@@ -1,4 +1,5 @@
 import { Instruction } from "./instruction";
+import type { Mask } from "./program-decoder/mask";
 
 type Byte = number;
 type Name = string;
@@ -54,7 +55,7 @@ const instructionsWithOneRegisterOneImmediateAndOneOffset: InstructionTuple[] = 
 ];
 
 const instructionsWithTwoRegisters: InstructionTuple[] = [
-  [Instruction.MOVE_REG, "move_reg", 0],
+  [Instruction.MOVE_REG, "move_reg", 2],
   [Instruction.SBRK, "sbrk", 0],
 ];
 
@@ -74,19 +75,19 @@ const instructionsWithTwoRegistersAndOneImmediate: InstructionTuple[] = [
   [Instruction.MUL_IMM, "mul_imm", 2],
   [Instruction.MUL_UPPER_S_S_IMM, "mul_upper_s_s_imm", 0],
   [Instruction.MUL_UPPER_U_U_IMM, "mul_upper_u_u_imm", 0],
-  [Instruction.SET_LT_U_IMM, "set_lt_u_imm", 0],
-  [Instruction.SET_LT_S_IMM, "set_lt_s_imm", 0],
+  [Instruction.SET_LT_U_IMM, "set_lt_u_imm", 2],
+  [Instruction.SET_LT_S_IMM, "set_lt_s_imm", 2],
   [Instruction.SHLO_L_IMM, "shlo_l_imm", 2],
   [Instruction.SHLO_R_IMM, "shlo_r_imm", 2],
   [Instruction.SHAR_R_IMM, "shar_r_imm", 2],
   [Instruction.NEG_ADD_IMM, "neg_add_imm", 2],
-  [Instruction.SET_GT_U_IMM, "set_gt_u_imm", 0],
-  [Instruction.SET_GT_S_IMM, "set_gt_s_imm", 0],
+  [Instruction.SET_GT_U_IMM, "set_gt_u_imm", 2],
+  [Instruction.SET_GT_S_IMM, "set_gt_s_imm", 2],
   [Instruction.SHLO_L_IMM_ALT, "shlo_l_imm_alt", 2],
   [Instruction.SHLO_R_IMM_ALT, "shlo_r_imm_alt", 2],
   [Instruction.SHAR_R_IMM_ALT, "shar_r_imm_alt", 2],
-  [Instruction.CMOV_IZ_IMM, "cmov_iz_imm", 0],
-  [Instruction.CMOV_NZ_IMM, "cmov_nz_imm", 0],
+  [Instruction.CMOV_IZ_IMM, "cmov_iz_imm", 2],
+  [Instruction.CMOV_NZ_IMM, "cmov_nz_imm", 2],
 ];
 
 const instructionsWithTwoRegistersAndOneOffset: InstructionTuple[] = [
@@ -114,13 +115,13 @@ const instructionsWithThreeRegisters: InstructionTuple[] = [
   [Instruction.DIV_S, "div_s", 2],
   [Instruction.REM_U, "rem_u", 2],
   [Instruction.REM_S, "rem_s", 2],
-  [Instruction.SET_LT_U, "set_lt_u", 0],
-  [Instruction.SET_LT_S, "set_lt_s", 0],
+  [Instruction.SET_LT_U, "set_lt_u", 2],
+  [Instruction.SET_LT_S, "set_lt_s", 2],
   [Instruction.SHLO_L, "shlo_l", 2],
   [Instruction.SHLO_R, "shlo_r", 2],
   [Instruction.SHAR_R, "shar_r", 2],
-  [Instruction.CMOV_IZ, "cmov_iz", 0],
-  [Instruction.CMOV_NZ, "cmov_nz", 0],
+  [Instruction.CMOV_IZ, "cmov_iz", 2],
+  [Instruction.CMOV_NZ, "cmov_nz", 2],
 ];
 
 const instructions: InstructionTuple[] = [...instructionsWithoutArgs, ...instructionsWithOneImmediate, ...instructionsWithTwoImmediates, ...instructionsWithOneOffset, ...instructionsWithOneRegisterAndOneImmediate, ...instructionsWithOneRegisterAndTwoImmediate, ...instructionsWithOneRegisterOneImmediateAndOneOffset, ...instructionsWithTwoRegisters, ...instructionsWithTwoRegistersAndOneImmediate, ...instructionsWithTwoRegistersAndOneOffset, ...instructionWithTwoRegistersAndTwoImmediates, ...instructionsWithThreeRegisters];
@@ -140,14 +141,10 @@ export const byteToOpCodeMap = instructions.reduce((acc, instruction) => {
   return acc;
 }, {} as ByteToOpCodeMap);
 
-export function assemblify(program: number[], k: number[]) {
+export function assemblify(program: Uint8Array, mask: Mask) {
   const printableProgram = program.reduce(
     (acc, byte, index) => {
-      const byteNumber = Math.floor(index / 8);
-      const bitNumber = index % 8;
-      const mask = 1 << bitNumber;
-      const isOpCode = (k[byteNumber] & mask) > 0;
-      if (isOpCode) {
+      if (mask.isInstruction(index)) {
         const instruction = byteToOpCodeMap[byte];
         acc.push([instruction.name]);
       } else {

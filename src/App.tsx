@@ -1,7 +1,7 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { InitialState, Pvm } from "@/pvm/pvm.ts";
+import { InitialState, Pvm } from "@/pvm-packages/pvm/pvm.ts";
 import { useState } from "react";
 
 function App() {
@@ -22,7 +22,7 @@ function App() {
   // const program = [0, 0, 3, 8, 135, 9, 249]
 
   const handleClick = () => {
-    const pvm = new Pvm(program, initialState);
+    const pvm = new Pvm(new Uint8Array(program), initialState);
     // console.log(pvm.printProgram())
     pvm.runProgram();
     // console.log(pvm.getState())
