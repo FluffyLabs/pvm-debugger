@@ -1,6 +1,6 @@
 import { ArgsDecoder } from "./args-decoder/args-decoder";
 import { ArgumentType } from "./args-decoder/argument-type";
-import { assemblify } from "./assemblify";
+import { assemblify, byteToOpCodeMap } from "./assemblify";
 import { Instruction } from "./instruction";
 import { instructionGasMap } from "./instruction-gas-map";
 import { BitOps, BooleanOps, MathOps, MoveOps, ShiftOps } from "./ops";
@@ -62,6 +62,11 @@ export class Pvm {
     this.pageMap = initialState.pageMap ?? [];
     this.memory = initialState.memory ?? [];
     this.argsDecoder = new ArgsDecoder(this.code, this.mask);
+
+    console.log({
+      argsDecoder: this.argsDecoder,
+    });
+
     const mathOps = new MathOps(this.registers);
     const shiftOps = new ShiftOps(this.registers);
     const bitOps = new BitOps(this.registers);
@@ -81,6 +86,8 @@ export class Pvm {
   }
 
   runProgram() {
+    const printableProgram = [];
+
     while (this.pc < this.code.length) {
       const currentInstruction = this.code[this.pc];
       this.gas -= instructionGasMap[currentInstruction];
@@ -89,6 +96,8 @@ export class Pvm {
         // TODO [MaSi]: to handle
       }
       const args = this.argsDecoder.getArgs(this.pc);
+
+      const currentInstructionDebug = { instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], args };
 
       switch (args.type) {
         case ArgumentType.NO_ARGUMENTS:
@@ -109,7 +118,11 @@ export class Pvm {
       }
 
       this.pc += args.noOfInstructionsToSkip;
+
+      printableProgram.push(currentInstructionDebug);
     }
+
+    return printableProgram;
   }
 
   getState() {

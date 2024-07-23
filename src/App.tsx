@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { InitialState, Pvm } from "@/pvm-packages/pvm/pvm.ts";
 import { useState } from "react";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table.tsx";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -17,17 +18,16 @@ function App() {
   const [registersInput, setRegistersInput] = useState("[0,0,0,0,0,0,0,0,0,0,0,0,0]");
   const [isInvalidProgram, setIsInvalidProgram] = useState(false);
   const [isInvalidRegisterTable, setIsInvalidRegisterTable] = useState(false);
-  const [programPreviewResult, setProgramPreviewResult] = useState<unknown>();
+  const [programPreviewResult, setProgramPreviewResult] = useState<unknown[]>();
   const [programRunResult, setProgramRunResult] = useState<unknown>();
   // const program = [0, 0, 3, 8, 135, 9, 249]
 
   const handleClick = () => {
     const pvm = new Pvm(new Uint8Array(program), initialState);
     // console.log(pvm.printProgram())
-    pvm.runProgram();
     // console.log(pvm.getState())
 
-    setProgramPreviewResult(pvm.printProgram());
+    setProgramPreviewResult(pvm.runProgram());
 
     setProgramRunResult(pvm.getState());
   };
@@ -74,9 +74,29 @@ function App() {
       {isInvalidProgram && <div>Program is not a valid JSON array</div>}
       <Button onClick={handleClick}>Check program</Button>
 
-      <pre>
-        <code>Program preview: {JSON.stringify(programPreviewResult)}</code>
-      </pre>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Instruction Code</TableHead>
+            <TableHead>Instruction Name</TableHead>
+            <TableHead>Instruction Args</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {!!programPreviewResult?.length &&
+            programPreviewResult.map((programRow: any) => (
+              <TableRow>
+                <TableCell>{programRow.instructionCode}</TableCell>
+                <TableCell>{programRow.name}</TableCell>
+                <TableCell>{JSON.stringify(programRow.args)}</TableCell>
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
+
+      {/*<pre>*/}
+      {/*  <code>Program preview: {JSON.stringify(programPreviewResult)}</code>*/}
+      {/*</pre>*/}
 
       <pre>
         <code>Program run result: {JSON.stringify(programRunResult)}</code>
