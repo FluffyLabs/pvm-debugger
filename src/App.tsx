@@ -4,6 +4,8 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { InitialState, Pvm } from "@/pvm-packages/pvm/pvm.ts";
 import { useState } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Label } from "@/components/ui/label.tsx";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -20,6 +22,7 @@ function App() {
   const [isInvalidRegisterTable, setIsInvalidRegisterTable] = useState(false);
   const [programPreviewResult, setProgramPreviewResult] = useState<unknown[]>();
   const [programRunResult, setProgramRunResult] = useState<unknown>();
+  let fileReader: FileReader;
   // const program = [0, 0, 3, 8, 135, 9, 249]
 
   const handleClick = () => {
@@ -32,8 +35,52 @@ function App() {
     setProgramRunResult(pvm.getState());
   };
 
+  const handleFileRead = () => {
+    const fileContent = fileReader?.result;
+
+    try {
+      if (fileContent !== null && typeof fileContent === "string") {
+        const jsonFile = JSON.parse(fileContent);
+
+        setInitialState({
+          regs: jsonFile["initial-regs"],
+          pc: jsonFile["initial-pc"],
+          pageMap: jsonFile["initial-page-map"],
+          memory: jsonFile["initial-memory"],
+          gas: jsonFile["initial-gas"],
+        });
+        setProgram(jsonFile["program"]);
+        setProgramInput(JSON.stringify(jsonFile["program"]));
+      } else {
+        alert("Cannot read file");
+      }
+    } catch (e) {
+      alert("Cannot parse JSON");
+    }
+  };
+
+  const handleProgramUpload = (file: Blob) => {
+    fileReader = new FileReader();
+    fileReader.onloadend = handleFileRead;
+    fileReader.readAsText(file);
+  };
+
   return (
     <>
+      <div className="grid w-full max-w-sm items-center gap-1.5">
+        <Label htmlFor="test-file">Load test from json file</Label>
+        <Input
+          id="test-file"
+          type="file"
+          accept="application/json"
+          onChange={(e) => {
+            if (e.target.files?.length) {
+              handleProgramUpload(e.target.files[0]);
+            }
+          }}
+        />
+      </div>
+
       <Textarea
         placeholder="Paste initial registers as an array of numbers"
         value={registersInput}
