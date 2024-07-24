@@ -98,7 +98,15 @@ export class Pvm {
       if (this.gas < 0) {
         // TODO [MaSi]: to handle
       }
-      const args = this.argsDecoder.getArgs(this.pc);
+
+      let args;
+
+      try {
+        args = this.argsDecoder.getArgs(this.pc);
+      } catch (e) {
+        printableProgram.push({ instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], error: "Cannot get arguments from args decoder" });
+        return printableProgram;
+      }
 
       const currentInstructionDebug = { instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], args };
 

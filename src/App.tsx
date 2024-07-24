@@ -131,6 +131,7 @@ function App() {
             <TableHead>Instruction Name</TableHead>
             <TableHead>Instruction Gas</TableHead>
             <TableHead>Instruction Args</TableHead>
+            <TableHead>Instruction Errors</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -141,6 +142,7 @@ function App() {
                 <TableCell>{programRow.name}</TableCell>
                 <TableCell>{programRow.gas}</TableCell>
                 <TableCell>{JSON.stringify(programRow.args)}</TableCell>
+                <TableCell>{programRow.error}</TableCell>
               </TableRow>
             ))}
         </TableBody>
