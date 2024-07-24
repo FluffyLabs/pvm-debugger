@@ -1,6 +1,7 @@
 import { ArgsDecoder } from "./args-decoder/args-decoder";
 import { ArgumentType } from "./args-decoder/argument-type";
-import { assemblify, byteToOpCodeMap } from "./assemblify";
+// import { assemblify, byteToOpCodeMap } from "./assemblify";
+import { byteToOpCodeMap } from "./assemblify";
 import { Instruction } from "./instruction";
 import { instructionGasMap } from "./instruction-gas-map";
 import { BitOps, BooleanOps, MathOps, MoveOps, ShiftOps } from "./ops";
@@ -61,6 +62,7 @@ export class Pvm {
     this.gas = initialState.gas ?? 0;
     this.pageMap = initialState.pageMap ?? [];
     this.memory = initialState.memory ?? [];
+    console.log("new code", rawProgram, this.code, this.mask);
     this.argsDecoder = new ArgsDecoder(this.code, this.mask);
 
     console.log({
@@ -79,10 +81,53 @@ export class Pvm {
   }
 
   printProgram() {
-    const p = assemblify(this.code, this.mask);
-    console.table(p);
+    // const argsDecoder = this.argsDecoder;
+    // return argsDecoder.getResults()?.map((instruction: any) => ({
+    //   instructionCode: instruction.type,
+    //   ...byteToOpCodeMap[instruction.type],
+    //   args: instruction
+    // }))
 
-    return p;
+    const printableProgram = [];
+    const initialPc = this.pc;
+
+    while (this.pc < this.code.length) {
+      const currentInstruction = this.code[this.pc];
+      this.gas -= instructionGasMap[currentInstruction];
+
+      if (this.gas < 0) {
+        // TODO [MaSi]: to handle
+      }
+      const args = this.argsDecoder.getArgs(this.pc);
+
+      const currentInstructionDebug = { instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], args };
+
+      switch (args.type) {
+        case ArgumentType.NO_ARGUMENTS:
+          if (currentInstruction === Instruction.TRAP) {
+            this.status = "trap";
+            return;
+          }
+          break;
+        case ArgumentType.TWO_REGISTERS:
+          // this.twoRegsDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.THREE_REGISTERS:
+          // this.threeRegsDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
+          // this.twoRegsOneImmDispatcher.dispatch(currentInstruction, args);
+          break;
+      }
+
+      this.pc += args.noOfInstructionsToSkip;
+
+      printableProgram.push(currentInstructionDebug);
+    }
+
+    this.pc = initialPc;
+
+    return printableProgram;
   }
 
   runProgram() {

@@ -27,11 +27,14 @@ function App() {
 
   const handleClick = () => {
     const pvm = new Pvm(new Uint8Array(program), initialState);
-    // console.log(pvm.printProgram())
-    // console.log(pvm.getState())
 
-    setProgramPreviewResult(pvm.runProgram());
+    // console.log({
+    //   printed: pvm.printProgram()
+    // })
 
+    setProgramPreviewResult(pvm.printProgram());
+
+    pvm.runProgram();
     setProgramRunResult(pvm.getState());
   };
 
@@ -126,6 +129,7 @@ function App() {
           <TableRow>
             <TableHead>Instruction Code</TableHead>
             <TableHead>Instruction Name</TableHead>
+            <TableHead>Instruction Gas</TableHead>
             <TableHead>Instruction Args</TableHead>
           </TableRow>
         </TableHeader>
@@ -135,15 +139,16 @@ function App() {
               <TableRow>
                 <TableCell>{programRow.instructionCode}</TableCell>
                 <TableCell>{programRow.name}</TableCell>
+                <TableCell>{programRow.gas}</TableCell>
                 <TableCell>{JSON.stringify(programRow.args)}</TableCell>
               </TableRow>
             ))}
         </TableBody>
       </Table>
 
-      {/*<pre>*/}
-      {/*  <code>Program preview: {JSON.stringify(programPreviewResult)}</code>*/}
-      {/*</pre>*/}
+      <pre>
+        <code>Program preview: {JSON.stringify(programPreviewResult)}</code>
+      </pre>
 
       <pre>
         <code>Program run result: {JSON.stringify(programRunResult)}</code>
