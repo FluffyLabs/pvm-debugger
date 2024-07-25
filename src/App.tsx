@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
+import { ArgumentType } from "@/pvm-packages/pvm/args-decoder/argument-type.ts";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -71,10 +73,30 @@ function App() {
     fileReader.readAsText(file);
   };
 
+  const mapInstructionsArgsByType = (args: any) => {
+    console.log("mapInstuctionsArgsByType", ArgumentType[args?.type]);
+    switch (args?.type) {
+      case ArgumentType.NO_ARGUMENTS:
+        return "No arguments";
+      case ArgumentType.ONE_OFFSET:
+        return `Offset: ${args.offset}`;
+      case ArgumentType.TWO_REGISTERS:
+        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}`;
+      case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
+        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}, Immediate: ${args.immediateDecoder1}`;
+      case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATE:
+        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}, Immediate: ${args.immediateDecoder1}, ${args.immediateDecoder2}`;
+      case ArgumentType.THREE_REGISTERS:
+        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}, ${args.thirdRegisterIndex}`;
+      default:
+        return "Unknown argument type";
+    }
+  };
+
   return (
     <>
       <div className="p-3 text-left w-screen">
-        <div className="grid grid-cols-12 gap-1.5">
+        <div className="grid grid-cols-12 gap-1.5 divide-x">
           <div className="col-span-3">
             <div className="bg-sky-200 p-3">
               <Label htmlFor="test-file">Load test from json file:</Label>
@@ -90,8 +112,13 @@ function App() {
               />
             </div>
 
-            <br />
+            <div className="text-right">
+              <Button className="my-2" onClick={handleClick}>
+                Check program
+              </Button>
+            </div>
 
+            <br />
             <div className="border-2 border-dashed border-sky-500 rounded-md">
               <div className="p-3 grid grid-cols-2">
                 <div>
@@ -161,12 +188,6 @@ function App() {
                 </div>
               </div>
             </div>
-
-            <div className="text-right">
-              <Button className="my-2" onClick={handleClick}>
-                Check program
-              </Button>
-            </div>
           </div>
 
           <div className="col-span-6 container py-3 font-mono">
@@ -177,8 +198,8 @@ function App() {
                   <TableHead>Code</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Gas</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Args</TableHead>
-                  <TableHead>Errors</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -188,10 +209,15 @@ function App() {
                       <TableCell>{programRow.instructionCode}</TableCell>
                       <TableCell className="uppercase font-bold">{programRow.name}</TableCell>
                       <TableCell>{programRow.gas}</TableCell>
+                      <TableCell>{ArgumentType[programRow.args?.type]}</TableCell>
                       <TableCell className="text-xs text-left">
-                        <pre>{JSON.stringify(programRow.args, null, 2)}</pre>
+                        <HoverCard>
+                          <HoverCardTrigger>{mapInstructionsArgsByType(programRow.args)}</HoverCardTrigger>
+                          <HoverCardContent>
+                            <pre>{JSON.stringify(programRow.args, null, 2)}</pre>
+                          </HoverCardContent>
+                        </HoverCard>
                       </TableCell>
-                      <TableCell>{programRow.error}</TableCell>
                     </TableRow>
                   ))}
               </TableBody>
