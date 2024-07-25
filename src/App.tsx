@@ -53,6 +53,7 @@ function App() {
           gas: jsonFile["initial-gas"],
         });
         setProgram(jsonFile["program"]);
+        setRegistersInput(JSON.stringify(jsonFile["initial-regs"]));
         setProgramInput(JSON.stringify(jsonFile["program"]));
       } else {
         alert("Cannot read file");
