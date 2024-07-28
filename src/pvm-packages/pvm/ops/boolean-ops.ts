@@ -1,6 +1,8 @@
-import { BaseOps } from "./base-ops";
+import type { Registers } from "../registers";
 
-export class BooleanOps extends BaseOps {
+export class BooleanOps {
+  constructor(private regs: Registers) {}
+
   setLessThanSignedImmediate(firstIndex: number, immediateValue: number, resultIndex: number) {
     this.regs.asUnsigned[resultIndex] = this.regs.asSigned[firstIndex] < immediateValue ? 1 : 0;
   }

@@ -1,0 +1,17 @@
+{
+  "name": "@typeberry/trie",
+  "version": "0.0.1",
+  "description": "Trie implementation for Typeberry JAM.",
+  "main": "index.ts",
+  "devDependencies": {
+    "@types/blake2b": "^2.1.3"
+  },
+  "scripts": {
+    "test": "node --test --require ts-node/register $(find . -type f -name '*.test.ts' | tr '\\n' ' ')"
+  },
+  "dependencies": {
+    "blake2b": "^2.1.4"
+  },
+  "author": "Fluffy Labs",
+  "license": "MPL-2.0"
+}

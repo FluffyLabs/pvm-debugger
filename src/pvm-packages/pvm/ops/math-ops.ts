@@ -1,7 +1,9 @@
-import { BaseOps } from "./base-ops";
+import type { Registers } from "../registers";
 import { MAX_SHIFT, MAX_VALUE, MIN_VALUE } from "./math-consts";
 
-export class MathOps extends BaseOps {
+export class MathOps {
+  constructor(private regs: Registers) {}
+
   add(firstIndex: number, secondIndex: number, resultIndex: number) {
     this.addImmediate(firstIndex, this.regs.asUnsigned[secondIndex], resultIndex);
   }

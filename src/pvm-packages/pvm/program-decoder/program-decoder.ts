@@ -1,4 +1,4 @@
-import { decodeNaturalNumber } from "../../jam-codec/decode-natural-number";
+import { decodeNaturalNumber } from "@typeberry/jam-codec";
 import { Mask } from "./mask";
 
 export class ProgramDecoder {

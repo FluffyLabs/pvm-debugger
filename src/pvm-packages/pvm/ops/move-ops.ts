@@ -1,6 +1,8 @@
-import { BaseOps } from "./base-ops";
+import type { Registers } from "../registers";
 
-export class MoveOps extends BaseOps {
+export class MoveOps {
+  constructor(private regs: Registers) {}
+
   cmovIfZeroImmediate(firstIndex: number, immediateValue: number, resultIndex: number) {
     if (this.regs.asUnsigned[firstIndex] === 0) {
       this.regs.asUnsigned[resultIndex] = immediateValue;

@@ -25,7 +25,8 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@typeberry/*": ["./src/pvm-packages/*"]
     }
   },
   "include": ["src"]
