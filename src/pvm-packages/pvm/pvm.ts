@@ -1,6 +1,6 @@
 import { ArgsDecoder } from "./args-decoder/args-decoder";
 import { ArgumentType } from "./args-decoder/argument-type";
-import { assemblify } from "./assemblify";
+import { assemblify, byteToOpCodeMap } from "./assemblify";
 import { Instruction } from "./instruction";
 import { instructionGasMap } from "./instruction-gas-map";
 import { InstructionResult } from "./instruction-result";
@@ -10,7 +10,7 @@ import type { Mask } from "./program-decoder/mask";
 import { ProgramDecoder } from "./program-decoder/program-decoder";
 import { NO_OF_REGISTERS, Registers } from "./registers";
 
-type InitialState = {
+export type InitialState = {
   regs?: RegistersArray;
   pc?: number;
   pageMap?: PageMapItem[];
@@ -59,7 +59,7 @@ export class Pvm {
     this.code = programDecoder.getCode();
     this.mask = programDecoder.getMask();
     this.registers = new Registers();
-    const pc = initialState.pc ?? 0;
+    // const pc = initialState.pc ?? 0;
 
     for (let i = 0; i < NO_OF_REGISTERS; i++) {
       this.registers.asUnsigned[i] = initialState.regs?.[i] ?? 0;
@@ -90,6 +90,79 @@ export class Pvm {
   printProgram() {
     const p = assemblify(this.code, this.mask);
     console.table(p);
+
+    const printableProgram = [];
+    const initialPc = this.pc;
+
+    while (this.pc < this.code.length) {
+      const currentInstruction = this.code[this.pc];
+      this.gas -= instructionGasMap[currentInstruction];
+
+      if (this.gas < 0) {
+        console.log("no gas");
+        // TODO [MaSi]: to handle
+      }
+
+      let args;
+
+      try {
+        args = this.argsDecoder.getArgs(this.pc) as any;
+
+        this.instructionResult.pcOffset = args.noOfInstructionsToSkip;
+      } catch (e) {
+        printableProgram.push({ instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], error: "Cannot get arguments from args decoder" });
+        return printableProgram;
+      }
+
+      const currentInstructionDebug = {
+        instructionCode: currentInstruction,
+        ...byteToOpCodeMap[currentInstruction],
+        args: {
+          ...args,
+          immediate: args.immediateDecoder?.getUnsigned(),
+        },
+      };
+
+      switch (args.type) {
+        case ArgumentType.NO_ARGUMENTS:
+          // if (currentInstruction === Instruction.TRAP) {
+          //   this.status = "trap";
+          //   return printableProgram;
+          // }
+          break;
+        case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
+          // this.oneRegisterOneImmediateOneOffsetDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.TWO_REGISTERS:
+          // this.twoRegsDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.THREE_REGISTERS:
+          // this.threeRegsDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
+          // this.twoRegsOneImmDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
+          // this.twoRegsOneOffsetDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.ONE_OFFSET:
+          // this.oneOffsetDispatcher.dispatch(currentInstruction, args);
+          break;
+        case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
+          // this.oneRegisterOneImmediateDispatcher.dispatch(currentInstruction, args);
+          break;
+        default:
+          return printableProgram;
+      }
+
+      printableProgram.push(currentInstructionDebug);
+
+      this.pc += this.instructionResult.pcOffset;
+    }
+
+    this.pc = initialPc;
+
+    return printableProgram;
   }
 
   runProgram() {

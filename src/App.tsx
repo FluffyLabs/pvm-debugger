@@ -74,20 +74,32 @@ function App() {
   };
 
   const mapInstructionsArgsByType = (args: any) => {
-    console.log("mapInstuctionsArgsByType", ArgumentType[args?.type]);
     switch (args?.type) {
       case ArgumentType.NO_ARGUMENTS:
         return "No arguments";
+      case ArgumentType.ONE_IMMEDIATE:
+        return `imm1: ${args?.immediate}`;
+      case ArgumentType.TWO_IMMEDIATE:
+        return `imm1: ${args?.immediate1}, imm2: ${args?.immediate2}`;
       case ArgumentType.ONE_OFFSET:
-        return `Offset: ${args.offset}`;
+        return `off: ${args?.offset}`;
+      case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
+        return `r1: ${args?.firstRegisterIndex}, imm1: ${args?.immediate}`;
+      case ArgumentType.ONE_REGISTER_TWO_IMMEDIATE:
+        return `r1: ${args?.firstRegisterIndex}, imm1: ${args?.immediate1}, imm2: ${args?.immediate2}`;
+      case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
+        return `r1: ${args?.firstRegisterIndex}, imm1: ${args?.immediate}, off: ${args?.offset}`;
       case ArgumentType.TWO_REGISTERS:
-        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}`;
+        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}`;
       case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
-        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}, Immediate: ${args.immediateDecoder1}`;
+        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, imm1: ${args?.immediate}`;
+      case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
+        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, off: ${args?.offset}`;
       case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATE:
-        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}, Immediate: ${args.immediateDecoder1}, ${args.immediateDecoder2}`;
+        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, imm1: ${args?.immediate1}, imm2: ${args?.immediate2}`;
       case ArgumentType.THREE_REGISTERS:
-        return `Registers: ${args.firstRegisterIndex}, ${args.secondRegisterIndex}, ${args.thirdRegisterIndex}`;
+        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, r3: ${args?.thirdRegisterIndex}`;
+
       default:
         return "Unknown argument type";
     }
