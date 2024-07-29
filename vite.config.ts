@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@typeberry": path.resolve(__dirname, "./src/pvm-packages"),
     },
   },
 });

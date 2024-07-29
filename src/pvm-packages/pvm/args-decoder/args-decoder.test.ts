@@ -52,7 +52,7 @@ test("ArgsDecoder", async (t) => {
       firstRegisterIndex: 1,
       secondRegisterIndex: 2,
 
-      immediateDecoder1: expectedImmediateDecoder,
+      immediateDecoder: expectedImmediateDecoder,
     };
 
     const result = argsDecoder.getArgs(0);
@@ -73,7 +73,48 @@ test("ArgsDecoder", async (t) => {
       firstRegisterIndex: 1,
       secondRegisterIndex: 2,
 
-      immediateDecoder1: expectedImmediateDecoder,
+      immediateDecoder: expectedImmediateDecoder,
+    };
+
+    const result = argsDecoder.getArgs(0);
+
+    assert.deepStrictEqual(result, expectedResult);
+  });
+
+  await t.test("return correct result for instruction with 1 reg, 1 immediate and 1 offset", () => {
+    const code = new Uint8Array([Instruction.BRANCH_EQ_IMM, 39, 210, 4, 6]);
+    const mask = new Mask(new Uint8Array([0b1111_1001]));
+    const argsDecoder = new ArgsDecoder(code, mask);
+    const expectedImmediateDecoder = new ImmediateDecoder();
+    expectedImmediateDecoder.setBytes(new Uint8Array([210, 4]));
+    const expectedResult = {
+      noOfInstructionsToSkip: code.length,
+      type: ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET,
+
+      firstRegisterIndex: 7,
+      immediateDecoder: expectedImmediateDecoder,
+      offset: 6,
+    };
+
+    const result = argsDecoder.getArgs(0);
+
+    assert.deepStrictEqual(result, expectedResult);
+  });
+
+  await t.test("return correct result for instruction with 2 regs and 1 offset", () => {
+    const code = new Uint8Array([Instruction.BRANCH_EQ, 135, 4]);
+    const mask = new Mask(new Uint8Array([0b1111_1001]));
+    const argsDecoder = new ArgsDecoder(code, mask);
+    const expectedImmediateDecoder = new ImmediateDecoder();
+    expectedImmediateDecoder.setBytes(new Uint8Array([0xff]));
+    const expectedResult = {
+      noOfInstructionsToSkip: code.length,
+      type: ArgumentType.TWO_REGISTERS_ONE_OFFSET,
+
+      firstRegisterIndex: 7,
+      secondRegisterIndex: 8,
+
+      offset: 4,
     };
 
     const result = argsDecoder.getArgs(0);

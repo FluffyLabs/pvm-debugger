@@ -12,9 +12,10 @@ export class Mask {
 
   getNoOfBytesToNextInstruction(index: number) {
     let noOfBytes = 0;
-    for (let i = index + 1; i <= index + MAX_ARGS_LENGTH; i++) {
-      noOfBytes++;
+    const maxIndex = Math.min(index + MAX_ARGS_LENGTH, this.mask.length * 8);
 
+    for (let i = index + 1; i <= maxIndex; i++) {
+      noOfBytes++;
       if (this.isInstruction(i)) {
         break;
       }

@@ -82,4 +82,15 @@ test("Mask - getNoOfBytesToNextInstruction", async (t) => {
 
     assert.strictEqual(result, expectedResult);
   });
+
+  await t.test("number of 0s between to the end", () => {
+    const input = [0b0001_1001];
+    const index = 4;
+    const expectedResult = 4;
+    const mask = new Mask(new Uint8Array(input));
+
+    const result = mask.getNoOfBytesToNextInstruction(index);
+
+    assert.strictEqual(result, expectedResult);
+  });
 });

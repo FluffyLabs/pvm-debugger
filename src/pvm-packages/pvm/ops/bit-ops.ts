@@ -1,6 +1,8 @@
-import { BaseOps } from "./base-ops";
+import type { Registers } from "../registers";
 
-export class BitOps extends BaseOps {
+export class BitOps {
+  constructor(private regs: Registers) {}
+
   or(firstIndex: number, secondIndex: number, resultIndex: number) {
     this.orImmediate(firstIndex, this.regs.asUnsigned[secondIndex], resultIndex);
   }

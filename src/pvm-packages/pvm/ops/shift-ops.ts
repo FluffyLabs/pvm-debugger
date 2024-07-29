@@ -1,7 +1,9 @@
-import { BaseOps } from "./base-ops";
+import type { Registers } from "../registers";
 import { MAX_SHIFT } from "./math-consts";
 
-export class ShiftOps extends BaseOps {
+export class ShiftOps {
+  constructor(private regs: Registers) {}
+
   shiftLogicalLeft(firstIndex: number, secondIndex: number, resultIndex: number) {
     this.shiftLogicalLeftImmediateAlternative(firstIndex, this.regs.asUnsigned[secondIndex], resultIndex);
   }
