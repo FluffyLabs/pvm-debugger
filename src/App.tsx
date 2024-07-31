@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label.tsx";
 import { ArgumentType } from "@/pvm-packages/pvm/args-decoder/argument-type.ts";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.tsx";
-// import {ChevronsUpDown} from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
+import { BlockMath } from "react-katex";
+import { instructionsToLatex } from "@/utils/instructionsToLatex.ts";
 import { DiffChecker, ExpectedState } from "./components/DiffChecker";
 
 function App() {
@@ -94,19 +96,19 @@ function App() {
       case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
         return (
           <span>
-            ω<sub>{args?.firstRegisterIndex}</sub>, ${args?.immediate}
+            ω<sub>{args?.firstRegisterIndex}</sub>, {args?.immediate}
           </span>
         );
       case ArgumentType.ONE_REGISTER_TWO_IMMEDIATE:
         return (
           <span>
-            ω<sub>{args?.firstRegisterIndex}</sub>, ${args?.immediate1}, ${args?.immediate2}
+            ω<sub>{args?.firstRegisterIndex}</sub>, {args?.immediate1}, {args?.immediate2}
           </span>
         );
       case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
         return (
           <span>
-            ω<sub>{args?.firstRegisterIndex}</sub>, ${args?.immediate}, {args?.offset}
+            ω<sub>{args?.firstRegisterIndex}</sub>, {args?.immediate}, {args?.offset}
           </span>
         );
       case ArgumentType.TWO_REGISTERS:
@@ -118,7 +120,7 @@ function App() {
       case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
         return (
           <span>
-            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, ${args?.immediate}
+            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, {args?.immediate}
           </span>
         );
       case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
@@ -130,7 +132,7 @@ function App() {
       case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATE:
         return (
           <span>
-            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, ${args?.immediate1}, ${args?.immediate2}
+            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, {args?.immediate1}, {args?.immediate2}
           </span>
         );
       case ArgumentType.THREE_REGISTERS:
@@ -278,16 +280,18 @@ function App() {
                           <TableCell>{programRow.gas}</TableCell>
                           <TableCell>
                             <CollapsibleTrigger asChild>
-                              {/*<Button variant="ghost" size="sm" className="w-9 p-0">*/}
-                              {/*  <ChevronsUpDown className="h-4 w-4" />*/}
-                              {/*  <span className="sr-only">Toggle</span>*/}
-                              {/*</Button>*/}
+                              <Button variant="ghost" size="sm" className="w-9 p-0">
+                                <ChevronsUpDown className="h-4 w-4" />
+                                <span className="sr-only">Toggle</span>
+                              </Button>
                             </CollapsibleTrigger>
                           </TableCell>
                         </TableRow>
                         <CollapsibleContent asChild>
                           <TableRow>
-                            <TableCell colSpan={3}>Row collapsible content</TableCell>
+                            <TableCell colSpan={3}>
+                              <BlockMath math={instructionsToLatex[programRow.name?.toUpperCase() as keyof typeof instructionsToLatex]} />
+                            </TableCell>
                           </TableRow>
                         </CollapsibleContent>
                       </>
