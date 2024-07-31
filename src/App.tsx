@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { ArgumentType } from "@/pvm-packages/pvm/args-decoder/argument-type.ts";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible.tsx";
+// import {ChevronsUpDown} from "lucide-react";
 import { DiffChecker, ExpectedState } from "./components/DiffChecker";
 
 function App() {
@@ -27,17 +29,11 @@ function App() {
   const [programRunResult, setProgramRunResult] = useState<unknown>();
   const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   let fileReader: FileReader;
-  // const program = [0, 0, 3, 8, 135, 9, 249]
 
   const handleClick = () => {
     window.scrollTo(0, 0);
 
     const pvm = new Pvm(new Uint8Array(program), initialState);
-
-    // console.log({
-    //   printed: pvm.printProgram()
-    // })
-
     setProgramPreviewResult(pvm.printProgram());
 
     pvm.runProgram();
@@ -65,7 +61,6 @@ function App() {
           gas: jsonFile["initial-gas"],
         });
         setProgram(jsonFile["program"]);
-        // setRegistersInput(JSON.stringify(jsonFile["initial-regs"]));
         setProgramInput(JSON.stringify(jsonFile["program"]));
       } else {
         alert("Cannot read file");
@@ -84,32 +79,69 @@ function App() {
   const mapInstructionsArgsByType = (args: any) => {
     switch (args?.type) {
       case ArgumentType.NO_ARGUMENTS:
-        return "No arguments";
+        return "";
       case ArgumentType.ONE_IMMEDIATE:
-        return `imm1: ${args?.immediate}`;
+        return <span>${args?.immediate}</span>;
       case ArgumentType.TWO_IMMEDIATE:
-        return `imm1: ${args?.immediate1}, imm2: ${args?.immediate2}`;
+        // return `imm1: ${args?.immediate1}, imm2: ${args?.immediate2}`;
+        return (
+          <span>
+            {args?.immediate1}, {args?.immediate2}
+          </span>
+        );
       case ArgumentType.ONE_OFFSET:
-        return `off: ${args?.offset}`;
+        return <span>{args?.offset}</span>;
       case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
-        return `r1: ${args?.firstRegisterIndex}, imm1: ${args?.immediate}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ${args?.immediate}
+          </span>
+        );
       case ArgumentType.ONE_REGISTER_TWO_IMMEDIATE:
-        return `r1: ${args?.firstRegisterIndex}, imm1: ${args?.immediate1}, imm2: ${args?.immediate2}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ${args?.immediate1}, ${args?.immediate2}
+          </span>
+        );
       case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
-        return `r1: ${args?.firstRegisterIndex}, imm1: ${args?.immediate}, off: ${args?.offset}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ${args?.immediate}, {args?.offset}
+          </span>
+        );
       case ArgumentType.TWO_REGISTERS:
-        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>
+          </span>
+        );
       case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
-        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, imm1: ${args?.immediate}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, ${args?.immediate}
+          </span>
+        );
       case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
-        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, off: ${args?.offset}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, {args?.offset}
+          </span>
+        );
       case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATE:
-        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, imm1: ${args?.immediate1}, imm2: ${args?.immediate2}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, ${args?.immediate1}, ${args?.immediate2}
+          </span>
+        );
       case ArgumentType.THREE_REGISTERS:
-        return `r1: ${args?.firstRegisterIndex}, r2: ${args?.secondRegisterIndex}, r3: ${args?.thirdRegisterIndex}`;
+        return (
+          <span>
+            ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, ω<sub>{args?.thirdRegisterIndex}</sub>
+          </span>
+        );
 
       default:
-        return "Unknown argument type";
+        return "err";
     }
   };
 
@@ -148,7 +180,9 @@ function App() {
                     {initialState.regs?.map((_, regNo) => (
                       <div className="flex items-center">
                         <Label className="inline-flex w-20" htmlFor={`reg-${regNo}`}>
-                          ω<sub>{regNo}</sub>:
+                          <p>
+                            ω<sub>{regNo}</sub>:
+                          </p>
                         </Label>
                         <Input
                           className="inline-flex w-14"
@@ -216,29 +250,48 @@ function App() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Code</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Instruction</TableHead>
                   <TableHead>Gas</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Args</TableHead>
+                  <TableHead></TableHead>
+                  {/*<TableHead>Args</TableHead>*/}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {!!programPreviewResult?.length &&
                   programPreviewResult.map((programRow: any) => (
-                    <TableRow>
-                      <TableCell>{programRow.instructionCode}</TableCell>
-                      <TableCell className="uppercase font-bold">{programRow.name}</TableCell>
-                      <TableCell>{programRow.gas}</TableCell>
-                      <TableCell>{ArgumentType[programRow.args?.type]}</TableCell>
-                      <TableCell className="text-xs text-left">
-                        <HoverCard>
-                          <HoverCardTrigger>{mapInstructionsArgsByType(programRow.args)}</HoverCardTrigger>
-                          <HoverCardContent>
-                            <pre>{JSON.stringify(programRow.args, null, 2)}</pre>
-                          </HoverCardContent>
-                        </HoverCard>
-                      </TableCell>
-                    </TableRow>
+                    <Collapsible asChild>
+                      <>
+                        <TableRow>
+                          <TableCell>{programRow.instructionCode}</TableCell>
+                          <TableCell>
+                            <HoverCard>
+                              <HoverCardTrigger>
+                                <span className="uppercase font-bold">{programRow.name}</span>
+                                &nbsp;
+                                <span className="font-bold">{mapInstructionsArgsByType(programRow.args)}</span>
+                              </HoverCardTrigger>
+                              <HoverCardContent>
+                                <pre>{JSON.stringify(programRow.args, null, 2)}</pre>
+                              </HoverCardContent>
+                            </HoverCard>
+                          </TableCell>
+                          <TableCell>{programRow.gas}</TableCell>
+                          <TableCell>
+                            <CollapsibleTrigger asChild>
+                              {/*<Button variant="ghost" size="sm" className="w-9 p-0">*/}
+                              {/*  <ChevronsUpDown className="h-4 w-4" />*/}
+                              {/*  <span className="sr-only">Toggle</span>*/}
+                              {/*</Button>*/}
+                            </CollapsibleTrigger>
+                          </TableCell>
+                        </TableRow>
+                        <CollapsibleContent asChild>
+                          <TableRow>
+                            <TableCell colSpan={3}>Row collapsible content</TableCell>
+                          </TableRow>
+                        </CollapsibleContent>
+                      </>
+                    </Collapsible>
                   ))}
               </TableBody>
             </Table>
