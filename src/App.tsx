@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { ArgumentType } from "@/pvm-packages/pvm/args-decoder/argument-type.ts";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.tsx";
+import { DiffChecker, ExpectedState } from "./components/DiffChecker";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -24,6 +25,7 @@ function App() {
   // const [isInvalidRegisterTable, setIsInvalidRegisterTable] = useState(false);
   const [programPreviewResult, setProgramPreviewResult] = useState<unknown[]>();
   const [programRunResult, setProgramRunResult] = useState<unknown>();
+  const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   let fileReader: FileReader;
   // const program = [0, 0, 3, 8, 135, 9, 249]
 
@@ -48,7 +50,13 @@ function App() {
     try {
       if (fileContent !== null && typeof fileContent === "string") {
         const jsonFile = JSON.parse(fileContent);
-
+        setExpectedResult({
+          gas: jsonFile["expected-gas"],
+          memory: jsonFile["expected-memory"],
+          pc: jsonFile["expected-pc"],
+          regs: jsonFile["expected-regs"],
+          status: jsonFile["expected-status"],
+        });
         setInitialState({
           regs: jsonFile["initial-regs"],
           pc: jsonFile["initial-pc"],
@@ -237,14 +245,8 @@ function App() {
           </div>
 
           <div className="col-span-3 container py-3 text-left text-xs">
-            <div className="grid grid-cols-2 p-3 bg-slate-100 rounded-md">
-              {/*<pre className="p-3">*/}
-              {/*  <code>Program preview: {JSON.stringify(programPreviewResult, null, 2)}</code>*/}
-              {/*</pre>*/}
-
-              <pre className="p-3">
-                <code>Program run result: {JSON.stringify(programRunResult, null, 2)}</code>
-              </pre>
+            <div className="p-3 bg-slate-100 rounded-md">
+              <DiffChecker actual={programRunResult as ReturnType<Pvm["getState"]>} expected={expectedResult} />
             </div>
           </div>
         </div>
