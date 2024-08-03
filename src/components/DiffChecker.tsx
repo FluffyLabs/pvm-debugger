@@ -1,9 +1,7 @@
-import { InitialState, Pvm } from "@/pvm-packages/pvm/pvm";
+import { Pvm } from "@/pvm-packages/pvm/pvm";
 import ReactJsonViewCompare from "react-json-view-compare";
+import { ExpectedState } from "./ProgramUpload/types";
 
-export type ExpectedState = InitialState & {
-  status: Pvm["status"];
-};
 const actualToExpected = (actual: ReturnType<Pvm["getState"]>): ExpectedState | undefined => {
   if (!actual) return;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
