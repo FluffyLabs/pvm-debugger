@@ -14,5 +14,11 @@ export const DiffChecker = (args: { expected?: ExpectedState; actual: ReturnType
 
   if (!args.actual) return null;
 
-  return <ReactJsonViewCompare oldData={args.expected} newData={actual} />;
+  return (
+    <div className="col-span-3 container py-3 text-left text-xs">
+      <div className="p-3 bg-slate-100 rounded-md">
+        <ReactJsonViewCompare oldData={args.expected} newData={actual} />
+      </div>
+    </div>
+  );
 };

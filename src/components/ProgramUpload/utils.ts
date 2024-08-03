@@ -11,7 +11,8 @@ export function mapUploadFileInputToOutput(data: ProgramUploadFileInput): Progra
     name: data.name,
     initial: {
       ...(mapKeys(initial, (_value: unknown, key) => camelCase(key.replace("initial", ""))) as ProgramUploadFileOutput["initial"]),
-      pageMap: data["initial-page-map"].map((val) => ({ address: val.address, length: val.length, isWritable: val["is-writable"] })),
+      // TODO is-writable has wrong case
+      // pageMap: data["initial-page-map"].map((val) => ({ address: val.address, length: val.length, isWritable: val["is-writable"] })),
     },
     program: data.program,
     expected: mapKeys(expected, (_value: unknown, key) => camelCase(key.replace("expected", ""))) as unknown as ProgramUploadFileOutput["expected"],
