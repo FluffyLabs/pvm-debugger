@@ -1,16 +1,18 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-// import { DiffChecker } from "./components/DiffChecker";
 import { ProgramUpload } from "./components/ProgramUpload";
 import { Instructions } from "./components/Instructions";
 import { InitialParams } from "./components/InitialParams";
 import { ExpectedState, InitialState } from "./types/pvm";
+import { Status } from "../node_modules/typeberry/packages/pvm/status";
+import { Pvm } from "../node_modules/typeberry/packages/pvm/pvm";
+import { DiffChecker } from "./components/DiffChecker";
+
+// The only files we need from PVM repo:
 import { ProgramDecoder } from "./pvm-packages/pvm/program-decoder/program-decoder";
 import { ArgsDecoder } from "./pvm-packages/pvm/args-decoder/args-decoder";
 import { byteToOpCodeMap } from "./pvm-packages/pvm/assemblify";
-import { Status } from "typeberry/packages/pvm/status";
-import { Pvm } from "typeberry/packages/pvm/pvm";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -29,39 +31,45 @@ function App() {
     window.scrollTo(0, 0);
 
     const pvm = new Pvm(new Uint8Array(program), initialState);
-    // setProgramPreviewResult(pvm.printProgram());
-
-    // pvm.runProgram();
-    // setProgramRunResult(pvm.getState());
-
     const programDecoder = new ProgramDecoder(new Uint8Array(program));
     const code = programDecoder.getCode();
     const mask = programDecoder.getMask();
     const argsDecoder = new ArgsDecoder(code, mask);
 
     const newProgramPreviewResult = [];
-    while (pvm.nextStep() === Status.OK) {
+
+    do {
       const currentInstruction = code[pvm.getPC()];
-      const args = argsDecoder.getArgs(pvm.getPC()) as any;
 
-      const currentInstructionDebug = {
-        instructionCode: currentInstruction,
-        ...byteToOpCodeMap[currentInstruction],
-        args: {
-          ...args,
-          immediate: args.immediateDecoder?.getUnsigned(),
-        },
-      };
+      let args;
 
-      // newProgramPreviewResult.push({
-      //   instructionCode: pvm.getPC(),
-      //   name: pvm,
-      //   gas: pvm.getGas(),
-      //   regs: pvm.getRegisters(),
-      // });
-      console.log(currentInstructionDebug);
-      newProgramPreviewResult.push(currentInstructionDebug);
-    }
+      try {
+        args = argsDecoder.getArgs(pvm.getPC()) as any;
+
+        const currentInstructionDebug = {
+          instructionCode: currentInstruction,
+          ...byteToOpCodeMap[currentInstruction],
+          args: {
+            ...args,
+            immediate: args.immediateDecoder?.getUnsigned(),
+          },
+        };
+        newProgramPreviewResult.push(currentInstructionDebug);
+      } catch (e) {
+        // The last iteration goes here since there's no instruction to proces and we didn't check if there's a next operation
+        break;
+        // newProgramPreviewResult.push({ instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], error: "Cannot get arguments from args decoder" });
+      }
+    } while (pvm.nextStep() === Status.OK);
+
+    setProgramRunResult({
+      pc: pvm.getPC(),
+      regs: Array.from(pvm.getRegisters()),
+      gas: pvm.getGas(),
+      pageMap: pvm.getMemory(),
+      memory: pvm.getMemory(),
+      status: pvm.getStatus(),
+    });
 
     setProgramPreviewResult(newProgramPreviewResult);
   };
@@ -89,7 +97,7 @@ function App() {
           </div>
 
           <Instructions programPreviewResult={programPreviewResult} />
-          {/* <DiffChecker actual={programRunResult as ReturnType<Pvm["getState"]>} expected={expectedResult} /> */}
+          <DiffChecker actual={programRunResult} expected={expectedResult} />
         </div>
       </div>
     </>
