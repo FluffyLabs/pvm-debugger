@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
-import { InitialState } from "@/pvm-packages/pvm/pvm";
+import { InitialState } from "@/types/pvm";
 import { useState } from "react";
 
 export const InitialParams = ({ initialState, setInitialState, program, setProgram }: { program: number[]; setProgram: (val: number[]) => void; initialState: InitialState; setInitialState: React.Dispatch<React.SetStateAction<InitialState>> }) => {

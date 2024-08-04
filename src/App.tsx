@@ -1,12 +1,16 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { InitialState, Pvm } from "@/pvm-packages/pvm/pvm.ts";
 import { useState } from "react";
-import { DiffChecker } from "./components/DiffChecker";
+// import { DiffChecker } from "./components/DiffChecker";
 import { ProgramUpload } from "./components/ProgramUpload";
-import { ExpectedState } from "./components/ProgramUpload/types";
 import { Instructions } from "./components/Instructions";
 import { InitialParams } from "./components/InitialParams";
+import { ExpectedState, InitialState } from "./types/pvm";
+import { ProgramDecoder } from "./pvm-packages/pvm/program-decoder/program-decoder";
+import { ArgsDecoder } from "./pvm-packages/pvm/args-decoder/args-decoder";
+import { byteToOpCodeMap } from "./pvm-packages/pvm/assemblify";
+import { Status } from "typeberry/packages/pvm/status";
+import { Pvm } from "typeberry/packages/pvm/pvm";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -25,10 +29,41 @@ function App() {
     window.scrollTo(0, 0);
 
     const pvm = new Pvm(new Uint8Array(program), initialState);
-    setProgramPreviewResult(pvm.printProgram());
+    // setProgramPreviewResult(pvm.printProgram());
 
-    pvm.runProgram();
-    setProgramRunResult(pvm.getState());
+    // pvm.runProgram();
+    // setProgramRunResult(pvm.getState());
+
+    const programDecoder = new ProgramDecoder(new Uint8Array(program));
+    const code = programDecoder.getCode();
+    const mask = programDecoder.getMask();
+    const argsDecoder = new ArgsDecoder(code, mask);
+
+    const newProgramPreviewResult = [];
+    while (pvm.nextStep() === Status.OK) {
+      const currentInstruction = code[pvm.getPC()];
+      const args = argsDecoder.getArgs(pvm.getPC()) as any;
+
+      const currentInstructionDebug = {
+        instructionCode: currentInstruction,
+        ...byteToOpCodeMap[currentInstruction],
+        args: {
+          ...args,
+          immediate: args.immediateDecoder?.getUnsigned(),
+        },
+      };
+
+      // newProgramPreviewResult.push({
+      //   instructionCode: pvm.getPC(),
+      //   name: pvm,
+      //   gas: pvm.getGas(),
+      //   regs: pvm.getRegisters(),
+      // });
+      console.log(currentInstructionDebug);
+      newProgramPreviewResult.push(currentInstructionDebug);
+    }
+
+    setProgramPreviewResult(newProgramPreviewResult);
   };
 
   return (
@@ -54,7 +89,7 @@ function App() {
           </div>
 
           <Instructions programPreviewResult={programPreviewResult} />
-          <DiffChecker actual={programRunResult as ReturnType<Pvm["getState"]>} expected={expectedResult} />
+          {/* <DiffChecker actual={programRunResult as ReturnType<Pvm["getState"]>} expected={expectedResult} /> */}
         </div>
       </div>
     </>

@@ -12,7 +12,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@typeberry/*": ["./src/pvm-packages/*"]
+      "@typeberry/*": ["./node_modules/typeberry/packages/*"]
     }
   }
 }

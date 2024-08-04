@@ -1,8 +1,4 @@
-import { InitialState } from "@/pvm-packages/pvm/pvm";
-
-export type ExpectedState = InitialState & {
-  status: "trap" | "halt";
-};
+import { ExpectedState, InitialState } from "@/types/pvm";
 
 export type ProgramUploadFileOutput = {
   name: string;
