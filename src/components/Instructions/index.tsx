@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export const Instructions = ({ programPreviewResult }: { programPreviewResult: unknown[] | undefined }) => {
   return (
-    <div className="col-span-6 container py-3 font-mono">
+    <div className="container py-3 font-mono h-2/4 overflow-auto scroll-auto">
       <Label>Instructions:</Label>
       <Table>
         <TableHeader>
