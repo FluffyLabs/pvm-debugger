@@ -27,7 +27,8 @@
     "react-katex": "^3.0.1",
     "scale-codec": "^0.13.0",
     "tailwind-merge": "^2.4.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "typeberry": "git://github.com/FluffyLabs/typeberry.git"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.7",

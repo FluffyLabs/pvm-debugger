@@ -1,4 +1,4 @@
-import { check } from "@typeberry/utils";
+import { check } from "../utils";
 
 function bytesToHexString(buffer: Uint8Array): string {
   // TODO [ToDr] consider using TextDecoder API?

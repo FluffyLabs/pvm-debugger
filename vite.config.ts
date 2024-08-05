@@ -5,11 +5,11 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: "/",
+  // base: "/",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@typeberry": path.resolve(__dirname, "./src/pvm-packages"),
+      "@typeberry": path.resolve(__dirname, "./node_modules/typeberry/packages"),
     },
   },
 });
