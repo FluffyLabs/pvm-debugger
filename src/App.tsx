@@ -9,7 +9,7 @@ import { DiffChecker } from "./components/DiffChecker";
 import { Pvm } from "../node_modules/typeberry/packages/pvm/pvm";
 
 import { initPvm, nextInstruction, runAllInstructions } from "./components/Debugger/debug";
-import { StepForward } from "lucide-react";
+import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { Status } from "../node_modules/typeberry/packages/pvm/status";
 
 function App() {
@@ -76,11 +76,25 @@ function App() {
             />
 
             <div className="flex justify-end align-middle my-4">
-              <Button className="mx-2" onClick={handleClick}>
-                Check program
+              <Button
+                className="mx-2"
+                onClick={() => {
+                  setProgramPreviewResult([]);
+                  setProgramRunResult(undefined);
+
+                  setIsDebugFinished(false);
+                  setPvm(initPvm(program, initialState));
+                }}
+              >
+                <RefreshCcw />
+                Restart
               </Button>
-              <Button onClick={onNext} disabled={isDebugFinished}>
-                <StepForward /> Debug
+              <Button className="mx-2" onClick={handleClick}>
+                <Play />
+                Run
+              </Button>
+              <Button className="mx-2" onClick={onNext} disabled={isDebugFinished}>
+                <StepForward /> Step
               </Button>
             </div>
 
