@@ -22,7 +22,7 @@ function App() {
     memory: [],
     gas: 10000,
   });
-  const [programPreviewResult, setProgramPreviewResult] = useState<unknown[]>([]);
+  const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
   const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
 
