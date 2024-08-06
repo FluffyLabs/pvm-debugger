@@ -7,8 +7,10 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Label } from "@/components/ui/label.tsx";
 import { mapInstructionsArgsByType } from "./utils";
 import { Button } from "@/components/ui/button";
+import { CurrentInstruction } from "../Debugger/debug";
 
-export const Instructions = ({ programPreviewResult }: { programPreviewResult: unknown[] | undefined }) => {
+export const Instructions = ({ programPreviewResult, currentInstruction }: { programPreviewResult: unknown[] | undefined; currentInstruction: CurrentInstruction | undefined }) => {
+  console.log(currentInstruction?.args);
   return (
     <div className="container py-3 font-mono h-2/4 overflow-auto scroll-auto">
       <Label>Instructions:</Label>
@@ -27,7 +29,7 @@ export const Instructions = ({ programPreviewResult }: { programPreviewResult: u
             programPreviewResult.map((programRow: any) => (
               <Collapsible asChild>
                 <>
-                  <TableRow>
+                  <TableRow style={{ background: currentInstruction?.name === programRow.name && currentInstruction?.args?.immediate === programRow?.args?.immediate ? "gray" : undefined }}>
                     <TableCell>{programRow.instructionCode}</TableCell>
                     <TableCell>
                       <HoverCard>

@@ -34,12 +34,24 @@ export const runAllInstructions = (pvm: Pvm, program: number[]) => {
   };
 };
 
+export type CurrentInstruction =
+  | {
+      args: any;
+      name: string;
+      gas: number;
+      instructionCode: number;
+    }
+  | {
+      error: string;
+      name: string;
+      gas: number;
+      instructionCode: number;
+    };
 export const nextInstruction = (pvm: Pvm, program: number[]) => {
   const programDecoder = new ProgramDecoder(new Uint8Array(program));
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();
   const argsDecoder = new ArgsDecoder(code, mask);
-
   const currentInstruction = code[pvm.getPC()];
 
   let args;

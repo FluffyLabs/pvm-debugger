@@ -1,6 +1,6 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ProgramUpload } from "./components/ProgramUpload";
 import { Instructions } from "./components/Instructions";
 import { InitialParams } from "./components/InitialParams";
@@ -8,9 +8,10 @@ import { ExpectedState, InitialState, PageMapItem } from "./types/pvm";
 import { DiffChecker } from "./components/DiffChecker";
 import { Pvm } from "../node_modules/typeberry/packages/pvm/pvm";
 
-import { initPvm, nextInstruction, runAllInstructions } from "./components/Debugger/debug";
+import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
 import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { Status } from "../node_modules/typeberry/packages/pvm/status";
+import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -22,38 +23,44 @@ function App() {
     gas: 10000,
   });
   const [programPreviewResult, setProgramPreviewResult] = useState<unknown[]>([]);
-  const [programRunResult, setProgramRunResult] = useState<unknown>();
   const [expectedResult, setExpectedResult] = useState<ExpectedState>();
+  const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
+
   const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
 
   const handleClick = () => {
     window.scrollTo(0, 0);
 
-    const result = runAllInstructions(initPvm(program, initialState), program);
-    setProgramPreviewResult(result.programPreviewResult);
-    setProgramRunResult(result.programRunResult);
+    const result = disassemblify(new Uint8Array(program));
+    console.log(result);
+    setProgramPreviewResult(result);
+    // setProgramRunResult(result.programRunResult);
   };
+
+  const currentState = useMemo(
+    () =>
+      pvm && {
+        pc: pvm.getPC(),
+        regs: Array.from(pvm.getRegisters()) as [number, number, number, number, number, number, number, number, number, number, number, number, number],
+        gas: pvm.getGas(),
+        pageMap: pvm.getMemory() as unknown as PageMapItem[],
+        memory: pvm.getMemory(),
+        status: pvm.getStatus() as unknown as "trap" | "halt",
+      },
+    [pvm],
+  );
 
   const onNext = () => {
     if (!pvm) return;
 
     const result = nextInstruction(pvm, program);
 
-    // if (result.name === "trap") return;
-    setProgramPreviewResult([...programPreviewResult, result]);
-    setProgramRunResult(expectedResult);
-    setExpectedResult({
-      pc: pvm.getPC(),
-      regs: Array.from(pvm.getRegisters()) as [number, number, number, number, number, number, number, number, number, number, number, number, number],
-      gas: pvm.getGas(),
-      pageMap: pvm.getMemory() as unknown as PageMapItem[],
-      memory: pvm.getMemory(),
-      status: pvm.getStatus() as unknown as "trap" | "halt",
-    });
+    setCurrentInstruction(result);
 
     if (pvm.nextStep() !== Status.OK) {
       setIsDebugFinished(true);
+      setPvm(undefined);
     }
   };
 
@@ -64,14 +71,15 @@ function App() {
           <div className="col-span-3">
             <ProgramUpload
               onFileUpload={({ expected, initial, program }) => {
-                setProgramPreviewResult([]);
-                setProgramRunResult(undefined);
                 setExpectedResult(expected);
                 setInitialState(initial);
                 setProgram(program);
 
                 setIsDebugFinished(false);
                 setPvm(initPvm(program, initial));
+
+                const result = disassemblify(new Uint8Array(program));
+                setProgramPreviewResult(result);
               }}
             />
 
@@ -79,9 +87,6 @@ function App() {
               <Button
                 className="mx-2"
                 onClick={() => {
-                  setProgramPreviewResult([]);
-                  setProgramRunResult(undefined);
-
                   setIsDebugFinished(false);
                   setPvm(initPvm(program, initialState));
                 }}
@@ -102,9 +107,9 @@ function App() {
           </div>
 
           <div className="col-span-6 h-100">
-            <Instructions programPreviewResult={programPreviewResult} />
+            <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
           </div>
-          <DiffChecker actual={programRunResult} expected={expectedResult} />
+          <DiffChecker actual={currentState} expected={expectedResult} />
         </div>
       </div>
     </>
