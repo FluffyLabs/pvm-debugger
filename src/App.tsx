@@ -9,6 +9,7 @@ import { DiffChecker } from "./components/DiffChecker";
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
 import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
+import { Header } from "@/components/Header";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -63,6 +64,7 @@ function App() {
 
   return (
     <>
+      <Header />
       <div className="p-3 text-left w-screen">
         <div className="grid grid-cols-12 gap-1.5 divide-x">
           <div className="col-span-3">
