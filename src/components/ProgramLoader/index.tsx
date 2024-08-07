@@ -10,9 +10,9 @@ export const ProgramLoader = ({ onFileUpload, program, setProgram }: { onFileUpl
   return (
     <div className="flex gap-1 flex-col">
       <div>
-        <Label htmlFor="program">PVM program as an array of numbers:</Label>
+        <Label htmlFor="program">Enter PVM program as an array of numbers:</Label>
         <Textarea
-          className="w-full"
+          className="w-full font-mono"
           id="program"
           placeholder="Paste the program as an array of numbers"
           value={JSON.stringify(program)}

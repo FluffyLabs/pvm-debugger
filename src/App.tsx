@@ -1,16 +1,17 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
-import { ProgramUpload } from "./components/ProgramUpload";
 import { Instructions } from "./components/Instructions";
-import { InitialParams } from "./components/InitialParams";
+import { Registers } from "./components/Registers";
 import { ExpectedState, InitialState, PageMapItem, Pvm, Status } from "./types/pvm";
-import { DiffChecker } from "./components/DiffChecker";
+
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
 import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
+import { MemoryPreview } from "@/components/MemoryPreview";
+import { KnowledgeBase } from "@/components/KnowledgeBase";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -83,35 +84,46 @@ function App() {
               setProgramPreviewResult(result);
             }}
           />
-          <div className="grid grid-cols-12 gap-1.5 divide-x pt-2">
-            <div className="col-span-3">
-              <div className="flex justify-end align-middle my-4">
-                <Button
-                  className="mx-2"
-                  onClick={() => {
-                    setIsDebugFinished(false);
-                    setPvm(initPvm(program, initialState));
-                  }}
-                >
-                  <RefreshCcw />
-                  Restart
-                </Button>
-                <Button className="mx-2" onClick={handleClick}>
-                  <Play />
-                  Run
-                </Button>
-                <Button className="mx-2" onClick={onNext} disabled={isDebugFinished}>
-                  <StepForward /> Step
-                </Button>
-              </div>
 
-              <InitialParams initialState={initialState} setInitialState={setInitialState} />
+          <div className="grid grid-cols-12 gap-1.5 pt-2">
+            <div className="col-span-12 flex align-middle my-3">
+              <Button
+                className="mr-3"
+                onClick={() => {
+                  setIsDebugFinished(false);
+                  setPvm(initPvm(program, initialState));
+                }}
+              >
+                <RefreshCcw className="w-3.5 mr-1.5" />
+                Restart
+              </Button>
+              <Button className="mr-3" onClick={handleClick}>
+                <Play className="w-3.5 mr-1.5" />
+                Run
+              </Button>
+              <Button className="mr-3" onClick={onNext} disabled={isDebugFinished}>
+                <StepForward className="w-3.5 mr-1.5" /> Step
+              </Button>
             </div>
-
-            <div className="col-span-6 h-100">
+          </div>
+          <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
+            <div>
               <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
             </div>
-            <DiffChecker actual={currentState} expected={expectedResult} />
+
+            <div>
+              <Registers initialState={initialState} setInitialState={setInitialState} />
+            </div>
+
+            <div>
+              <MemoryPreview />
+            </div>
+
+            <div>
+              <KnowledgeBase currentInstruction={currentInstruction} />
+            </div>
+
+            {/*<DiffChecker actual={currentState} expected={expectedResult} />*/}
           </div>
         </div>
       </div>
