@@ -10,6 +10,7 @@ import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debug
 import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 import { Header } from "@/components/Header";
+import { ProgramLoader } from "@/components/ProgramLoader";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -66,49 +67,52 @@ function App() {
     <>
       <Header />
       <div className="p-3 text-left w-screen">
-        <div className="grid grid-cols-12 gap-1.5 divide-x">
-          <div className="col-span-3">
-            <ProgramUpload
-              onFileUpload={({ expected, initial, program }) => {
-                setExpectedResult(expected);
-                setInitialState(initial);
-                setProgram(program);
+        <div className="flex flex-col gap-5 divide-y-2">
+          <ProgramLoader
+            program={program}
+            setProgram={setProgram}
+            onFileUpload={({ expected, initial, program }) => {
+              setExpectedResult(expected);
+              setInitialState(initial);
+              setProgram(program);
 
-                setIsDebugFinished(false);
-                setPvm(initPvm(program, initial));
+              setIsDebugFinished(false);
+              setPvm(initPvm(program, initial));
 
-                const result = disassemblify(new Uint8Array(program));
-                setProgramPreviewResult(result);
-              }}
-            />
+              const result = disassemblify(new Uint8Array(program));
+              setProgramPreviewResult(result);
+            }}
+          />
+          <div className="grid grid-cols-12 gap-1.5 divide-x pt-2">
+            <div className="col-span-3">
+              <div className="flex justify-end align-middle my-4">
+                <Button
+                  className="mx-2"
+                  onClick={() => {
+                    setIsDebugFinished(false);
+                    setPvm(initPvm(program, initialState));
+                  }}
+                >
+                  <RefreshCcw />
+                  Restart
+                </Button>
+                <Button className="mx-2" onClick={handleClick}>
+                  <Play />
+                  Run
+                </Button>
+                <Button className="mx-2" onClick={onNext} disabled={isDebugFinished}>
+                  <StepForward /> Step
+                </Button>
+              </div>
 
-            <div className="flex justify-end align-middle my-4">
-              <Button
-                className="mx-2"
-                onClick={() => {
-                  setIsDebugFinished(false);
-                  setPvm(initPvm(program, initialState));
-                }}
-              >
-                <RefreshCcw />
-                Restart
-              </Button>
-              <Button className="mx-2" onClick={handleClick}>
-                <Play />
-                Run
-              </Button>
-              <Button className="mx-2" onClick={onNext} disabled={isDebugFinished}>
-                <StepForward /> Step
-              </Button>
+              <InitialParams initialState={initialState} setInitialState={setInitialState} />
             </div>
 
-            <InitialParams program={program} setProgram={setProgram} initialState={initialState} setInitialState={setInitialState} />
+            <div className="col-span-6 h-100">
+              <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
+            </div>
+            <DiffChecker actual={currentState} expected={expectedResult} />
           </div>
-
-          <div className="col-span-6 h-100">
-            <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
-          </div>
-          <DiffChecker actual={currentState} expected={expectedResult} />
         </div>
       </div>
     </>
