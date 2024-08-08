@@ -25,6 +25,7 @@ export function disassemblify(rawProgram: Uint8Array) {
     const currentInstructionDebug = {
       instructionCode: currentInstruction,
       ...byteToOpCodeMap[currentInstruction],
+      instructionBytes: code.slice(i - args.noOfInstructionsToSkip, i),
       args: {
         ...args,
         immediate: args.immediateDecoder?.getUnsigned() as number,
