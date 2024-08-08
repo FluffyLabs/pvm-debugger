@@ -1,18 +1,17 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ProgramUpload } from "./components/ProgramUpload";
 import { Instructions } from "./components/Instructions";
 import { InitialParams } from "./components/InitialParams";
-import { ExpectedState, InitialState } from "./types/pvm";
-import { Status } from "../node_modules/typeberry/packages/pvm/status";
-import { Pvm } from "../node_modules/typeberry/packages/pvm/pvm";
+import { ExpectedState, InitialState, PageMapItem } from "./types/pvm";
 import { DiffChecker } from "./components/DiffChecker";
+import { Pvm } from "../node_modules/typeberry/packages/pvm/pvm";
 
-// The only files we need from PVM repo:
-import { ProgramDecoder } from "./pvm-packages/pvm/program-decoder/program-decoder";
-import { ArgsDecoder } from "./pvm-packages/pvm/args-decoder/args-decoder";
-import { byteToOpCodeMap } from "./pvm-packages/pvm/assemblify";
+import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
+import { Play, RefreshCcw, StepForward } from "lucide-react";
+import { Status } from "../node_modules/typeberry/packages/pvm/status";
+import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -23,55 +22,46 @@ function App() {
     memory: [],
     gas: 10000,
   });
-  const [programPreviewResult, setProgramPreviewResult] = useState<unknown[]>();
-  const [programRunResult, setProgramRunResult] = useState<unknown>();
+  const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
   const [expectedResult, setExpectedResult] = useState<ExpectedState>();
+  const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
+
+  const [pvm, setPvm] = useState<Pvm>();
+  const [isDebugFinished, setIsDebugFinished] = useState(false);
 
   const handleClick = () => {
     window.scrollTo(0, 0);
 
-    const pvm = new Pvm(new Uint8Array(program), initialState);
-    const programDecoder = new ProgramDecoder(new Uint8Array(program));
-    const code = programDecoder.getCode();
-    const mask = programDecoder.getMask();
-    const argsDecoder = new ArgsDecoder(code, mask);
+    const result = disassemblify(new Uint8Array(program));
+    console.log(result);
+    setProgramPreviewResult(result);
+    // setProgramRunResult(result.programRunResult);
+  };
 
-    const newProgramPreviewResult = [];
+  const currentState = useMemo(
+    () =>
+      pvm && {
+        pc: pvm.getPC(),
+        regs: Array.from(pvm.getRegisters()) as [number, number, number, number, number, number, number, number, number, number, number, number, number],
+        gas: pvm.getGas(),
+        pageMap: pvm.getMemory() as unknown as PageMapItem[],
+        memory: pvm.getMemory(),
+        status: pvm.getStatus() as unknown as "trap" | "halt",
+      },
+    [pvm],
+  );
 
-    do {
-      const currentInstruction = code[pvm.getPC()];
+  const onNext = () => {
+    if (!pvm) return;
 
-      let args;
+    const result = nextInstruction(pvm, program);
 
-      try {
-        args = argsDecoder.getArgs(pvm.getPC()) as any;
+    setCurrentInstruction(result);
 
-        const currentInstructionDebug = {
-          instructionCode: currentInstruction,
-          ...byteToOpCodeMap[currentInstruction],
-          args: {
-            ...args,
-            immediate: args.immediateDecoder?.getUnsigned(),
-          },
-        };
-        newProgramPreviewResult.push(currentInstructionDebug);
-      } catch (e) {
-        // The last iteration goes here since there's no instruction to proces and we didn't check if there's a next operation
-        break;
-        // newProgramPreviewResult.push({ instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], error: "Cannot get arguments from args decoder" });
-      }
-    } while (pvm.nextStep() === Status.OK);
-
-    setProgramRunResult({
-      pc: pvm.getPC(),
-      regs: Array.from(pvm.getRegisters()),
-      gas: pvm.getGas(),
-      pageMap: pvm.getMemory(),
-      memory: pvm.getMemory(),
-      status: pvm.getStatus(),
-    });
-
-    setProgramPreviewResult(newProgramPreviewResult);
+    if (pvm.nextStep() !== Status.OK) {
+      setIsDebugFinished(true);
+      setPvm(undefined);
+    }
   };
 
   return (
@@ -84,20 +74,42 @@ function App() {
                 setExpectedResult(expected);
                 setInitialState(initial);
                 setProgram(program);
+
+                setIsDebugFinished(false);
+                setPvm(initPvm(program, initial));
+
+                const result = disassemblify(new Uint8Array(program));
+                setProgramPreviewResult(result);
               }}
             />
 
-            <div className="text-right">
-              <Button className="my-2" onClick={handleClick}>
-                Check program
+            <div className="flex justify-end align-middle my-4">
+              <Button
+                className="mx-2"
+                onClick={() => {
+                  setIsDebugFinished(false);
+                  setPvm(initPvm(program, initialState));
+                }}
+              >
+                <RefreshCcw />
+                Restart
+              </Button>
+              <Button className="mx-2" onClick={handleClick}>
+                <Play />
+                Run
+              </Button>
+              <Button className="mx-2" onClick={onNext} disabled={isDebugFinished}>
+                <StepForward /> Step
               </Button>
             </div>
 
             <InitialParams program={program} setProgram={setProgram} initialState={initialState} setInitialState={setInitialState} />
           </div>
 
-          <Instructions programPreviewResult={programPreviewResult} />
-          <DiffChecker actual={programRunResult} expected={expectedResult} />
+          <div className="col-span-6 h-100">
+            <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
+          </div>
+          <DiffChecker actual={currentState} expected={expectedResult} />
         </div>
       </div>
     </>

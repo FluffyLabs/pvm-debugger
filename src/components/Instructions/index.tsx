@@ -7,10 +7,12 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Label } from "@/components/ui/label.tsx";
 import { mapInstructionsArgsByType } from "./utils";
 import { Button } from "@/components/ui/button";
+import { CurrentInstruction } from "../Debugger/debug";
 
-export const Instructions = ({ programPreviewResult }: { programPreviewResult: unknown[] | undefined }) => {
+export const Instructions = ({ programPreviewResult, currentInstruction }: { programPreviewResult: CurrentInstruction[] | undefined; currentInstruction: CurrentInstruction | undefined }) => {
+  const isActive = (programRow: CurrentInstruction) => currentInstruction?.name === programRow.name && (!("args" in programRow) || !("args" in currentInstruction) || currentInstruction?.args?.immediate === programRow?.args?.immediate);
   return (
-    <div className="col-span-6 container py-3 font-mono">
+    <div className="container py-3 font-mono h-2/4 overflow-auto scroll-auto">
       <Label>Instructions:</Label>
       <Table>
         <TableHeader>
@@ -24,20 +26,20 @@ export const Instructions = ({ programPreviewResult }: { programPreviewResult: u
         </TableHeader>
         <TableBody>
           {!!programPreviewResult?.length &&
-            programPreviewResult.map((programRow: any) => (
+            programPreviewResult.map((programRow) => (
               <Collapsible asChild>
                 <>
-                  <TableRow>
+                  <TableRow style={{ background: isActive(programRow) ? "gray" : undefined }}>
                     <TableCell>{programRow.instructionCode}</TableCell>
                     <TableCell>
                       <HoverCard>
                         <HoverCardTrigger>
                           <span className="uppercase font-bold">{programRow.name}</span>
                           &nbsp;
-                          <span className="font-bold">{mapInstructionsArgsByType(programRow.args)}</span>
+                          <span className="font-bold">{"args" in programRow && mapInstructionsArgsByType(programRow.args)}</span>
                         </HoverCardTrigger>
                         <HoverCardContent>
-                          <pre>{JSON.stringify(programRow.args, null, 2)}</pre>
+                          <pre>{"args" in programRow && JSON.stringify(programRow.args, null, 2)}</pre>
                         </HoverCardContent>
                       </HoverCard>
                     </TableCell>
