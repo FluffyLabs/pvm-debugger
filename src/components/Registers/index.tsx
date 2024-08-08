@@ -1,13 +1,13 @@
-import { InitialState } from "@/types/pvm";
+import { ExpectedState, InitialState } from "@/types/pvm";
 import ContentEditable from "react-contenteditable";
 
-export const Registers = ({ initialState, setInitialState }: { initialState: InitialState; setInitialState: React.Dispatch<React.SetStateAction<InitialState>> }) => {
+export const Registers = ({ currentState, setCurrentState }: { currentState: ExpectedState; setCurrentState: React.Dispatch<React.SetStateAction<InitialState>> }) => {
   return (
     <div className="border-2 rounded-md">
       <div className="p-3">
         <div>
           <div className="font-mono flex flex-col items-start">
-            {initialState.regs?.map((_, regNo) => (
+            {currentState.regs?.map((_: unknown, regNo: number) => (
               <div className="flex flex-row items-center w-full">
                 <p className="flex-[2]">
                   ω<sub>{regNo}</sub>
@@ -17,12 +17,12 @@ export const Registers = ({ initialState, setInitialState }: { initialState: Ini
                   onChange={(e) => {
                     const value = e.target?.value;
                     const regValue = value && !Number.isNaN(parseInt(value)) ? parseInt(value) : "";
-                    setInitialState((prevState: InitialState) => ({
+                    setCurrentState((prevState: InitialState) => ({
                       ...prevState,
                       regs: prevState.regs?.map((val: number, index: number) => (index === regNo ? regValue : val)) as InitialState["regs"],
                     }));
                   }}
-                  html={`${initialState.regs?.[regNo]}`}
+                  html={`${currentState.regs?.[regNo]}`}
                 />
               </div>
             ))}
@@ -36,9 +36,9 @@ export const Registers = ({ initialState, setInitialState }: { initialState: Ini
                 onChange={(e) => {
                   const value = e.target?.value;
                   const pcValue = value && !Number.isNaN(parseInt(value)) ? parseInt(value) : "";
-                  setInitialState({ ...initialState, pc: pcValue as number });
+                  setCurrentState({ ...currentState, pc: pcValue as number });
                 }}
-                html={`${initialState.pc}`}
+                html={`${currentState.pc}`}
               />
             </div>
 
@@ -51,9 +51,9 @@ export const Registers = ({ initialState, setInitialState }: { initialState: Ini
                 onChange={(e) => {
                   const value = e.target?.value;
                   const pcValue = value && !Number.isNaN(parseInt(value)) ? parseInt(value) : "";
-                  setInitialState({ ...initialState, gas: pcValue as number });
+                  setCurrentState({ ...currentState, gas: pcValue as number });
                 }}
-                html={`${initialState.gas}`}
+                html={`${currentState.gas}`}
               />
             </div>
           </div>

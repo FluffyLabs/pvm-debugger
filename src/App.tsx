@@ -1,6 +1,6 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
 import { ExpectedState, InitialState, PageMapItem, Pvm, Status } from "./types/pvm";
@@ -25,6 +25,7 @@ function App() {
   const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
   const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
+  const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
@@ -38,18 +39,18 @@ function App() {
     // setProgramRunResult(result.programRunResult);
   };
 
-  const currentState = useMemo(
-    () =>
-      pvm && {
+  useEffect(() => {
+    if (pvm) {
+      setCurrentState({
         pc: pvm.getPC(),
         regs: Array.from(pvm.getRegisters()) as [number, number, number, number, number, number, number, number, number, number, number, number, number],
         gas: pvm.getGas(),
         pageMap: pvm.getMemory() as unknown as PageMapItem[],
         memory: pvm.getMemory(),
         status: pvm.getStatus() as unknown as "trap" | "halt",
-      },
-    [pvm],
-  );
+      });
+    }
+  }, [pvm, currentInstruction]);
 
   const onNext = () => {
     if (!pvm) return;
@@ -92,6 +93,7 @@ function App() {
                 onClick={() => {
                   setIsDebugFinished(false);
                   setPvm(initPvm(program, initialState));
+                  setCurrentState(initialState);
                 }}
               >
                 <RefreshCcw className="w-3.5 mr-1.5" />
@@ -112,7 +114,7 @@ function App() {
             </div>
 
             <div>
-              <Registers initialState={initialState} setInitialState={setInitialState} />
+              <Registers currentState={currentState} setCurrentState={setCurrentState} />
             </div>
 
             <div>
