@@ -1,6 +1,6 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
 import { ExpectedState, InitialState, PageMapItem, Pvm, Status } from "./types/pvm";
@@ -23,7 +23,7 @@ function App() {
     gas: 10000,
   });
   const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  const [expectedResult, setExpectedResult] = useState<ExpectedState>();
+  // const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
 
@@ -73,8 +73,8 @@ function App() {
           <ProgramLoader
             program={program}
             setProgram={setProgram}
-            onFileUpload={({ expected, initial, program }) => {
-              setExpectedResult(expected);
+            onFileUpload={({ /*expected, */ initial, program }) => {
+              // setExpectedResult(expected);
               setInitialState(initial);
               setProgram(program);
 
