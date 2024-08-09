@@ -47,7 +47,7 @@ function App() {
         gas: pvm.getGas(),
         pageMap: pvm.getMemory() as unknown as PageMapItem[],
         memory: pvm.getMemory(),
-        status: pvm.getStatus() as unknown as "trap" | "halt",
+        status: pvm.getStatus() as unknown as Status,
       });
     }
   }, [pvm, currentInstruction]);

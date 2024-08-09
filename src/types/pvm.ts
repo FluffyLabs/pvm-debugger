@@ -29,7 +29,7 @@ export enum Status {
   OUT_OF_GAS = 3,
 }
 export type ExpectedState = InitialState & {
-  status: Status;
+  status?: Status;
 };
 
 export type Pvm = {
@@ -37,9 +37,9 @@ export type Pvm = {
   runProgram: () => void;
   nextStep: () => Status;
   getRegisters: () => RegistersArray;
-  getMemory: () => Uint8Array[];
+  getMemory: () => MemoryChunkItem[];
   getPC: () => number;
   getGas: () => number;
   getStatus: () => Status;
-  getMemoryPage: (pageNumber: number) => Uint8Array | null;
+  getMemoryPage: (pageNumber: number) => MemoryChunkItem | null;
 };
