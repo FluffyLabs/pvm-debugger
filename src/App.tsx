@@ -4,13 +4,10 @@ import { useMemo, useState } from "react";
 import { ProgramUpload } from "./components/ProgramUpload";
 import { Instructions } from "./components/Instructions";
 import { InitialParams } from "./components/InitialParams";
-import { ExpectedState, InitialState, PageMapItem } from "./types/pvm";
+import { ExpectedState, InitialState, PageMapItem, Pvm, Status } from "./types/pvm";
 import { DiffChecker } from "./components/DiffChecker";
-import { Pvm } from "../node_modules/typeberry/packages/pvm/pvm";
-
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
 import { Play, RefreshCcw, StepForward } from "lucide-react";
-import { Status } from "../node_modules/typeberry/packages/pvm/status";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 
 function App() {

@@ -17,6 +17,7 @@
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@tanstack/react-table": "^8.19.3",
+    "@typeberry/pvm": "0.0.1-18cd6dd",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lodash": "^4.17.21",
@@ -27,8 +28,7 @@
     "react-katex": "^3.0.1",
     "scale-codec": "^0.13.0",
     "tailwind-merge": "^2.4.0",
-    "tailwindcss-animate": "^1.0.7",
-    "typeberry": "git://github.com/FluffyLabs/typeberry.git"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.7",

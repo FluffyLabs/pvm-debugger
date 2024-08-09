@@ -1,4 +1,7 @@
-import { RegistersArray } from "@/pvm-packages/pvm/pvm";
+type GrowToSize<T, N extends number, A extends T[]> = A["length"] extends N ? A : GrowToSize<T, N, [...A, T]>;
+type FixedArray<T, N extends number> = GrowToSize<T, N, []>;
+
+export type RegistersArray = FixedArray<number, 13>;
 
 export type InitialState = {
   regs?: RegistersArray;
@@ -19,6 +22,24 @@ export type PageMapItem = {
   "is-writable": boolean;
 };
 
+export enum Status {
+  OK = 0,
+  HALT = 1,
+  PANIC = 2,
+  OUT_OF_GAS = 3,
+}
 export type ExpectedState = InitialState & {
-  status: "trap" | "halt";
+  status: Status;
+};
+
+export type Pvm = {
+  printProgram: () => void;
+  runProgram: () => void;
+  nextStep: () => Status;
+  getRegisters: () => RegistersArray;
+  getMemory: () => Uint8Array[];
+  getPC: () => number;
+  getGas: () => number;
+  getStatus: () => Status;
+  getMemoryPage: (pageNumber: number) => Uint8Array | null;
 };
