@@ -1,14 +1,17 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useMemo, useState } from "react";
-import { ProgramUpload } from "./components/ProgramUpload";
+import { useEffect, useState } from "react";
 import { Instructions } from "./components/Instructions";
-import { InitialParams } from "./components/InitialParams";
+import { Registers } from "./components/Registers";
 import { ExpectedState, InitialState, PageMapItem, Pvm, Status } from "./types/pvm";
-import { DiffChecker } from "./components/DiffChecker";
+
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
 import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
+import { Header } from "@/components/Header";
+import { ProgramLoader } from "@/components/ProgramLoader";
+import { MemoryPreview } from "@/components/MemoryPreview";
+import { KnowledgeBase } from "@/components/KnowledgeBase";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -20,8 +23,9 @@ function App() {
     gas: 10000,
   });
   const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  const [expectedResult, setExpectedResult] = useState<ExpectedState>();
+  // const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
+  const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
@@ -35,18 +39,18 @@ function App() {
     // setProgramRunResult(result.programRunResult);
   };
 
-  const currentState = useMemo(
-    () =>
-      pvm && {
+  useEffect(() => {
+    if (pvm) {
+      setCurrentState({
         pc: pvm.getPC(),
         regs: Array.from(pvm.getRegisters()) as [number, number, number, number, number, number, number, number, number, number, number, number, number],
         gas: pvm.getGas(),
         pageMap: pvm.getMemory() as unknown as PageMapItem[],
         memory: pvm.getMemory(),
-        status: pvm.getStatus() as unknown as "trap" | "halt",
-      },
-    [pvm],
-  );
+        status: pvm.getStatus() as unknown as Status,
+      });
+    }
+  }, [pvm, currentInstruction]);
 
   const onNext = () => {
     if (!pvm) return;
@@ -63,50 +67,66 @@ function App() {
 
   return (
     <>
+      <Header />
       <div className="p-3 text-left w-screen">
-        <div className="grid grid-cols-12 gap-1.5 divide-x">
-          <div className="col-span-3">
-            <ProgramUpload
-              onFileUpload={({ expected, initial, program }) => {
-                setExpectedResult(expected);
-                setInitialState(initial);
-                setProgram(program);
+        <div className="flex flex-col gap-5 divide-y-2">
+          <ProgramLoader
+            program={program}
+            setProgram={setProgram}
+            onFileUpload={({ /*expected, */ initial, program }) => {
+              // setExpectedResult(expected);
+              setInitialState(initial);
+              setProgram(program);
 
-                setIsDebugFinished(false);
-                setPvm(initPvm(program, initial));
+              setIsDebugFinished(false);
+              setPvm(initPvm(program, initial));
 
-                const result = disassemblify(new Uint8Array(program));
-                setProgramPreviewResult(result);
-              }}
-            />
+              const result = disassemblify(new Uint8Array(program));
+              setProgramPreviewResult(result);
+            }}
+          />
 
-            <div className="flex justify-end align-middle my-4">
+          <div className="grid grid-cols-12 gap-1.5 pt-2">
+            <div className="col-span-12 flex align-middle my-3">
               <Button
-                className="mx-2"
+                className="mr-3"
                 onClick={() => {
                   setIsDebugFinished(false);
                   setPvm(initPvm(program, initialState));
+                  setCurrentState(initialState);
                 }}
               >
-                <RefreshCcw />
+                <RefreshCcw className="w-3.5 mr-1.5" />
                 Restart
               </Button>
-              <Button className="mx-2" onClick={handleClick}>
-                <Play />
+              <Button className="mr-3" onClick={handleClick}>
+                <Play className="w-3.5 mr-1.5" />
                 Run
               </Button>
-              <Button className="mx-2" onClick={onNext} disabled={isDebugFinished}>
-                <StepForward /> Step
+              <Button className="mr-3" onClick={onNext} disabled={isDebugFinished}>
+                <StepForward className="w-3.5 mr-1.5" /> Step
               </Button>
             </div>
-
-            <InitialParams program={program} setProgram={setProgram} initialState={initialState} setInitialState={setInitialState} />
           </div>
+          <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
+            <div>
+              <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
+            </div>
 
-          <div className="col-span-6 h-100">
-            <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
+            <div>
+              <Registers currentState={currentState} setCurrentState={setCurrentState} />
+            </div>
+
+            <div>
+              <MemoryPreview />
+            </div>
+
+            <div>
+              <KnowledgeBase currentInstruction={currentInstruction} />
+            </div>
+
+            {/*<DiffChecker actual={currentState} expected={expectedResult} />*/}
           </div>
-          <DiffChecker actual={currentState} expected={expectedResult} />
         </div>
       </div>
     </>

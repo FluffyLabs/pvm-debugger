@@ -38,12 +38,14 @@ export type CurrentInstruction =
       name: string;
       gas: number;
       instructionCode: number;
+      instructionBytes?: Uint8Array;
     }
   | {
       error: string;
       name: string;
       gas: number;
       instructionCode: number;
+      instructionBytes?: Uint8Array;
     };
 export const nextInstruction = (pvm: Pvm, program: number[]) => {
   const programDecoder = new ProgramDecoder(new Uint8Array(program));

@@ -26,9 +26,10 @@ export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUpl
     fileReader.onloadend = handleFileRead;
     fileReader.readAsText(file);
   };
+
   return (
-    <div className="bg-sky-200 p-3">
-      <Label htmlFor="test-file">Load test from json file:</Label>
+    <div className="bg-sky-200 p-3 flex w-[400px] justify-center items-center text-right gap-2">
+      <Label htmlFor="test-file">or load test scenario from json file:</Label>
       <Input
         id="test-file"
         type="file"
