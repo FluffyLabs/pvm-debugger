@@ -1,14 +1,12 @@
-import { InitialState } from "@/types/pvm";
-import { Pvm } from "../../../node_modules/typeberry/packages/pvm/pvm";
-import { Status } from "../../../node_modules/typeberry/packages/pvm/status";
-
+import { InitialState, Pvm, Status } from "@/types/pvm";
 // The only files we need from PVM repo:
 import { ProgramDecoder } from "../../pvm-packages/pvm/program-decoder/program-decoder";
 import { ArgsDecoder } from "../../pvm-packages/pvm/args-decoder/args-decoder";
 import { byteToOpCodeMap } from "../../pvm-packages/pvm/assemblify";
+import { Pvm as PvmInstance } from "@typeberry/pvm";
 
 export const initPvm = (program: number[], initialState: InitialState) => {
-  const pvm = new Pvm(new Uint8Array(program), initialState);
+  const pvm = new PvmInstance(new Uint8Array(program), initialState);
 
   return pvm;
 };
