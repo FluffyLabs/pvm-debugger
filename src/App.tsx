@@ -6,15 +6,18 @@ import { Registers } from "./components/Registers";
 import { ExpectedState, InitialState, PageMapItem, Pvm, Status } from "./types/pvm";
 
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
-import { Play, RefreshCcw, StepForward } from "lucide-react";
+import { RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
+import { ProgramUpload } from "@/components/ProgramUpload";
+import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
+  const [isProgramEditMode, setIsProgramEditMode] = useState(true);
   const [initialState, setInitialState] = useState<InitialState>({
     regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     pc: 0,
@@ -30,13 +33,25 @@ function App() {
   const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
 
-  const handleClick = () => {
-    window.scrollTo(0, 0);
+  // const handleClick = () => {
+  //   window.scrollTo(0, 0);
+  //
+  //   const result = disassemblify(new Uint8Array(program));
+  //   console.log(result);
+  //   setProgramPreviewResult(result);
+  //   // setProgramRunResult(result.programRunResult);
+  // };
+
+  const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
+    // setExpectedResult(expected);
+    setInitialState(initial);
+    setProgram(program);
+
+    setIsDebugFinished(false);
+    setPvm(initPvm(program, initial));
 
     const result = disassemblify(new Uint8Array(program));
-    console.log(result);
     setProgramPreviewResult(result);
-    // setProgramRunResult(result.programRunResult);
   };
 
   useEffect(() => {
@@ -58,6 +73,7 @@ function App() {
     const result = nextInstruction(pvm, program);
 
     setCurrentInstruction(result);
+    setIsProgramEditMode(false);
 
     if (pvm.nextStep() !== Status.OK) {
       setIsDebugFinished(true);
@@ -69,25 +85,9 @@ function App() {
     <>
       <Header />
       <div className="p-3 text-left w-screen">
-        <div className="flex flex-col gap-5 divide-y-2">
-          <ProgramLoader
-            program={program}
-            setProgram={setProgram}
-            onFileUpload={({ /*expected, */ initial, program }) => {
-              // setExpectedResult(expected);
-              setInitialState(initial);
-              setProgram(program);
-
-              setIsDebugFinished(false);
-              setPvm(initPvm(program, initial));
-
-              const result = disassemblify(new Uint8Array(program));
-              setProgramPreviewResult(result);
-            }}
-          />
-
+        <div className="flex flex-col gap-5">
           <div className="grid grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-12 flex align-middle my-3">
+            <div className="col-span-12 flex align-middle">
               <Button
                 className="mr-3"
                 onClick={() => {
@@ -99,18 +99,28 @@ function App() {
                 <RefreshCcw className="w-3.5 mr-1.5" />
                 Restart
               </Button>
-              <Button className="mr-3" onClick={handleClick}>
-                <Play className="w-3.5 mr-1.5" />
-                Run
-              </Button>
+              {/*<Button className="mr-3" onClick={handleClick}>*/}
+              {/*  <Play className="w-3.5 mr-1.5" />*/}
+              {/*  Run*/}
+              {/*</Button>*/}
               <Button className="mr-3" onClick={onNext} disabled={isDebugFinished}>
                 <StepForward className="w-3.5 mr-1.5" /> Step
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
+          <div className="grid auto-rows-fr grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
             <div>
-              <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
+              {isProgramEditMode && (
+                <>
+                  <ProgramLoader program={program} setProgram={setProgram} />
+                </>
+              )}
+
+              {!isProgramEditMode && (
+                <>
+                  <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
+                </>
+              )}
             </div>
 
             <div>
@@ -126,6 +136,11 @@ function App() {
             </div>
 
             {/*<DiffChecker actual={currentState} expected={expectedResult} />*/}
+          </div>
+
+          <div>
+            {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
+            {!isProgramEditMode && <Button onClick={() => setIsProgramEditMode(true)}>Edit program</Button>}
           </div>
         </div>
       </div>

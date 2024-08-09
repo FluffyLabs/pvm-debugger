@@ -3,7 +3,7 @@ import ContentEditable from "react-contenteditable";
 
 export const Registers = ({ currentState, setCurrentState }: { currentState: ExpectedState; setCurrentState: React.Dispatch<React.SetStateAction<InitialState>> }) => {
   return (
-    <div className="border-2 rounded-md">
+    <div className="border-2 rounded-md h-full">
       <div className="p-3">
         <div>
           <div className="font-mono flex flex-col items-start">

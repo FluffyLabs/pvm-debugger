@@ -1,9 +1,13 @@
-import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button.tsx";
+import { useState } from "react";
 
 export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFileOutput) => void }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   let fileReader: FileReader;
 
   const handleFileRead = () => {
@@ -28,18 +32,35 @@ export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUpl
   };
 
   return (
-    <div className="bg-sky-200 p-3 flex w-[400px] justify-center items-center text-right gap-2">
-      <Label htmlFor="test-file">or load test scenario from json file:</Label>
-      <Input
-        id="test-file"
-        type="file"
-        accept="application/json"
-        onChange={(e) => {
-          if (e.target.files?.length) {
-            handleProgramUpload(e.target.files[0]);
-          }
-        }}
-      />
-    </div>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button>Load from test file</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Load program from test file</DialogTitle>
+          <DialogDescription></DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <div className="col-auto">
+              <Input
+                className="w-200"
+                id="test-file"
+                type="file"
+                accept="application/json"
+                onChange={(e) => {
+                  if (e.target.files?.length) {
+                    handleProgramUpload(e.target.files[0]);
+                    setIsDialogOpen(false);
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>{/*<Button type="submit">Save changes</Button>*/}</DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

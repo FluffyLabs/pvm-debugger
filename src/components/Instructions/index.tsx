@@ -7,7 +7,7 @@ export const Instructions = ({ programPreviewResult, currentInstruction }: { pro
   const isActive = (programRow: CurrentInstruction) => currentInstruction?.name === programRow.name && (!("args" in programRow) || !("args" in currentInstruction) || currentInstruction?.args?.immediate === programRow?.args?.immediate);
 
   return (
-    <div className="font-mono overflow-auto scroll-auto border-2 rounded-md">
+    <div className="font-mono overflow-auto scroll-auto border-2 rounded-md h-full">
       <Table>
         <TableBody>
           {!!programPreviewResult?.length &&
