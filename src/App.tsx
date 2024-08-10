@@ -17,6 +17,7 @@ import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
+import { PvmSelect } from "@/components/PvmSelect";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -91,7 +92,7 @@ function App() {
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-12 flex align-middle">
+            <div className="col-span-6 flex align-middle">
               <Button
                 className="mr-3"
                 onClick={() => {
@@ -111,7 +112,12 @@ function App() {
                 <StepForward className="w-3.5 mr-1.5" /> Step
               </Button>
             </div>
+
+            <div className="col-span-6 flex align-middle justify-end">
+              <PvmSelect />
+            </div>
           </div>
+
           <div className="grid auto-rows-fr grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
             <div>
               {isProgramEditMode && (
