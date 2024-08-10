@@ -3,6 +3,8 @@ import { mapInstructionsArgsByType } from "./utils";
 import { CurrentInstruction } from "../Debugger/debug";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
+import { NumeralSystemContext } from "@/context/NumeralSystem.tsx";
+import { useContext } from "react";
 
 export const Instructions = ({
   programPreviewResult,
@@ -13,6 +15,8 @@ export const Instructions = ({
   currentInstruction: CurrentInstruction | undefined;
   instructionMode: InstructionMode;
 }) => {
+  const { numeralSystem } = useContext(NumeralSystemContext);
+
   const isActive = (programRow: CurrentInstruction) =>
     currentInstruction?.name === programRow.name &&
     (!("args" in programRow) ||
@@ -41,7 +45,9 @@ export const Instructions = ({
                   </TableCell>
                 )}
                 <TableCell className="p-1.5">
-                  <span className="">{"args" in programRow && mapInstructionsArgsByType(programRow.args)}</span>
+                  <span className="">
+                    {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
+                  </span>
                 </TableCell>
               </TableRow>
             ))}

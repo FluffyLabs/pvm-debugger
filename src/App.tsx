@@ -18,9 +18,10 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
+import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 
 function App() {
-  const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
+  const [program, setProgram] = useState<number[]>([]);
   const [isProgramEditMode, setIsProgramEditMode] = useState(true);
   const [initialState, setInitialState] = useState<InitialState>({
     regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -113,8 +114,9 @@ function App() {
               </Button>
             </div>
 
-            <div className="col-span-6 flex align-middle justify-end">
+            <div className="col-span-6 flex align-middle justify-end gap-10">
               <PvmSelect />
+              <NumeralSystemSwitch />
             </div>
           </div>
 
