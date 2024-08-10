@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { ExpectedState, InitialState, PageMapItem, Pvm, Status } from "./types/pvm";
+import { ExpectedState, InitialState, PageMapItem, Pvm, RegistersArray, Status } from "./types/pvm";
 
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
 import { RefreshCcw, StepForward } from "lucide-react";
@@ -14,6 +14,9 @@ import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { ProgramUpload } from "@/components/ProgramUpload";
 import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
+import { Switch } from "@/components/ui/switch.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { InstructionMode } from "@/components/Instructions/types.ts";
 
 function App() {
   const [program, setProgram] = useState([0, 0, 3, 8, 135, 9, 249]);
@@ -28,6 +31,7 @@ function App() {
   const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
   // const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
+  const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [pvm, setPvm] = useState<Pvm>();
@@ -58,7 +62,7 @@ function App() {
     if (pvm) {
       setCurrentState({
         pc: pvm.getPC(),
-        regs: Array.from(pvm.getRegisters()) as [number, number, number, number, number, number, number, number, number, number, number, number, number],
+        regs: Array.from(pvm.getRegisters()) as RegistersArray,
         gas: pvm.getGas(),
         pageMap: pvm.getMemory() as unknown as PageMapItem[],
         memory: pvm.getMemory(),
@@ -118,7 +122,11 @@ function App() {
 
               {!isProgramEditMode && (
                 <>
-                  <Instructions programPreviewResult={programPreviewResult} currentInstruction={currentInstruction} />
+                  <Instructions
+                    programPreviewResult={programPreviewResult}
+                    currentInstruction={currentInstruction}
+                    instructionMode={instructionMode}
+                  />
                 </>
               )}
             </div>
@@ -138,9 +146,25 @@ function App() {
             {/*<DiffChecker actual={currentState} expected={expectedResult} />*/}
           </div>
 
-          <div>
-            {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
-            {!isProgramEditMode && <Button onClick={() => setIsProgramEditMode(true)}>Edit program</Button>}
+          <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5">
+            <div className="flex items-center justify-between">
+              <div>
+                {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
+                {!isProgramEditMode && <Button onClick={() => setIsProgramEditMode(true)}>Edit program</Button>}
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="instruction-mode">ASM</Label>
+                  <Switch
+                    id="instruction-mode"
+                    onCheckedChange={(checked) =>
+                      setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
+                    }
+                  />
+                  <Label htmlFor="instruction-mode">Bytecode</Label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
