@@ -34,11 +34,10 @@ export const Instructions = ({
       return false;
     }
 
-    if (currentInstruction?.instructionCode !== programRow.instructionCode) {
-      return false;
-    }
-
-    return isEqual(omit(currentInstruction?.args, "immediateDecoder"), omit(programRow?.args, "immediateDecoder"));
+    return isEqual(
+      omit(currentInstruction, "args.immediateDecoder"),
+      omit(programRow, ["args.immediateDecoder", "instructionBytes"]),
+    );
   };
 
   return (
