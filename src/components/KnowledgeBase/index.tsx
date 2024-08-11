@@ -41,12 +41,12 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
       </div>
 
       <div className="divide-y">
-        {filteredInstructions.map((instruction) => {
+        {filteredInstructions.map((instruction, i) => {
           const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find(
             (instructionFromKB) => instructionFromKB.name?.toUpperCase() === instruction.name?.toUpperCase(),
           );
           return (
-            <div key={instruction.name}>
+            <div key={i}>
               <p className="font-mono font-bold uppercase my-3">{instruction?.name}</p>
               <div className="text-left">
                 <BlockMath math={currentInstructionFromKnowledgeBase?.latex as string} />
