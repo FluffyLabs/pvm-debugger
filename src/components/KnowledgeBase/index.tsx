@@ -18,11 +18,15 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
   }, [currentInstruction]);
 
   useEffect(() => {
-    setFilteredInstructions(instructionsKnowledgeBase.filter((instruction) => instruction.name?.toUpperCase().includes(searchText.toUpperCase())).slice(0, 3));
+    setFilteredInstructions(
+      instructionsKnowledgeBase
+        .filter((instruction) => instruction.name?.toUpperCase().includes(searchText.toUpperCase()))
+        .slice(0, 3),
+    );
   }, [searchText]);
 
   return (
-    <div className="border-2 rounded-md min-h-64 p-3">
+    <div className="border-2 rounded-md min-h-64 h-[70vh] p-3 overflow-auto">
       <div className="flex w-full items-center space-x-2 mb-3">
         <Input
           type="text"
@@ -38,13 +42,15 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
 
       <div className="divide-y">
         {filteredInstructions.map((instruction) => {
-          const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find((instructionFromKB) => instructionFromKB.name?.toUpperCase() === instruction.name?.toUpperCase());
+          const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find(
+            (instructionFromKB) => instructionFromKB.name?.toUpperCase() === instruction.name?.toUpperCase(),
+          );
           return (
-            <div>
+            <div key={instruction.name}>
               <p className="font-mono font-bold uppercase my-3">{instruction?.name}</p>
-              <p className="text-left">
+              <div className="text-left">
                 <BlockMath math={currentInstructionFromKnowledgeBase?.latex as string} />
-              </p>
+              </div>
               <p className="my-3">{currentInstructionFromKnowledgeBase?.description}</p>
             </div>
           );

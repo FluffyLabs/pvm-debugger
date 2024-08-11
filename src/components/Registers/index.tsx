@@ -1,14 +1,25 @@
 import { ExpectedState, InitialState } from "@/types/pvm";
 import ContentEditable from "react-contenteditable";
+import { useContext } from "react";
+import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
+import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
 
-export const Registers = ({ currentState, setCurrentState }: { currentState: ExpectedState; setCurrentState: React.Dispatch<React.SetStateAction<InitialState>> }) => {
+export const Registers = ({
+  currentState,
+  setCurrentState,
+}: {
+  currentState: ExpectedState;
+  setCurrentState: React.Dispatch<React.SetStateAction<InitialState>>;
+}) => {
+  const { numeralSystem } = useContext(NumeralSystemContext);
+
   return (
-    <div className="border-2 rounded-md">
+    <div className="border-2 rounded-md h-full">
       <div className="p-3">
         <div>
           <div className="font-mono flex flex-col items-start">
             {currentState.regs?.map((_: unknown, regNo: number) => (
-              <div className="flex flex-row items-center w-full">
+              <div key={regNo} className="flex flex-row items-center w-full">
                 <p className="flex-[2]">
                   ω<sub>{regNo}</sub>
                 </p>
@@ -16,13 +27,18 @@ export const Registers = ({ currentState, setCurrentState }: { currentState: Exp
                   className="flex-[3]"
                   onChange={(e) => {
                     const value = e.target?.value;
-                    const regValue = value && !Number.isNaN(parseInt(value)) ? parseInt(value) : "";
+                    const valueInDecimal =
+                      numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
+                    const regValue =
+                      valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : "";
                     setCurrentState((prevState: InitialState) => ({
                       ...prevState,
-                      regs: prevState.regs?.map((val: number, index: number) => (index === regNo ? regValue : val)) as InitialState["regs"],
+                      regs: prevState.regs?.map((val: number, index: number) =>
+                        index === regNo ? regValue : val,
+                      ) as InitialState["regs"],
                     }));
                   }}
-                  html={`${currentState.regs?.[regNo]}`}
+                  html={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
                 />
               </div>
             ))}
