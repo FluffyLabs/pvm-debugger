@@ -201,16 +201,18 @@ function App() {
                 )}
               </div>
               <div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="instruction-mode">ASM</Label>
-                  <Switch
-                    id="instruction-mode"
-                    onCheckedChange={(checked) =>
-                      setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
-                    }
-                  />
-                  <Label htmlFor="instruction-mode">Bytecode</Label>
-                </div>
+                {!isProgramEditMode && (
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="instruction-mode">ASM</Label>
+                    <Switch
+                      id="instruction-mode"
+                      onCheckedChange={(checked) =>
+                        setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
+                      }
+                    />
+                    <Label htmlFor="instruction-mode">Bytecode</Label>
+                  </div>
+                )}
               </div>
             </div>
           </div>

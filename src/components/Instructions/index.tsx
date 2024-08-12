@@ -57,15 +57,17 @@ export const Instructions = ({
                   </TableCell>
                 )}
                 {instructionMode === InstructionMode.ASM && (
-                  <TableCell className="p-1.5">
-                    <span className="uppercase font-bold">{programRow.name}</span>
-                  </TableCell>
+                  <>
+                    <TableCell className="p-1.5">
+                      <span className="uppercase font-bold">{programRow.name}</span>
+                    </TableCell>
+                    <TableCell className="p-1.5">
+                      <span className="">
+                        {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
+                      </span>
+                    </TableCell>
+                  </>
                 )}
-                <TableCell className="p-1.5">
-                  <span className="">
-                    {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
-                  </span>
-                </TableCell>
               </TableRow>
             ))}
         </TableBody>
