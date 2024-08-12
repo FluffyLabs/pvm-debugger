@@ -63,41 +63,61 @@ function App() {
     });
   };
 
-  const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
+  const startProgram = (initialState: ExpectedState, program: number[]) => {
     // setExpectedResult(expected);
-    setInitialState(initial);
+    setInitialState(initialState);
     setProgram(program);
 
     setIsDebugFinished(false);
-    setPvm(initPvm(program, initial));
+    const pvm = initPvm(program, initialState);
+    setPvm(pvm);
 
     const result = disassemblify(new Uint8Array(program));
     setProgramPreviewResult(result);
+
+    return pvm;
+  };
+
+  const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
+    startProgram(initial, program);
   };
 
   const onNext = () => {
-    if (!pvm) return;
+    let currentPvm;
 
-    const result = nextInstruction(pvm, program);
+    if (!pvm) {
+      currentPvm = startProgram(initialState, program);
+    } else {
+      currentPvm = pvm;
+    }
+
+    const result = nextInstruction(currentPvm, program);
 
     setCurrentInstruction(result);
     setIsProgramEditMode(false);
 
-    if (pvm.nextStep() !== Status.OK) {
+    if (currentPvm.nextStep() !== Status.OK) {
       setIsDebugFinished(true);
       setPvm(undefined);
     }
   };
 
   const handleRunProgram = () => {
-    if (!pvm) return;
+    let currentPvm;
 
-    pvm?.runProgram();
+    if (!pvm) {
+      currentPvm = startProgram(initialState, program);
+      setPvm(currentPvm);
+    } else {
+      currentPvm = pvm;
+    }
+
+    currentPvm?.runProgram();
 
     setIsProgramEditMode(false);
     setIsDebugFinished(true);
     setCurrentInstruction(programPreviewResult?.[0]);
-    setCurrentStateFromPvm(pvm);
+    setCurrentStateFromPvm(currentPvm);
   };
 
   const restartProgram = () => {
