@@ -44,20 +44,24 @@ function App() {
 
   useEffect(() => {
     if (pvm) {
-      const currentState = {
-        pc: pvm.getPC(),
-        regs: Array.from(pvm.getRegisters()) as RegistersArray,
-        gas: pvm.getGas(),
-        pageMap: pvm.getMemory() as unknown as PageMapItem[],
-        memory: pvm.getMemory(),
-        status: pvm.getStatus() as unknown as Status,
-      };
-      setCurrentState((prevState) => {
-        setPreviousState(prevState);
-        return currentState;
-      });
+      setCurrentStateFromPvm(pvm);
     }
   }, [pvm, currentInstruction]);
+
+  const setCurrentStateFromPvm = (pvm: Pvm) => {
+    const currentState = {
+      pc: pvm.getPC(),
+      regs: Array.from(pvm.getRegisters()) as RegistersArray,
+      gas: pvm.getGas(),
+      pageMap: pvm.getMemory() as unknown as PageMapItem[],
+      memory: pvm.getMemory(),
+      status: pvm.getStatus() as unknown as Status,
+    };
+    setCurrentState((prevState) => {
+      setPreviousState(prevState);
+      return currentState;
+    });
+  };
 
   const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
     // setExpectedResult(expected);
@@ -88,9 +92,12 @@ function App() {
   const handleRunProgram = () => {
     if (!pvm) return;
 
-    setIsProgramEditMode(false);
     pvm?.runProgram();
-    setCurrentInstruction({} as CurrentInstruction);
+
+    setIsProgramEditMode(false);
+    setIsDebugFinished(true);
+    setCurrentInstruction(programPreviewResult?.[0]);
+    setCurrentStateFromPvm(pvm);
   };
 
   const restartProgram = () => {
@@ -112,12 +119,13 @@ function App() {
                   setIsDebugFinished(false);
                   setPvm(initPvm(program, initialState));
                   setCurrentState(initialState);
+                  setCurrentInstruction(programPreviewResult?.[0]);
                 }}
               >
                 <RefreshCcw className="w-3.5 mr-1.5" />
                 Restart
               </Button>
-              <Button className="mr-3" onClick={handleRunProgram}>
+              <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished}>
                 <Play className="w-3.5 mr-1.5" />
                 Run
               </Button>
