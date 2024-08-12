@@ -6,7 +6,7 @@ import { Registers } from "./components/Registers";
 import { ExpectedState, InitialState, PageMapItem, Pvm, RegistersArray, Status } from "./types/pvm";
 
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
-import { RefreshCcw, StepForward } from "lucide-react";
+import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
@@ -41,14 +41,19 @@ function App() {
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [isInitialCTA, setIsInitialCTA] = useState(true);
 
-  // const handleClick = () => {
-  //   window.scrollTo(0, 0);
-  //
-  //   const result = disassemblify(new Uint8Array(program));
-  //   console.log(result);
-  //   setProgramPreviewResult(result);
-  //   // setProgramRunResult(result.programRunResult);
-  // };
+  useEffect(() => {
+    if (pvm) {
+      const currentState = {
+        pc: pvm.getPC(),
+        regs: Array.from(pvm.getRegisters()) as RegistersArray,
+        gas: pvm.getGas(),
+        pageMap: pvm.getMemory() as unknown as PageMapItem[],
+        memory: pvm.getMemory(),
+        status: pvm.getStatus() as unknown as Status,
+      };
+      setCurrentState(currentState);
+    }
+  }, [pvm, currentInstruction]);
 
   const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
     // setExpectedResult(expected);
@@ -62,19 +67,6 @@ function App() {
     setProgramPreviewResult(result);
   };
 
-  useEffect(() => {
-    if (pvm) {
-      setCurrentState({
-        pc: pvm.getPC(),
-        regs: Array.from(pvm.getRegisters()) as RegistersArray,
-        gas: pvm.getGas(),
-        pageMap: pvm.getMemory() as unknown as PageMapItem[],
-        memory: pvm.getMemory(),
-        status: pvm.getStatus() as unknown as Status,
-      });
-    }
-  }, [pvm, currentInstruction]);
-
   const onNext = () => {
     if (!pvm) return;
 
@@ -87,6 +79,14 @@ function App() {
       setIsDebugFinished(true);
       setPvm(undefined);
     }
+  };
+
+  const handleRunProgram = () => {
+    if (!pvm) return;
+
+    setIsProgramEditMode(false);
+    pvm?.runProgram();
+    setCurrentInstruction({} as CurrentInstruction);
   };
 
   const restartProgram = () => {
@@ -113,10 +113,10 @@ function App() {
                 <RefreshCcw className="w-3.5 mr-1.5" />
                 Restart
               </Button>
-              {/*<Button className="mr-3" onClick={handleClick}>*/}
-              {/*  <Play className="w-3.5 mr-1.5" />*/}
-              {/*  Run*/}
-              {/*</Button>*/}
+              <Button className="mr-3" onClick={handleRunProgram}>
+                <Play className="w-3.5 mr-1.5" />
+                Run
+              </Button>
               <Button className="mr-3" onClick={onNext} disabled={isDebugFinished}>
                 <StepForward className="w-3.5 mr-1.5" /> Step
               </Button>
