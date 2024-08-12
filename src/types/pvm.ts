@@ -43,3 +43,19 @@ export type Pvm = {
   getStatus: () => Status;
   getMemoryPage: (pageNumber: number) => MemoryChunkItem | null;
 };
+
+export type CurrentInstruction =
+  | {
+      args: any;
+      name: string;
+      gas: number;
+      instructionCode: number;
+      instructionBytes?: Uint8Array;
+    }
+  | {
+      error: string;
+      name: string;
+      gas: number;
+      instructionCode: number;
+      instructionBytes?: Uint8Array;
+    };

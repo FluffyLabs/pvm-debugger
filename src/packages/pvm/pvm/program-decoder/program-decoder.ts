@@ -1,4 +1,4 @@
-import { decodeNaturalNumber } from "@/pvm-packages/jam-codec";
+import { decodeNaturalNumber } from "../../jam-codec";
 import { Mask } from "./mask";
 
 export class ProgramDecoder {
@@ -15,7 +15,9 @@ export class ProgramDecoder {
   private decodeProgram(program: Uint8Array) {
     const { value: jumpTableLength, bytesToSkip: firstNumberLength } = decodeNaturalNumber(program);
     const jumpTableItemSize = program[firstNumberLength];
-    const { value: codeLength, bytesToSkip: thirdNumberLenght } = decodeNaturalNumber(program.subarray(firstNumberLength + 1));
+    const { value: codeLength, bytesToSkip: thirdNumberLenght } = decodeNaturalNumber(
+      program.subarray(firstNumberLength + 1),
+    );
     const jumpTableFirstByteIndex = firstNumberLength + 1 + thirdNumberLenght;
     const jumpTableLengthInBytes = Number(jumpTableLength) * jumpTableItemSize;
     const jumpTable = program.subarray(jumpTableFirstByteIndex, jumpTableFirstByteIndex + jumpTableLengthInBytes);

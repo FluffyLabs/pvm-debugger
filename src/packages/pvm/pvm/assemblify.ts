@@ -99,7 +99,9 @@ const instructionsWithTwoRegistersAndOneOffset: InstructionTuple[] = [
   [Instruction.BRANCH_GE_S, "branch_ge_s", 1],
 ];
 
-const instructionWithTwoRegistersAndTwoImmediates: InstructionTuple[] = [[Instruction.LOAD_IMM_JUMP_IND, "load_imm_jump_ind", 1]];
+const instructionWithTwoRegistersAndTwoImmediates: InstructionTuple[] = [
+  [Instruction.LOAD_IMM_JUMP_IND, "load_imm_jump_ind", 1],
+];
 
 const instructionsWithThreeRegisters: InstructionTuple[] = [
   [Instruction.ADD, "add", 1],
@@ -124,7 +126,20 @@ const instructionsWithThreeRegisters: InstructionTuple[] = [
   [Instruction.CMOV_NZ, "cmov_nz", 1],
 ];
 
-const instructions: InstructionTuple[] = [...instructionsWithoutArgs, ...instructionsWithOneImmediate, ...instructionsWithTwoImmediates, ...instructionsWithOneOffset, ...instructionsWithOneRegisterAndOneImmediate, ...instructionsWithOneRegisterAndTwoImmediate, ...instructionsWithOneRegisterOneImmediateAndOneOffset, ...instructionsWithTwoRegisters, ...instructionsWithTwoRegistersAndOneImmediate, ...instructionsWithTwoRegistersAndOneOffset, ...instructionWithTwoRegistersAndTwoImmediates, ...instructionsWithThreeRegisters];
+const instructions: InstructionTuple[] = [
+  ...instructionsWithoutArgs,
+  ...instructionsWithOneImmediate,
+  ...instructionsWithTwoImmediates,
+  ...instructionsWithOneOffset,
+  ...instructionsWithOneRegisterAndOneImmediate,
+  ...instructionsWithOneRegisterAndTwoImmediate,
+  ...instructionsWithOneRegisterOneImmediateAndOneOffset,
+  ...instructionsWithTwoRegisters,
+  ...instructionsWithTwoRegistersAndOneImmediate,
+  ...instructionsWithTwoRegistersAndOneOffset,
+  ...instructionWithTwoRegistersAndTwoImmediates,
+  ...instructionsWithThreeRegisters,
+];
 
 type OpCode = {
   name: Name;

@@ -1,4 +1,14 @@
-import type { NoArgumentsResult, OneOffsetResult, OneRegisterOneImmediateOneOffsetResult, OneRegisterOneImmediateResult, ThreeRegistersResult, TwoRegistersOneImmediateResult, TwoRegistersOneOffsetResult, TwoRegistersResult, TwoRegistersTwoImmediatesResult } from "./args-decoder";
+import type {
+  NoArgumentsResult,
+  OneOffsetResult,
+  OneRegisterOneImmediateOneOffsetResult,
+  OneRegisterOneImmediateResult,
+  ThreeRegistersResult,
+  TwoRegistersOneImmediateResult,
+  TwoRegistersOneOffsetResult,
+  TwoRegistersResult,
+  TwoRegistersTwoImmediatesResult,
+} from "./args-decoder";
 import { ArgumentType } from "./argument-type";
 import { ImmediateDecoder } from "./decoders/immediate-decoder";
 

@@ -3,11 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { ExpectedState, InitialState, PageMapItem, Pvm, RegistersArray, Status } from "./types/pvm";
+import { CurrentInstruction, ExpectedState, InitialState, PageMapItem, Pvm, RegistersArray, Status } from "./types/pvm";
 
-import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
 import { RefreshCcw, StepForward } from "lucide-react";
-import { disassemblify } from "./pvm-packages/pvm/disassemblify";
+import { disassemblify } from "./packages/pvm/pvm/disassemblify";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
 import { MemoryPreview } from "@/components/MemoryPreview";
@@ -19,6 +18,8 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
+import { worker } from "./packages/web-worker";
+import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -36,55 +37,48 @@ function App() {
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
 
-  const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
 
-  // const handleClick = () => {
-  //   window.scrollTo(0, 0);
-  //
-  //   const result = disassemblify(new Uint8Array(program));
-  //   console.log(result);
-  //   setProgramPreviewResult(result);
-  //   // setProgramRunResult(result.programRunResult);
-  // };
+  useEffect(() => {
+    console.log("listen worker", worker);
+
+    if (!worker) {
+      return;
+    }
+    worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
+      console.log(e.data);
+
+      if (e.data.command === Commands.STEP) {
+        setCurrentState(e.data.payload.state);
+        setCurrentInstruction(e.data.payload.result);
+
+        if (e.data.payload.isFinished) {
+          setIsDebugFinished(true);
+        }
+      }
+    };
+    console.log("Message posted to worker");
+  }, []);
 
   const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
-    // setExpectedResult(expected);
     setInitialState(initial);
     setProgram(program);
 
     setIsDebugFinished(false);
-    setPvm(initPvm(program, initial));
 
+    console.log("send message");
+    worker.postMessage({ command: "init", payload: { program, initialState: initial } });
     const result = disassemblify(new Uint8Array(program));
     setProgramPreviewResult(result);
   };
 
-  useEffect(() => {
-    if (pvm) {
-      setCurrentState({
-        pc: pvm.getPC(),
-        regs: Array.from(pvm.getRegisters()) as RegistersArray,
-        gas: pvm.getGas(),
-        pageMap: pvm.getMemory() as unknown as PageMapItem[],
-        memory: pvm.getMemory(),
-        status: pvm.getStatus() as unknown as Status,
-      });
-    }
-  }, [pvm, currentInstruction]);
-
   const onNext = () => {
-    if (!pvm) return;
+    // if (!pvm) return;
 
-    const result = nextInstruction(pvm, program);
+    // const result = nextInstruction(pvm, program);
+    worker.postMessage({ command: "step", payload: { program } });
 
-    setCurrentInstruction(result);
     setIsProgramEditMode(false);
-
-    if (pvm.nextStep() !== Status.OK) {
-      setIsDebugFinished(true);
-      setPvm(undefined);
-    }
   };
 
   return (
@@ -98,7 +92,8 @@ function App() {
                 className="mr-3"
                 onClick={() => {
                   setIsDebugFinished(false);
-                  setPvm(initPvm(program, initialState));
+                  // setPvm(initPvm(program, initialState));
+                  worker.postMessage({ command: "init", payload: { program, initialState } });
                   setCurrentState(initialState);
                 }}
               >

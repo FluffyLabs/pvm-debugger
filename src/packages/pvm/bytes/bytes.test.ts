@@ -25,14 +25,26 @@ test("BytesBlob", async (t) => {
     const input = "0x2fa3f686df876995167e7c2e5d74c4c7b6e48f8068fe0e44208344d480f7904c";
     const result = BytesBlob.parseBlob(input);
 
-    assert.deepStrictEqual(result.buffer, new Uint8Array([47, 163, 246, 134, 223, 135, 105, 149, 22, 126, 124, 46, 93, 116, 196, 199, 182, 228, 143, 128, 104, 254, 14, 68, 32, 131, 68, 212, 128, 247, 144, 76]));
+    assert.deepStrictEqual(
+      result.buffer,
+      new Uint8Array([
+        47, 163, 246, 134, 223, 135, 105, 149, 22, 126, 124, 46, 93, 116, 196, 199, 182, 228, 143, 128, 104, 254, 14,
+        68, 32, 131, 68, 212, 128, 247, 144, 76,
+      ]),
+    );
   });
 
   await t.test("parse non 0x-prefixed hex string into blob of bytes", () => {
     const input = "2fa3f686df876995167e7c2e5d74c4c7b6e48f8068fe0e44208344d480f7904c";
     const result = BytesBlob.parseBlobNoPrefix(input);
 
-    assert.deepStrictEqual(result.buffer, new Uint8Array([47, 163, 246, 134, 223, 135, 105, 149, 22, 126, 124, 46, 93, 116, 196, 199, 182, 228, 143, 128, 104, 254, 14, 68, 32, 131, 68, 212, 128, 247, 144, 76]));
+    assert.deepStrictEqual(
+      result.buffer,
+      new Uint8Array([
+        47, 163, 246, 134, 223, 135, 105, 149, 22, 126, 124, 46, 93, 116, 196, 199, 182, 228, 143, 128, 104, 254, 14,
+        68, 32, 131, 68, 212, 128, 247, 144, 76,
+      ]),
+    );
   });
 
   await t.test("from bytes", () => {
@@ -59,7 +71,13 @@ test("Bytes", async (t) => {
 
     const bytes = Bytes.parseBytes(input, 32);
 
-    assert.deepStrictEqual(bytes.raw, new Uint8Array([156, 45, 59, 206, 122, 160, 165, 133, 124, 103, 168, 82, 71, 54, 93, 32, 53, 247, 217, 218, 236, 43, 81, 94, 134, 8, 101, 132, 173, 94, 134, 68]));
+    assert.deepStrictEqual(
+      bytes.raw,
+      new Uint8Array([
+        156, 45, 59, 206, 122, 160, 165, 133, 124, 103, 168, 82, 71, 54, 93, 32, 53, 247, 217, 218, 236, 43, 81, 94,
+        134, 8, 101, 132, 173, 94, 134, 68,
+      ]),
+    );
   });
 
   await t.test("parse non 0x-prefixed, fixed length bytes vector", () => {
@@ -67,6 +85,12 @@ test("Bytes", async (t) => {
 
     const bytes = Bytes.parseBytesNoPrefix(input, 32);
 
-    assert.deepStrictEqual(bytes.raw, new Uint8Array([156, 45, 59, 206, 122, 160, 165, 133, 124, 103, 168, 82, 71, 54, 93, 32, 53, 247, 217, 218, 236, 43, 81, 94, 134, 8, 101, 132, 173, 94, 134, 68]));
+    assert.deepStrictEqual(
+      bytes.raw,
+      new Uint8Array([
+        156, 45, 59, 206, 122, 160, 165, 133, 124, 103, 168, 82, 71, 54, 93, 32, 53, 247, 217, 218, 236, 43, 81, 94,
+        134, 8, 101, 132, 173, 94, 134, 68,
+      ]),
+    );
   });
 });

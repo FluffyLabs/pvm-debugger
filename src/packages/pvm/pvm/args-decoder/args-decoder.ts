@@ -72,7 +72,16 @@ export type OneOffsetResult = {
   offset: number;
 };
 
-type Result = NoArgumentsResult | TwoRegistersResult | ThreeRegistersResult | TwoRegistersOneImmediateResult | TwoRegistersTwoImmediatesResult | OneRegisterOneImmediateOneOffsetResult | TwoRegistersOneOffsetResult | OneRegisterOneImmediateResult | OneOffsetResult;
+type Result =
+  | NoArgumentsResult
+  | TwoRegistersResult
+  | ThreeRegistersResult
+  | TwoRegistersOneImmediateResult
+  | TwoRegistersTwoImmediatesResult
+  | OneRegisterOneImmediateOneOffsetResult
+  | TwoRegistersOneOffsetResult
+  | OneRegisterOneImmediateResult
+  | OneOffsetResult;
 
 export class ArgsDecoder {
   private nibblesDecoder = new NibblesDecoder();
@@ -128,7 +137,9 @@ export class ArgsDecoder {
         const immediateLength = this.nibblesDecoder.getHighNibble();
         result.immediateDecoder.setBytes(this.code.subarray(pc + 2, pc + 2 + immediateLength));
         const offsetLength = this.mask.getNoOfBytesToNextInstruction(pc + 2 + immediateLength);
-        this.offsetDecoder.setBytes(this.code.subarray(pc + 2 + immediateLength, pc + 2 + immediateLength + offsetLength));
+        this.offsetDecoder.setBytes(
+          this.code.subarray(pc + 2 + immediateLength, pc + 2 + immediateLength + offsetLength),
+        );
         result.offset = this.offsetDecoder.getSigned();
         result.noOfInstructionsToSkip = 2 + immediateLength + offsetLength;
         return result;
