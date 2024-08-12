@@ -18,7 +18,7 @@ export const Instructions = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
-  const isActive = (programRow: CurrentInstruction) => {
+  const isLastRunInstruction = (programRow: CurrentInstruction) => {
     if (!currentInstruction) {
       return false;
     }
@@ -40,13 +40,17 @@ export const Instructions = ({
     );
   };
 
+  const isActive = (index: number) => {
+    return index === programPreviewResult?.findIndex((programRow) => isLastRunInstruction(programRow));
+  };
+
   return (
     <div className="font-mono overflow-auto scroll-auto border-2 rounded-md h-full">
       <Table>
         <TableBody>
           {!!programPreviewResult?.length &&
             programPreviewResult.map((programRow, i) => (
-              <TableRow className={classNames("hover:bg-gray-300", { "bg-gray-200": isActive(programRow) })} key={i}>
+              <TableRow className={classNames("hover:bg-gray-300", { "bg-gray-200": isActive(i - 1) })} key={i}>
                 {instructionMode === InstructionMode.BYTECODE && (
                   <TableCell className="p-1.5">
                     {programRow.instructionBytes && (
@@ -57,15 +61,17 @@ export const Instructions = ({
                   </TableCell>
                 )}
                 {instructionMode === InstructionMode.ASM && (
-                  <TableCell className="p-1.5">
-                    <span className="uppercase font-bold">{programRow.name}</span>
-                  </TableCell>
+                  <>
+                    <TableCell className="p-1.5">
+                      <span className="uppercase font-bold">{programRow.name}</span>
+                    </TableCell>
+                    <TableCell className="p-1.5">
+                      <span className="">
+                        {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
+                      </span>
+                    </TableCell>
+                  </>
                 )}
-                <TableCell className="p-1.5">
-                  <span className="">
-                    {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
-                  </span>
-                </TableCell>
               </TableRow>
             ))}
         </TableBody>

@@ -6,7 +6,7 @@ import { Registers } from "./components/Registers";
 import { ExpectedState, InitialState, PageMapItem, Pvm, RegistersArray, Status } from "./types/pvm";
 
 import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
-import { RefreshCcw, StepForward } from "lucide-react";
+import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
+import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -35,18 +36,32 @@ function App() {
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
+  const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
+  const [isInitialCTA, setIsInitialCTA] = useState(true);
 
-  // const handleClick = () => {
-  //   window.scrollTo(0, 0);
-  //
-  //   const result = disassemblify(new Uint8Array(program));
-  //   console.log(result);
-  //   setProgramPreviewResult(result);
-  //   // setProgramRunResult(result.programRunResult);
-  // };
+  useEffect(() => {
+    if (pvm) {
+      setCurrentStateFromPvm(pvm);
+    }
+  }, [pvm, currentInstruction]);
+
+  const setCurrentStateFromPvm = (pvm: Pvm) => {
+    const currentState = {
+      pc: pvm.getPC(),
+      regs: Array.from(pvm.getRegisters()) as RegistersArray,
+      gas: pvm.getGas(),
+      pageMap: pvm.getMemory() as unknown as PageMapItem[],
+      memory: pvm.getMemory(),
+      status: pvm.getStatus() as unknown as Status,
+    };
+    setCurrentState((prevState) => {
+      setPreviousState(prevState);
+      return currentState;
+    });
+  };
 
   const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
     // setExpectedResult(expected);
@@ -59,19 +74,6 @@ function App() {
     const result = disassemblify(new Uint8Array(program));
     setProgramPreviewResult(result);
   };
-
-  useEffect(() => {
-    if (pvm) {
-      setCurrentState({
-        pc: pvm.getPC(),
-        regs: Array.from(pvm.getRegisters()) as RegistersArray,
-        gas: pvm.getGas(),
-        pageMap: pvm.getMemory() as unknown as PageMapItem[],
-        memory: pvm.getMemory(),
-        status: pvm.getStatus() as unknown as Status,
-      });
-    }
-  }, [pvm, currentInstruction]);
 
   const onNext = () => {
     if (!pvm) return;
@@ -87,6 +89,23 @@ function App() {
     }
   };
 
+  const handleRunProgram = () => {
+    if (!pvm) return;
+
+    pvm?.runProgram();
+
+    setIsProgramEditMode(false);
+    setIsDebugFinished(true);
+    setCurrentInstruction(programPreviewResult?.[0]);
+    setCurrentStateFromPvm(pvm);
+  };
+
+  const restartProgram = () => {
+    setIsDebugFinished(false);
+    setPvm(initPvm(program, initialState));
+    setCurrentState(initialState);
+  };
+
   return (
     <>
       <Header />
@@ -100,15 +119,16 @@ function App() {
                   setIsDebugFinished(false);
                   setPvm(initPvm(program, initialState));
                   setCurrentState(initialState);
+                  setCurrentInstruction(programPreviewResult?.[0]);
                 }}
               >
                 <RefreshCcw className="w-3.5 mr-1.5" />
                 Restart
               </Button>
-              {/*<Button className="mr-3" onClick={handleClick}>*/}
-              {/*  <Play className="w-3.5 mr-1.5" />*/}
-              {/*  Run*/}
-              {/*</Button>*/}
+              <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished}>
+                <Play className="w-3.5 mr-1.5" />
+                Run
+              </Button>
               <Button className="mr-3" onClick={onNext} disabled={isDebugFinished}>
                 <StepForward className="w-3.5 mr-1.5" /> Step
               </Button>
@@ -122,25 +142,49 @@ function App() {
 
           <div className="grid auto-rows-fr grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
             <div>
-              {isProgramEditMode && (
-                <>
-                  <ProgramLoader program={program} setProgram={setProgram} />
-                </>
+              {isInitialCTA && (
+                <InitialLoadProgramCTA
+                  onFileUpload={(uploadedProgram) => {
+                    handleFileUpload(uploadedProgram);
+                    setIsInitialCTA(false);
+                  }}
+                  onEditClick={() => {
+                    setIsInitialCTA(false);
+                  }}
+                />
               )}
-
-              {!isProgramEditMode && (
+              {!isInitialCTA && (
                 <>
-                  <Instructions
-                    programPreviewResult={programPreviewResult}
-                    currentInstruction={currentInstruction}
-                    instructionMode={instructionMode}
-                  />
+                  {isProgramEditMode && (
+                    <>
+                      <ProgramLoader program={program} setProgram={setProgram} />
+                    </>
+                  )}
+
+                  {!isProgramEditMode && (
+                    <>
+                      <Instructions
+                        programPreviewResult={programPreviewResult}
+                        currentInstruction={currentInstruction}
+                        instructionMode={instructionMode}
+                      />
+                    </>
+                  )}
                 </>
               )}
             </div>
 
             <div>
-              <Registers currentState={currentState} setCurrentState={setCurrentState} />
+              <Registers
+                currentState={isProgramEditMode ? initialState : currentState}
+                previousState={isProgramEditMode ? initialState : previousState}
+                onCurrentStateChange={(state) => {
+                  setInitialState(state);
+                  setCurrentState(state);
+                  setPvm(initPvm(program, state));
+                }}
+                allowEditing={isProgramEditMode}
+              />
             </div>
 
             <div>
@@ -158,19 +202,30 @@ function App() {
             <div className="flex items-center justify-between">
               <div>
                 {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
-                {!isProgramEditMode && <Button onClick={() => setIsProgramEditMode(true)}>Edit program</Button>}
+                {!isProgramEditMode && (
+                  <Button
+                    onClick={() => {
+                      restartProgram();
+                      setIsProgramEditMode(true);
+                    }}
+                  >
+                    Edit program
+                  </Button>
+                )}
               </div>
               <div>
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="instruction-mode">ASM</Label>
-                  <Switch
-                    id="instruction-mode"
-                    onCheckedChange={(checked) =>
-                      setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
-                    }
-                  />
-                  <Label htmlFor="instruction-mode">Bytecode</Label>
-                </div>
+                {!isProgramEditMode && (
+                  <div className="flex items-center space-x-2">
+                    <Label htmlFor="instruction-mode">ASM</Label>
+                    <Switch
+                      id="instruction-mode"
+                      onCheckedChange={(checked) =>
+                        setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
+                      }
+                    />
+                    <Label htmlFor="instruction-mode">Bytecode</Label>
+                  </div>
+                )}
               </div>
             </div>
           </div>
