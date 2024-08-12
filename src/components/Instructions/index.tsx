@@ -14,6 +14,7 @@ export const Instructions = ({
 }: {
   programPreviewResult: CurrentInstruction[] | undefined;
   currentInstruction: CurrentInstruction | undefined;
+  previousInstruction: CurrentInstruction | undefined;
   instructionMode: InstructionMode;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);

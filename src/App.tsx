@@ -36,6 +36,7 @@ function App() {
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
+  const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
@@ -51,7 +52,10 @@ function App() {
         memory: pvm.getMemory(),
         status: pvm.getStatus() as unknown as Status,
       };
-      setCurrentState(currentState);
+      setCurrentState((prevState) => {
+        setPreviousState(prevState);
+        return currentState;
+      });
     }
   }, [pvm, currentInstruction]);
 
@@ -165,6 +169,7 @@ function App() {
             <div>
               <Registers
                 currentState={isProgramEditMode ? initialState : currentState}
+                previousState={isProgramEditMode ? initialState : previousState}
                 onCurrentStateChange={(state) => {
                   setInitialState(state);
                   setCurrentState(state);

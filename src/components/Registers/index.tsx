@@ -3,13 +3,17 @@ import ContentEditable from "react-contenteditable";
 import { useContext } from "react";
 import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
 import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
+import classNames from "classnames";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Registers = ({
   currentState,
+  previousState,
   onCurrentStateChange,
   allowEditing,
 }: {
   currentState: ExpectedState;
+  previousState: ExpectedState;
   onCurrentStateChange: (changedState: ExpectedState) => void;
   allowEditing: boolean;
 }) => {
@@ -48,6 +52,27 @@ export const Registers = ({
                     }}
                     html={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
                   />
+                ) : currentState.regs?.[regNo] !== previousState.regs?.[regNo] ? (
+                  <div className="flex-[3]">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={classNames({
+                              "text-blue-500": currentState.regs?.[regNo] !== previousState.regs?.[regNo],
+                            })}
+                          >
+                            {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <span>{valueToNumeralSystem(previousState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                          <span> → </span>
+                          <span>{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 ) : (
                   <div className="flex-[3]">{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</div>
                 )}
