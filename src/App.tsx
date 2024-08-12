@@ -87,6 +87,12 @@ function App() {
     }
   };
 
+  const restartProgram = () => {
+    setIsDebugFinished(false);
+    setPvm(initPvm(program, initialState));
+    setCurrentState(initialState);
+  };
+
   return (
     <>
       <Header />
@@ -140,7 +146,15 @@ function App() {
             </div>
 
             <div>
-              <Registers currentState={currentState} setCurrentState={setCurrentState} />
+              <Registers
+                currentState={isProgramEditMode ? initialState : currentState}
+                onCurrentStateChange={(state) => {
+                  setInitialState(state);
+                  setCurrentState(state);
+                  setPvm(initPvm(program, state));
+                }}
+                allowEditing={isProgramEditMode}
+              />
             </div>
 
             <div>
@@ -158,7 +172,16 @@ function App() {
             <div className="flex items-center justify-between">
               <div>
                 {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
-                {!isProgramEditMode && <Button onClick={() => setIsProgramEditMode(true)}>Edit program</Button>}
+                {!isProgramEditMode && (
+                  <Button
+                    onClick={() => {
+                      restartProgram();
+                      setIsProgramEditMode(true);
+                    }}
+                  >
+                    Edit program
+                  </Button>
+                )}
               </div>
               <div>
                 <div className="flex items-center space-x-2">
