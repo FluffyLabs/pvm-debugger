@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
+import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -38,6 +39,7 @@ function App() {
 
   const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
+  const [isInitialCTA, setIsInitialCTA] = useState(true);
 
   // const handleClick = () => {
   //   window.scrollTo(0, 0);
@@ -128,19 +130,34 @@ function App() {
 
           <div className="grid auto-rows-fr grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
             <div>
-              {isProgramEditMode && (
-                <>
-                  <ProgramLoader program={program} setProgram={setProgram} />
-                </>
+              {isInitialCTA && (
+                <InitialLoadProgramCTA
+                  onFileUpload={(uploadedProgram) => {
+                    handleFileUpload(uploadedProgram);
+                    setIsInitialCTA(false);
+                  }}
+                  onEditClick={() => {
+                    setIsInitialCTA(false);
+                  }}
+                />
               )}
-
-              {!isProgramEditMode && (
+              {!isInitialCTA && (
                 <>
-                  <Instructions
-                    programPreviewResult={programPreviewResult}
-                    currentInstruction={currentInstruction}
-                    instructionMode={instructionMode}
-                  />
+                  {isProgramEditMode && (
+                    <>
+                      <ProgramLoader program={program} setProgram={setProgram} />
+                    </>
+                  )}
+
+                  {!isProgramEditMode && (
+                    <>
+                      <Instructions
+                        programPreviewResult={programPreviewResult}
+                        currentInstruction={currentInstruction}
+                        instructionMode={instructionMode}
+                      />
+                    </>
+                  )}
                 </>
               )}
             </div>
