@@ -82,10 +82,15 @@ function App() {
   };
 
   const onNext = () => {
+    if (!currentInstruction) {
+      setCurrentInstruction(programPreviewResult?.[0]);
+      setCurrentState(initialState);
+    } else {
+      worker.postMessage({ command: "step", payload: { program } });
+    }
     // if (!pvm) return;
 
     // const result = nextInstruction(pvm, program);
-    worker.postMessage({ command: "step", payload: { program } });
 
     setIsProgramEditMode(false);
   };
@@ -101,6 +106,7 @@ function App() {
   const restartProgram = (state: InitialState) => {
     setIsDebugFinished(false);
     setCurrentState(state);
+    setPreviousState(state);
     setCurrentInstruction(programPreviewResult?.[0]);
     worker.postMessage({ command: "init", payload: { program, initialState: state } });
   };

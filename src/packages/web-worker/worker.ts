@@ -28,6 +28,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   let result;
   let state;
   // let program;
+  let isFinished;
   switch (e.data.command) {
     case Commands.INIT:
       pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
@@ -36,6 +37,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
     case Commands.STEP:
       console.log("step");
       result = nextInstruction(pvm, e.data.payload.program);
+      isFinished = pvm.nextStep() !== Status.OK;
       state = {
         pc: pvm.getPC(),
         regs: Array.from(pvm.getRegisters()) as RegistersArray,
@@ -45,7 +47,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         status: pvm.getStatus() as unknown as Status,
       };
 
-      postMessage({ command: Commands.STEP, payload: { result, state, isFinished: pvm.nextStep() !== Status.OK } });
+      postMessage({ command: Commands.STEP, payload: { result, state, isFinished } });
       break;
     case Commands.RUN:
       pvm.runProgram();
