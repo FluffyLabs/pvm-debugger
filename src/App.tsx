@@ -3,11 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { ExpectedState, InitialState, PageMapItem, Pvm, RegistersArray, Status } from "./types/pvm";
+import { CurrentInstruction, ExpectedState, InitialState } from "./types/pvm";
 
-import { CurrentInstruction, initPvm, nextInstruction } from "./components/Debugger/debug";
+import { disassemblify } from "./packages/pvm/pvm/disassemblify";
 import { Play, RefreshCcw, StepForward } from "lucide-react";
-import { disassemblify } from "./pvm-packages/pvm/disassemblify";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
 import { MemoryPreview } from "@/components/MemoryPreview";
@@ -19,6 +18,9 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
+import { worker } from "./packages/web-worker";
+
+import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 
 function App() {
@@ -38,44 +40,48 @@ function App() {
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
 
-  const [pvm, setPvm] = useState<Pvm>();
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [isInitialCTA, setIsInitialCTA] = useState(true);
+  const [pvmInitialized, setPvmInitialized] = useState(false);
 
   useEffect(() => {
-    if (pvm) {
-      setCurrentStateFromPvm(pvm);
+    if (!worker) {
+      return;
     }
-  }, [pvm, currentInstruction]);
 
-  const setCurrentStateFromPvm = (pvm: Pvm) => {
-    const currentState = {
-      pc: pvm.getPC(),
-      regs: Array.from(pvm.getRegisters()) as RegistersArray,
-      gas: pvm.getGas(),
-      pageMap: pvm.getMemory() as unknown as PageMapItem[],
-      memory: pvm.getMemory(),
-      status: pvm.getStatus() as unknown as Status,
+    worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
+      if (e.data.command === Commands.STEP || e.data.command === Commands.RUN) {
+        const { state, isFinished } = e.data.payload;
+        setCurrentState((prevState) => {
+          setPreviousState(prevState);
+          return state;
+        });
+
+        if (e.data.command === Commands.STEP) {
+          setCurrentInstruction(e.data.payload.result);
+        } else if (e.data.command === Commands.RUN) {
+          setCurrentInstruction(programPreviewResult?.[0]);
+        }
+
+        if (isFinished) {
+          setIsDebugFinished(true);
+        }
+      }
     };
-    setCurrentState((prevState) => {
-      setPreviousState(prevState);
-      return currentState;
-    });
-  };
+    console.log("Message posted to worker");
+  }, []);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
-    // setExpectedResult(expected);
     setInitialState(initialState);
     setProgram(program);
 
     setIsDebugFinished(false);
-    const pvm = initPvm(program, initialState);
-    setPvm(pvm);
 
+    worker.postMessage({ command: "init", payload: { program, initialState } });
     const result = disassemblify(new Uint8Array(program));
     setProgramPreviewResult(result);
-
-    return pvm;
+    setCurrentInstruction(result?.[0]);
+    setPvmInitialized(true);
   };
 
   const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
@@ -83,47 +89,38 @@ function App() {
   };
 
   const onNext = () => {
-    let currentPvm;
+    console.log({
+      pvmInitialized,
+      currentInstruction,
+    });
+    if (!pvmInitialized) {
+      startProgram(initialState, program);
+    }
 
-    if (!pvm) {
-      currentPvm = startProgram(initialState, program);
+    if (!currentInstruction) {
+      setCurrentState(initialState);
     } else {
-      currentPvm = pvm;
+      worker.postMessage({ command: "step", payload: { program } });
     }
 
-    const result = nextInstruction(currentPvm, program);
-
-    setCurrentInstruction(result);
     setIsProgramEditMode(false);
-
-    if (currentPvm.nextStep() !== Status.OK) {
-      setIsDebugFinished(true);
-      setPvm(undefined);
-    }
   };
 
   const handleRunProgram = () => {
-    let currentPvm;
-
-    if (!pvm) {
-      currentPvm = startProgram(initialState, program);
-      setPvm(currentPvm);
-    } else {
-      currentPvm = pvm;
+    if (!pvmInitialized) {
+      startProgram(initialState, program);
     }
-
-    currentPvm?.runProgram();
-
     setIsProgramEditMode(false);
     setIsDebugFinished(true);
-    setCurrentInstruction(programPreviewResult?.[0]);
-    setCurrentStateFromPvm(currentPvm);
+    worker.postMessage({ command: "run", payload: { program } });
   };
 
-  const restartProgram = () => {
+  const restartProgram = (state: InitialState) => {
     setIsDebugFinished(false);
-    setPvm(initPvm(program, initialState));
-    setCurrentState(initialState);
+    setCurrentState(state);
+    setPreviousState(state);
+    setCurrentInstruction(programPreviewResult?.[0]);
+    worker.postMessage({ command: "init", payload: { program, initialState: state } });
   };
 
   return (
@@ -136,9 +133,7 @@ function App() {
               <Button
                 className="mr-3"
                 onClick={() => {
-                  setIsDebugFinished(false);
-                  setPvm(initPvm(program, initialState));
-                  setCurrentState(initialState);
+                  restartProgram(initialState);
                   setCurrentInstruction(programPreviewResult?.[0]);
                 }}
               >
@@ -200,8 +195,7 @@ function App() {
                 previousState={isProgramEditMode ? initialState : previousState}
                 onCurrentStateChange={(state) => {
                   setInitialState(state);
-                  setCurrentState(state);
-                  setPvm(initPvm(program, state));
+                  restartProgram(state);
                 }}
                 allowEditing={isProgramEditMode}
               />
@@ -225,7 +219,7 @@ function App() {
                 {!isProgramEditMode && (
                   <Button
                     onClick={() => {
-                      restartProgram();
+                      restartProgram(initialState);
                       setIsProgramEditMode(true);
                     }}
                   >

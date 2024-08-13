@@ -18,7 +18,11 @@ export function disassemblify(rawProgram: Uint8Array) {
       args = argsDecoder.getArgs(i) as any;
       i += args.noOfInstructionsToSkip;
     } catch (e) {
-      printableProgram.push({ instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], error: "Cannot get arguments from args decoder" });
+      printableProgram.push({
+        instructionCode: currentInstruction,
+        ...byteToOpCodeMap[currentInstruction],
+        error: "Cannot get arguments from args decoder",
+      });
       return printableProgram;
     }
 

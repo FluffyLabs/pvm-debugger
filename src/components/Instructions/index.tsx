@@ -1,11 +1,11 @@
 import { Table, TableRow, TableBody, TableCell } from "@/components/ui/table.tsx";
 import { mapInstructionsArgsByType } from "./utils";
-import { CurrentInstruction } from "../Debugger/debug";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { NumeralSystemContext } from "@/context/NumeralSystem.tsx";
 import { useContext } from "react";
 import { isEqual, omit } from "lodash";
+import { CurrentInstruction } from "@/types/pvm";
 
 export const Instructions = ({
   programPreviewResult,

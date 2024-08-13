@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { BlockMath } from "react-katex";
 import { Search } from "lucide-react";
-import { CurrentInstruction } from "@/components/Debugger/debug.ts";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { InstructionKnowledgeBaseEntry, instructionsKnowledgeBase } from "@/utils/instructionsKnowledgeBase.ts";
+import { CurrentInstruction } from "@/types/pvm";
 
 export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: CurrentInstruction | undefined }) => {
   const [filteredInstructions, setFilteredInstructions] = useState<InstructionKnowledgeBaseEntry[]>([]);
