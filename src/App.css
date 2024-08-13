@@ -3,3 +3,8 @@
 .katex-html {
   text-align: left;
 }
+
+#instruction-mode,
+#numerical-system-mode {
+  background-color: hsl(var(--primary));
+}

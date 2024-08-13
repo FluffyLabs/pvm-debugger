@@ -8,12 +8,12 @@ export const NumeralSystemSwitch = () => {
 
   return (
     <div className="flex items-center space-x-2">
-      <Label htmlFor="instruction-mode">Dec</Label>
+      <Label htmlFor="numerical-system-mode">Dec</Label>
       <Switch
-        id="instruction-mode"
+        id="numerical-system-mode"
         onCheckedChange={(checked) => setNumeralSystem(checked ? NumeralSystem.HEXADECIMAL : NumeralSystem.DECIMAL)}
       />
-      <Label htmlFor="instruction-mode">Hex</Label>
+      <Label htmlFor="numerical-system-mode">Hex</Label>
     </div>
   );
 };

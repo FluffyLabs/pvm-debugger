@@ -37,8 +37,8 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       break;
     case Commands.STEP:
       console.log("webworker step");
-      result = nextInstruction(pvm, e.data.payload.program);
       isFinished = pvm.nextStep() !== Status.OK;
+      result = nextInstruction(pvm, e.data.payload.program);
       state = {
         pc: pvm.getPC(),
         regs: Array.from(pvm.getRegisters()) as RegistersArray,

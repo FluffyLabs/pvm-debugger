@@ -6,7 +6,7 @@ import { Registers } from "./components/Registers";
 import { CurrentInstruction, ExpectedState, InitialState } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
-import { Play, RefreshCcw, StepForward } from "lucide-react";
+import { Play, RefreshCcw, StepForward, Check } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
 import { MemoryPreview } from "@/components/MemoryPreview";
@@ -78,10 +78,15 @@ function App() {
     setIsDebugFinished(false);
 
     worker.postMessage({ command: "init", payload: { program, initialState } });
-    const result = disassemblify(new Uint8Array(program));
-    setProgramPreviewResult(result);
-    setCurrentInstruction(result?.[0]);
-    setPvmInitialized(true);
+
+    try {
+      const result = disassemblify(new Uint8Array(program));
+      setProgramPreviewResult(result);
+      setCurrentInstruction(result?.[0]);
+      setPvmInitialized(true);
+    } catch (e) {
+      console.log("Error disassembling program", e);
+    }
   };
 
   const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
@@ -239,6 +244,16 @@ function App() {
                     />
                     <Label htmlFor="instruction-mode">Bytecode</Label>
                   </div>
+                )}
+                {isProgramEditMode && !isInitialCTA && (
+                  <Button
+                    onClick={() => {
+                      startProgram(initialState, program);
+                      setIsProgramEditMode(false);
+                    }}
+                  >
+                    <Check />
+                  </Button>
                 )}
               </div>
             </div>
