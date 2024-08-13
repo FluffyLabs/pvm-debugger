@@ -20,8 +20,11 @@ export type WorkerOnMessageParams =
   | { command: Commands.STEP; payload: { program: number[] } };
 
 onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
-  console.log(e.data.command);
-  switch (e.data?.command) {
+  if (!e.data?.command) {
+    return;
+  }
+
+  switch (e.data.command) {
     case Commands.INIT:
       pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       postMessage({ command: Commands.INIT, result: "success" });
@@ -37,7 +40,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         status: pvm.getStatus() as unknown as Status,
       };
 
-      postMessage({ command: Commands.STEP, result: { result, state, isFinished: pvm.nextStep() !== Status.OK } });
+      postMessage({ command: Commands.STEP, payload: { result, state, isFinished: pvm.nextStep() !== Status.OK } });
       break;
     default:
       break;

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { CurrentInstruction, ExpectedState, InitialState, PageMapItem, Pvm, RegistersArray, Status } from "./types/pvm";
+import { CurrentInstruction, ExpectedState, InitialState } from "./types/pvm";
 
 import { RefreshCcw, StepForward } from "lucide-react";
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
@@ -19,6 +19,7 @@ import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 import { worker } from "./packages/web-worker";
+
 import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 
 function App() {
@@ -66,7 +67,6 @@ function App() {
 
     setIsDebugFinished(false);
 
-    console.log("send message");
     worker.postMessage({ command: "init", payload: { program, initialState: initial } });
     const result = disassemblify(new Uint8Array(program));
     setProgramPreviewResult(result);
