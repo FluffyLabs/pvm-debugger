@@ -42,6 +42,7 @@ function App() {
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [isInitialCTA, setIsInitialCTA] = useState(true);
+  const [pvmInitialized, setPvmInitialized] = useState(false);
 
   useEffect(() => {
     if (!worker) {
@@ -70,34 +71,45 @@ function App() {
     console.log("Message posted to worker");
   }, []);
 
-  const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
-    setInitialState(initial);
+  const startProgram = (initialState: ExpectedState, program: number[]) => {
+    setInitialState(initialState);
     setProgram(program);
 
     setIsDebugFinished(false);
 
-    worker.postMessage({ command: "init", payload: { program, initialState: initial } });
+    worker.postMessage({ command: "init", payload: { program, initialState } });
     const result = disassemblify(new Uint8Array(program));
     setProgramPreviewResult(result);
+    setCurrentInstruction(result?.[0]);
+    setPvmInitialized(true);
+  };
+
+  const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
+    startProgram(initial, program);
   };
 
   const onNext = () => {
+    console.log({
+      pvmInitialized,
+      currentInstruction,
+    });
+    if (!pvmInitialized) {
+      startProgram(initialState, program);
+    }
+
     if (!currentInstruction) {
-      setCurrentInstruction(programPreviewResult?.[0]);
       setCurrentState(initialState);
     } else {
       worker.postMessage({ command: "step", payload: { program } });
     }
-    // if (!pvm) return;
-
-    // const result = nextInstruction(pvm, program);
 
     setIsProgramEditMode(false);
   };
 
   const handleRunProgram = () => {
-    // if (!pvm) return;
-
+    if (!pvmInitialized) {
+      startProgram(initialState, program);
+    }
     setIsProgramEditMode(false);
     setIsDebugFinished(true);
     worker.postMessage({ command: "run", payload: { program } });

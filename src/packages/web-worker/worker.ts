@@ -31,11 +31,12 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   let isFinished;
   switch (e.data.command) {
     case Commands.INIT:
+      console.log("webworker init");
       pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       postMessage({ command: Commands.INIT, result: "success" });
       break;
     case Commands.STEP:
-      console.log("step");
+      console.log("webworker step");
       result = nextInstruction(pvm, e.data.payload.program);
       isFinished = pvm.nextStep() !== Status.OK;
       state = {
