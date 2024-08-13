@@ -1,10 +1,10 @@
 import { ExpectedState, InitialState, Status } from "@/types/pvm";
-import ContentEditable from "react-contenteditable";
 import { useContext } from "react";
 import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
 import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
 import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input.tsx";
 
 export const Registers = ({
   currentState,
@@ -30,28 +30,30 @@ export const Registers = ({
                   ω<sub>{regNo}</sub>
                 </p>
                 {allowEditing ? (
-                  <ContentEditable
-                    className="flex-[3]"
-                    onChange={(e) => {
-                      const value = e.target?.value;
-                      const valueInDecimal =
-                        numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
-                      const regValue =
-                        valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : "";
-                      onCurrentStateChange({
-                        ...currentState,
-                        regs: currentState.regs?.map((val: number, index: number) =>
-                          index === regNo ? regValue : val,
-                        ) as InitialState["regs"],
-                      });
-                    }}
-                    onKeyUp={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    html={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
-                  />
+                  <div className="flex-[3]">
+                    <Input
+                      className="w-20 h-6 m-0 p-0"
+                      onChange={(e) => {
+                        const value = e.target?.value;
+                        const valueInDecimal =
+                          numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
+                        const regValue =
+                          valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : "";
+                        onCurrentStateChange({
+                          ...currentState,
+                          regs: currentState.regs?.map((val: number, index: number) =>
+                            index === regNo ? regValue : val,
+                          ) as InitialState["regs"],
+                        });
+                      }}
+                      onKeyUp={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                    />
+                  </div>
                 ) : currentState.regs?.[regNo] !== previousState.regs?.[regNo] ? (
                   <div className="flex-[3]">
                     <TooltipProvider>
