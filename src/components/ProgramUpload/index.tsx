@@ -1,7 +1,15 @@
 import { Input } from "@/components/ui/input.tsx";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button.tsx";
 import { useState } from "react";
 
@@ -33,7 +41,7 @@ export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUpl
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
+      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
         <Button>Load from test file</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -49,6 +57,7 @@ export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUpl
                 id="test-file"
                 type="file"
                 accept="application/json"
+                onClick={(e) => e.stopPropagation()}
                 onChange={(e) => {
                   if (e.target.files?.length) {
                     handleProgramUpload(e.target.files[0]);
