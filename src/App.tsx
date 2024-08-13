@@ -6,7 +6,7 @@ import { Registers } from "./components/Registers";
 import { CurrentInstruction, ExpectedState, InitialState } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
-import { RefreshCcw, StepForward } from "lucide-react";
+import { Play, RefreshCcw, StepForward } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
 import { MemoryPreview } from "@/components/MemoryPreview";
@@ -44,21 +44,23 @@ function App() {
   const [isInitialCTA, setIsInitialCTA] = useState(true);
 
   useEffect(() => {
-    console.log("listen worker", worker);
-
     if (!worker) {
       return;
     }
-    worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
-      console.log(e.data);
 
-      if (e.data.command === Commands.STEP) {
-        const { state, result, isFinished } = e.data.payload;
+    worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
+      if (e.data.command === Commands.STEP || e.data.command === Commands.RUN) {
+        const { state, isFinished } = e.data.payload;
         setCurrentState((prevState) => {
           setPreviousState(prevState);
           return state;
         });
-        setCurrentInstruction(result);
+
+        if (e.data.command === Commands.STEP) {
+          setCurrentInstruction(e.data.payload.result);
+        } else if (e.data.command === Commands.RUN) {
+          setCurrentInstruction(programPreviewResult?.[0]);
+        }
 
         if (isFinished) {
           setIsDebugFinished(true);
@@ -88,20 +90,18 @@ function App() {
     setIsProgramEditMode(false);
   };
 
-  // const handleRunProgram = () => {
-  //   // if (!pvm) return;
+  const handleRunProgram = () => {
+    // if (!pvm) return;
 
-  //   pvm?.runProgram();
-
-  //   setIsProgramEditMode(false);
-  //   setIsDebugFinished(true);
-  //   setCurrentInstruction(programPreviewResult?.[0]);
-  //   setCurrentStateFromPvm(pvm);
-  // };
+    setIsProgramEditMode(false);
+    setIsDebugFinished(true);
+    worker.postMessage({ command: "run", payload: { program } });
+  };
 
   const restartProgram = (state: InitialState) => {
     setIsDebugFinished(false);
     setCurrentState(state);
+    setCurrentInstruction(programPreviewResult?.[0]);
     worker.postMessage({ command: "init", payload: { program, initialState: state } });
   };
 
@@ -122,10 +122,10 @@ function App() {
                 <RefreshCcw className="w-3.5 mr-1.5" />
                 Restart
               </Button>
-              {/* <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished}>
+              <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished}>
                 <Play className="w-3.5 mr-1.5" />
                 Run
-              </Button> */}
+              </Button>
               <Button className="mr-3" onClick={onNext} disabled={isDebugFinished}>
                 <StepForward className="w-3.5 mr-1.5" /> Step
               </Button>
