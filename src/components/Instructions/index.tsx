@@ -18,7 +18,7 @@ export const Instructions = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
-  const isLastRunInstruction = (programRow: CurrentInstruction) => {
+  const isActive = (programRow: CurrentInstruction) => {
     if (!currentInstruction) {
       return false;
     }
@@ -35,13 +35,9 @@ export const Instructions = ({
     }
 
     return isEqual(
-      omit(currentInstruction, "args.immediateDecoder"),
+      omit(currentInstruction, ["args.immediateDecoder", "instructionBytes"]),
       omit(programRow, ["args.immediateDecoder", "instructionBytes"]),
     );
-  };
-
-  const isActive = (index: number) => {
-    return index === programPreviewResult?.findIndex((programRow) => isLastRunInstruction(programRow));
   };
 
   return (
@@ -50,7 +46,7 @@ export const Instructions = ({
         <TableBody>
           {!!programPreviewResult?.length &&
             programPreviewResult.map((programRow, i) => (
-              <TableRow className={classNames("hover:bg-gray-300", { "bg-gray-200": isActive(i - 1) })} key={i}>
+              <TableRow className={classNames("hover:bg-gray-300", { "bg-gray-200": isActive(programRow) })} key={i}>
                 {instructionMode === InstructionMode.BYTECODE && (
                   <TableCell className="p-1.5">
                     {programRow.instructionBytes && (
