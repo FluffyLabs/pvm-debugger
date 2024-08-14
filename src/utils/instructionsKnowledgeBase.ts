@@ -5,6 +5,109 @@ export interface InstructionKnowledgeBaseEntry {
 }
 
 export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
+
+  { 
+    name: "TRAP",
+    opcode: "0",
+    description: "Halts program execution by entering a trap state and setting the exit state to an error condition, effectively terminating further processing",
+    latex: "\\varepsilon = \panic$"
+  },
+
+  { 
+    name: "FALLTHROUGH",
+    opcode: "17",
+    description: "Transfers control to the next sequential instruction without altering the program state or causing a jump.",
+    latex: "\\"
+  },
+
+  { 
+    name: "ECALLI",
+    opcode: "78",
+    description: "Transfers control to the next sequential instruction without altering the program state or causing a jump.",
+    latex: "\\varepsilon = \host \times \immed_X$"
+  },  
+
+ { 
+    name: "STORE_IMM_U8",
+    opcode: "62",
+    description: "Stores an 8-bit immediate value into the specified memory address.",
+    latex: "\\{\mem'}^\circlearrowleft_{\immed_X} = \immed_Y \bmod 2^8"
+  },
+
+ { 
+    name: "STORE_IMM_U16",
+    opcode: "79",
+    description: "Stores a 16-bit immediate value into the specified memory address.",
+    latex: "\\{\mem'}^\circlearrowleft_{\immed_X\dots+2} = \se_2(\immed_Y \bmod 2^{16})"
+  }, 
+
+  { 
+    name: "STORE_IMM_U32",
+    opcode: "38",
+    description: "Stores an 32-bit immediate value into the specified memory address.",
+    latex: "\\{\mem'}^\circlearrowleft_{\immed_X\dots+4} = \se_4(\immed_Y)"
+  },  
+
+  { 
+    name: "JUMP",
+    opcode: "38",
+    description: "Transfers control to the instruction located at the target address specified by the immediate argument.",
+    latex: "\\token{branch}(\immed_X, \top)"
+  },  
+
+  {
+    name: "JUMP_IND",
+    opcode: "19",
+    description: "Transfers control to the instruction at the address contained in the specified register, effectively performing an indirect jump.",
+    latex: "\\token{djump}((\reg_A + \immed_X) \bmod 2^{32})"
+  },  
+
+  {
+    name: "LOAD_IMM",
+    opcode: "4",
+    description": "Loads an immediate value into a specified register.",
+    latex: "\\reg'_A = \immed_X$"
+  },
+
+{  
+  name: "LOAD_U8",
+  opcode: "20",
+  description: "Loads an 8-bit value from memory into a specified register.",
+  latex: "\\token{load_u8}(\\reg_A, \\mem[\\reg_B])"
+},
+
+{  
+  name: "LOAD_I8",
+  opcode: "74",
+  description: "Loads an 8-bit signed integer from memory into a specified register, extending the sign to fit the register's size.",
+  latex: "\\reg'_A = \unsigned{\signedn{1}{\mem_{\immed_X}}}"
+},
+  
+{
+  name: "LOAD_U16",
+  opcode: "76",
+  description: "Loads a 16-bit unsigned value from memory into a specified register.",
+  latex: "\\reg'_A = \\de_2(\\memr_{\\immed_X\\dots+2})"
+},
+
+{
+  name: "LOAD_I16",
+  opcode: "66",
+  description: "Loads a 16-bit signed integer from memory into a specified register, sign-extending it to fit the register's size.",
+  latex: "\\reg'_A = \\unsigned{\\signedn{2}{\\de_2(\\memr_{\\immed_X\\dots+2})}}"
+},
+
+{
+  name: "LOAD_U32",
+  opcode: "10",
+  description: "Loads a 32-bit unsigned value from memory into a specified register.",
+  latex: "\\reg'_A = \\de_4(\\memr_{\\immed_X\\dots+4})"
+}
+  
+  
+
+  
+  
   {
     name: "ADD",
     opcode: "", 8,
@@ -221,7 +324,6 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
     description: "No operation.",
     latex: "\\iota = \\omega_A",
   },
-  { name: "TRAP", opcode: "0", latex: "trap" },
   { name: "FALLTHROUGH", latex: "Continues execution to the next instruction" },
   { name: "ECALLI", latex: "System call interface" },
   { name: "STORE_IMM_U8", latex: "\\mu[\\omega_A] = \\nu_X \\mod 2^8" },
