@@ -1,5 +1,6 @@
 export interface InstructionKnowledgeBaseEntry {
   name: string;
+  opcode?: string | number;
   description?: string;
   latex?: string;
 }
@@ -7,7 +8,7 @@ export interface InstructionKnowledgeBaseEntry {
 export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   {
     name: "ADD",
-    opcode: "", 8,
+    opcode: "8",
     description: "Add ωA and ωB and store the result in ωD modulo 2^32.",
     latex: "\\omega'_D = (\\omega_A + \\omega_B) \\mod 2^{32}",
   },
@@ -103,7 +104,8 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   },
   {
     name: "MUL_IMM",
-    description: "Multiply the value in register ωA by the immediate value νX and store the result in register ωB modulo 2^32.",
+    description:
+      "Multiply the value in register ωA by the immediate value νX and store the result in register ωB modulo 2^32.",
     latex: "\\omega'_A = \\omega_B \\times \\nu_X",
   },
   {
@@ -113,22 +115,26 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   },
   {
     name: "REM_IMM",
-    description: "Compute the remainder of the value in register ωA divided by the immediate value νX and store the result in register ωB.",
+    description:
+      "Compute the remainder of the value in register ωA divided by the immediate value νX and store the result in register ωB.",
     latex: "\\omega'_A = \\omega_B \\mod \\nu_X",
   },
   {
     name: "AND_IMM",
-    description: "Perform a bitwise AND between the value in register ωA and the immediate value νX, storing the result in register ωB.",
+    description:
+      "Perform a bitwise AND between the value in register ωA and the immediate value νX, storing the result in register ωB.",
     latex: "\\omega'_A = \\omega_B \\land \\nu_X",
   },
   {
     name: "OR_IMM",
-    description: "Perform a bitwise OR between the value in register ωA and the immediate value νX, storing the result in register ωB.",
+    description:
+      "Perform a bitwise OR between the value in register ωA and the immediate value νX, storing the result in register ωB.",
     latex: "\\omega'_A = \\omega_B \\lor \\nu_X",
   },
   {
     name: "XOR_IMM",
-    description: "Perform a bitwise XOR between the value in register ωA and the immediate value νX, storing the result in register ωB.",
+    description:
+      "Perform a bitwise XOR between the value in register ωA and the immediate value νX, storing the result in register ωB.",
     latex: "\\omega'_A = \\omega_B \\oplus \\nu_X",
   },
   {
@@ -174,7 +180,7 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   {
     name: "JMP",
     description: "Jump to the instruction at address νX.",
-    latex: "\token{branch}(\immed_X, \top)$\\",
+    latex: "\token{branch}(immed_X, \top)$\\",
   },
   {
     name: "JMP_IF_ZERO",
@@ -267,8 +273,14 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   { name: "XOR_IMM", latex: "\\omega'_A = \\omega_B \\oplus \\nu_X" },
   { name: "OR_IMM", latex: "\\omega'_A = \\omega_B \\lor \\nu_X" },
   { name: "MUL_IMM", latex: "\\omega'_A = (\\omega_B \\times \\nu_X) \\mod 2^{32}" },
-  { name: "MUL_UPPER_S_S_IMM", latex: "\\omega'_A = ((\\omega_B \\times \\nu_X) \\gg 32) \\mod 2^{32}$ \\text{ (signed)}" },
-  { name: "MUL_UPPER_U_U_IMM", latex: "\\omega'_A = ((\\omega_B \\times \\nu_X) \\gg 32) \\mod 2^{32}$ \\text{ (unsigned)}" },
+  {
+    name: "MUL_UPPER_S_S_IMM",
+    latex: "\\omega'_A = ((\\omega_B \\times \\nu_X) \\gg 32) \\mod 2^{32}$ \\text{ (signed)}",
+  },
+  {
+    name: "MUL_UPPER_U_U_IMM",
+    latex: "\\omega'_A = ((\\omega_B \\times \\nu_X) \\gg 32) \\mod 2^{32}$ \\text{ (unsigned)}",
+  },
   { name: "SET_LT_U_IMM", latex: "\\omega'_A = (\\omega_B < \\nu_X)" },
   { name: "SET_LT_S_IMM", latex: "\\omega'_A = (\\omega_B < \\nu_X) \\text{ (signed)}" },
   { name: "SHLO_L_IMM", latex: "\\omega'_A = \\omega_B \\ll \\nu_X" },
@@ -295,11 +307,26 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   { name: "XOR", latex: "\\omega'_D = \\omega_A \\oplus \\omega_B" },
   { name: "OR", latex: "\\omega'_D = \\omega_A \\lor \\omega_B" },
   { name: "MUL", latex: "\\omega'_D = (\\omega_A \\times \\omega_B) \\mod 2^{32}" },
-  { name: "MUL_UPPER_S_S", latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed)}" },
-  { name: "MUL_UPPER_U_U", latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (unsigned)}" },
-  { name: "MUL_UPPER_S_U", latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed/unsigned)}" },
-  { name: "DIV_U", latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (unsigned)}" },
-  { name: "DIV_S", latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (signed)}" },
+  {
+    name: "MUL_UPPER_S_S",
+    latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed)}",
+  },
+  {
+    name: "MUL_UPPER_U_U",
+    latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (unsigned)}",
+  },
+  {
+    name: "MUL_UPPER_S_U",
+    latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed/unsigned)}",
+  },
+  {
+    name: "DIV_U",
+    latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (unsigned)}",
+  },
+  {
+    name: "DIV_S",
+    latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (signed)}",
+  },
   { name: "REM_U", latex: "\\omega'_D = \\omega_A \\mod \\omega_B \\text{ (unsigned)}" },
   { name: "REM_S", latex: "\\omega'_D = \\omega_A \\mod \\omega_B \\text{ (signed)}" },
   { name: "SET_LT_U", latex: "\\omega'_A = (\\omega_B < \\omega_C) \\text{ (unsigned)}" },
