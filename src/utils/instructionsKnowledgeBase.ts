@@ -7,6 +7,7 @@ export interface InstructionKnowledgeBaseEntry {
 export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   {
     name: "ADD",
+    opcode: "", 8,
     description: "Add ωA and ωB and store the result in ωD modulo 2^32.",
     latex: "\\omega'_D = (\\omega_A + \\omega_B) \\mod 2^{32}",
   },
@@ -173,7 +174,7 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   {
     name: "JMP",
     description: "Jump to the instruction at address νX.",
-    latex: "\\iota = \\omega_A",
+    latex: "\token{branch}(\immed_X, \top)$\\",
   },
   {
     name: "JMP_IF_ZERO",
@@ -220,7 +221,7 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
     description: "No operation.",
     latex: "\\iota = \\omega_A",
   },
-  { name: "TRAP", latex: "trap" },
+  { name: "TRAP", opcode: "0", latex: "trap" },
   { name: "FALLTHROUGH", latex: "Continues execution to the next instruction" },
   { name: "ECALLI", latex: "System call interface" },
   { name: "STORE_IMM_U8", latex: "\\mu[\\omega_A] = \\nu_X \\mod 2^8" },
