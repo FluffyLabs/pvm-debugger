@@ -1,312 +1,550 @@
 export interface InstructionKnowledgeBaseEntry {
   name: string;
+  opcode?: string | number;
   description?: string;
   latex?: string;
 }
 
 export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
-  {
-    name: "ADD",
-    opcode: "", 8,
-    description: "Add ωA and ωB and store the result in ωD modulo 2^32.",
-    latex: "\\omega'_D = (\\omega_A + \\omega_B) \\mod 2^{32}",
-  },
-  {
-    name: "SUB",
-    description: "Subtract ωB from ωA and store the result in ωD modulo 2^32.",
-    latex: "\\omega'_D = (\\omega_A - \\omega_B) \\mod 2^{32}",
-  },
-  {
-    name: "AND",
-    description: "Perform a bitwise AND on each bit of ωA and ωB, storing the result in ωD.",
-    latex: "\\omega'_D = \\omega_A \\land \\omega_B",
-  },
-  {
-    name: "XOR",
-    description: "Perform a bitwise XOR on each bit of ωA and ωB, storing the result in ωD.",
-    latex: "\\omega'_D = \\omega_A \\oplus \\omega_B",
-  },
-  {
-    name: "OR",
-    description: "Perform a bitwise OR on each bit of ωA and ωB, storing the result in ωD.",
-    latex: "\\omega'_D = \\omega_A \\lor \\omega_B",
-  },
-  {
-    name: "MUL",
-    description: "Multiply ωA by ωB and store the result in ωD modulo 2^32.",
-    latex: "\\omega'_D = (\\omega_A \\times \\omega_B) \\mod 2^{32}",
-  },
-  {
-    name: "MUL_UPPER_S_S",
-    description: "Compute the scaled product of Z4(ωA) and Z4(ωB), store in ωD.",
-    latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed)}",
-  },
-  {
-    name: "MUL_UPPER_U_U",
-    description: "Compute the upper 32 bits of the product of ωA and ωB, store in ωD.",
-    latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (unsigned)}",
-  },
-  {
-    name: "MUL_UPPER_S_U",
-    description: "Compute the scaled product of Z4(ωA) and ωB, store in ωD.",
-    latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed/unsigned)}",
-  },
-  {
-    name: "DIV_U",
-    description: "Divide ωA by ωB and store the result in ωD, with special handling for zero.",
-    latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (unsigned)}",
-  },
-  {
-    name: "DIV_S",
-    description: "Divide ωA by ωB and store the result in ωD, considering signed values and zero.",
-    latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (signed)}",
-  },
-  {
-    name: "REM_U",
-    description: "Compute the remainder of ωA divided by ωB, store in ωD, with special handling for zero.",
-    latex: "\\omega'_D = \\omega_A \\mod \\omega_B \\text{ (unsigned)}",
-  },
-  {
-    name: "REM_S",
-    description: "Compute the signed remainder of ωA divided by ωB, store in ωD, with special handling for zero.",
-    latex: "\\omega'_D = \\omega_A \\mod \\omega_B \\text{ (signed)}",
-  },
-  {
-    name: "SET_LT_U",
-    description: "Set ωD to 1 if ωA < ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B < \\omega_C) \\text{ (unsigned)}",
-  },
-  {
-    name: "SET_LT_S",
-    description: "Set ωD to 1 if signed ωA < ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B < \\omega_C) \\text{ (signed)}",
-  },
-  {
-    name: "SHLO_L",
-    description: "Shift ωA left by ωB bits and store the result in ωD, modulo 2^32.",
-    latex: "\\omega'_D = \\omega_A \\ll \\omega_B",
-  },
-  {
-    name: "SHLO_R",
-    description: "Shift ωA left by ωB bits and store the result in ωD.",
-    latex: "\\omega'_D = \\omega_A \\gg \\omega_B",
-  },
-  {
-    name: "SHAR_R",
-    description: "Shift ωA right by ωB bits and store the result in ωD.",
-    latex: "\\omega'_D = \\omega_A \\gg \\omega_B \\text{ (arithmetic)}",
-  },
-  {
-    name: "CMOV_IZ",
-    description: "Move ωB to ωD if ωA is zero, otherwise move ωA to ωD.",
-    latex: "\\omega'_A = (\\omega_B \\text{ if } \\omega_C == 0 \\text{ else } \\omega_A)",
-  },
-  {
-    name: "MUL_IMM",
-    description: "Multiply the value in register ωA by the immediate value νX and store the result in register ωB modulo 2^32.",
-    latex: "\\omega'_A = \\omega_B \\times \\nu_X",
-  },
-  {
-    name: "DIV_IMM",
-    description: "Divide the value in register ωA by the immediate value νX and store the result in register ωB.",
-    latex: "\\omega'_A = \\left\\lfloor \\frac{\\omega_B}{\\nu_X} \\right\\rfloor",
-  },
-  {
-    name: "REM_IMM",
-    description: "Compute the remainder of the value in register ωA divided by the immediate value νX and store the result in register ωB.",
-    latex: "\\omega'_A = \\omega_B \\mod \\nu_X",
-  },
-  {
-    name: "AND_IMM",
-    description: "Perform a bitwise AND between the value in register ωA and the immediate value νX, storing the result in register ωB.",
-    latex: "\\omega'_A = \\omega_B \\land \\nu_X",
-  },
-  {
-    name: "OR_IMM",
-    description: "Perform a bitwise OR between the value in register ωA and the immediate value νX, storing the result in register ωB.",
-    latex: "\\omega'_A = \\omega_B \\lor \\nu_X",
-  },
-  {
-    name: "XOR_IMM",
-    description: "Perform a bitwise XOR between the value in register ωA and the immediate value νX, storing the result in register ωB.",
-    latex: "\\omega'_A = \\omega_B \\oplus \\nu_X",
-  },
-  {
-    name: "ADD_IMM",
-    description: "Add the value in register ωA to the immediate value νX and store the result in register ωB.",
-    latex: "\\omega'_A = \\omega_B + \\nu_X",
-  },
-  {
-    name: "SUB_IMM",
-    description: "Subtract the immediate value νX from the value in register ωA and store the result in register ωB.",
-    latex: "\\omega'_A = \\omega_B - \\nu_X",
-  },
-  {
-    name: "SET_EQ",
-    description: "Set ωD to 1 if ωA is equal to ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B == \\omega_C)",
-  },
-  {
-    name: "SET_NE",
-    description: "Set ωD to 1 if ωA is not equal to ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B != \\omega_C)",
-  },
-  {
-    name: "SET_GT_U",
-    description: "Set ωD to 1 if unsigned ωA is greater than ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B > \\nu_X)",
-  },
-  {
-    name: "SET_LE_U",
-    description: "Set ωD to 1 if unsigned ωA is less than or equal to ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B <= \\omega_C)",
-  },
-  {
-    name: "SET_GT_S",
-    description: "Set ωD to 1 if signed ωA is greater than ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B > \\nu_X) \\text{ (signed)}",
-  },
-  {
-    name: "SET_LE_S",
-    description: "Set ωD to 1 if signed ωA is less than or equal to ωB, otherwise set ωD to 0.",
-    latex: "\\omega'_A = (\\omega_B <= \\omega_C) \\text{ (signed)}",
-  },
-  {
-    name: "JMP",
-    description: "Jump to the instruction at address νX.",
-    latex: "\token{branch}(\immed_X, \top)$\\",
-  },
-  {
-    name: "JMP_IF_ZERO",
-    description: "Jump to the instruction at address νX if ωA is zero.",
-    latex: "\\iota = \\omega_A \\text{ if } \\omega_B = 0",
-  },
-  {
-    name: "JMP_IF_NOT_ZERO",
-    description: "Jump to the instruction at address νX if ωA is not zero.",
-    latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\neq 0",
-  },
-  {
-    name: "JMP_IF_EQ",
-    description: "Jump to the instruction at address νX if ωA is equal to ωB.",
-    latex: "\\iota = \\omega_A \\text{ if } \\omega_B = \\omega_C",
-  },
-  {
-    name: "JMP_IF_NE",
-    description: "Jump to the instruction at address νX if ωA is not equal to ωB.",
-    latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\neq \\omega_C",
-  },
-  {
-    name: "CALL",
-    description: "Call the subroutine at address νX.",
-    latex: "\\iota = \\omega_A",
-  },
-  {
-    name: "RETURN",
-    description: "Return from the current subroutine.",
-    latex: "\\iota = \\omega_A",
-  },
-  {
-    name: "SYSCALL",
-    description: "Perform a system call with the code νX.",
-    latex: "\\iota = \\omega_A",
-  },
-  {
-    name: "BREAK",
-    description: "Trigger a breakpoint.",
-    latex: "\\iota = \\omega_A",
-  },
-  {
-    name: "NOP",
-    description: "No operation.",
-    latex: "\\iota = \\omega_A",
-  },
-  { name: "TRAP", opcode: "0", latex: "trap" },
-  { name: "FALLTHROUGH", latex: "Continues execution to the next instruction" },
-  { name: "ECALLI", latex: "System call interface" },
-  { name: "STORE_IMM_U8", latex: "\\mu[\\omega_A] = \\nu_X \\mod 2^8" },
-  { name: "STORE_IMM_U16", latex: "\\mu[\\omega_A] = \\nu_X \\mod 2^{16}" },
-  { name: "STORE_IMM_U32", latex: "\\mu[\\omega_A] = \\nu_X \\mod 2^{32}" },
-  { name: "JUMP", latex: "\\iota = \\omega_A" },
-  { name: "JUMP_IND", latex: "\\iota = \\mu[\\omega_A]" },
-  { name: "LOAD_IMM", latex: "\\omega'_A = \\nu_X" },
-  { name: "LOAD_U8", latex: "\\omega'_A = \\mu[\\omega_B] \\mod 2^8" },
-  { name: "LOAD_I8", latex: "\\omega'_A = (\\mu[\\omega_B] \\mod 2^8) \\text{ as signed}" },
-  { name: "LOAD_U16", latex: "\\omega'_A = \\mu[\\omega_B] \\mod 2^{16}" },
-  { name: "LOAD_I16", latex: "\\omega'_A = (\\mu[\\omega_B] \\mod 2^{16}) \\text{ as signed}" },
-  { name: "LOAD_U32", latex: "\\omega'_A = \\mu[\\omega_B] \\mod 2^{32}" },
-  { name: "STORE_U8", latex: "\\mu[\\omega_A] = \\omega_B \\mod 2^8" },
-  { name: "STORE_U16", latex: "\\mu[\\omega_A] = \\omega_B \\mod 2^{16}" },
-  { name: "STORE_U32", latex: "\\mu[\\omega_A] = \\omega_B \\mod 2^{32}" },
-  { name: "STORE_IMM_IND_U8", latex: "\\mu[\\mu[\\omega_A]] = \\nu_X \\mod 2^8" },
-  { name: "STORE_IMM_IND_U16", latex: "\\mu[\\mu[\\omega_A]] = \\nu_X \\mod 2^{16}" },
-  { name: "STORE_IMM_IND_U32", latex: "\\mu[\\mu[\\omega_A]] = \\nu_X \\mod 2^{32}" },
-  { name: "LOAD_IMM_JUMP", latex: "\\omega'_A = \\nu_X; \\iota = \\nu_Y" },
-  { name: "BRANCH_EQ_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B = \\nu_X" },
-  { name: "BRANCH_NE_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\neq \\nu_X" },
-  { name: "BRANCH_LT_U_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B < \\nu_X" },
-  { name: "BRANCH_LE_U_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\leq \\nu_X" },
-  { name: "BRANCH_GE_U_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\geq \\nu_X" },
-  { name: "BRANCH_GT_U_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B > \\nu_X" },
-  { name: "BRANCH_LT_S_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B < \\nu_X \\text{ (signed)}" },
-  { name: "BRANCH_LE_S_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\leq \\nu_X \\text{ (signed)}" },
-  { name: "BRANCH_GE_S_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\geq \\nu_X \\text{ (signed)}" },
-  { name: "BRANCH_GT_S_IMM", latex: "\\iota = \\omega_A \\text{ if } \\omega_B > \\nu_X \\text{ (signed)}" },
-  { name: "MOVE_REG", latex: "\\omega'_A = \\omega_B" },
-  { name: "SBRK", latex: "Increase program break (memory allocation)" },
-  { name: "STORE_IND_U8", latex: "\\mu[\\mu[\\omega_A]] = \\omega_B \\mod 2^8" },
-  { name: "STORE_IND_U16", latex: "\\mu[\\mu[\\omega_A]] = \\omega_B \\mod 2^{16}" },
-  { name: "STORE_IND_U32", latex: "\\mu[\\mu[\\omega_A]] = \\omega_B \\mod 2^{32}" },
-  { name: "LOAD_IND_U8", latex: "\\omega'_A = \\mu[\\mu[\\omega_B]] \\mod 2^8" },
-  { name: "LOAD_IND_I8", latex: "\\omega'_A = (\\mu[\\mu[\\omega_B]] \\mod 2^8) \\text{ as signed}" },
-  { name: "LOAD_IND_U16", latex: "\\omega'_A = \\mu[\\mu[\\omega_B]] \\mod 2^{16}" },
-  { name: "LOAD_IND_I16", latex: "\\omega'_A = (\\mu[\\mu[\\omega_B]] \\mod 2^{16}) \\text{ as signed}" },
-  { name: "LOAD_IND_U32", latex: "\\omega'_A = \\mu[\\mu[\\omega_B]] \\mod 2^{32}" },
-  { name: "ADD_IMM", latex: "\\omega'_A = (\\omega_B + \\nu_X) \\mod 2^{32}" },
-  { name: "AND_IMM", latex: "\\omega'_A = \\omega_B \\land \\nu_X" },
-  { name: "XOR_IMM", latex: "\\omega'_A = \\omega_B \\oplus \\nu_X" },
-  { name: "OR_IMM", latex: "\\omega'_A = \\omega_B \\lor \\nu_X" },
-  { name: "MUL_IMM", latex: "\\omega'_A = (\\omega_B \\times \\nu_X) \\mod 2^{32}" },
-  { name: "MUL_UPPER_S_S_IMM", latex: "\\omega'_A = ((\\omega_B \\times \\nu_X) \\gg 32) \\mod 2^{32}$ \\text{ (signed)}" },
-  { name: "MUL_UPPER_U_U_IMM", latex: "\\omega'_A = ((\\omega_B \\times \\nu_X) \\gg 32) \\mod 2^{32}$ \\text{ (unsigned)}" },
-  { name: "SET_LT_U_IMM", latex: "\\omega'_A = (\\omega_B < \\nu_X)" },
-  { name: "SET_LT_S_IMM", latex: "\\omega'_A = (\\omega_B < \\nu_X) \\text{ (signed)}" },
-  { name: "SHLO_L_IMM", latex: "\\omega'_A = \\omega_B \\ll \\nu_X" },
-  { name: "SHLO_R_IMM", latex: "\\omega'_A = \\omega_B \\gg \\nu_X" },
-  { name: "SHAR_R_IMM", latex: "\\omega'_A = \\omega_B \\gg \\nu_X \\text{ (signed)}" },
-  { name: "NEG_ADD_IMM", latex: "\\omega'_A = -\\omega_B + \\nu_X" },
-  { name: "SET_GT_U_IMM", latex: "\\omega'_A = (\\omega_B > \\nu_X)" },
-  { name: "SET_GT_S_IMM", latex: "\\omega'_A = (\\omega_B > \\nu_X) \\text{ (signed)}" },
-  { name: "SHLO_L_IMM_ALT", latex: "\\omega'_A = \\omega_B \\ll \\nu_X" },
-  { name: "SHLO_R_IMM_ALT", latex: "\\omega'_A = \\omega_B \\gg \\nu_X" },
-  { name: "SHAR_R_IMM_ALT", latex: "\\omega'_A = \\omega_B \\gg \\nu_X \\text{ (signed)}" },
-  { name: "CMOV_IZ_IMM", latex: "\\omega'_A = \\nu_X \\text{ if } \\omega_B = 0" },
-  { name: "CMOV_NZ_IMM", latex: "\\omega'_A = \\nu_X \\text{ if } \\omega_B \\neq 0" },
-  { name: "BRANCH_EQ", latex: "\\iota = \\omega_A \\text{ if } \\omega_B = \\omega_C" },
-  { name: "BRANCH_NE", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\neq \\omega_C" },
-  { name: "BRANCH_LT_U", latex: "\\iota = \\omega_A \\text{ if } \\omega_B < \\omega_C" },
-  { name: "BRANCH_LT_S", latex: "\\iota = \\omega_A \\text{ if } \\omega_B < \\omega_C \\text{ (signed)}" },
-  { name: "BRANCH_GE_U", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\geq \\omega_C" },
-  { name: "BRANCH_GE_S", latex: "\\iota = \\omega_A \\text{ if } \\omega_B \\geq \\omega_C \\text{ (signed)}" },
-  { name: "LOAD_IMM_JUMP_IND", latex: "\\omega'_A = \\nu_X; \\iota = \\mu[\\omega_B]" },
-  { name: "ADD", latex: "\\omega'_D = (\\omega_A + \\omega_B) \\mod 2^{32}" },
-  // { name: "SUB", latex: "\\omega'_D = (\\omega_A - \\omega_B) \\mod 2^{32}" },
-  { name: "AND", latex: "\\omega'_D = \\omega_A \\land \\omega_B" },
-  { name: "XOR", latex: "\\omega'_D = \\omega_A \\oplus \\omega_B" },
-  { name: "OR", latex: "\\omega'_D = \\omega_A \\lor \\omega_B" },
-  { name: "MUL", latex: "\\omega'_D = (\\omega_A \\times \\omega_B) \\mod 2^{32}" },
-  { name: "MUL_UPPER_S_S", latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed)}" },
-  { name: "MUL_UPPER_U_U", latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (unsigned)}" },
-  { name: "MUL_UPPER_S_U", latex: "\\omega'_D = \\left(\\frac{\\omega_A \\times \\omega_B}{2^{32}}\\right) \\text{ (signed/unsigned)}" },
-  { name: "DIV_U", latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (unsigned)}" },
-  { name: "DIV_S", latex: "\\omega'_D = \\left\\lfloor \\frac{\\omega_A}{\\omega_B} \\right\\rfloor \\text{ (signed)}" },
-  { name: "REM_U", latex: "\\omega'_D = \\omega_A \\mod \\omega_B \\text{ (unsigned)}" },
-  { name: "REM_S", latex: "\\omega'_D = \\omega_A \\mod \\omega_B \\text{ (signed)}" },
-  { name: "SET_LT_U", latex: "\\omega'_A = (\\omega_B < \\omega_C) \\text{ (unsigned)}" },
-  { name: "SET_LT_S", latex: "\\omega'_A = (\\omega_B < \\omega_C) \\text{ (signed)}" },
-  { name: "SHLO_L", latex: "\\omega'_D = \\omega_A \\ll \\omega_B" },
-  { name: "SHLO_R", latex: "\\omega'_D = \\omega_A \\gg \\omega_B" },
-  { name: "SHAR_R", latex: "\\omega'_D = \\omega_A \\gg \\omega_B \\text{ (arithmetic)}" },
-  { name: "CMOV_IZ", latex: "\\omega'_A = (\\omega_B \\text{ if } \\omega_C == 0 \\text{ else } \\omega_A)" },
-  { name: "CMOV_NZ", latex: "\\omega'_A = (\\omega_B \\text{ if } \\omega_C \\neq 0 \\text{ else } \\omega_A)" },
+
+{
+  name: "trap",
+  opcode: 0,
+  description: "Trigger a trap, setting the error state.",
+  latex: "\\varepsilon = \\text{⚡}"
+},
+{
+  name: "fallthrough",
+  opcode: 17,
+  description: "Proceed with the next instruction without any modifications.",
+  latex: ""
+},
+
+{
+  name: "ecalli",
+  opcode: 78,
+  description: "Execute a call with an external operation, setting the error state based on the result.",
+  latex: "\\varepsilon = \\hbar \\times \\nu_X"
+},
+
+{
+  name: "store_imm_u8",
+  opcode: 62,
+  description: "Store the immediate value νY into memory at the address νX modulo 2^8.",
+  latex: "\\mu'_{\\nu_X} = \\nu_Y \\mod 2^8"
+},
+{
+  name: "store_imm_u16",
+  opcode: 79,
+  description: "Store the immediate value νY into memory at the address νX as a 16-bit value.",
+  latex: "\\mu'_{\\nu_X...+2} = \\mathcal{E}_2(\\nu_Y \\mod 2^{16})"
+},
+{
+  name: "store_imm_u32",
+  opcode: 38,
+  description: "Store the immediate value νY into memory at the address νX as a 32-bit value.",
+  latex: "\\mu'_{\\nu_X...+4} = \\mathcal{E}_4(\\nu_Y)"
+},
+
+{
+  name: "jump",
+  opcode: 5,
+  description: "Perform a jump to the address specified by νX.",
+  latex: "branch(\\nu_X, \\top)"
+},
+
+{
+  name: "jump_ind",
+  opcode: 19,
+  description: "Indirect jump to the address calculated as (ωA + νX) modulo 2^32.",
+  latex: "djump((\\omega_A + \\nu_X) \\mod 2^{32})"
+},
+{
+  name: "load_imm",
+  opcode: 4,
+  description: "Load the immediate value νX into register ω'A.",
+  latex: "\\omega'_A = \\nu_X"
+},
+{
+  name: "load_u8",
+  opcode: 60,
+  description: "Load an 8-bit unsigned value from memory at address μνX into register ω'A.",
+  latex: "\\omega'_A = \\mu_{\\nu_X}"
+},
+{
+  name: "load_i8",
+  opcode: 74,
+  description: "Load an 8-bit signed value from memory at address μνX into register ω'A.",
+  latex: "\\omega'_A = \\mathbb{Z}_4^{-1}(\\mathbb{Z}_1(\\mu_{\\nu_X}))"
+},
+{
+  name: "load_u16",
+  opcode: 76,
+  description: "Load a 16-bit unsigned value from memory at address μνX into register ω'A.",
+  latex: "\\omega'_A = \\mathcal{E}_2^{-1}(\\mu_{\\nu_X...+2})"
+},
+{
+  name: "load_i16",
+  opcode: 66,
+  description: "Load a 16-bit signed value from memory at address μνX into register ω'A.",
+  latex: "\\omega'_A = \\mathbb{Z}_4^{-1}(\\mathbb{Z}_2(\\mathcal{E}_2^{-1}(\\mu_{\\nu_X...+2})))"
+},
+{
+  name: "load_u32",
+  opcode: 10,
+  description: "Load a 32-bit unsigned value from memory at address μνX into register ω'A.",
+  latex: "\\omega'_A = \\mathcal{E}_4^{-1}(\\mu_{\\nu_X...+4})"
+},
+{
+  name: "store_u8",
+  opcode: 71,
+  description: "Store an 8-bit unsigned value from register ωA into memory at address μνX.",
+  latex: "\\mu'_{\\nu_X} = \\omega_A \\mod 2^8"
+},
+{
+  name: "store_u16",
+  opcode: 69,
+  description: "Store a 16-bit unsigned value from register ωA into memory at address μνX.",
+  latex: "\\mu'_{\\nu_X...+2} = \\mathcal{E}_2(\\omega_A \\mod 2^{16})"
+},
+{
+  name: "store_u32",
+  opcode: 22,
+  description: "Store a 32-bit unsigned value from register ωA into memory at address μνX.",
+  latex: "\\mu'_{\\nu_X...+4} = \\mathcal{E}_4(\\omega_A)"
+},
+
+{
+  name: "store_imm_ind_u8",
+  opcode: 26,
+  description: "Store the immediate value νY into memory at the address (ωA + νX) modulo 2^8.",
+  latex: "\\mu'_{\\omega_A + \\nu_X} = \\nu_Y \\mod 2^8"
+},
+{
+  name: "store_imm_ind_u16",
+  opcode: 54,
+  description: "Store the immediate value νY into memory at the address (ωA + νX) as a 16-bit value.",
+  latex: "\\mu'_{\\omega_A + \\nu_X...+2} = \\mathcal{E}_2(\\nu_Y \\mod 2^{16})"
+},
+{
+  name: "store_imm_ind_u32",
+  opcode: 13,
+  description: "Store the immediate value νY into memory at the address (ωA + νX) as a 32-bit value.",
+  latex: "\\mu'_{\\omega_A + \\nu_X...+4} = \\mathcal{E}_4(\\nu_Y)"
+},
+
+{
+  name: "load_imm_jump",
+  opcode: 6,
+  description: "Load immediate value νX into register ω'A and perform a branch to address νY.",
+  latex: "branch(\\nu_Y, \\top), \\omega'_A = \\nu_X"
+},
+{
+  name: "branch_eq_imm",
+  opcode: 7,
+  description: "Branch to νY if ωA equals νX.",
+  latex: "branch(\\nu_Y, \\omega_A = \\nu_X)"
+},
+{
+  name: "branch_ne_imm",
+  opcode: 15,
+  description: "Branch to νY if ωA does not equal νX.",
+  latex: "branch(\\nu_Y, \\omega_A \\neq \\nu_X)"
+},
+{
+  name: "branch_lt_u_imm",
+  opcode: 44,
+  description: "Branch to νY if ωA is less than νX (unsigned comparison).",
+  latex: "branch(\\nu_Y, \\omega_A < \\nu_X)"
+},
+{
+  name: "branch_le_u_imm",
+  opcode: 59,
+  description: "Branch to νY if ωA is less than or equal to νX (unsigned comparison).",
+  latex: "branch(\\nu_Y, \\omega_A \\leq \\nu_X)"
+},
+{
+  name: "branch_ge_u_imm",
+  opcode: 52,
+  description: "Branch to νY if ωA is greater than or equal to νX (unsigned comparison).",
+  latex: "branch(\\nu_Y, \\omega_A \\geq \\nu_X)"
+},
+{
+  name: "branch_gt_u_imm",
+  opcode: 50,
+  description: "Branch to νY if ωA is greater than νX (unsigned comparison).",
+  latex: "branch(\\nu_Y, \\omega_A > \\nu_X)"
+},
+{
+  name: "branch_lt_s_imm",
+  opcode: 32,
+  description: "Branch to νY if ωA is less than νX (signed comparison).",
+  latex: "branch(\\nu_Y, \\mathbb{Z}_4(\\omega_A) < \\mathbb{Z}_4(\\nu_X))"
+},
+{
+  name: "branch_le_s_imm",
+  opcode: 46,
+  description: "Branch to νY if ωA is less than or equal to νX (signed comparison).",
+  latex: "branch(\\nu_Y, \\mathbb{Z}_4(\\omega_A) \\leq \\mathbb{Z}_4(\\nu_X))"
+},
+{
+  name: "branch_ge_s_imm",
+  opcode: 45,
+  description: "Branch to νY if ωA is greater than or equal to νX (signed comparison).",
+  latex: "branch(\\nu_Y, \\mathbb{Z}_4(\\omega_A) \\geq \\mathbb{Z}_4(\\nu_X))"
+},
+{
+  name: "branch_gt_s_imm",
+  opcode: 53,
+  description: "Branch to νY if ωA is greater than νX (signed comparison).",
+  latex: "branch(\\nu_Y, \\mathbb{Z}_4(\\omega_A) > \\mathbb{Z}_4(\\nu_X))"
+},
+
+{
+  name: "move_reg",
+  opcode: 82,
+  description: "Move the value from register ωA to register ω'D. Optionally, set ω'D to the minimum value in the set of natural numbers NR that is greater than or equal to h.",
+  latex: "\\omega'_D = \\omega_A \\text{ or } \\omega'_D \\equiv \\min(x \\in \\mathbb{N}_R) : x \\geq h"
+},
+{
+  name: "sbrk",
+  opcode: 87,
+  description: "Adjust the program's data space by moving the break value.",
+  latex: "\\mathbb{N}_{x...+\\omega_A} \\notin \\mathbb{V}_\\mu \\text{ or } \\mathbb{N}_{x...+\\omega_A} \\in \\mathbb{V}^*_{\\mu'}"
+},
+
+{
+  name: "store_ind_u8",
+  opcode: 16,
+  description: "Store an 8-bit unsigned value from register ωA into memory at the address (ωB + νX).",
+  latex: "\\mu'_{\\omega_B + \\nu_X} = \\omega_A \\mod 2^8"
+},
+{
+  name: "store_ind_u16",
+  opcode: 29,
+  description: "Store a 16-bit unsigned value from register ωA into memory at the address (ωB + νX).",
+  latex: "\\mu'_{\\omega_B + \\nu_X...+2} = \\mathcal{E}_2(\\omega_A \\mod 2^{16})"
+},
+{
+  name: "store_ind_u32",
+  opcode: 3,
+  description: "Store a 32-bit unsigned value from register ωA into memory at the address (ωB + νX).",
+  latex: "\\mu'_{\\omega_B + \\nu_X...+4} = \\mathcal{E}_4(\\omega_A)"
+},
+{
+  name: "load_ind_u8",
+  opcode: 11,
+  description: "Load an 8-bit unsigned value from memory at the address (ωB + νX) into register ω'A.",
+  latex: "\\omega'_A = \\mu_{\\omega_B + \\nu_X}"
+},
+{
+  name: "load_ind_i8",
+  opcode: 21,
+  description: "Load an 8-bit signed value from memory at the address (ωB + νX) into register ω'A.",
+  latex: "\\omega'_A = \\mathbb{Z}_4^{-1}(\\mathbb{Z}_1(\\mu_{\\omega_B + \\nu_X}))"
+},
+{
+  name: "load_ind_u16",
+  opcode: 37,
+  description: "Load a 16-bit unsigned value from memory at the address (ωB + νX) into register ω'A.",
+  latex: "\\omega'_A = \\mathcal{E}_2^{-1}(\\mu_{\\omega_B + \\nu_X...+2})"
+},
+{
+  name: "load_ind_i16",
+  opcode: 33,
+  description: "Load a 16-bit signed value from memory at the address (ωB + νX) into register ω'A.",
+  latex: "\\omega'_A = \\mathbb{Z}_4^{-1}(\\mathbb{Z}_2(\\mathcal{E}_2^{-1}(\\mu_{\\omega_B + \\nu_X...+2})))"
+},
+{
+  name: "load_ind_u32",
+  opcode: 1,
+  description: "Load a 32-bit unsigned value from memory at the address (ωB + νX) into register ω'A.",
+  latex: "\\omega'_A = \\mathcal{E}_4^{-1}(\\mu_{\\omega_B + \\nu_X...+4})"
+},
+{
+  name: "add_imm",
+  opcode: 2,
+  description: "Add immediate value νX to ωA and store the result in ω'B modulo 2^32.",
+  latex: "\\omega'_B = (\\omega_A + \\nu_X) \\mod 2^{32}"
+},
+{
+  name: "and_imm",
+  opcode: 31,
+  description: "Perform a bitwise AND between ωA and νX and store the result in ω'B.",
+  latex: "\\forall i \\in \\mathbb{N}_{32}: \\mathbb{B}_4(\\omega'_B)_i = \\mathbb{B}_4(\\omega_A)_i \\land \\mathbb{B}_4(\\nu_X)_i"
+},
+{
+  name: "xor_imm",
+  opcode: 30,
+  description: "Perform a bitwise XOR between ωA and νX and store the result in ω'B.",
+  latex: "\\forall i \\in \\mathbb{N}_{32}: \\mathbb{B}_4(\\omega'_B)_i = \\mathbb{B}_4(\\omega_A)_i \\oplus \\mathbb{B}_4(\\nu_X)_i"
+},
+{
+  name: "or_imm",
+  opcode: 49,
+  description: "Perform a bitwise OR between ωA and νX and store the result in ω'B.",
+  latex: "\\forall i \\in \\mathbb{N}_{32}: \\mathbb{B}_4(\\omega'_B)_i = \\mathbb{B}_4(\\omega_A)_i \\lor \\mathbb{B}_4(\\nu_X)_i"
+},
+{
+  name: "mul_imm",
+  opcode: 35,
+  description: "Multiply ωA by νX and store the result in ω'B modulo 2^32.",
+  latex: "\\omega'_B = (\\omega_A \\times \\nu_X) \\mod 2^{32}"
+},
+{
+  name: "mul_upper_s_s_imm",
+  opcode: 65,
+  description: "Multiply the signed value of ωA by the signed value of νX and store the upper half of the result in ω'B.",
+  latex: "\\omega'_B = \\mathbb{Z}_4^{-1}((\\mathbb{Z}_4(\\omega_A) \\times \\mathbb{Z}_4(\\nu_X)) + 2^{32})"
+},
+{
+  name: "mul_upper_u_u_imm",
+  opcode: 63,
+  description: "Multiply the unsigned value of ωA by the unsigned value of νX and store the upper half of the result in ω'B.",
+  latex: "\\omega'_B = ((\\omega_A \\times \\nu_X) + 2^{32})"
+},
+{
+  name: "set_lt_u_imm",
+  opcode: 27,
+  description: "Set ω'B to 1 if ωA is less than νX (unsigned comparison); otherwise, set it to 0.",
+  latex: "\\omega'_B = \\omega_A < \\nu_X"
+},
+{
+  name: "set_lt_s_imm",
+  opcode: 56,
+  description: "Set ω'B to 1 if ωA is less than νX (signed comparison); otherwise, set it to 0.",
+  latex: "\\omega'_B = \\mathbb{Z}_4(\\omega_A) < \\mathbb{Z}_4(\\nu_X)"
+},
+{
+  name: "shlo_l_imm",
+  opcode: 9,
+  description: "Shift ωA left by a value of (2 * νX) modulo 32 and store the result in ω'B.",
+  latex: "\\omega'_B = (\\omega_A \\times 2^{\\nu_X} \\mod 32) \\mod 2^{32}"
+},
+{
+  name: "shlo_r_imm",
+  opcode: 14,
+  description: "Shift ωA right by a value of (2 * νX) modulo 32 and store the result in ω'B.",
+  latex: "\\omega'_B = (\\omega_A \\div 2^{\\nu_X} \\mod 32) \\mod 2^{32}"
+},
+{
+  name: "shar_r_imm",
+  opcode: 25,
+  description: "Arithmetic shift right of ωA by νX and store the result in ω'B.",
+  latex: "\\omega'_B = \\mathbb{Z}_4^{-1}(\\mathbb{Z}_4(\\omega_A) \\div 2^{\\nu_X \\mod 32})"
+},
+{
+  name: "neg_add_imm",
+  opcode: 40,
+  description: "Add the two's complement of νX to ωA and store the result in ω'B modulo 2^32.",
+  latex: "\\omega'_B = (\\nu_X + 2^{32} - \\omega_A) \\mod 2^{32}"
+},
+{
+  name: "set_gt_u_imm",
+  opcode: 39,
+  description: "Set ω'B to 1 if ωA is greater than νX (unsigned comparison); otherwise, set it to 0.",
+  latex: "\\omega'_B = \\omega_A > \\nu_X"
+},
+{
+  name: "set_gt_s_imm",
+  opcode: 61,
+  description: "Set ω'B to 1 if ωA is greater than νX (signed comparison); otherwise, set it to 0.",
+  latex: "\\omega'_B = \\mathbb{Z}_4(\\omega_A) > \\mathbb{Z}_4(\\nu_X)"
+},
+{
+  name: "shlo_l_imm_alt",
+  opcode: 75,
+  description: "Alternative left shift of νX by 24 modulo 32 and store the result in ω'B.",
+  latex: "\\omega'_B = (\\nu_X \\times 2^{24} \\mod 32) \\mod 2^{32}"
+},
+{
+  name: "shlo_r_imm_alt",
+  opcode: 72,
+  description: "Alternative right shift of νX by 24 modulo 32 and store the result in ω'B.",
+  latex: "\\omega'_B = (\\nu_X \\div 2^{24} \\mod 32) \\mod 2^{32}"
+},
+{
+  name: "shar_r_imm_alt",
+  opcode: 28,
+  description: "Alternative arithmetic right shift of ωA by (νX mod 32) and store the result in ω'B.",
+  latex: "\\omega'_B = \\mathbb{Z}_4^{-1}(\\mathbb{Z}_4(\\omega_A) \\div 2^{\\nu_X \\mod 32})"
+},
+{
+  name: "cmov_iz_imm",
+  opcode: 85,
+  description: "Move νX to ω'A if ωB equals 0; otherwise, move ωA to ω'A.",
+  latex: "\\omega'_A = \\begin{cases} \\nu_X & \\text{if } \\omega_B = 0 \\\\ \\omega_A & \\text{otherwise} \\end{cases}"
+},
+{
+  name: "cmov_nz_imm",
+  opcode: 86,
+  description: "Move νX to ω'A if ωB does not equal 0; otherwise, move ωA to ω'A.",
+  latex: "\\omega'_A = \\begin{cases} \\nu_X & \\text{if } \\omega_B \\neq 0 \\\\ \\omega_A & \\text{otherwise} \\end{cases}"
+},
+
+{
+  name: "branch_eq",
+  opcode: 24,
+  description: "Branch to νX if ωA equals ωB.",
+  latex: "branch(\\nu_X, \\omega_A = \\omega_B)"
+},
+{
+  name: "branch_ne",
+  opcode: 30,
+  description: "Branch to νX if ωA does not equal ωB.",
+  latex: "branch(\\nu_X, \\omega_A \\neq \\omega_B)"
+},
+{
+  name: "branch_lt_u",
+  opcode: 47,
+  description: "Branch to νX if ωA is less than ωB (unsigned comparison).",
+  latex: "branch(\\nu_X, \\omega_A < \\omega_B)"
+},
+{
+  name: "branch_lt_s",
+  opcode: 48,
+  description: "Branch to νX if ωA is less than ωB (signed comparison).",
+  latex: "branch(\\nu_X, \\mathbb{Z}_4(\\omega_A) < \\mathbb{Z}_4(\\omega_B))"
+},
+{
+  name: "branch_ge_u",
+  opcode: 41,
+  description: "Branch to νX if ωA is greater than or equal to ωB (unsigned comparison).",
+  latex: "branch(\\nu_X, \\omega_A \\geq \\omega_B)"
+},
+{
+  name: "branch_ge_s",
+  opcode: 43,
+  description: "Branch to νX if ωA is greater than or equal to ωB (signed comparison).",
+  latex: "branch(\\nu_X, \\mathbb{Z}_4(\\omega_A) \\geq \\mathbb{Z}_4(\\omega_B))"
+},
+
+{
+  name: "load_imm_jump_ind",
+  opcode: 42,
+  description: "Perform an indirect jump to the address calculated as (ωB + νY) modulo 2^32 and load the immediate value νX into register ω'A.",
+  latex: "djump((\\omega_B + \\nu_Y) \\mod 2^{32}), \\omega'_A = \\nu_X"
+},
+
+{
+  name: "add",
+  opcode: 6,
+  description: "Add ωA and ωB and store the result in ω'D modulo 2^32.",
+  latex: "\\omega'_D = (\\omega_A + \\omega_B) \\mod 2^{32}"
+},
+{
+  name: "sub",
+  opcode: 20,
+  description: "Subtract ωB from ωA and store the result in ω'D modulo 2^32.",
+  latex: "\\omega'_D = (\\omega_A + 2^{32} - \\omega_B) \\mod 2^{32}"
+},
+{
+  name: "and",
+  opcode: 23,
+  description: "Perform a bitwise AND between ωA and ωB and store the result in ω'D.",
+  latex: "\\forall i \\in \\mathbb{N}_{32}: \\mathbb{B}_4(\\omega'_D)_i = \\mathbb{B}_4(\\omega_A)_i \\land \\mathbb{B}_4(\\omega_B)_i"
+},
+{
+  name: "xor",
+  opcode: 28,
+  description: "Perform a bitwise XOR between ωA and ωB and store the result in ω'D.",
+  latex: "\\forall i \\in \\mathbb{N}_{32}: \\mathbb{B}_4(\\omega'_D)_i = \\mathbb{B}_4(\\omega_A)_i \\oplus \\mathbb{B}_4(\\omega_B)_i"
+},
+{
+  name: "or",
+  opcode: 12,
+  description: "Perform a bitwise OR between ωA and ωB and store the result in ω'D.",
+  latex: "\\forall i \\in \\mathbb{N}_{32}: \\mathbb{B}_4(\\omega'_D)_i = \\mathbb{B}_4(\\omega_A)_i \\lor \\mathbb{B}_4(\\omega_B)_i"
+},
+{
+  name: "mul",
+  opcode: 34,
+  description: "Multiply ωA by ωB and store the result in ω'D modulo 2^32.",
+  latex: "\\omega'_D = (\\omega_A \\times \\omega_B) \\mod 2^{32}"
+},
+{
+  name: "mul_upper_s_s",
+  opcode: 5,
+  description: "Multiply the signed values of ωA and ωB, then store the upper half of the result in ω'D.",
+  latex: "\\omega'_D = \\mathbb{Z}_4^{-1}((\\mathbb{Z}_4(\\omega_A) \\times \\mathbb{Z}_4(\\omega_B)) + 2^{32})"
+},
+{
+  name: "mul_upper_u_u",
+  opcode: 57,
+  description: "Multiply the unsigned values of ωA and ωB, then store the upper half of the result in ω'D.",
+  latex: "\\omega'_D = ((\\omega_A \\times \\omega_B) + 2^{32})"
+},
+{
+  name: "mul_upper_s_u",
+  opcode: 81,
+  description: "Multiply the signed value of ωA by the unsigned value of ωB, then store the upper half of the result in ω'D.",
+  latex: "\\omega'_D = \\mathbb{Z}_4^{-1}((\\mathbb{Z}_4(\\omega_A) \\times \\omega_B) + 2^{32})"
+},
+{
+  name: "div_u",
+  opcode: 68,
+  description: "Divide the unsigned value of ωA by ωB and store the result in ω'D. If ωB is zero, store 2^32 - 1 instead.",
+  latex: "\\omega'_D = \\begin{cases} 2^{32} - 1 & \\text{if } \\omega_B = 0 \\\\ \\frac{\\omega_A}{\\omega_B} & \\text{otherwise} \\end{cases}"
+},
+{
+  name: "div_s",
+  opcode: 64,
+  description: "Divide the signed value of ωA by ωB and store the result in ω'D. If ωB is zero or if division would overflow, store ωA instead.",
+  latex: "\\omega'_D = \\begin{cases} 2^{32} - 1 & \\text{if } \\omega_B = 0 \\\\ \\omega_A & \\text{if } \\mathbb{Z}_4(\\omega_A) = -2^{31} \\land \\mathbb{Z}_4(\\omega_B) = -1 \\\\ \\mathbb{Z}_4^{-1}(\\mathbb{Z}_4(\\omega_A) \\div \\mathbb{Z}_4(\\omega_B)) & \\text{otherwise} \\end{cases}"
+},
+{
+  name: "rem_u",
+  opcode: 73,
+  description: "Compute the remainder of unsigned division of ωA by ωB and store the result in ω'D. If ωB is zero, store ωA instead.",
+  latex: "\\omega'_D = \\begin{cases} \\omega_A & \\text{if } \\omega_B = 0 \\\\ \\omega_A \\mod \\omega_B & \\text{otherwise} \\end{cases}"
+},
+{
+  name: "rem_s",
+  opcode: 70,
+  description: "Compute the remainder of signed division of ωA by ωB and store the result in ω'D. If ωB is zero or if division would overflow, store ωA instead.",
+  latex: "\\omega'_D = \\begin{cases} \\omega_A & \\text{if } \\omega_B = 0 \\\\ 0 & \\text{if } \\mathbb{Z}_4(\\omega_A) = -2^{31} \\land \\mathbb{Z}_4(\\omega_B) = -1 \\\\ \\mathbb{Z}_4^{-1}(\\mathbb{Z}_4(\\omega_A) \\mod \\mathbb{Z}_4(\\omega_B)) & \\text{otherwise} \\end{cases}"
+},
+{
+  name: "set_lt_u",
+  opcode: 36,
+  description: "Set ω'D to 1 if ωA is less than ωB (unsigned comparison); otherwise, set it to 0.",
+  latex: "\\omega'_D = \\omega_A < \\omega_B"
+},
+{
+  name: "set_lt_s",
+  opcode: 58,
+  description: "Set ω'D to 1 if ωA is less than ωB (signed comparison); otherwise, set it to 0.",
+  latex: "\\omega'_D = \\mathbb{Z}_4(\\omega_A) < \\mathbb{Z}_4(\\omega_B)"
+},
+{
+  name: "shlo_l",
+  opcode: 55,
+  description: "Shift ωA left by a value of (2 * ωB) modulo 32 and store the result in ω'D.",
+  latex: "\\omega'_D = (\\omega_A \\times 2^{\\omega_B \\mod 32}) \\mod 2^{32}"
+},
+{
+  name: "shlo_r",
+  opcode: 51,
+  description: "Shift ωA right by a value of (2 * ωB) modulo 32 and store the result in ω'D.",
+  latex: "\\omega'_D = \\omega_A \\div 2^{\\omega_B \\mod 32}"
+},
+{
+  name: "shar_r",
+  opcode: 77,
+  description: "Arithmetic shift right of ωA by ωB and store the result in ω'D.",
+  latex: "\\omega'_D = \\mathbb{Z}_4^{-1}(\\mathbb{Z}_4(\\omega_A) \\div 2^{\\omega_B \\mod 32})"
+},
+{
+  name: "cmov_iz",
+  opcode: 83,
+  description: "Move ωA to ω'D if ωB equals 0; otherwise, move ωD to ω'D.",
+  latex: "\\omega'_D = \\begin{cases} \\omega_A & \\text{if } \\omega_B = 0 \\\\ \\omega_D & \\text{otherwise} \\end{cases}"
+},
+{
+  name: "cmov_nz",
+  opcode: 84,
+  description: "Move ωA to ω'D if ωB does not equal 0; otherwise, move ωD to ω'D.",
+  latex: "\\omega'_D = \\begin{cases} \\omega_A & \\text{if } \\omega_B \\neq 0 \\\\ \\omega_D & \\text{otherwise} \\end{cases}"
+}
+  
 ];
