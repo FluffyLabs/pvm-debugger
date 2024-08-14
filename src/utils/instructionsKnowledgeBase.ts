@@ -9,7 +9,7 @@ export const instructionsKnowledgeBase: InstructionKnowledgeBaseEntry[] = [
   {
     name: "ADD",
     opcode: "8",
-    description: "Add ωA and ωB and store the result in ωD modulo 2^32.",
+    description: "Add ωA and ωB and store the result in ωD modulo 2^32",
     latex: "\\omega'_D = (\\omega_A + \\omega_B) \\mod 2^{32}",
   },
   {
