@@ -143,7 +143,7 @@ function App() {
                 }}
               >
                 <RefreshCcw className="w-3.5 mr-1.5" />
-                Restart
+                Reset
               </Button>
               <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished}>
                 <Play className="w-3.5 mr-1.5" />
