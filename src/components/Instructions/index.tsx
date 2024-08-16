@@ -35,8 +35,8 @@ export const Instructions = ({
     }
 
     return isEqual(
-      omit(currentInstruction, ["args.immediateDecoder", "instructionBytes"]),
-      omit(programRow, ["args.immediateDecoder", "instructionBytes"]),
+      omit(currentInstruction, ["args.immediateDecoder", "instructionBytes", "address"]),
+      omit(programRow, ["args.immediateDecoder", "instructionBytes", "address"]),
     );
   };
 
@@ -50,7 +50,7 @@ export const Instructions = ({
       const address = (
         <div>
           {[...Array(8 - addressVal.length)].map(() => (
-            <span className="text-gray-300">0</span>
+            <span className="text-gray-400">0</span>
           ))}
           <span>{addressVal}</span>
         </div>
