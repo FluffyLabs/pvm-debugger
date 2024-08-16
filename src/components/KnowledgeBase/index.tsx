@@ -19,9 +19,9 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
 
   useEffect(() => {
     setFilteredInstructions(
-      instructionsKnowledgeBase
-        .filter((instruction) => instruction.name?.toUpperCase().includes(searchText.toUpperCase()))
-        .slice(0, 3),
+      instructionsKnowledgeBase.filter((instruction) =>
+        instruction.name?.toUpperCase().includes(searchText.toUpperCase()),
+      ),
     );
   }, [searchText]);
 

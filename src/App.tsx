@@ -141,15 +141,16 @@ function App() {
                   restartProgram(initialState);
                   setCurrentInstruction(programPreviewResult?.[0]);
                 }}
+                disabled={!pvmInitialized}
               >
                 <RefreshCcw className="w-3.5 mr-1.5" />
-                Restart
+                Reset
               </Button>
-              <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished}>
+              <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished || !pvmInitialized}>
                 <Play className="w-3.5 mr-1.5" />
                 Run
               </Button>
-              <Button className="mr-3" onClick={onNext} disabled={isDebugFinished}>
+              <Button className="mr-3" onClick={onNext} disabled={isDebugFinished || !pvmInitialized}>
                 <StepForward className="w-3.5 mr-1.5" /> Step
               </Button>
             </div>

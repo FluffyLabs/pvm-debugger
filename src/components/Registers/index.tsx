@@ -6,6 +6,17 @@ import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input.tsx";
 
+const getStatusColor = (status?: Status) => {
+  if (status === Status.OK) {
+    return "#4caf50";
+  }
+  if (status === Status.HALT) {
+    return "#55b3f3";
+  }
+  if (status === Status.PANIC) {
+    return "#f44336";
+  }
+};
 export const Registers = ({
   currentState,
   previousState,
@@ -24,6 +35,27 @@ export const Registers = ({
       <div className="p-3">
         <div>
           <div className="font-mono flex flex-col items-start">
+            <div className="flex flex-row items-center justify-between w-full mb-2">
+              <p className="flex-[2]">PC</p>
+              <p
+                className={classNames({
+                  "flex-[3]": true,
+                  "text-blue-500": currentState.pc !== previousState.pc,
+                })}
+              >
+                {currentState.pc ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
+              </p>
+            </div>
+
+            <div className="flex flex-row items-center justify-between w-full">
+              <p className="flex-[2]">Status</p>
+              <p className="flex-[3]" style={{ color: getStatusColor(currentState.status) }}>
+                {currentState.status !== undefined ? Status[currentState.status] : null}
+              </p>
+            </div>
+
+            <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
+
             {currentState.regs?.map((_: unknown, regNo: number) => (
               <div key={regNo} className="flex flex-row items-center w-full">
                 <p className="flex-[2]">
@@ -56,44 +88,37 @@ export const Registers = ({
                   </div>
                 ) : currentState.regs?.[regNo] !== previousState.regs?.[regNo] ? (
                   <div className="flex-[3]">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={classNames({
-                              "text-blue-500": currentState.regs?.[regNo] !== previousState.regs?.[regNo],
-                            })}
-                          >
-                            {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <span>{valueToNumeralSystem(previousState.regs?.[regNo] ?? 0, numeralSystem)}</span>
-                          <span> → </span>
-                          <span>{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <div
+                      className={classNames({
+                        "text-blue-500": currentState.regs?.[regNo] !== previousState.regs?.[regNo],
+                      })}
+                    >
+                      <TooltipProvider>
+                        <Tooltip delayDuration={0}>
+                          <TooltipTrigger asChild>
+                            <span> {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>{valueToNumeralSystem(previousState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                            <span> → </span>
+                            <span>{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                 ) : (
-                  <div className="flex-[3]">{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</div>
+                  <div
+                    className={classNames({
+                      "flex-[3]": true,
+                      "text-gray-300": currentState.regs?.[regNo] === 0,
+                    })}
+                  >
+                    {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                  </div>
                 )}
               </div>
             ))}
-
-            <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
-
-            <div className="flex flex-row items-center justify-between w-full">
-              <p className="flex-[2]">PC</p>
-              <p className="flex-[3]">{currentState.pc}</p>
-            </div>
-
-            <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
-
-            <div className="flex flex-row items-center justify-between w-full">
-              <p className="flex-[2]">Status</p>
-              <p className="flex-[3]">{currentState.status !== undefined ? Status[currentState.status] : null}</p>
-            </div>
           </div>
         </div>
       </div>
