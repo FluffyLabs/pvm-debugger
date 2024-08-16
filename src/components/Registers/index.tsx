@@ -24,6 +24,18 @@ export const Registers = ({
       <div className="p-3">
         <div>
           <div className="font-mono flex flex-col items-start">
+            <div className="flex flex-row items-center justify-between w-full mb-2">
+              <p className="flex-[2]">PC</p>
+              <p className="flex-[3]">{currentState.pc}</p>
+            </div>
+
+            <div className="flex flex-row items-center justify-between w-full">
+              <p className="flex-[2]">Status</p>
+              <p className="flex-[3]">{currentState.status !== undefined ? Status[currentState.status] : null}</p>
+            </div>
+
+            <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
+
             {currentState.regs?.map((_: unknown, regNo: number) => (
               <div key={regNo} className="flex flex-row items-center w-full">
                 <p className="flex-[2]">
@@ -80,20 +92,6 @@ export const Registers = ({
                 )}
               </div>
             ))}
-
-            <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
-
-            <div className="flex flex-row items-center justify-between w-full">
-              <p className="flex-[2]">PC</p>
-              <p className="flex-[3]">{currentState.pc}</p>
-            </div>
-
-            <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
-
-            <div className="flex flex-row items-center justify-between w-full">
-              <p className="flex-[2]">Status</p>
-              <p className="flex-[3]">{currentState.status !== undefined ? Status[currentState.status] : null}</p>
-            </div>
           </div>
         </div>
       </div>
