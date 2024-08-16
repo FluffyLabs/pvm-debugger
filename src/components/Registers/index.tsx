@@ -6,6 +6,18 @@ import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input.tsx";
 
+const getStatusColor = (status?: Status) => {
+  if (status === Status.OK) {
+    return "#4caf50";
+  }
+
+  if (status === Status.HALT) {
+    return "#55b3f3";
+  }
+  if (status === Status.PANIC) {
+    return "#f44336";
+  }
+};
 export const Registers = ({
   currentState,
   previousState,
@@ -31,7 +43,9 @@ export const Registers = ({
 
             <div className="flex flex-row items-center justify-between w-full">
               <p className="flex-[2]">Status</p>
-              <p className="flex-[3]">{currentState.status !== undefined ? Status[currentState.status] : null}</p>
+              <p className="flex-[3]" style={{ color: getStatusColor(currentState.status) }}>
+                {currentState.status !== undefined ? Status[currentState.status] : null}
+              </p>
             </div>
 
             <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
