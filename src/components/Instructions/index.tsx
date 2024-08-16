@@ -1,5 +1,5 @@
 import { Table, TableRow, TableBody, TableCell } from "@/components/ui/table.tsx";
-import { mapInstructionsArgsByType } from "./utils";
+import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { NumeralSystemContext } from "@/context/NumeralSystem.tsx";
@@ -17,7 +17,7 @@ export const Instructions = ({
   instructionMode: InstructionMode;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
-
+  console.log(numeralSystem);
   const isActive = (programRow: CurrentInstruction) => {
     if (!currentInstruction) {
       return false;
@@ -51,7 +51,11 @@ export const Instructions = ({
                   <TableCell className="p-1.5">
                     {programRow.instructionBytes && (
                       <span className="text-gray-500">
-                        {[...programRow.instructionBytes]?.map((byte) => `${byte}`.padStart(3, "0")).join(" ")}
+                        {[...programRow.instructionBytes]
+                          ?.map((byte) =>
+                            valueToNumeralSystem(byte, numeralSystem).padStart(numeralSystem ? 2 : 3, "0"),
+                          )
+                          .join(" ")}
                       </span>
                     )}
                   </TableCell>
