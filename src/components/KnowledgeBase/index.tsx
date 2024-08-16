@@ -26,7 +26,7 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
   }, [searchText]);
 
   return (
-    <div className="border-2 rounded-md min-h-[450px] h-[70vh] w-[30vw] p-3 overflow-auto">
+    <div className="border-2 rounded-md min-h-[450px] h-[70vh] p-3 overflow-auto">
       <div className="flex w-full items-center space-x-2 mb-3">
         <Input
           type="text"
