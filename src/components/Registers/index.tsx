@@ -10,7 +10,6 @@ const getStatusColor = (status?: Status) => {
   if (status === Status.OK) {
     return "#4caf50";
   }
-
   if (status === Status.HALT) {
     return "#55b3f3";
   }
@@ -38,7 +37,14 @@ export const Registers = ({
           <div className="font-mono flex flex-col items-start">
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">PC</p>
-              <p className="flex-[3]">{currentState.pc}</p>
+              <p
+                className={classNames({
+                  "flex-[3]": true,
+                  "text-blue-500": currentState.pc !== previousState.pc,
+                })}
+              >
+                {currentState.pc}
+              </p>
             </div>
 
             <div className="flex flex-row items-center justify-between w-full">
