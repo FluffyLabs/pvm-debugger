@@ -46,7 +46,7 @@ export const Instructions = ({
         <TableBody>
           {!!programPreviewResult?.length &&
             programPreviewResult.map((programRow, i) => (
-              <TableRow className={classNames("hover:bg-gray-300", { "bg-gray-200": isActive(programRow) })} key={i}>
+              <TableRow className={classNames("hover:bg-gray-300", { "bg-[#55B3F3]": isActive(programRow) })} key={i}>
                 {instructionMode === InstructionMode.BYTECODE && (
                   <TableCell className="p-1.5">
                     {programRow.instructionBytes && (

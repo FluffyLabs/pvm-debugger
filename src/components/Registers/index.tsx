@@ -56,24 +56,24 @@ export const Registers = ({
                   </div>
                 ) : currentState.regs?.[regNo] !== previousState.regs?.[regNo] ? (
                   <div className="flex-[3]">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={classNames({
-                              "text-blue-500": currentState.regs?.[regNo] !== previousState.regs?.[regNo],
-                            })}
-                          >
-                            {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <span>{valueToNumeralSystem(previousState.regs?.[regNo] ?? 0, numeralSystem)}</span>
-                          <span> → </span>
-                          <span>{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <div
+                      className={classNames({
+                        "text-blue-500": currentState.regs?.[regNo] !== previousState.regs?.[regNo],
+                      })}
+                    >
+                      <TooltipProvider>
+                        <Tooltip delayDuration={0}>
+                          <TooltipTrigger asChild>
+                            <span> {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <span>{valueToNumeralSystem(previousState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                            <span> → </span>
+                            <span>{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
                 ) : (
                   <div className="flex-[3]">{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</div>
