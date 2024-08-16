@@ -108,7 +108,14 @@ export const Registers = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex-[3]">{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</div>
+                  <div
+                    className={classNames({
+                      "flex-[3]": true,
+                      "text-gray-300": currentState.regs?.[regNo] === 0,
+                    })}
+                  >
+                    {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                  </div>
                 )}
               </div>
             ))}
