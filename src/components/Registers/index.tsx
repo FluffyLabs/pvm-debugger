@@ -111,7 +111,7 @@ export const Registers = ({
                   <div
                     className={classNames({
                       "flex-[3]": true,
-                      "text-gray-300": currentState.regs?.[regNo] === 0,
+                      "opacity-20": currentState.regs?.[regNo] === 0,
                     })}
                   >
                     {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
