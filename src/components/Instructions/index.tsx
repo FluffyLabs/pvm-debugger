@@ -2,7 +2,7 @@ import { Table, TableRow, TableBody, TableCell } from "@/components/ui/table.tsx
 import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
-import { NumeralSystemContext } from "@/context/NumeralSystem.tsx";
+import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
 import { useContext, useMemo } from "react";
 import { isEqual, omit } from "lodash";
 import { CurrentInstruction } from "@/types/pvm";
@@ -46,13 +46,15 @@ export const Instructions = ({
     }
     let counter = 0;
     return programPreviewResult?.map((result) => {
-      const addressVal = valueToNumeralSystem(counter, numeralSystem);
+      const isHex = numeralSystem === NumeralSystem.HEXADECIMAL;
+      const valInNumeralSystem = isHex ? `${(counter >>> 0).toString(16)}` : counter.toString();
       const address = (
         <div>
-          {[...Array(8 - addressVal.length)].map(() => (
+          {isHex && <span className="opacity-20">0x</span>}
+          {[...Array(8 - (isHex ? 2 : 0) - valInNumeralSystem.length)].map(() => (
             <span className="opacity-20">0</span>
           ))}
-          <span>{addressVal}</span>
+          <span>{valInNumeralSystem}</span>
         </div>
       );
       if ("args" in result) {
