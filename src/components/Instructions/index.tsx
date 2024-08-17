@@ -74,9 +74,7 @@ export const Instructions = ({
                     {programRow.instructionBytes && (
                       <span className="text-gray-500">
                         {[...programRow.instructionBytes]
-                          ?.map((byte) =>
-                            valueToNumeralSystem(byte, numeralSystem).padStart(numeralSystem ? 2 : 3, "0"),
-                          )
+                          ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
                           .join(" ")}
                       </span>
                     )}
