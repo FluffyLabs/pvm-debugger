@@ -4,7 +4,7 @@ import { ArgumentType } from "@/packages/pvm/pvm/args-decoder/argument-type";
 export const valueToNumeralSystem = (value: number, numeralSystem: NumeralSystem, padStartVal?: number): string => {
   return numeralSystem === NumeralSystem.HEXADECIMAL
     ? `0x${(value >>> 0).toString(16).padStart(padStartVal || 0, "0")}`
-    : value.toString();
+    : value.toString().padStart(padStartVal || 0, "0");
 };
 
 export const mapInstructionsArgsByType = (args: any, numeralSystem: NumeralSystem) => {
