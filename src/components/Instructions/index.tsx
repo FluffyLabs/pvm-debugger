@@ -2,7 +2,7 @@ import { Table, TableRow, TableBody, TableCell } from "@/components/ui/table.tsx
 import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
-import { NumeralSystemContext } from "@/context/NumeralSystem.tsx";
+import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
 import { useContext, useMemo } from "react";
 import { isEqual, omit } from "lodash";
 import { CurrentInstruction } from "@/types/pvm";
@@ -46,13 +46,15 @@ export const Instructions = ({
     }
     let counter = 0;
     return programPreviewResult?.map((result) => {
-      const addressVal = valueToNumeralSystem(counter, numeralSystem);
+      const isHex = numeralSystem === NumeralSystem.HEXADECIMAL;
+      const valInNumeralSystem = isHex ? `${(counter >>> 0).toString(16)}` : counter.toString();
       const address = (
         <div>
-          {[...Array(8 - addressVal.length)].map(() => (
-            <span className="text-gray-400">0</span>
+          {isHex && <span className="opacity-20">0x</span>}
+          {[...Array(8 - (isHex ? 2 : 0) - valInNumeralSystem.length)].map(() => (
+            <span className="opacity-20">0</span>
           ))}
-          <span>{addressVal}</span>
+          <span>{valInNumeralSystem}</span>
         </div>
       );
       if ("args" in result) {
@@ -74,9 +76,7 @@ export const Instructions = ({
                     {programRow.instructionBytes && (
                       <span className="text-gray-500">
                         {[...programRow.instructionBytes]
-                          ?.map((byte) =>
-                            valueToNumeralSystem(byte, numeralSystem).padStart(numeralSystem ? 2 : 3, "0"),
-                          )
+                          ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
                           .join(" ")}
                       </span>
                     )}
@@ -85,7 +85,7 @@ export const Instructions = ({
                 {instructionMode === InstructionMode.ASM && (
                   <>
                     <TableCell className="p-1.5">
-                      <span className="uppercase font-bold">{programRow.address}</span>
+                      <span className="uppercase">{programRow.address}</span>
                     </TableCell>
                     <TableCell className="p-1.5">
                       <span className="uppercase font-bold">{programRow.name}</span>
