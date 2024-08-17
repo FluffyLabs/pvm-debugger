@@ -50,7 +50,7 @@ export const Instructions = ({
       const address = (
         <div>
           {[...Array(8 - addressVal.length)].map(() => (
-            <span className="text-gray-400">0</span>
+            <span className="opacity-20">0</span>
           ))}
           <span>{addressVal}</span>
         </div>
@@ -85,7 +85,7 @@ export const Instructions = ({
                 {instructionMode === InstructionMode.ASM && (
                   <>
                     <TableCell className="p-1.5">
-                      <span className="uppercase font-bold">{programRow.address}</span>
+                      <span className="uppercase">{programRow.address}</span>
                     </TableCell>
                     <TableCell className="p-1.5">
                       <span className="uppercase font-bold">{programRow.name}</span>
