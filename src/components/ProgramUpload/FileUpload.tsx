@@ -7,7 +7,7 @@ export const FileUpload = ({
   close,
 }: {
   onFileUpload: (val: ProgramUploadFileOutput) => void;
-  close: () => void;
+  close?: () => void;
 }) => {
   let fileReader: FileReader;
 
@@ -33,7 +33,8 @@ export const FileUpload = ({
   };
 
   return (
-    <div className="grid gap-4 py-4">
+    <div className="grid gap-4 pb-[100px]">
+      <p>Load testfile compatible with JAM TestVectors JSON files </p>
       <div className="grid grid-cols-4 items-center gap-4">
         <div className="col-auto">
           <Input
@@ -45,7 +46,7 @@ export const FileUpload = ({
             onChange={(e) => {
               if (e.target.files?.length) {
                 handleProgramUpload(e.target.files[0]);
-                close();
+                close?.();
               }
             }}
           />

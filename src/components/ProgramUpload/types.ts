@@ -1,10 +1,10 @@
-import { ExpectedState, InitialState } from "@/types/pvm";
+import { InitialState } from "@/types/pvm";
 
 export type ProgramUploadFileOutput = {
   name: string;
   initial: InitialState;
   program: number[];
-  expected: ExpectedState;
+  // expected: ExpectedState;
 };
 
 export type ProgramUploadFileInput = {

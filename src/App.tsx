@@ -34,14 +34,12 @@ function App() {
     gas: 10000,
   });
   const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  // const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
-  const [isInitialCTA, setIsInitialCTA] = useState(true);
   const [pvmInitialized, setPvmInitialized] = useState(false);
 
   useEffect(() => {
@@ -89,7 +87,7 @@ function App() {
     }
   };
 
-  const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
+  const handleFileUpload = ({ initial, program }: ProgramUploadFileOutput) => {
     startProgram(initial, program);
   };
 
@@ -177,18 +175,8 @@ function App() {
 
           <div className="grid auto-rows-fr grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
             <div>
-              {isInitialCTA && (
-                <InitialLoadProgramCTA
-                  onFileUpload={(uploadedProgram) => {
-                    handleFileUpload(uploadedProgram);
-                    setIsInitialCTA(false);
-                  }}
-                  onEditClick={() => {
-                    setIsInitialCTA(false);
-                  }}
-                />
-              )}
-              {!isInitialCTA && (
+              {!program.length && <InitialLoadProgramCTA />}
+              {!!program.length && (
                 <>
                   {isProgramEditMode && (
                     <>
@@ -228,8 +216,6 @@ function App() {
             <div>
               <KnowledgeBase currentInstruction={currentInstruction} />
             </div>
-
-            {/*<DiffChecker actual={currentState} expected={expectedResult} />*/}
           </div>
 
           <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5">
@@ -247,7 +233,7 @@ function App() {
                     <Label htmlFor="instruction-mode">Bytecode</Label>
                   </div>
                 )}
-                {isProgramEditMode && !isInitialCTA && (
+                {isProgramEditMode && !!program.length && (
                   <Button
                     onClick={() => {
                       startProgram(initialState, program);
