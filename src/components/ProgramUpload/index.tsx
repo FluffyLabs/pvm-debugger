@@ -13,8 +13,15 @@ import { useState } from "react";
 import { FileUpload } from "./FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Examples } from "./Examples";
+import { Bytecode } from "./Bytecode";
 
-export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFileOutput) => void }) => {
+export const ProgramUpload = ({
+  onFileUpload,
+  program,
+}: {
+  onFileUpload: (val: ProgramUploadFileOutput) => void;
+  program: number[];
+}) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [file, setFile] = useState<ProgramUploadFileOutput>();
 
@@ -40,6 +47,9 @@ export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUpl
             </TabsContent>
             <TabsContent value="examples">
               <Examples onFileUpload={setFile} />
+            </TabsContent>
+            <TabsContent value="bytecode">
+              <Bytecode onFileUpload={setFile} program={program} />
             </TabsContent>
           </div>
         </Tabs>

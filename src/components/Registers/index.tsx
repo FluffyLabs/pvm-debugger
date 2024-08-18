@@ -57,7 +57,7 @@ export const Registers = ({
             <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
 
             {currentState.regs?.map((_: unknown, regNo: number) => (
-              <div key={regNo} className="flex flex-row items-center w-full">
+              <div key={regNo} className="flex flex-row items-center w-full my-0.5">
                 <p className="flex-[2]">
                   ω<sub>{regNo}</sub>
                 </p>

@@ -1,21 +1,13 @@
-import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { useEffect, useState } from "react";
 import classNames from "classnames";
 
-export const ProgramLoader = ({
-  program,
-  setProgram,
-}: {
-  onFileUpload?: (val: ProgramUploadFileOutput) => void;
-  program: number[];
-  setProgram: (val: number[]) => void;
-}) => {
-  const [programInput, setProgramInput] = useState(JSON.stringify(program));
+export const ProgramLoader = ({ program, setProgram }: { program?: number[]; setProgram: (val: number[]) => void }) => {
+  const [programInput, setProgramInput] = useState(program?.length ? JSON.stringify(program) : "");
   const [isInvalidProgram, setIsInvalidProgram] = useState(false);
-
+  console.log(programInput);
   useEffect(() => {
-    setProgramInput(JSON.stringify(program));
+    setProgramInput(program?.length ? JSON.stringify(program) : "");
   }, [program]);
 
   return (

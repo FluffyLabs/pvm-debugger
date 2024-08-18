@@ -134,7 +134,7 @@ function App() {
           <div className="grid grid-cols-12 gap-1.5 pt-2">
             <div className="col-span-6 flex align-middle">
               <div className="mr-3">
-                <ProgramUpload onFileUpload={handleFileUpload} />
+                <ProgramUpload onFileUpload={handleFileUpload} program={program} />
                 {/* {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
                 {!isProgramEditMode && (
                   <Button
@@ -147,6 +147,16 @@ function App() {
                   </Button>
                 )} */}
               </div>
+              <Button
+                className="mr-3"
+                disabled={!program.length || isProgramEditMode}
+                onClick={() => {
+                  restartProgram(initialState);
+                  setIsProgramEditMode(true);
+                }}
+              >
+                Edit
+              </Button>
               <Button
                 className="mr-3"
                 onClick={() => {
