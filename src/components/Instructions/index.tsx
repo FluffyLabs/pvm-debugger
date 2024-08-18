@@ -72,15 +72,20 @@ export const Instructions = ({
             programPreviewResultWithAddress.map((programRow, i) => (
               <TableRow className={classNames("hover:bg-gray-300", { "bg-[#55B3F3]": isActive(programRow) })} key={i}>
                 {instructionMode === InstructionMode.BYTECODE && (
-                  <TableCell className="p-1.5">
-                    {programRow.instructionBytes && (
-                      <span className="text-gray-500">
-                        {[...programRow.instructionBytes]
-                          ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
-                          .join(" ")}
-                      </span>
-                    )}
-                  </TableCell>
+                  <>
+                    <TableCell className="p-1.5">
+                      <span className="uppercase">{programRow.address}</span>
+                    </TableCell>
+                    <TableCell className="p-1.5">
+                      {programRow.instructionBytes && (
+                        <span className="text-gray-500">
+                          {[...programRow.instructionBytes]
+                            ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
+                            .join(" ")}
+                        </span>
+                      )}
+                    </TableCell>
+                  </>
                 )}
                 {instructionMode === InstructionMode.ASM && (
                   <>
