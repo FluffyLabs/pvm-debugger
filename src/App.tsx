@@ -243,6 +243,7 @@ function App() {
                     <Label htmlFor="instruction-mode">ASM</Label>
                     <Switch
                       id="instruction-mode"
+                      checked={instructionMode === InstructionMode.BYTECODE}
                       onCheckedChange={(checked) =>
                         setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
                       }
