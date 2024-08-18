@@ -22,7 +22,7 @@ import { worker } from "./packages/web-worker";
 
 import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
-import { MobileRegisters } from "./components/Registers copy";
+import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 
 function App() {
@@ -217,7 +217,11 @@ function App() {
             </div>
 
             <div className="col-span-12 md:hidden">
-              <MobileRegisters />
+              <MobileRegisters
+                isEnabled={pvmInitialized}
+                currentState={isProgramEditMode ? initialState : currentState}
+                previousState={isProgramEditMode ? initialState : previousState}
+              />
             </div>
 
             <div className="max-sm:hidden col-span-12 md:col-span-3">

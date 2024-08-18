@@ -6,7 +6,7 @@ import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input.tsx";
 
-const getStatusColor = (status?: Status) => {
+export const getStatusColor = (status?: Status) => {
   if (status === Status.OK) {
     return "#4caf50";
   }
