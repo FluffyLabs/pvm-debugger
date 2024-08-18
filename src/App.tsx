@@ -135,6 +135,20 @@ function App() {
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-12 gap-1.5 pt-2">
             <div className="col-span-6 flex align-middle">
+              <div className="mr-3">
+                <ProgramUpload onFileUpload={handleFileUpload} />
+                {/* {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
+                {!isProgramEditMode && (
+                  <Button
+                    onClick={() => {
+                      restartProgram(initialState);
+                      setIsProgramEditMode(true);
+                    }}
+                  >
+                    Edit program
+                  </Button>
+                )} */}
+              </div>
               <Button
                 className="mr-3"
                 onClick={() => {
@@ -220,19 +234,6 @@ function App() {
 
           <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5">
             <div className="flex items-center justify-between">
-              <div>
-                {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
-                {!isProgramEditMode && (
-                  <Button
-                    onClick={() => {
-                      restartProgram(initialState);
-                      setIsProgramEditMode(true);
-                    }}
-                  >
-                    Edit program
-                  </Button>
-                )}
-              </div>
               <div>
                 {!isProgramEditMode && (
                   <div className="flex items-center space-x-2">
