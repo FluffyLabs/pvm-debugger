@@ -13,10 +13,10 @@ import { ExternalLink } from "lucide-react";
 export const PvmSelect = () => {
   return (
     <Select value="typeberry">
-      <SelectTrigger className="w-[300px]">
+      <SelectTrigger>
         <SelectValue placeholder="Select a PVM" />
       </SelectTrigger>
-      <SelectContent className="w-[300px]">
+      <SelectContent>
         <SelectGroup>
           <SelectItem value="typeberry">@typeberry/pvm-{import.meta.env.TYPEBERRY_PVM_VERSION}</SelectItem>
           <SelectSeparator />

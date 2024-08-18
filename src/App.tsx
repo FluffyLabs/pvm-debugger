@@ -22,6 +22,8 @@ import { worker } from "./packages/web-worker";
 
 import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
+import { MobileRegisters } from "./components/Registers copy";
+import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -131,8 +133,8 @@ function App() {
       <Header />
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
-          <div className="grid grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-6 flex align-middle">
+          <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
+            <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
               <div className="mr-3">
                 <ProgramUpload onFileUpload={handleFileUpload} program={program} />
               </div>
@@ -160,25 +162,26 @@ function App() {
                 disabled={!pvmInitialized}
               >
                 <RefreshCcw className="w-3.5 mr-1.5" />
-                Reset
+                <span className="hidden md:block">Reset</span>
               </Button>
               <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished || !pvmInitialized}>
                 <Play className="w-3.5 mr-1.5" />
-                Run
+                <span className="hidden md:block">Run</span>
               </Button>
               <Button className="mr-3" onClick={onNext} disabled={isDebugFinished || !pvmInitialized}>
-                <StepForward className="w-3.5 mr-1.5" /> Step
+                <StepForward className="w-3.5 mr-1.5" />
+                <span className="hidden md:block">Step</span>
               </Button>
             </div>
 
-            <div className="col-span-6 flex align-middle justify-end gap-10">
-              <PvmSelect />
-              <NumeralSystemSwitch />
+            <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
+              <div className="w-full md:w-[300px]">
+                <PvmSelect />
+              </div>
+              <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
-          </div>
 
-          <div className="grid auto-rows-fr grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
-            <div>
+            <div className="col-span-12 md:col-span-4 max-sm:max-h-[20vh]">
               {!program.length && <InitialLoadProgramCTA />}
               {!!program.length && (
                 <>
@@ -201,7 +204,7 @@ function App() {
               )}
             </div>
 
-            <div>
+            <div className="max-sm:hidden md:col-span-2">
               <Registers
                 currentState={isProgramEditMode ? initialState : currentState}
                 previousState={isProgramEditMode ? initialState : previousState}
@@ -213,17 +216,23 @@ function App() {
               />
             </div>
 
-            <div>
+            <div className="col-span-12 md:hidden">
+              <MobileRegisters />
+            </div>
+
+            <div className="max-sm:hidden col-span-12 md:col-span-3">
               <MemoryPreview />
             </div>
 
-            <div>
+            <div className="max-sm:hidden md:col-span-3 overflow-hidden">
               <KnowledgeBase currentInstruction={currentInstruction} />
             </div>
-          </div>
 
-          <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5">
-            <div className="flex items-center justify-between">
+            <div className="md:hidden col-span-12 order-last">
+              <MobileKnowledgeBase currentInstruction={currentInstruction} />
+            </div>
+
+            <div className="col-span-12 md:col-span-3 max-sm:order-first flex items-center justify-between my-3">
               <div>
                 {!isProgramEditMode && (
                   <div className="flex items-center space-x-2">
@@ -234,10 +243,11 @@ function App() {
                         setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
                       }
                     />
-                    <Label htmlFor="instruction-mode">Bytecode</Label>
+                    <Label htmlFor="instruction-mode">RAW</Label>
                   </div>
                 )}
               </div>
+              <NumeralSystemSwitch className="ml-3 md:hidden" />
             </div>
           </div>
         </div>

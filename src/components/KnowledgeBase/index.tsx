@@ -26,7 +26,7 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
   }, [searchText]);
 
   return (
-    <div className="border-2 rounded-md min-h-[450px] h-[70vh] p-3 overflow-auto">
+    <div className="border-2 rounded-md min-h-[450px] h-[70vh] p-3">
       <div className="flex w-full items-center space-x-2 mb-3">
         <Input
           type="text"
@@ -40,7 +40,7 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
         </Button>
       </div>
 
-      <div className="divide-y">
+      <div className="divide-y overflow-auto relative" style={{ maxHeight: "calc(100% - 60px)" }}>
         {filteredInstructions.map((instruction, i) => {
           const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find(
             (instructionFromKB) => instructionFromKB.name?.toUpperCase() === instruction.name?.toUpperCase(),

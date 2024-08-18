@@ -33,25 +33,21 @@ export const FileUpload = ({
   };
 
   return (
-    <div className="grid gap-4 pb-[100px]">
+    <div className="block pb-[100px]">
       <p>Load testfile compatible with JAM TestVectors JSON files </p>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <div className="col-auto">
-          <Input
-            className="w-200"
-            id="test-file"
-            type="file"
-            accept="application/json"
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => {
-              if (e.target.files?.length) {
-                handleProgramUpload(e.target.files[0]);
-                close?.();
-              }
-            }}
-          />
-        </div>
-      </div>
+      <Input
+        className="mt-5 mr-3"
+        id="test-file"
+        type="file"
+        accept="application/json"
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => {
+          if (e.target.files?.length) {
+            handleProgramUpload(e.target.files[0]);
+            close?.();
+          }
+        }}
+      />
     </div>
   );
 };
