@@ -25,7 +25,7 @@ import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
-  const [isProgramEditMode, setIsProgramEditMode] = useState(true);
+  const [isProgramEditMode, setIsProgramEditMode] = useState(false);
   const [initialState, setInitialState] = useState<InitialState>({
     regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     pc: 0,
@@ -135,27 +135,21 @@ function App() {
             <div className="col-span-6 flex align-middle">
               <div className="mr-3">
                 <ProgramUpload onFileUpload={handleFileUpload} program={program} />
-                {/* {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
-                {!isProgramEditMode && (
-                  <Button
-                    onClick={() => {
-                      restartProgram(initialState);
-                      setIsProgramEditMode(true);
-                    }}
-                  >
-                    Edit program
-                  </Button>
-                )} */}
               </div>
               <Button
                 className="mr-3"
-                disabled={!program.length || isProgramEditMode}
+                disabled={!program.length}
                 onClick={() => {
-                  restartProgram(initialState);
-                  setIsProgramEditMode(true);
+                  if (isProgramEditMode) {
+                    startProgram(initialState, program);
+                    setIsProgramEditMode(false);
+                  } else {
+                    restartProgram(initialState);
+                    setIsProgramEditMode(true);
+                  }
                 }}
               >
-                Edit
+                {isProgramEditMode ? <Check /> : "Edit"}
               </Button>
               <Button
                 className="mr-3"
@@ -242,16 +236,6 @@ function App() {
                     />
                     <Label htmlFor="instruction-mode">Bytecode</Label>
                   </div>
-                )}
-                {isProgramEditMode && !!program.length && (
-                  <Button
-                    onClick={() => {
-                      startProgram(initialState, program);
-                      setIsProgramEditMode(false);
-                    }}
-                  >
-                    <Check />
-                  </Button>
                 )}
               </div>
             </div>
