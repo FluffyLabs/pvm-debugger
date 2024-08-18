@@ -1,3 +1,4 @@
+import { ExternalLink } from "lucide-react";
 import { Input } from "../ui/input";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
@@ -34,7 +35,15 @@ export const FileUpload = ({
 
   return (
     <div className="block pb-[100px]">
-      <p>Load testfile compatible with JAM TestVectors JSON files </p>
+      <p>
+        Load testfile compatible with JAM TestVectors JSON&nbsp;
+        <a
+          href="https://github.com/w3f/jamtestvectors/pull/3/files#diff-4faad966a03de9e579ed189eebceaf870983ec407fc919253c5d997462c09f51"
+          target="_blank"
+        >
+          <ExternalLink className="inline w-4 mb-1 text-blue-600" />
+        </a>
+      </p>
       <Input
         className="mt-5 mr-3"
         id="test-file"
