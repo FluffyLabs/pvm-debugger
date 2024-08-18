@@ -1,6 +1,4 @@
-import { Input } from "@/components/ui/input.tsx";
 import { ProgramUploadFileOutput } from "./types";
-import { mapUploadFileInputToOutput } from "./utils";
 import {
   Dialog,
   DialogContent,
@@ -12,63 +10,63 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button.tsx";
 import { useState } from "react";
+import { FileUpload } from "./FileUpload";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Examples } from "./Examples";
+import { Bytecode } from "./Bytecode";
 
-export const ProgramUpload = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFileOutput) => void }) => {
+export const ProgramUpload = ({
+  onFileUpload,
+  program,
+}: {
+  onFileUpload: (val: ProgramUploadFileOutput) => void;
+  program: number[];
+}) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  let fileReader: FileReader;
-
-  const handleFileRead = () => {
-    const fileContent = fileReader?.result;
-
-    try {
-      if (fileContent !== null && typeof fileContent === "string") {
-        const jsonFile = JSON.parse(fileContent);
-        onFileUpload(mapUploadFileInputToOutput(jsonFile));
-      } else {
-        alert("Cannot read file");
-      }
-    } catch (e) {
-      alert("Cannot parse JSON");
-    }
-  };
-
-  const handleProgramUpload = (file: Blob) => {
-    fileReader = new FileReader();
-    fileReader.onloadend = handleFileRead;
-    fileReader.readAsText(file);
-  };
+  const [file, setFile] = useState<ProgramUploadFileOutput>();
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button>Load from test file</Button>
+        <Button>Load</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="min-h-[500px] h-100% flex flex-col">
         <DialogHeader>
-          <DialogTitle>Load program from test file</DialogTitle>
+          <DialogTitle>Load program</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <div className="col-auto">
-              <Input
-                className="w-200"
-                id="test-file"
-                type="file"
-                accept="application/json"
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => {
-                  if (e.target.files?.length) {
-                    handleProgramUpload(e.target.files[0]);
-                    setIsDialogOpen(false);
-                  }
-                }}
-              />
-            </div>
+        <Tabs className="grow flex flex-col items-start" defaultValue="upload">
+          <TabsList>
+            <TabsTrigger value="upload">Upload testfile</TabsTrigger>
+            <TabsTrigger value="examples">Examples</TabsTrigger>
+            <TabsTrigger value="bytecode">Bytecode</TabsTrigger>
+          </TabsList>
+          <div className="border-2 rounded mt-2 p-4 grow w-full">
+            <TabsContent value="upload">
+              <FileUpload onFileUpload={setFile} />
+            </TabsContent>
+            <TabsContent value="examples">
+              <Examples onFileUpload={setFile} />
+            </TabsContent>
+            <TabsContent value="bytecode">
+              <Bytecode onFileUpload={setFile} program={program} />
+            </TabsContent>
           </div>
-        </div>
-        <DialogFooter>{/*<Button type="submit">Save changes</Button>*/}</DialogFooter>
+        </Tabs>
+        <DialogFooter>
+          <Button
+            type="button"
+            disabled={!file}
+            onClick={() => {
+              if (!file) return;
+
+              onFileUpload(file);
+              setIsDialogOpen(false);
+            }}
+          >
+            Load
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

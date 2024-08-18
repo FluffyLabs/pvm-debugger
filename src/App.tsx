@@ -22,10 +22,12 @@ import { worker } from "./packages/web-worker";
 
 import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
+import { MobileRegisters } from "./components/MobileRegisters";
+import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
-  const [isProgramEditMode, setIsProgramEditMode] = useState(true);
+  const [isProgramEditMode, setIsProgramEditMode] = useState(false);
   const [initialState, setInitialState] = useState<InitialState>({
     regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     pc: 0,
@@ -34,14 +36,12 @@ function App() {
     gas: 10000,
   });
   const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  // const [expectedResult, setExpectedResult] = useState<ExpectedState>();
   const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
-  const [isInitialCTA, setIsInitialCTA] = useState(true);
   const [pvmInitialized, setPvmInitialized] = useState(false);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ function App() {
     }
   };
 
-  const handleFileUpload = ({ /*expected, */ initial, program }: ProgramUploadFileOutput) => {
+  const handleFileUpload = ({ initial, program }: ProgramUploadFileOutput) => {
     startProgram(initial, program);
   };
 
@@ -133,8 +133,26 @@ function App() {
       <Header />
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
-          <div className="grid grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-6 flex align-middle">
+          <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
+            <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
+              <div className="mr-3">
+                <ProgramUpload onFileUpload={handleFileUpload} program={program} />
+              </div>
+              <Button
+                className="mr-3"
+                disabled={!program.length}
+                onClick={() => {
+                  if (isProgramEditMode) {
+                    startProgram(initialState, program);
+                    setIsProgramEditMode(false);
+                  } else {
+                    restartProgram(initialState);
+                    setIsProgramEditMode(true);
+                  }
+                }}
+              >
+                {isProgramEditMode ? <Check /> : "Edit"}
+              </Button>
               <Button
                 className="mr-3"
                 onClick={() => {
@@ -144,37 +162,28 @@ function App() {
                 disabled={!pvmInitialized}
               >
                 <RefreshCcw className="w-3.5 mr-1.5" />
-                Reset
+                <span className="hidden md:block">Reset</span>
               </Button>
               <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished || !pvmInitialized}>
                 <Play className="w-3.5 mr-1.5" />
-                Run
+                <span className="hidden md:block">Run</span>
               </Button>
               <Button className="mr-3" onClick={onNext} disabled={isDebugFinished || !pvmInitialized}>
-                <StepForward className="w-3.5 mr-1.5" /> Step
+                <StepForward className="w-3.5 mr-1.5" />
+                <span className="hidden md:block">Step</span>
               </Button>
             </div>
 
-            <div className="col-span-6 flex align-middle justify-end gap-10">
-              <PvmSelect />
-              <NumeralSystemSwitch />
+            <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
+              <div className="w-full md:w-[300px]">
+                <PvmSelect />
+              </div>
+              <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
-          </div>
 
-          <div className="grid auto-rows-fr grid-cols-[3fr_200px_3fr_3fr] gap-1.5 pt-2">
-            <div>
-              {isInitialCTA && (
-                <InitialLoadProgramCTA
-                  onFileUpload={(uploadedProgram) => {
-                    handleFileUpload(uploadedProgram);
-                    setIsInitialCTA(false);
-                  }}
-                  onEditClick={() => {
-                    setIsInitialCTA(false);
-                  }}
-                />
-              )}
-              {!isInitialCTA && (
+            <div className="col-span-12 md:col-span-4 max-sm:max-h-[20vh]">
+              {!program.length && <InitialLoadProgramCTA />}
+              {!!program.length && (
                 <>
                   {isProgramEditMode && (
                     <>
@@ -195,7 +204,7 @@ function App() {
               )}
             </div>
 
-            <div>
+            <div className="max-sm:hidden md:col-span-2">
               <Registers
                 currentState={isProgramEditMode ? initialState : currentState}
                 previousState={isProgramEditMode ? initialState : previousState}
@@ -207,56 +216,43 @@ function App() {
               />
             </div>
 
-            <div>
+            <div className="col-span-12 md:hidden">
+              <MobileRegisters
+                isEnabled={pvmInitialized}
+                currentState={isProgramEditMode ? initialState : currentState}
+                previousState={isProgramEditMode ? initialState : previousState}
+              />
+            </div>
+
+            <div className="max-sm:hidden col-span-12 md:col-span-3">
               <MemoryPreview />
             </div>
 
-            <div>
+            <div className="max-sm:hidden md:col-span-3 overflow-hidden">
               <KnowledgeBase currentInstruction={currentInstruction} />
             </div>
 
-            {/*<DiffChecker actual={currentState} expected={expectedResult} />*/}
-          </div>
+            <div className="md:hidden col-span-12 order-last">
+              <MobileKnowledgeBase currentInstruction={currentInstruction} />
+            </div>
 
-          <div className="grid grid-cols-[3fr_200px_3fr_3fr] gap-1.5">
-            <div className="flex items-center justify-between">
-              <div>
-                {isProgramEditMode && <ProgramUpload onFileUpload={handleFileUpload} />}
-                {!isProgramEditMode && (
-                  <Button
-                    onClick={() => {
-                      restartProgram(initialState);
-                      setIsProgramEditMode(true);
-                    }}
-                  >
-                    Edit program
-                  </Button>
-                )}
-              </div>
+            <div className="col-span-12 md:col-span-3 max-sm:order-first flex items-center justify-between my-3">
               <div>
                 {!isProgramEditMode && (
                   <div className="flex items-center space-x-2">
                     <Label htmlFor="instruction-mode">ASM</Label>
                     <Switch
                       id="instruction-mode"
+                      checked={instructionMode === InstructionMode.BYTECODE}
                       onCheckedChange={(checked) =>
                         setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
                       }
                     />
-                    <Label htmlFor="instruction-mode">Bytecode</Label>
+                    <Label htmlFor="instruction-mode">RAW</Label>
                   </div>
                 )}
-                {isProgramEditMode && !isInitialCTA && (
-                  <Button
-                    onClick={() => {
-                      startProgram(initialState, program);
-                      setIsProgramEditMode(false);
-                    }}
-                  >
-                    <Check />
-                  </Button>
-                )}
               </div>
+              <NumeralSystemSwitch className="ml-3 md:hidden" />
             </div>
           </div>
         </div>

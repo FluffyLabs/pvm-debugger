@@ -65,22 +65,27 @@ export const Instructions = ({
   }, [numeralSystem, programPreviewResult]);
 
   return (
-    <div className="font-mono overflow-auto scroll-auto border-2 rounded-md min-h-[450px] h-[70vh]">
+    <div className="font-mono overflow-auto scroll-auto border-2 rounded-md h-full">
       <Table>
         <TableBody>
           {!!programPreviewResultWithAddress?.length &&
             programPreviewResultWithAddress.map((programRow, i) => (
               <TableRow className={classNames("hover:bg-gray-300", { "bg-[#55B3F3]": isActive(programRow) })} key={i}>
                 {instructionMode === InstructionMode.BYTECODE && (
-                  <TableCell className="p-1.5">
-                    {programRow.instructionBytes && (
-                      <span className="text-gray-500">
-                        {[...programRow.instructionBytes]
-                          ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
-                          .join(" ")}
-                      </span>
-                    )}
-                  </TableCell>
+                  <>
+                    <TableCell className="p-1.5">
+                      <span className="uppercase">{programRow.address}</span>
+                    </TableCell>
+                    <TableCell className="p-1.5">
+                      {programRow.instructionBytes && (
+                        <span className="text-gray-500">
+                          {[...programRow.instructionBytes]
+                            ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
+                            .join(" ")}
+                        </span>
+                      )}
+                    </TableCell>
+                  </>
                 )}
                 {instructionMode === InstructionMode.ASM && (
                   <>
