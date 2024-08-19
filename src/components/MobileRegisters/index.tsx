@@ -24,21 +24,21 @@ export const MobileRegisters = ({
 
   return (
     <div className="border-2 rounded-md h-[80px] grid grid-cols-12 py-3 px-4">
-      <div className="col-span-2 font-semibold">{currentState.pc !== previousState.pc && <>PC</>}</div>
+      <div className="col-span-2 font-semibold">PC</div>
       <div className="col-span-8 flex">
+        {previousState.pc !== undefined ? valueToNumeralSystem(previousState.pc, numeralSystem) : ""}
         {currentState.pc !== previousState.pc && (
           <>
-            {currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
             <ArrowRight className="mx-2" />
             <span className="text-blue-500">
-              {previousState.pc !== undefined ? valueToNumeralSystem(previousState.pc, numeralSystem) : ""}
+              {currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
             </span>
           </>
         )}
       </div>
 
-      <div className="col-span-2 font-semibold text-right" style={{ color: getStatusColor(currentState.status) }}>
-        {currentState.status !== undefined && Status[currentState.status]}
+      <div className="col-span-2 font-semibold text-right" style={{ color: getStatusColor(currentState.status || 0) }}>
+        {currentState.status !== undefined ? Status[currentState.status] : Status[0]}
       </div>
       {changedRegisterIndex !== -1 && (
         <>
