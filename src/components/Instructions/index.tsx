@@ -3,10 +3,92 @@ import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
-import { useContext, useMemo } from "react";
+import { ReactNode, useContext, useMemo, useRef } from "react";
 import { isEqual, omit } from "lodash";
 import { CurrentInstruction } from "@/types/pvm";
 
+type ProgramRow = CurrentInstruction & { address: ReactNode };
+
+const Row = ({
+  currentInstruction,
+  instructionMode,
+  programRow,
+}: {
+  programRow: ProgramRow;
+  currentInstruction: CurrentInstruction | undefined;
+  instructionMode: InstructionMode;
+}) => {
+  const { numeralSystem } = useContext(NumeralSystemContext);
+  const ref = useRef<HTMLTableRowElement>(null);
+
+  const isActive = (programRow: CurrentInstruction) => {
+    if (!currentInstruction) {
+      return false;
+    }
+
+    if ("error" in programRow && "error" in currentInstruction) {
+      const val =
+        programRow.name === currentInstruction.name &&
+        programRow.instructionCode === currentInstruction.instructionCode;
+
+      if (val) {
+        ref.current?.scrollIntoView();
+      }
+      return val;
+    }
+
+    // Remove error instructions from type
+    if ("error" in programRow || "error" in currentInstruction) {
+      return false;
+    }
+
+    const val = isEqual(
+      omit(currentInstruction, ["args.immediateDecoder", "instructionBytes", "address"]),
+      omit(programRow, ["args.immediateDecoder", "instructionBytes", "address"]),
+    );
+    if (val) {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    return val;
+  };
+
+  return (
+    <TableRow ref={ref} className={classNames("hover:bg-gray-300", { "bg-[#55B3F3]": isActive(programRow) })}>
+      {instructionMode === InstructionMode.BYTECODE && (
+        <>
+          <TableCell className="p-1.5">
+            <span className="uppercase">{programRow.address}</span>
+          </TableCell>
+          <TableCell className="p-1.5">
+            {programRow.instructionBytes && (
+              <span className="text-gray-500">
+                {[...programRow.instructionBytes]
+                  ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
+                  .join(" ")}
+              </span>
+            )}
+          </TableCell>
+        </>
+      )}
+      {instructionMode === InstructionMode.ASM && (
+        <>
+          <TableCell className="p-1.5">
+            <span className="uppercase">{programRow.address}</span>
+          </TableCell>
+          <TableCell className="p-1.5">
+            <span className="uppercase font-bold">{programRow.name}</span>
+          </TableCell>
+          <TableCell className="p-1.5">
+            <span className="">
+              {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
+            </span>
+          </TableCell>
+        </>
+      )}
+    </TableRow>
+  );
+};
 export const Instructions = ({
   programPreviewResult,
   currentInstruction,
@@ -17,28 +99,6 @@ export const Instructions = ({
   instructionMode: InstructionMode;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
-  console.log(numeralSystem);
-  const isActive = (programRow: CurrentInstruction) => {
-    if (!currentInstruction) {
-      return false;
-    }
-
-    if ("error" in programRow && "error" in currentInstruction) {
-      return (
-        programRow.name === currentInstruction.name && programRow.instructionCode === currentInstruction.instructionCode
-      );
-    }
-
-    // Remove error instructions from type
-    if ("error" in programRow || "error" in currentInstruction) {
-      return false;
-    }
-
-    return isEqual(
-      omit(currentInstruction, ["args.immediateDecoder", "instructionBytes", "address"]),
-      omit(programRow, ["args.immediateDecoder", "instructionBytes", "address"]),
-    );
-  };
 
   const programPreviewResultWithAddress = useMemo(() => {
     if (!programPreviewResult) {
@@ -70,39 +130,12 @@ export const Instructions = ({
         <TableBody>
           {!!programPreviewResultWithAddress?.length &&
             programPreviewResultWithAddress.map((programRow, i) => (
-              <TableRow className={classNames("hover:bg-gray-300", { "bg-[#55B3F3]": isActive(programRow) })} key={i}>
-                {instructionMode === InstructionMode.BYTECODE && (
-                  <>
-                    <TableCell className="p-1.5">
-                      <span className="uppercase">{programRow.address}</span>
-                    </TableCell>
-                    <TableCell className="p-1.5">
-                      {programRow.instructionBytes && (
-                        <span className="text-gray-500">
-                          {[...programRow.instructionBytes]
-                            ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
-                            .join(" ")}
-                        </span>
-                      )}
-                    </TableCell>
-                  </>
-                )}
-                {instructionMode === InstructionMode.ASM && (
-                  <>
-                    <TableCell className="p-1.5">
-                      <span className="uppercase">{programRow.address}</span>
-                    </TableCell>
-                    <TableCell className="p-1.5">
-                      <span className="uppercase font-bold">{programRow.name}</span>
-                    </TableCell>
-                    <TableCell className="p-1.5">
-                      <span className="">
-                        {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
-                      </span>
-                    </TableCell>
-                  </>
-                )}
-              </TableRow>
+              <Row
+                currentInstruction={currentInstruction}
+                instructionMode={instructionMode}
+                key={i}
+                programRow={programRow}
+              />
             ))}
         </TableBody>
       </Table>

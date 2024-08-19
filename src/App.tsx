@@ -135,11 +135,11 @@ function App() {
         <div className="flex flex-col gap-5">
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
             <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
-              <div className="mr-3">
+              <div className="md:mr-3">
                 <ProgramUpload onFileUpload={handleFileUpload} program={program} />
               </div>
               <Button
-                className="mr-3"
+                className="md:mr-3"
                 disabled={!program.length}
                 onClick={() => {
                   if (isProgramEditMode) {
@@ -154,22 +154,22 @@ function App() {
                 {isProgramEditMode ? <Check /> : "Edit"}
               </Button>
               <Button
-                className="mr-3"
+                className="md:mr-3"
                 onClick={() => {
                   restartProgram(initialState);
                   setCurrentInstruction(programPreviewResult?.[0]);
                 }}
                 disabled={!pvmInitialized}
               >
-                <RefreshCcw className="w-3.5 mr-1.5" />
+                <RefreshCcw className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Reset</span>
               </Button>
-              <Button className="mr-3" onClick={handleRunProgram} disabled={isDebugFinished || !pvmInitialized}>
-                <Play className="w-3.5 mr-1.5" />
+              <Button className="md:mr-3" onClick={handleRunProgram} disabled={isDebugFinished || !pvmInitialized}>
+                <Play className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Run</span>
               </Button>
-              <Button className="mr-3" onClick={onNext} disabled={isDebugFinished || !pvmInitialized}>
-                <StepForward className="w-3.5 mr-1.5" />
+              <Button className="md:mr-3" onClick={onNext} disabled={isDebugFinished || !pvmInitialized}>
+                <StepForward className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Step</span>
               </Button>
             </div>
@@ -181,7 +181,7 @@ function App() {
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
 
-            <div className="col-span-12 md:col-span-4 max-sm:max-h-[20vh]">
+            <div className="col-span-12 md:col-span-4 max-sm:max-h-[40vh] max-sm:min-h-[250px]">
               {!program.length && <InitialLoadProgramCTA />}
               {!!program.length && (
                 <>
