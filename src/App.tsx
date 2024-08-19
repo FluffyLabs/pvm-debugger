@@ -181,7 +181,7 @@ function App() {
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
 
-            <div className="col-span-12 md:col-span-4 max-sm:max-h-[20vh] max-sm:min-h-[150px]">
+            <div className="col-span-12 md:col-span-4 max-sm:max-h-[40vh] max-sm:min-h-[250px]">
               {!program.length && <InitialLoadProgramCTA />}
               {!!program.length && (
                 <>
