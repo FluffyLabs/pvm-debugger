@@ -46,7 +46,17 @@ export const Registers = ({
                 {currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
               </p>
             </div>
-
+            <div className="flex flex-row items-center justify-between w-full mb-2">
+              <p className="flex-[2]">Gas</p>
+              <p
+                className={classNames({
+                  "flex-[3]": true,
+                  "text-blue-500": currentState.gas !== previousState.gas,
+                })}
+              >
+                {currentState.gas !== undefined ? valueToNumeralSystem(currentState.gas, numeralSystem) : ""}
+              </p>
+            </div>
             <div className="flex flex-row items-center justify-between w-full">
               <p className="flex-[2]">Status</p>
               <p className="flex-[3]" style={{ color: getStatusColor(currentState.status) }}>

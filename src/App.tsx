@@ -134,7 +134,6 @@ function App() {
 
   const onNext = () => {
     console.log({
-      pvmInitialized,
       currentInstruction,
     });
     if (!pvmInitialized) {
