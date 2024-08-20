@@ -80,13 +80,11 @@ function App() {
           return state;
         });
 
-        console.log(e.data);
         if (e.data.command === Commands.STEP) {
           setCurrentInstruction(e.data.payload.result);
         } else if (e.data.command === Commands.RUN) {
           let counter = 0;
           const result = programPreviewResult.find((x) => {
-            console.log(counter, state.pc);
             if (counter === state.pc) {
               return true;
             }
