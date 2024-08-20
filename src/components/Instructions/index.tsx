@@ -57,7 +57,7 @@ const Row = ({
 
   const fillSearch = useCallback(() => {
     onClick(programRow);
-  }, []);
+  }, [programRow, onClick]);
 
   return (
     <TableRow ref={ref} className={classNames("hover:bg-gray-300", { "bg-[#55B3F3]": isActive(programRow) })}>

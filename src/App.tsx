@@ -77,7 +77,7 @@ function App() {
       }
     };
     console.log("Message posted to worker");
-  }, []);
+  }, [setCurrentInstruction]);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
     setInitialState(initialState);
