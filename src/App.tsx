@@ -25,6 +25,14 @@ import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 
+const virtualTrapInstruction: CurrentInstruction = {
+  args: { type: 0 },
+  name: "TRAP",
+  gas: 0,
+  instructionCode: 0,
+  instructionBytes: new Uint8Array(0),
+};
+
 function App() {
   const [program, setProgram] = useState<number[]>([]);
   const [isProgramEditMode, setIsProgramEditMode] = useState(false);
@@ -46,22 +54,18 @@ function App() {
   const [pvmInitialized, setPvmInitialized] = useState(false);
 
   const mobileView = useRef<HTMLDivElement | null>(null);
-  const virtualTrapInstruction: CurrentInstruction = {
-    args: { type: 0 },
-    name: "TRAP",
-    gas: 0,
-    instructionCode: 0,
-    instructionBytes: new Uint8Array(0),
-  };
 
-  const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
-    if (ins === null) {
-      setCurrentInstruction(virtualTrapInstruction);
-    } else {
-      setCurrentInstructionState(ins);
-    }
-    setClickedInstruction(null);
-  }, []);
+  const setCurrentInstruction = useCallback(
+    (ins: CurrentInstruction | null) => {
+      if (ins === null) {
+        setCurrentInstruction(virtualTrapInstruction);
+      } else {
+        setCurrentInstructionState(ins);
+      }
+      setClickedInstruction(null);
+    },
+    [virtualTrapInstruction],
+  );
 
   useEffect(() => {
     if (!worker) {
