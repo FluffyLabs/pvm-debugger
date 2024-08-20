@@ -21,7 +21,7 @@ const programs: {
     pc: 0,
     pageMap: [],
     memory: [],
-    gas: 10000,
+    gas: 100000,
   },
   branch: {
     program: [0, 0, 16, 4, 7, 210, 4, 7, 39, 211, 4, 6, 0, 4, 7, 239, 190, 173, 222, 17, 6],

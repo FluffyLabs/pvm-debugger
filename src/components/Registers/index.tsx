@@ -7,15 +7,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Input } from "@/components/ui/input.tsx";
 
 export const getStatusColor = (status?: Status) => {
-  if (status === Status.OK) {
+  if (status === Status.OK || status === Status.HALT) {
     return "#4caf50";
   }
-  if (status === Status.HALT) {
-    return "#55b3f3";
-  }
+
   if (status === Status.PANIC) {
     return "#f44336";
   }
+
+  return "#55b3f3";
 };
 export const Registers = ({
   currentState,
