@@ -139,7 +139,7 @@ function App() {
                 <ProgramUpload onFileUpload={handleFileUpload} program={program} />
               </div>
               <Button
-                className="md:mr-3"
+                className="md:mr-3 hidden-button"
                 disabled={!program.length}
                 onClick={() => {
                   if (isProgramEditMode) {
