@@ -1,6 +1,6 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
 import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
@@ -36,13 +36,21 @@ function App() {
     gas: 10000,
   });
   const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  const [currentInstruction, setCurrentInstruction] = useState<CurrentInstruction>();
+  const [currentInstruction, setCurrentInstructionState] = useState<CurrentInstruction>();
+  const [clickedInstruction, setClickedInstruction] = useState<CurrentInstruction | null>(null);
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
+
+  const mobileView = useRef<HTMLDivElement>();
+
+  const setCurrentInstruction = useCallback((ins: CurrentInstruction) => {
+    setCurrentInstructionState(ins);
+    setClickedInstruction(null);
+  }, []);
 
   useEffect(() => {
     if (!worker) {
@@ -135,6 +143,14 @@ function App() {
     worker.postMessage({ command: "init", payload: { program, initialState: state } });
   };
 
+  const onInstructionClick = useCallback((row: CurrentInstruction) => {
+    setClickedInstruction(row);
+  }, []);
+
+  const isMobileViewActive = () => {
+    return mobileView?.current?.offsetParent !== null;
+  };
+
   return (
     <>
       <Header />
@@ -188,7 +204,7 @@ function App() {
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
 
-            <div className="col-span-12 md:col-span-4 max-sm:max-h-[40vh] max-sm:min-h-[250px]">
+            <div className="col-span-12 md:col-span-4 max-sm:max-h-[70vh] max-sm:min-h-[450px]">
               {!program.length && <InitialLoadProgramCTA />}
               {!!program.length && (
                 <>
@@ -204,6 +220,7 @@ function App() {
                         programPreviewResult={programPreviewResult}
                         currentInstruction={currentInstruction}
                         instructionMode={instructionMode}
+                        onInstructionClick={onInstructionClick}
                       />
                     </>
                   )}
@@ -236,11 +253,15 @@ function App() {
             </div>
 
             <div className="max-sm:hidden md:col-span-3 overflow-hidden">
-              <KnowledgeBase currentInstruction={currentInstruction} />
+              <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
             </div>
 
-            <div className="md:hidden col-span-12 order-last">
-              <MobileKnowledgeBase currentInstruction={currentInstruction} />
+            <div className="md:hidden col-span-12 order-last" ref={mobileView}>
+              <MobileKnowledgeBase
+                currentInstruction={clickedInstruction ?? currentInstruction}
+                open={clickedInstruction !== null && isMobileViewActive()}
+                onClose={() => setClickedInstruction(null)}
+              />
             </div>
 
             <div className="col-span-12 md:col-span-3 max-sm:order-first flex items-center justify-between my-3">

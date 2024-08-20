@@ -3,7 +3,7 @@ import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
-import { ReactNode, useContext, useMemo, useRef } from "react";
+import { ReactNode, useCallback, useContext, useMemo, useRef } from "react";
 import { isEqual, omit } from "lodash";
 import { CurrentInstruction } from "@/types/pvm";
 
@@ -13,10 +13,12 @@ const Row = ({
   currentInstruction,
   instructionMode,
   programRow,
+  onClick,
 }: {
   programRow: ProgramRow;
   currentInstruction: CurrentInstruction | undefined;
   instructionMode: InstructionMode;
+  onClick: (r: ProgramRow) => void;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const ref = useRef<HTMLTableRowElement>(null);
@@ -53,6 +55,10 @@ const Row = ({
     return val;
   };
 
+  const fillSearch = useCallback(() => {
+    onClick(programRow);
+  }, []);
+
   return (
     <TableRow ref={ref} className={classNames("hover:bg-gray-300", { "bg-[#55B3F3]": isActive(programRow) })}>
       {instructionMode === InstructionMode.BYTECODE && (
@@ -77,7 +83,9 @@ const Row = ({
             <span>{programRow.address}</span>
           </TableCell>
           <TableCell className="p-1.5">
-            <span className="uppercase font-bold">{programRow.name}</span>
+            <a onClick={fillSearch} className="cursor-pointer">
+              <span className="uppercase font-bold">{programRow.name}</span>
+            </a>
           </TableCell>
           <TableCell className="p-1.5">
             <span className="">
@@ -93,10 +101,12 @@ export const Instructions = ({
   programPreviewResult,
   currentInstruction,
   instructionMode,
+  onInstructionClick,
 }: {
   programPreviewResult: CurrentInstruction[] | undefined;
   currentInstruction: CurrentInstruction | undefined;
   instructionMode: InstructionMode;
+  onInstructionClick: (r: ProgramRow) => void;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
@@ -133,6 +143,7 @@ export const Instructions = ({
           {!!programPreviewResultWithAddress?.length &&
             programPreviewResultWithAddress.map((programRow, i) => (
               <Row
+                onClick={onInstructionClick}
                 currentInstruction={currentInstruction}
                 instructionMode={instructionMode}
                 key={i}
