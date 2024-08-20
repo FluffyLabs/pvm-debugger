@@ -45,7 +45,7 @@ function App() {
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
 
-  const mobileView = useRef<HTMLDivElement>();
+  const mobileView = useRef<HTMLDivElement | null>(null);
 
   const setCurrentInstruction = useCallback((ins: CurrentInstruction) => {
     setCurrentInstructionState(ins);
