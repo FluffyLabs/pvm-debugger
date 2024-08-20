@@ -43,7 +43,7 @@ export const Registers = ({
                   "text-blue-500": currentState.pc !== previousState.pc,
                 })}
               >
-                {currentState.pc ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
+                {currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
               </p>
             </div>
 

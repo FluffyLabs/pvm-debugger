@@ -12,7 +12,6 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
 
   useEffect(() => {
     if (currentInstruction) {
-      setFilteredInstructions([currentInstruction]);
       setSearchText(currentInstruction.name || "");
     }
   }, [currentInstruction]);

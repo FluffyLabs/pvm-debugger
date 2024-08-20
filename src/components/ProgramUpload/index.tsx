@@ -37,9 +37,9 @@ export const ProgramUpload = ({
         </DialogHeader>
         <Tabs className="grow flex flex-col items-start" defaultValue="upload">
           <TabsList>
-            <TabsTrigger value="upload">Upload testfile</TabsTrigger>
+            <TabsTrigger value="upload">JSON tests</TabsTrigger>
             <TabsTrigger value="examples">Examples</TabsTrigger>
-            <TabsTrigger value="bytecode">Bytecode</TabsTrigger>
+            <TabsTrigger value="bytecode">RAW bytecode</TabsTrigger>
           </TabsList>
           <div className="border-2 rounded mt-2 p-4 grow w-full">
             <TabsContent value="upload">
