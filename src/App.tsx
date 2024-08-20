@@ -107,6 +107,7 @@ function App() {
     const currentState = {
       pc: 0,
       regs: initialState.regs,
+      gas: initialState.gas,
       status: Status.OK,
     };
     setCurrentState(currentState);
