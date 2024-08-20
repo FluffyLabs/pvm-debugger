@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { CurrentInstruction, ExpectedState, InitialState } from "./types/pvm";
+import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
 import { Play, RefreshCcw, StepForward, Check } from "lucide-react";
@@ -74,6 +74,13 @@ function App() {
   const startProgram = (initialState: ExpectedState, program: number[]) => {
     setInitialState(initialState);
     setProgram(program);
+    const currentState = {
+      pc: 0,
+      regs: initialState.regs,
+      status: Status.OK,
+    };
+    setCurrentState(currentState);
+    setPreviousState(currentState);
 
     setIsDebugFinished(false);
 

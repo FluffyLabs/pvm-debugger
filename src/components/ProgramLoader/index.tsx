@@ -16,6 +16,7 @@ export const ProgramLoader = ({ program, setProgram }: { program?: number[]; set
     >
       <div className="w-full h-full">
         <Textarea
+          rows={7}
           autoFocus
           className={classNames("w-full h-full font-mono border-0 text-base", {
             "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isInvalidProgram,

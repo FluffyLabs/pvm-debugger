@@ -111,8 +111,10 @@ export const Instructions = ({
       const address = (
         <div>
           {isHex && <span className="opacity-20">0x</span>}
-          {[...Array(8 - (isHex ? 2 : 0) - valInNumeralSystem.length)].map(() => (
-            <span className="opacity-20">0</span>
+          {[...Array(8 - (isHex ? 2 : 0) - valInNumeralSystem.length)].map((_, idx) => (
+            <span key={idx} className="opacity-20">
+              0
+            </span>
           ))}
           <span>{valInNumeralSystem}</span>
         </div>

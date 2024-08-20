@@ -63,15 +63,21 @@ export const Examples = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFi
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="fibonacci" id="option-fibonacci" />
-          <Label htmlFor="option-fibonacci">Fibonacci sequence</Label>
+          <Label htmlFor="option-fibonacci" className="cursor-pointer">
+            Fibonacci sequence
+          </Label>
         </div>
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="branch" id="option-branch" />
-          <Label htmlFor="option-branch">Branch instruction</Label>
+          <Label htmlFor="option-branch" className="cursor-pointer">
+            Branch instruction
+          </Label>
         </div>
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="add" id="option-add" />
-          <Label htmlFor="option-add">ADD instruction</Label>
+          <Label htmlFor="option-add" className="cursor-pointer">
+            ADD instruction
+          </Label>
         </div>
       </RadioGroup>
     </div>
