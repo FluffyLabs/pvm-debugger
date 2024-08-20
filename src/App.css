@@ -8,3 +8,7 @@
 #numerical-system-mode {
   background-color: hsl(var(--primary));
 }
+
+button.hidden-button {
+  display: none !important;
+}

@@ -58,7 +58,7 @@ const Row = ({
       {instructionMode === InstructionMode.BYTECODE && (
         <>
           <TableCell className="p-1.5">
-            <span className="uppercase">{programRow.address}</span>
+            <span>{programRow.address}</span>
           </TableCell>
           <TableCell className="p-1.5">
             {programRow.instructionBytes && (
@@ -74,7 +74,7 @@ const Row = ({
       {instructionMode === InstructionMode.ASM && (
         <>
           <TableCell className="p-1.5">
-            <span className="uppercase">{programRow.address}</span>
+            <span>{programRow.address}</span>
           </TableCell>
           <TableCell className="p-1.5">
             <span className="uppercase font-bold">{programRow.name}</span>
