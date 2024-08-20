@@ -3,7 +3,7 @@ import classNames from "classnames";
 import { getStatusColor } from "../Registers/utils";
 import { Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
-import { useCallback, useContext, useRef } from "react";
+import { useCallback, useContext, useRef, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from ".";
@@ -15,6 +15,35 @@ function getBackgroundColor(status: Status | undefined, isHighlighted: boolean) 
 
   return getStatusColor(status);
 }
+
+const AddressCell = ({
+  breakpointAddresses,
+  programRow,
+  onAddressClick,
+}: {
+  breakpointAddresses: (number | undefined)[];
+  programRow: ProgramRow;
+  onAddressClick: (address: number) => void;
+}) => {
+  const [isHover, setIsHover] = useState(false);
+
+  return (
+    <TableCell
+      className="p-1.5 border-transparent cursor-pointer relative"
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={() => setIsHover(false)}
+    >
+      <div
+        className={classNames("w-[4px] absolute h-[100%] left-0 top-0", {
+          "bg-red-600": breakpointAddresses.includes(programRow.counter),
+          "bg-red-400": isHover,
+        })}
+      ></div>
+      <span onClick={() => onAddressClick(programRow.counter)}>{programRow.addressEl}</span>
+    </TableCell>
+  );
+};
+
 export const InstructionItem = ({
   status,
   isLast,
@@ -22,6 +51,8 @@ export const InstructionItem = ({
   instructionMode,
   programRow,
   onClick,
+  onAddressClick,
+  breakpointAddresses,
 }: {
   status?: Status;
   isLast: boolean;
@@ -29,6 +60,8 @@ export const InstructionItem = ({
   currentPc: number | undefined;
   instructionMode: InstructionMode;
   onClick: (r: ProgramRow) => void;
+  onAddressClick: (address: number) => void;
+  breakpointAddresses: (number | undefined)[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const ref = useRef<HTMLTableRowElement>(null);
@@ -52,9 +85,11 @@ export const InstructionItem = ({
     >
       {instructionMode === InstructionMode.BYTECODE && (
         <>
-          <TableCell className="p-1.5">
-            <span>{programRow.addressEl}</span>
-          </TableCell>
+          <AddressCell
+            breakpointAddresses={breakpointAddresses}
+            programRow={programRow}
+            onAddressClick={onAddressClick}
+          />
           <TableCell className="p-1.5">
             {"instructionBytes" in programRow && programRow.instructionBytes && (
               <span className="text-gray-500">
@@ -68,9 +103,11 @@ export const InstructionItem = ({
       )}
       {instructionMode === InstructionMode.ASM && (
         <>
-          <TableCell className="p-1.5">
-            <span>{programRow.addressEl}</span>
-          </TableCell>
+          <AddressCell
+            breakpointAddresses={breakpointAddresses}
+            programRow={programRow}
+            onAddressClick={onAddressClick}
+          />
           <TableCell className="p-1.5">
             <a onClick={fillSearch} className="cursor-pointer">
               <span className="uppercase font-bold">{programRow.name}</span>
