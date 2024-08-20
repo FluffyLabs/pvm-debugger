@@ -46,9 +46,20 @@ function App() {
   const [pvmInitialized, setPvmInitialized] = useState(false);
 
   const mobileView = useRef<HTMLDivElement | null>(null);
+  const virtualTrapInstruction: CurrentInstruction = {
+    args: { type: 0 },
+    name: "TRAP",
+    gas: 0,
+    instructionCode: 0,
+    instructionBytes: new Uint8Array(0),
+  };
 
-  const setCurrentInstruction = useCallback((ins: CurrentInstruction) => {
-    setCurrentInstructionState(ins);
+  const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
+    if (ins === null) {
+      setCurrentInstruction(virtualTrapInstruction);
+    } else {
+      setCurrentInstructionState(ins);
+    }
     setClickedInstruction(null);
   }, []);
 
@@ -65,10 +76,19 @@ function App() {
           return state;
         });
 
+        console.log(e.data);
         if (e.data.command === Commands.STEP) {
           setCurrentInstruction(e.data.payload.result);
         } else if (e.data.command === Commands.RUN) {
-          setCurrentInstruction(programPreviewResult?.[0]);
+          let counter = 0;
+          const result = programPreviewResult.find((x) => {
+            console.log(counter, state.pc);
+            if (counter === state.pc) {
+              return true;
+            }
+            counter += x.instructionBytes?.length ?? 0;
+          });
+          setCurrentInstruction(result ?? null);
         }
 
         if (isFinished) {
@@ -77,7 +97,7 @@ function App() {
       }
     };
     console.log("Message posted to worker");
-  }, [setCurrentInstruction]);
+  }, [setCurrentInstruction, programPreviewResult]);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
     setInitialState(initialState);
@@ -96,6 +116,7 @@ function App() {
 
     try {
       const result = disassemblify(new Uint8Array(program));
+      result.push(virtualTrapInstruction);
       setProgramPreviewResult(result);
       setCurrentInstruction(result?.[0]);
       setPvmInitialized(true);
@@ -217,6 +238,7 @@ function App() {
                   {!isProgramEditMode && (
                     <>
                       <Instructions
+                        status={currentState.status}
                         programPreviewResult={programPreviewResult}
                         currentInstruction={currentInstruction}
                         instructionMode={instructionMode}

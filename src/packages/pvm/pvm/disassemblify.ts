@@ -1,8 +1,9 @@
+import { CurrentInstruction } from "@/types/pvm";
 import { ArgsDecoder } from "./args-decoder/args-decoder";
 import { byteToOpCodeMap } from "./assemblify";
 import { ProgramDecoder } from "./program-decoder/program-decoder";
 
-export function disassemblify(rawProgram: Uint8Array) {
+export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
   const programDecoder = new ProgramDecoder(rawProgram);
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();

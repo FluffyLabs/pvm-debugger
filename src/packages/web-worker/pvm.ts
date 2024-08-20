@@ -55,11 +55,6 @@ export const nextInstruction = (pvm: Pvm, program: number[]) => {
     return currentInstructionDebug;
   } catch (e) {
     // The last iteration goes here since there's no instruction to proces and we didn't check if there's a next operation
-    return {
-      instructionCode: currentInstruction,
-      ...byteToOpCodeMap[currentInstruction],
-      error: "Cannot get arguments from args decoder",
-    };
-    // newProgramPreviewResult.push({ instructionCode: currentInstruction, ...byteToOpCodeMap[currentInstruction], error: "Cannot get arguments from args decoder" });
+    return null;
   }
 };
