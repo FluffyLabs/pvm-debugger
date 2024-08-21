@@ -1,3 +1,5 @@
+import { ArgumentType } from "@/packages/pvm/pvm/args-decoder/argument-type";
+
 type GrowToSize<T, N extends number, A extends T[]> = A["length"] extends N ? A : GrowToSize<T, N, [...A, T]>;
 type FixedArray<T, N extends number> = GrowToSize<T, N, []>;
 
@@ -44,9 +46,24 @@ export type Pvm = {
   getMemoryPage: (pageNumber: number) => MemoryChunkItem | null;
 };
 
+export type Args = {
+  type?: ArgumentType;
+  immediate?: number;
+  immediate1?: number;
+  immediate2?: number;
+  offset?: number;
+  firstRegisterIndex?: number;
+  secondRegisterIndex?: number;
+  thirdRegisterIndex?: number;
+  immediateDecoder?: {
+    getUnsigned(): number;
+  };
+  noOfInstructionsToSkip?: number;
+};
+
 export type CurrentInstruction =
   | {
-      args: any;
+      args: Args;
       name: string;
       gas: number;
       instructionCode: number;

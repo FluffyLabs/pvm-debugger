@@ -1,4 +1,4 @@
-import { InitialState, Pvm, Status } from "@/types/pvm";
+import { Args, InitialState, Pvm, Status } from "@/types/pvm";
 // The only files we need from PVM repo:
 import { ProgramDecoder } from "../../packages/pvm/pvm/program-decoder/program-decoder";
 import { ArgsDecoder } from "../../packages/pvm/pvm/args-decoder/args-decoder";
@@ -42,7 +42,7 @@ export const nextInstruction = (pvm: Pvm, program: number[]) => {
   let args;
 
   try {
-    args = argsDecoder.getArgs(pvm.getPC()) as any;
+    args = argsDecoder.getArgs(pvm.getPC()) as Args;
 
     const currentInstructionDebug = {
       instructionCode: currentInstruction,

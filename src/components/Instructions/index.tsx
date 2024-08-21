@@ -2,11 +2,12 @@ import { Table, TableRow, TableBody, TableCell } from "@/components/ui/table.tsx
 import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { InstructionMode } from "@/components/Instructions/types.ts";
-import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
+import { NumeralSystem } from "@/context/NumeralSystem.tsx";
+import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { ReactNode, useCallback, useContext, useMemo, useRef } from "react";
 import { isEqual, omit } from "lodash";
 import { CurrentInstruction, Status } from "@/types/pvm";
-import { getStatusColor } from "../Registers";
+import { getStatusColor } from "../Registers/utils";
 
 type ProgramRow = CurrentInstruction & { address: ReactNode };
 
