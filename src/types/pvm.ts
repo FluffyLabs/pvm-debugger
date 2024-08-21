@@ -58,7 +58,7 @@ export type Args = {
   immediateDecoder?: {
     getUnsigned(): number;
   };
-  noOfInstructionsToSkip?: number;
+  noOfBytesToSkip?: number;
 };
 
 export type CurrentInstruction =

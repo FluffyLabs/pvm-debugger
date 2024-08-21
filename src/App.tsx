@@ -116,6 +116,7 @@ function App() {
 
     try {
       const result = disassemblify(new Uint8Array(program));
+      console.log(result);
       result.push(virtualTrapInstruction);
       setProgramPreviewResult(result);
       setCurrentInstruction(result?.[0]);

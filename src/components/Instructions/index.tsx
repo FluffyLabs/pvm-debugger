@@ -158,9 +158,13 @@ export const Instructions = ({
     const programRows = programPreviewResult?.map((result) => {
       const address = getAddress(counter);
       if ("args" in result) {
-        counter += result.args?.noOfInstructionsToSkip ?? 0;
+        counter += result.args?.noOfBytesToSkip ?? 0;
       }
-      return { ...result, address };
+
+      // return Object.assign(result, { address });
+      (result as any).address = address;
+
+      return result;
     });
     return programRows;
   }, [numeralSystem, programPreviewResult]);

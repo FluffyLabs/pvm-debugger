@@ -18,7 +18,7 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
       return "";
     case ArgumentType.ONE_IMMEDIATE:
       return <span>{valueToNumeralSystem(args?.immediate, numeralSystem)}</span>;
-    case ArgumentType.TWO_IMMEDIATE:
+    case ArgumentType.TWO_IMMEDIATES:
       return (
         <span>
           {valueToNumeralSystem(args?.immediate1, numeralSystem)},{" "}
@@ -33,7 +33,7 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
           ω<sub>{args?.firstRegisterIndex}</sub>, {valueToNumeralSystem(args?.immediate, numeralSystem)}
         </span>
       );
-    case ArgumentType.ONE_REGISTER_TWO_IMMEDIATE:
+    case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES:
       return (
         <span>
           ω<sub>{args?.firstRegisterIndex}</sub>, {valueToNumeralSystem(args?.immediate1, numeralSystem)},{" "}
@@ -67,7 +67,7 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
           {valueToNumeralSystem(args?.offset, numeralSystem)}
         </span>
       );
-    case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATE:
+    case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES:
       return (
         <span>
           ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}

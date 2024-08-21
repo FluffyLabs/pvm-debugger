@@ -17,7 +17,7 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
 
     try {
       args = argsDecoder.getArgs(i) as Args;
-      i += args.noOfInstructionsToSkip ?? 0;
+      i += args.noOfBytesToSkip ?? 0;
     } catch (e) {
       printableProgram.push({
         instructionCode: currentInstruction,
@@ -30,7 +30,7 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
     const currentInstructionDebug = {
       instructionCode: currentInstruction,
       ...byteToOpCodeMap[currentInstruction],
-      instructionBytes: code.slice(i - (args.noOfInstructionsToSkip ?? 0), i),
+      instructionBytes: code.slice(i - (args.noOfBytesToSkip ?? 0), i),
       args: {
         ...args,
         immediate: args.immediateDecoder?.getUnsigned() as number,
