@@ -133,9 +133,6 @@ function App() {
   };
 
   const onNext = () => {
-    console.log({
-      currentInstruction,
-    });
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }

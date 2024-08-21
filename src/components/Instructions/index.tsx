@@ -55,7 +55,6 @@ export const Instructions = ({
 
       return result;
     });
-    console.log(programRows);
     return programRows as ProgramRow[];
   }, [numeralSystem, programPreviewResult]);
 

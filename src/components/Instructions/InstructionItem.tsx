@@ -34,7 +34,6 @@ export const InstructionItem = ({
   const ref = useRef<HTMLTableRowElement>(null);
 
   const isActive = (programRow: ProgramRow) => {
-    console.log(programRow.pc, currentPc);
     return programRow.pc === currentPc;
   };
 
