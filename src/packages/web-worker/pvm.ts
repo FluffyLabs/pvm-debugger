@@ -49,7 +49,7 @@ export const nextInstruction = (pvm: Pvm, program: number[]) => {
       ...byteToOpCodeMap[currentInstruction],
       args: {
         ...args,
-        immediate: args.immediateDecoder?.getUnsigned(),
+        immediate: "immediateDecoder" in args ? args.immediateDecoder?.getUnsigned() : undefined,
       },
     };
     return currentInstructionDebug;
