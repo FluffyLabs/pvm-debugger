@@ -96,7 +96,7 @@ export type OneOffsetResult = {
   offset: number;
 };
 
-type Result =
+export type Result =
   | NoArgumentsResult
   | OneImmediateResult
   | TwoRegistersResult

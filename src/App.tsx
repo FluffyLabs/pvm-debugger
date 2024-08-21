@@ -26,7 +26,7 @@ import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 
 const virtualTrapInstruction: CurrentInstruction = {
-  args: { type: 0 },
+  args: { type: 0, noOfBytesToSkip: 0 },
   name: "TRAP",
   gas: 0,
   instructionCode: 0,
@@ -85,7 +85,10 @@ function App() {
             if (counter === state.pc) {
               return true;
             }
-            counter += x.instructionBytes?.length ?? 0;
+
+            if (!("error" in x)) {
+              counter += x.instructionBytes?.length ?? 0;
+            }
           });
           setCurrentInstruction(result ?? null);
         }
@@ -116,7 +119,6 @@ function App() {
 
     try {
       const result = disassemblify(new Uint8Array(program));
-      console.log(result);
       result.push(virtualTrapInstruction);
       setProgramPreviewResult(result);
       setCurrentInstruction(result?.[0]);
@@ -239,8 +241,8 @@ function App() {
                     <>
                       <Instructions
                         status={currentState.status}
+                        currentState={currentState}
                         programPreviewResult={programPreviewResult}
-                        currentInstruction={currentInstruction}
                         instructionMode={instructionMode}
                         onInstructionClick={onInstructionClick}
                       />
