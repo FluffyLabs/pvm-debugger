@@ -67,6 +67,7 @@ export const createResults = () => {
     firstRegisterIndex: 0,
     immediateDecoder: new ImmediateDecoder(),
     nextPc: 0,
+    offset: 0,
   };
 
   results[ArgumentType.TWO_REGISTERS_ONE_OFFSET] = {
@@ -75,6 +76,7 @@ export const createResults = () => {
     firstRegisterIndex: 0,
     secondRegisterIndex: 0,
     nextPc: 0,
+    offset: 0,
   };
 
   results[ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE] = {
@@ -104,6 +106,7 @@ export const createResults = () => {
     type: ArgumentType.ONE_OFFSET,
     noOfBytesToSkip: 1,
     nextPc: 0,
+    offset: 0,
   };
 
   results[ArgumentType.TWO_IMMEDIATES] = {

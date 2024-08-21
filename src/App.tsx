@@ -24,14 +24,7 @@ import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
-
-const virtualTrapInstruction: CurrentInstruction = {
-  args: { type: 0, noOfBytesToSkip: 0 },
-  name: "TRAP",
-  gas: 0,
-  instructionCode: 0,
-  instructionBytes: new Uint8Array(0),
-};
+import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -119,7 +112,6 @@ function App() {
 
     try {
       const result = disassemblify(new Uint8Array(program));
-      result.push(virtualTrapInstruction);
       setProgramPreviewResult(result);
       setCurrentInstruction(result?.[0]);
       setPvmInitialized(true);

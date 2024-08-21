@@ -1,3 +1,4 @@
+import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction";
 import { ArgsDecoder } from "./args-decoder/args-decoder";
 import { byteToOpCodeMap } from "./assemblify";
 import { ProgramDecoder } from "./program-decoder/program-decoder";
@@ -10,6 +11,7 @@ export function disassemblify(rawProgram: Uint8Array) {
   let i = 0;
   const printableProgram = [];
 
+  let prevI = 0;
   while (i < code.length) {
     const currentInstruction = code[i];
     let args;
@@ -20,6 +22,7 @@ export function disassemblify(rawProgram: Uint8Array) {
     } catch (e) {
       printableProgram.push({
         instructionCode: currentInstruction,
+        address: 0,
         ...byteToOpCodeMap[currentInstruction],
         error: "Cannot get arguments from args decoder",
       });
@@ -30,10 +33,14 @@ export function disassemblify(rawProgram: Uint8Array) {
       instructionCode: currentInstruction,
       ...byteToOpCodeMap[currentInstruction],
       instructionBytes: code.slice(i - (args.noOfBytesToSkip ?? 0), i),
+      address: prevI,
       args,
     };
 
+    prevI = i;
+
     printableProgram.push(currentInstructionDebug);
+    printableProgram.push({ ...virtualTrapInstruction, address: code.length });
   }
 
   return printableProgram;

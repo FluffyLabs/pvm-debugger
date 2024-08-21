@@ -34,7 +34,7 @@ export const InstructionItem = ({
   const ref = useRef<HTMLTableRowElement>(null);
 
   const isActive = (programRow: ProgramRow) => {
-    return programRow.pc === currentPc;
+    return programRow.address === currentPc;
   };
 
   const fillSearch = useCallback(() => {
@@ -53,7 +53,7 @@ export const InstructionItem = ({
       {instructionMode === InstructionMode.BYTECODE && (
         <>
           <TableCell className="p-1.5">
-            <span>{programRow.address}</span>
+            <span>{programRow.addressEl}</span>
           </TableCell>
           <TableCell className="p-1.5">
             {"instructionBytes" in programRow && programRow.instructionBytes && (
@@ -69,7 +69,7 @@ export const InstructionItem = ({
       {instructionMode === InstructionMode.ASM && (
         <>
           <TableCell className="p-1.5">
-            <span>{programRow.address}</span>
+            <span>{programRow.addressEl}</span>
           </TableCell>
           <TableCell className="p-1.5">
             <a onClick={fillSearch} className="cursor-pointer">

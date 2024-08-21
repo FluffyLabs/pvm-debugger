@@ -7,7 +7,7 @@ import { ReactNode, useContext, useMemo } from "react";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { InstructionItem } from "./InstructionItem";
 
-export type ProgramRow = CurrentInstruction & { address: ReactNode; pc: number };
+export type ProgramRow = CurrentInstruction & { addressEl: ReactNode };
 
 export const Instructions = ({
   status,
@@ -30,7 +30,7 @@ export const Instructions = ({
     }
 
     const isHex = numeralSystem === NumeralSystem.HEXADECIMAL;
-    const getAddress = (counter: number) => {
+    const getAddressEl = (counter: number) => {
       const valInNumeralSystem = isHex ? `${(counter >>> 0).toString(16)}` : counter.toString();
       return (
         <div>
@@ -44,15 +44,8 @@ export const Instructions = ({
         </div>
       );
     };
-    let pc = 0;
     const programRows = programPreviewResult?.map((result) => {
-      const address = getAddress(pc);
-      Object.assign(result, { address, pc });
-
-      if ("args" in result) {
-        pc += result.args?.noOfBytesToSkip ?? 0;
-      }
-
+      Object.assign(result, { addressEl: getAddressEl(result.address) });
       return result;
     });
     return programRows as ProgramRow[];

@@ -50,6 +50,7 @@ export type Args = Result;
 
 export type CurrentInstruction =
   | {
+      address: number;
       args: Args;
       name: string;
       gas: number;
@@ -57,6 +58,7 @@ export type CurrentInstruction =
       instructionBytes: Uint8Array;
     }
   | {
+      address: number;
       error: string;
       name: string;
       gas: number;
