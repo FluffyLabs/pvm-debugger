@@ -40,8 +40,8 @@ export function disassemblify(rawProgram: Uint8Array) {
     prevI = i;
 
     printableProgram.push(currentInstructionDebug);
-    printableProgram.push({ ...virtualTrapInstruction, address: code.length });
   }
+  printableProgram.push({ ...virtualTrapInstruction, address: code.length });
 
   return printableProgram;
 }
