@@ -1,4 +1,4 @@
-import { CurrentInstruction } from "@/types/pvm";
+import { Args, CurrentInstruction } from "@/types/pvm";
 import { ArgsDecoder } from "./args-decoder/args-decoder";
 import { byteToOpCodeMap } from "./assemblify";
 import { ProgramDecoder } from "./program-decoder/program-decoder";
@@ -16,8 +16,8 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
     let args;
 
     try {
-      args = argsDecoder.getArgs(i) as any;
-      i += args.noOfInstructionsToSkip;
+      args = argsDecoder.getArgs(i) as Args;
+      i += args.noOfInstructionsToSkip ?? 0;
     } catch (e) {
       printableProgram.push({
         instructionCode: currentInstruction,
@@ -30,7 +30,7 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
     const currentInstructionDebug = {
       instructionCode: currentInstruction,
       ...byteToOpCodeMap[currentInstruction],
-      instructionBytes: code.slice(i - args.noOfInstructionsToSkip, i),
+      instructionBytes: code.slice(i - (args.noOfInstructionsToSkip ?? 0), i),
       args: {
         ...args,
         immediate: args.immediateDecoder?.getUnsigned() as number,

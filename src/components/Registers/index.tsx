@@ -1,22 +1,13 @@
 import { ExpectedState, InitialState, Status } from "@/types/pvm";
 import { useContext } from "react";
-import { NumeralSystem, NumeralSystemContext } from "@/context/NumeralSystem.tsx";
+import { NumeralSystem } from "@/context/NumeralSystem";
+import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
 import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input.tsx";
+import { getStatusColor } from "./utils";
 
-export const getStatusColor = (status?: Status) => {
-  if (status === Status.OK || status === Status.HALT) {
-    return "#4caf50";
-  }
-
-  if (status === Status.PANIC) {
-    return "#f44336";
-  }
-
-  return "#55b3f3";
-};
 export const Registers = ({
   currentState,
   previousState,

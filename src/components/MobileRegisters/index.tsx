@@ -1,8 +1,8 @@
 import { ExpectedState, Status } from "@/types/pvm";
 import { ArrowRight } from "lucide-react";
-import { getStatusColor } from "../Registers";
+import { getStatusColor } from "../Registers/utils";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { NumeralSystemContext } from "@/context/NumeralSystem";
+import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { useContext } from "react";
 
 export const MobileRegisters = ({

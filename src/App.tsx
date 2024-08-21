@@ -55,17 +55,14 @@ function App() {
 
   const mobileView = useRef<HTMLDivElement | null>(null);
 
-  const setCurrentInstruction = useCallback(
-    (ins: CurrentInstruction | null) => {
-      if (ins === null) {
-        setCurrentInstruction(virtualTrapInstruction);
-      } else {
-        setCurrentInstructionState(ins);
-      }
-      setClickedInstruction(null);
-    },
-    [virtualTrapInstruction],
-  );
+  const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
+    if (ins === null) {
+      setCurrentInstruction(virtualTrapInstruction);
+    } else {
+      setCurrentInstructionState(ins);
+    }
+    setClickedInstruction(null);
+  }, []);
 
   useEffect(() => {
     if (!worker) {

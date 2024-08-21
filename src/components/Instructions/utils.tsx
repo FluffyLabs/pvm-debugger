@@ -1,13 +1,18 @@
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
 import { ArgumentType } from "@/packages/pvm/pvm/args-decoder/argument-type";
+import { Args } from "@/types/pvm";
 
-export const valueToNumeralSystem = (value: number, numeralSystem: NumeralSystem, padStartVal?: number): string => {
+export const valueToNumeralSystem = (
+  value: number | undefined,
+  numeralSystem: NumeralSystem,
+  padStartVal?: number,
+): string => {
   return numeralSystem === NumeralSystem.HEXADECIMAL
-    ? `0x${(value >>> 0).toString(16).padStart(padStartVal || 0, "0")}`
-    : value.toString().padStart(padStartVal || 0, "0");
+    ? `0x${((value ?? 0) >>> 0).toString(16).padStart(padStartVal || 0, "0")}`
+    : (value ?? 0).toString().padStart(padStartVal || 0, "0");
 };
 
-export const mapInstructionsArgsByType = (args: any, numeralSystem: NumeralSystem) => {
+export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: NumeralSystem) => {
   switch (args?.type) {
     case ArgumentType.NO_ARGUMENTS:
       return "";

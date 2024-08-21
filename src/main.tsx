@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./globals.css";
-import { NumeralSystemProvider } from "@/context/NumeralSystem.tsx";
+import { NumeralSystemProvider } from "@/context/NumeralSystemProvider";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
