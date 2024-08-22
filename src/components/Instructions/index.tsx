@@ -7,7 +7,7 @@ import { ReactNode, useContext, useMemo } from "react";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { InstructionItem } from "./InstructionItem";
 
-export type ProgramRow = CurrentInstruction & { addressEl: ReactNode };
+export type ProgramRow = CurrentInstruction & { addressEl: ReactNode; counter: number };
 
 export const Instructions = ({
   status,
@@ -15,12 +15,16 @@ export const Instructions = ({
   currentState,
   instructionMode,
   onInstructionClick,
+  onAddressClick,
+  breakpointAddresses,
 }: {
   status?: Status;
   programPreviewResult: CurrentInstruction[] | undefined;
   currentState: ExpectedState;
   instructionMode: InstructionMode;
   onInstructionClick: (r: ProgramRow) => void;
+  onAddressClick: (address: number) => void;
+  breakpointAddresses: (number | undefined)[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
@@ -45,7 +49,7 @@ export const Instructions = ({
       );
     };
     const programRows = programPreviewResult?.map((result) => {
-      Object.assign(result, { addressEl: getAddressEl(result.address) });
+      Object.assign(result, { addressEl: getAddressEl(result.address), counter: result.address });
       return result;
     });
     return programRows as ProgramRow[];
@@ -65,6 +69,8 @@ export const Instructions = ({
                 key={i}
                 programRow={programRow}
                 currentPc={currentState.pc}
+                onAddressClick={onAddressClick}
+                breakpointAddresses={breakpointAddresses}
               />
             ))}
         </TableBody>

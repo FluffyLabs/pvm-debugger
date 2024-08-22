@@ -42,6 +42,8 @@ function App() {
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
+  const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
+  const [isRunMode, setIsRunMode] = useState(false);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
@@ -63,8 +65,8 @@ function App() {
     }
 
     worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
-      if (e.data.command === Commands.STEP || e.data.command === Commands.RUN) {
-        const { state, isFinished } = e.data.payload;
+      if (e.data.command === Commands.STEP) {
+        const { state, isFinished, isRunMode } = e.data.payload;
         setCurrentState((prevState) => {
           setPreviousState(prevState);
           return state;
@@ -72,18 +74,15 @@ function App() {
 
         if (e.data.command === Commands.STEP) {
           setCurrentInstruction(e.data.payload.result);
-        } else if (e.data.command === Commands.RUN) {
-          let counter = 0;
-          const result = programPreviewResult.find((x) => {
-            if (counter === state.pc) {
-              return true;
-            }
+        }
 
-            if (!("error" in x)) {
-              counter += x.instructionBytes?.length ?? 0;
-            }
-          });
-          setCurrentInstruction(result ?? null);
+        if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
+          worker.postMessage({ command: "step", payload: { program } });
+        }
+
+        if (isRunMode && breakpointAddresses.includes(state.pc)) {
+          worker.postMessage({ command: "stop", payload: { program } });
+          setIsRunMode(false);
         }
 
         if (isFinished) {
@@ -91,8 +90,7 @@ function App() {
         }
       }
     };
-    console.log("Message posted to worker");
-  }, [setCurrentInstruction, programPreviewResult]);
+  }, [isRunMode, breakpointAddresses, currentState, program, setCurrentInstruction, programPreviewResult]);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
     setInitialState(initialState);
@@ -126,6 +124,8 @@ function App() {
   };
 
   const onNext = () => {
+    setIsRunMode(false);
+
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
@@ -143,9 +143,9 @@ function App() {
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
-    setIsProgramEditMode(false);
-    setIsDebugFinished(true);
+    setIsRunMode(true);
     worker.postMessage({ command: "run", payload: { program } });
+    worker.postMessage({ command: "step", payload: { program } });
   };
 
   const restartProgram = (state: InitialState) => {
@@ -156,6 +156,13 @@ function App() {
     worker.postMessage({ command: "init", payload: { program, initialState: state } });
   };
 
+  const handleBreakpointClick = (address: number) => {
+    if (breakpointAddresses.includes(address)) {
+      setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address));
+    } else {
+      setBreakpointAddresses([...breakpointAddresses, address]);
+    }
+  };
   const onInstructionClick = useCallback((row: CurrentInstruction) => {
     setClickedInstruction(row);
   }, []);
@@ -234,6 +241,8 @@ function App() {
                         currentState={currentState}
                         programPreviewResult={programPreviewResult}
                         instructionMode={instructionMode}
+                        onAddressClick={handleBreakpointClick}
+                        breakpointAddresses={breakpointAddresses}
                         onInstructionClick={onInstructionClick}
                       />
                     </>

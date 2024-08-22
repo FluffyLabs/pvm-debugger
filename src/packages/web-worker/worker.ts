@@ -6,19 +6,26 @@ export enum Commands {
   INIT = "init",
   STEP = "step",
   RUN = "run",
+  STOP = "stop",
 }
 
 let pvm: typeof PvmInstance | null = null;
+let isRunMode = false;
 
 export type TargerOnMessageParams =
   | { command: Commands.INIT; payload: { program: number[]; initialState: InitialState } }
-  | { command: Commands.STEP; payload: { state: ExpectedState; result: CurrentInstruction; isFinished: boolean } }
-  | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean } };
+  | {
+      command: Commands.STEP;
+      payload: { state: ExpectedState; result: CurrentInstruction; isFinished: boolean; isRunMode: boolean };
+    }
+  | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
+  | { command: Commands.STOP; payload: { isRunMode: boolean } };
 
 export type WorkerOnMessageParams =
   | { command: Commands.INIT; payload: { program: number[]; initialState: InitialState } }
   | { command: Commands.STEP; payload: { program: number[] } }
-  | { command: Commands.RUN };
+  | { command: Commands.RUN }
+  | { command: Commands.STOP };
 
 onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   if (!e.data?.command) {
@@ -31,12 +38,10 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   let isFinished;
   switch (e.data.command) {
     case Commands.INIT:
-      console.log("webworker init");
       pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       postMessage({ command: Commands.INIT, result: "success" });
       break;
     case Commands.STEP:
-      console.log("webworker step");
       isFinished = pvm.nextStep() !== Status.OK;
       result = nextInstruction(pvm, e.data.payload.program);
       state = {
@@ -48,10 +53,10 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         status: pvm.getStatus() as unknown as Status,
       };
 
-      postMessage({ command: Commands.STEP, payload: { result, state, isFinished } });
+      postMessage({ command: Commands.STEP, payload: { result, state, isFinished, isRunMode } });
       break;
     case Commands.RUN:
-      pvm.runProgram();
+      isRunMode = true;
       state = {
         pc: pvm.getPC(),
         regs: Array.from(pvm.getRegisters()) as RegistersArray,
@@ -60,8 +65,11 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         memory: pvm.getMemory(),
         status: pvm.getStatus() as unknown as Status,
       };
-
-      postMessage({ command: Commands.RUN, payload: { state, isFinished: true } });
+      postMessage({ command: Commands.RUN, payload: { isRunMode, state, isFinished: true } });
+      break;
+    case Commands.STOP:
+      isRunMode = false;
+      postMessage({ command: Commands.RUN, payload: { isRunMode } });
       break;
     default:
       break;

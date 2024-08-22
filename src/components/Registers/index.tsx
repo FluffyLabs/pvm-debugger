@@ -21,6 +21,11 @@ export const Registers = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
+  console.log({
+    currentState,
+    previousState,
+  });
+
   return (
     <div className="border-2 rounded-md h-full">
       <div className="p-3">

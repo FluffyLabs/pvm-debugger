@@ -1,11 +1,11 @@
 const IMMEDIATE_SIZE = 4;
 
 export class ImmediateDecoder {
-  private buffer = new ArrayBuffer(IMMEDIATE_SIZE);
-  private unsignedImmediate = new Uint32Array(this.buffer);
-  private signedImmediate = new Int32Array(this.buffer);
-  private view = new DataView(this.buffer);
-  private bytes = new Uint8Array(this.buffer);
+  public buffer = new ArrayBuffer(IMMEDIATE_SIZE);
+  public unsignedImmediate = new Uint32Array(this.buffer);
+  public signedImmediate = new Int32Array(this.buffer);
+  public view = new DataView(this.buffer);
+  public bytes = new Uint8Array(this.buffer);
 
   setBytes(bytes: Uint8Array) {
     const n = bytes.length;

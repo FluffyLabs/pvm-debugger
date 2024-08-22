@@ -1,6 +1,7 @@
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
 import { ArgumentType } from "@/packages/pvm/pvm/args-decoder/argument-type";
 import { Args } from "@/types/pvm";
+import { ImmediateDecoder } from "@/packages/pvm/pvm/args-decoder/decoders/immediate-decoder.ts";
 
 export const valueToNumeralSystem = (
   value: number | undefined,
@@ -13,14 +14,16 @@ export const valueToNumeralSystem = (
 };
 
 // TODO remove type casting when PVM changed
-const getUnsignedImmediate = (immediateDecoder: any) => immediateDecoder?.unsignedImmediate[0];
+const getUnsignedImmediate = (immediateDecoder: ImmediateDecoder) => immediateDecoder?.unsignedImmediate[0];
 
 export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: NumeralSystem) => {
   switch (args?.type) {
     case ArgumentType.NO_ARGUMENTS:
       return "";
     case ArgumentType.ONE_IMMEDIATE:
-      return <span>{valueToNumeralSystem(getUnsignedImmediate(args), numeralSystem)}</span>;
+      return (
+        <span>{valueToNumeralSystem(getUnsignedImmediate(args as unknown as ImmediateDecoder), numeralSystem)}</span>
+      );
     case ArgumentType.TWO_IMMEDIATES:
       return (
         <span>
