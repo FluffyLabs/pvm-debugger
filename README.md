@@ -2,7 +2,7 @@
 
 Additional web-based tooling for typeberry.
 
-- [ ] PVM disassembler
+- [x] PVM disassembler (live @ https://pvm.fluffylabs.dev)
 
 ## Requirements
 
