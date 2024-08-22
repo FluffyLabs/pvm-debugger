@@ -1,10 +1,10 @@
+import assert from "node:assert";
+import { describe, it } from "node:test";
+
 import { NibblesDecoder } from "./nibbles-decoder";
 
-import assert from "node:assert";
-import { test } from "node:test";
-
-test("NibblesDecoder", async (t) => {
-  await t.test("decode high nibble from 0x79", () => {
+describe("NibblesDecoder", () => {
+  it("should decode high nibble from 0x79", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0x79);
@@ -14,7 +14,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 7);
   });
 
-  await t.test("decode low nibble from 0x79", () => {
+  it("should decode low nibble from 0x79", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0x79);
@@ -24,7 +24,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 9);
   });
 
-  await t.test("should not clamp high nibble", () => {
+  it("should not clamp high nibble", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0xde);
@@ -34,7 +34,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 13);
   });
 
-  await t.test("should not clamp low nibble", () => {
+  it("should not clamp low nibble", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0xde);
@@ -44,7 +44,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 14);
   });
 
-  await t.test("decode high register index from 0x79", () => {
+  it("should decode high register index from 0x79", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0x79);
@@ -54,7 +54,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 7);
   });
 
-  await t.test("decode low register index from 0x79", () => {
+  it("should decode low register index from 0x79", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0x79);
@@ -64,7 +64,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 9);
   });
 
-  await t.test("should clamp high register index", () => {
+  it("should clamp high register index", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0xed);
@@ -74,7 +74,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 12);
   });
 
-  await t.test("should clamp low register index", () => {
+  it("should clamp low register index", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0xde);
@@ -84,7 +84,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 12);
   });
 
-  await t.test("decode high length from 0x23", () => {
+  it("decode high length from 0x23", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0x23);
@@ -94,7 +94,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 2);
   });
 
-  await t.test("decode low length from 0x23", () => {
+  it("should decode low length from 0x23", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0x23);
@@ -104,7 +104,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 3);
   });
 
-  await t.test("should clamp high length", () => {
+  it("should clamp high length", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0xed);
@@ -114,7 +114,7 @@ test("NibblesDecoder", async (t) => {
     assert.strictEqual(registerValue, 4);
   });
 
-  await t.test("should clamp low length", () => {
+  it("should clamp low length", () => {
     const nibblesDecoder = new NibblesDecoder();
 
     nibblesDecoder.setByte(0xde);

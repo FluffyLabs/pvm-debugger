@@ -1,9 +1,12 @@
 import type {
   NoArgumentsResult,
+  OneImmediateResult,
   OneOffsetResult,
   OneRegisterOneImmediateOneOffsetResult,
   OneRegisterOneImmediateResult,
+  OneRegisterTwoImmediatesResult,
   ThreeRegistersResult,
+  TwoImmediatesResult,
   TwoRegistersOneImmediateResult,
   TwoRegistersOneOffsetResult,
   TwoRegistersResult,
@@ -16,11 +19,11 @@ const ARGUMENT_TYPE_LENGTH = Object.keys(ArgumentType).length / 2;
 
 type Results = [
   NoArgumentsResult,
-  undefined, // 1 imm
-  undefined, // 2 imms
+  OneImmediateResult,
+  TwoImmediatesResult,
   OneOffsetResult,
   OneRegisterOneImmediateResult,
-  undefined, // 1 reg 2 imms
+  OneRegisterTwoImmediatesResult,
   OneRegisterOneImmediateOneOffsetResult,
   TwoRegistersResult,
   TwoRegistersOneImmediateResult,
@@ -34,19 +37,25 @@ export const createResults = () => {
 
   results[ArgumentType.NO_ARGUMENTS] = {
     type: ArgumentType.NO_ARGUMENTS,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
+  };
+
+  results[ArgumentType.ONE_IMMEDIATE] = {
+    type: ArgumentType.ONE_IMMEDIATE,
+    noOfBytesToSkip: 1,
+    immediateDecoder: new ImmediateDecoder(),
   };
 
   results[ArgumentType.TWO_REGISTERS] = {
     type: ArgumentType.TWO_REGISTERS,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
     firstRegisterIndex: 0,
     secondRegisterIndex: 0,
   };
 
   results[ArgumentType.THREE_REGISTERS] = {
     type: ArgumentType.THREE_REGISTERS,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
     firstRegisterIndex: 0,
     secondRegisterIndex: 0,
     thirdRegisterIndex: 0,
@@ -54,23 +63,25 @@ export const createResults = () => {
 
   results[ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET] = {
     type: ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
     firstRegisterIndex: 0,
     immediateDecoder: new ImmediateDecoder(),
+    nextPc: 0,
     offset: 0,
   };
 
   results[ArgumentType.TWO_REGISTERS_ONE_OFFSET] = {
     type: ArgumentType.TWO_REGISTERS_ONE_OFFSET,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
     firstRegisterIndex: 0,
     secondRegisterIndex: 0,
+    nextPc: 0,
     offset: 0,
   };
 
   results[ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE] = {
     type: ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
     firstRegisterIndex: 0,
     secondRegisterIndex: 0,
     immediateDecoder: new ImmediateDecoder(),
@@ -78,15 +89,40 @@ export const createResults = () => {
 
   results[ArgumentType.ONE_REGISTER_ONE_IMMEDIATE] = {
     type: ArgumentType.ONE_REGISTER_ONE_IMMEDIATE,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
     firstRegisterIndex: 0,
     immediateDecoder: new ImmediateDecoder(),
   };
 
+  results[ArgumentType.ONE_REGISTER_TWO_IMMEDIATES] = {
+    type: ArgumentType.ONE_REGISTER_TWO_IMMEDIATES,
+    noOfBytesToSkip: 1,
+    registerIndex: 0,
+    firstImmediateDecoder: new ImmediateDecoder(),
+    secondImmediateDecoder: new ImmediateDecoder(),
+  };
+
   results[ArgumentType.ONE_OFFSET] = {
     type: ArgumentType.ONE_OFFSET,
-    noOfInstructionsToSkip: 1,
+    noOfBytesToSkip: 1,
+    nextPc: 0,
     offset: 0,
+  };
+
+  results[ArgumentType.TWO_IMMEDIATES] = {
+    type: ArgumentType.TWO_IMMEDIATES,
+    noOfBytesToSkip: 1,
+    firstImmediateDecoder: new ImmediateDecoder(),
+    secondImmediateDecoder: new ImmediateDecoder(),
+  };
+
+  results[ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES] = {
+    type: ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES,
+    noOfBytesToSkip: 1,
+    firstImmediateDecoder: new ImmediateDecoder(),
+    secondImmediateDecoder: new ImmediateDecoder(),
+    firstRegisterIndex: 0,
+    secondRegisterIndex: 0,
   };
 
   return results;

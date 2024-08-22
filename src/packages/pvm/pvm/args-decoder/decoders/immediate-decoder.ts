@@ -5,6 +5,7 @@ export class ImmediateDecoder {
   private unsignedImmediate = new Uint32Array(this.buffer);
   private signedImmediate = new Int32Array(this.buffer);
   private view = new DataView(this.buffer);
+  private bytes = new Uint8Array(this.buffer);
 
   setBytes(bytes: Uint8Array) {
     const n = bytes.length;
@@ -27,5 +28,9 @@ export class ImmediateDecoder {
 
   getSigned() {
     return this.signedImmediate[0];
+  }
+
+  getBytesAsLittleEndian() {
+    return this.bytes.subarray(0, IMMEDIATE_SIZE);
   }
 }

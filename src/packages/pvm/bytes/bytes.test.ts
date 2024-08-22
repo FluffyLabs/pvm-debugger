@@ -1,9 +1,9 @@
 import assert from "node:assert";
-import { test } from "node:test";
+import { describe, it } from "node:test";
 import { Bytes, BytesBlob } from "./bytes";
 
-test("BytesBlob", async (t) => {
-  await t.test("should fail if 0x is missing", () => {
+describe("BytesBlob", () => {
+  it("should fail if 0x is missing", () => {
     try {
       BytesBlob.parseBlob("ff2f");
       assert.fail("Should throw an exception");
@@ -12,7 +12,7 @@ test("BytesBlob", async (t) => {
     }
   });
 
-  await t.test("should fail in case invalid characters are given", () => {
+  it("should fail in case invalid characters are given", () => {
     try {
       BytesBlob.parseBlob("0xff2g");
       assert.fail("Should throw an exception");
@@ -21,7 +21,7 @@ test("BytesBlob", async (t) => {
     }
   });
 
-  await t.test("parse 0x-prefixed hex string into blob of bytes", () => {
+  it("parse 0x-prefixed hex string into blob of bytes", () => {
     const input = "0x2fa3f686df876995167e7c2e5d74c4c7b6e48f8068fe0e44208344d480f7904c";
     const result = BytesBlob.parseBlob(input);
 
@@ -34,7 +34,7 @@ test("BytesBlob", async (t) => {
     );
   });
 
-  await t.test("parse non 0x-prefixed hex string into blob of bytes", () => {
+  it("parse non 0x-prefixed hex string into blob of bytes", () => {
     const input = "2fa3f686df876995167e7c2e5d74c4c7b6e48f8068fe0e44208344d480f7904c";
     const result = BytesBlob.parseBlobNoPrefix(input);
 
@@ -47,15 +47,15 @@ test("BytesBlob", async (t) => {
     );
   });
 
-  await t.test("from bytes", () => {
+  it("from bytes", () => {
     const result = BytesBlob.fromBytes([47, 163, 246, 134]);
 
     assert.deepStrictEqual(result.buffer, new Uint8Array([47, 163, 246, 134]));
   });
 });
 
-test("Bytes", async (t) => {
-  await t.test("should fail in case of length mismatch", () => {
+describe("Bytes", () => {
+  it("should fail in case of length mismatch", () => {
     const input = "0x9c2d3bce7aa0a5857c67a85247365d2035f7d9daec2b515e86086584ad5e8644";
 
     try {
@@ -66,7 +66,7 @@ test("Bytes", async (t) => {
     }
   });
 
-  await t.test("parse 0x-prefixed, fixed length bytes vector", () => {
+  it("parse 0x-prefixed, fixed length bytes vector", () => {
     const input = "0x9c2d3bce7aa0a5857c67a85247365d2035f7d9daec2b515e86086584ad5e8644";
 
     const bytes = Bytes.parseBytes(input, 32);
@@ -80,7 +80,7 @@ test("Bytes", async (t) => {
     );
   });
 
-  await t.test("parse non 0x-prefixed, fixed length bytes vector", () => {
+  it("parse non 0x-prefixed, fixed length bytes vector", () => {
     const input = "9c2d3bce7aa0a5857c67a85247365d2035f7d9daec2b515e86086584ad5e8644";
 
     const bytes = Bytes.parseBytesNoPrefix(input, 32);

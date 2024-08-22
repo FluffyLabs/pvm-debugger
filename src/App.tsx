@@ -24,14 +24,7 @@ import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
-
-const virtualTrapInstruction: CurrentInstruction = {
-  args: { type: 0 },
-  name: "TRAP",
-  gas: 0,
-  instructionCode: 0,
-  instructionBytes: new Uint8Array(0),
-};
+import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -85,7 +78,10 @@ function App() {
             if (counter === state.pc) {
               return true;
             }
-            counter += x.instructionBytes?.length ?? 0;
+
+            if (!("error" in x)) {
+              counter += x.instructionBytes?.length ?? 0;
+            }
           });
           setCurrentInstruction(result ?? null);
         }
@@ -116,7 +112,7 @@ function App() {
 
     try {
       const result = disassemblify(new Uint8Array(program));
-      result.push(virtualTrapInstruction);
+      console.info("Disassembly result:", result);
       setProgramPreviewResult(result);
       setCurrentInstruction(result?.[0]);
       setPvmInitialized(true);
@@ -130,9 +126,6 @@ function App() {
   };
 
   const onNext = () => {
-    console.log({
-      currentInstruction,
-    });
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
@@ -238,8 +231,8 @@ function App() {
                     <>
                       <Instructions
                         status={currentState.status}
+                        currentState={currentState}
                         programPreviewResult={programPreviewResult}
-                        currentInstruction={currentInstruction}
                         instructionMode={instructionMode}
                         onInstructionClick={onInstructionClick}
                       />

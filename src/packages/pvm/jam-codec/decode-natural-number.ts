@@ -14,7 +14,7 @@ export function decodeNaturalNumber(bytes: Uint8Array): Result {
 
   if (l === 8) {
     return {
-      value: littleEndianDecoder.decode(bytes.subarray(1, 9)),
+      value: littleEndianDecoder.decodeU64(bytes.subarray(1, 9)),
       bytesToSkip,
     };
   }
@@ -23,7 +23,7 @@ export function decodeNaturalNumber(bytes: Uint8Array): Result {
     return { value: BigInt(bytes[0]), bytesToSkip };
   }
 
-  const restBytesValue = littleEndianDecoder.decode(bytes.subarray(1, l + 1));
+  const restBytesValue = littleEndianDecoder.decodeU64(bytes.subarray(1, l + 1));
   const firstByteValue = BigInt(bytes[0]) + 2n ** (8n - BigInt(l)) - 2n ** 8n;
 
   return {
