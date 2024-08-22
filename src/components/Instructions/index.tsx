@@ -7,7 +7,7 @@ import { ReactNode, useContext, useMemo } from "react";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { InstructionItem } from "./InstructionItem";
 
-export type ProgramRow = CurrentInstruction & { addressEl: ReactNode, counter: number };
+export type ProgramRow = CurrentInstruction & { addressEl: ReactNode; counter: number };
 
 export const Instructions = ({
   status,
