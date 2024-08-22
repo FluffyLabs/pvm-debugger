@@ -63,6 +63,9 @@
     "vite": "^5.3.4"
   },
   "lint-staged": {
-    "**/*": ["prettier --write --ignore-unknown", "npm run lint"]
+    "**/*": [
+      "npm run format",
+      "npm run lint"
+    ]
   }
 }
