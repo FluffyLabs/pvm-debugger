@@ -112,6 +112,7 @@ function App() {
 
     try {
       const result = disassemblify(new Uint8Array(program));
+      console.info("Disassembly result:", result);
       setProgramPreviewResult(result);
       setCurrentInstruction(result?.[0]);
       setPvmInitialized(true);
