@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
-import { worker } from "./packages/web-worker";
+import { wasmWorker as worker } from "./packages/web-worker";
 
 import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
@@ -57,6 +57,10 @@ function App() {
       setCurrentInstructionState(ins);
     }
     setClickedInstruction(null);
+  }, []);
+
+  useEffect(() => {
+    worker.postMessage({ command: "load" });
   }, []);
 
   useEffect(() => {
