@@ -63,7 +63,7 @@
     "vite": "^5.3.4"
   },
   "lint-staged": {
-    "**/*": [
+    "**/*.{ts,tsx}": [
       "npm run format",
       "npm run lint"
     ]
