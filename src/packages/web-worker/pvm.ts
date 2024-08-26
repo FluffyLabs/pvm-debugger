@@ -4,7 +4,7 @@ import { ProgramDecoder } from "../../packages/pvm/pvm/program-decoder/program-d
 import { ArgsDecoder } from "../../packages/pvm/pvm/args-decoder/args-decoder";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
 import { Pvm as PvmInstance } from "@typeberry/pvm";
-import { WasmPvmInstance } from "@/packages/web-worker/wasm-worker.ts";
+import { PvmApiInterface } from "@/packages/web-worker/worker.ts";
 
 export const initPvm = (program: number[], initialState: InitialState) => {
   const pvm = new PvmInstance(new Uint8Array(program), initialState);
@@ -33,10 +33,11 @@ export const runAllInstructions = (pvm: Pvm, program: number[]) => {
   };
 };
 
-export const nextInstruction = (pvm: WasmPvmInstance, program: number[]) => {
+export const nextInstruction = (pvm: PvmApiInterface, program: number[]) => {
   const programDecoder = new ProgramDecoder(new Uint8Array(program));
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();
+  // TODO: unify the api
   const programCounter = pvm.getPC ? pvm.getPC() : pvm.getProgramCounter();
   const argsDecoder = new ArgsDecoder(code, mask);
   const currentInstruction = code[programCounter];
