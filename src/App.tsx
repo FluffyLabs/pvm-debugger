@@ -188,10 +188,18 @@ function App() {
     return mobileView?.current?.offsetParent !== null;
   };
 
-  const handlePvmTypeChange = ({ type, param }: { type: string; param: string }) => {
+  const handlePvmTypeChange = ({ type, param }: { type: string; param: string | Blob }) => {
     setSelectedPvmType(type as PvmTypes);
     // setSelectedPvmParam(param);
-    worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
+    console.log("Selected PVM type", type, param);
+
+    if (type === PvmTypes.WASM_FILE) {
+      worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
+    } else if (type === PvmTypes.WASM_URL) {
+      worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
+    } else {
+      worker.postMessage({ command: "load", payload: { type } });
+    }
   };
 
   return (

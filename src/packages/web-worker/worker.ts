@@ -13,6 +13,7 @@ export enum Commands {
 export enum PvmTypes {
   BUILT_IN = "built-in",
   WASM_URL = "wasm-url",
+  WASM_FILE = "wasm-file",
 }
 
 export enum CommandResult {
@@ -36,7 +37,7 @@ export type TargerOnMessageParams =
   | { command: Commands.STOP; payload: { isRunMode: boolean } };
 
 export type WorkerOnMessageParams =
-  | { command: Commands.LOAD; payload: { type: PvmTypes; params: { url?: string } } }
+  | { command: Commands.LOAD; payload: { type: PvmTypes; params: { url?: string; file?: Blob } } }
   | { command: Commands.INIT; payload: { program: number[]; initialState: InitialState } }
   | { command: Commands.STEP; payload: { program: number[] } }
   | { command: Commands.RUN }
@@ -57,6 +58,22 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         // TODO: currently there's only one built-in PVM so there's no need to load it
         pvm = null;
         postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
+      }
+      if (e.data.payload.type === PvmTypes.WASM_FILE) {
+        try {
+          const file = e.data.payload.params.file;
+          if (!file) {
+            throw new Error("No PVM file");
+          }
+          const bytes = await file.arrayBuffer();
+          const wasmModule = await WebAssembly.instantiate(bytes, {});
+          console.log("WASM module loaded", wasmModule.instance.exports);
+          pvm = wasmModule.instance.exports;
+          postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
+        } catch (error) {
+          console.error(error);
+          postMessage({ command: Commands.LOAD, result: CommandResult.ERROR });
+        }
       }
       if (e.data.payload.type === PvmTypes.WASM_URL) {
         try {
