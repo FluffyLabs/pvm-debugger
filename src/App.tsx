@@ -9,7 +9,7 @@ import { disassemblify } from "./packages/pvm/pvm/disassemblify";
 import { Play, RefreshCcw, StepForward, Check } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
-import { MemoryPreview } from "@/components/MemoryPreview";
+// import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { ProgramUpload } from "@/components/ProgramUpload";
 import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
@@ -299,9 +299,7 @@ function App() {
               />
             </div>
 
-            <div className="max-sm:hidden col-span-12 md:col-span-3">
-              <MemoryPreview />
-            </div>
+            <div className="max-sm:hidden col-span-12 md:col-span-3">{/* <MemoryPreview /> */}</div>
 
             <div className="max-sm:hidden md:col-span-3 overflow-hidden">
               <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />

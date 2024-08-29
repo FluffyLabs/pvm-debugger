@@ -9,6 +9,7 @@ export enum Commands {
   STEP = "step",
   RUN = "run",
   STOP = "stop",
+  MEMORY_PAGE = "memory_page",
 }
 
 export enum PvmTypes {
@@ -35,7 +36,8 @@ export type TargerOnMessageParams =
       payload: { state: ExpectedState; result: CurrentInstruction; isFinished: boolean; isRunMode: boolean };
     }
   | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
-  | { command: Commands.STOP; payload: { isRunMode: boolean } };
+  | { command: Commands.STOP; payload: { isRunMode: boolean } }
+  | { command: Commands.MEMORY_PAGE; payload: { memoryPage: Uint8Array } };
 
 export type WorkerOnMessageParams =
   | { command: Commands.LOAD; payload: { type: PvmTypes; params: { url?: string; file?: Blob } } }
