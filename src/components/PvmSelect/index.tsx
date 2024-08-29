@@ -99,6 +99,7 @@ export const PvmSelect = ({
           <DialogDescription>
             <Input
               type="file"
+              accept=".wasm"
               onChange={(e) => {
                 if (e.target.files?.length) {
                   handlePvmUpload(e.target.files[0]);
