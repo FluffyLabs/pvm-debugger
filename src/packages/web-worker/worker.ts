@@ -28,7 +28,7 @@ export type PvmApiInterface = typeof wasmPvmShell | InternalPvm;
 let pvm: PvmApiInterface | null = null;
 let isRunMode = false;
 
-export type TargerOnMessageParams =
+export type TargetOnMessageParams =
   | { command: Commands.LOAD; result: CommandResult }
   | { command: Commands.INIT; payload: { initialState: InitialState } }
   | {
@@ -44,9 +44,10 @@ export type WorkerOnMessageParams =
   | { command: Commands.INIT; payload: { program: number[]; initialState: InitialState } }
   | { command: Commands.STEP; payload: { program: number[] } }
   | { command: Commands.RUN }
-  | { command: Commands.STOP };
+  | { command: Commands.STOP }
+  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } };
 
-function postTypedMessage(msg: TargerOnMessageParams) {
+function postTypedMessage(msg: TargetOnMessageParams) {
   postMessage(msg);
 }
 
@@ -165,6 +166,13 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
           isFinished: isFinished ?? true,
           state: state ?? {},
         },
+      });
+      break;
+    case Commands.MEMORY_PAGE:
+      console.log(e.data.payload.pageNumber, pvm.getMemoryPage(e.data.payload.pageNumber));
+      postMessage({
+        command: Commands.MEMORY_PAGE,
+        payload: { memoryPage: pvm.getMemoryPage(e.data.payload.pageNumber) },
       });
       break;
     default:

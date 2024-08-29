@@ -9,7 +9,7 @@ import { disassemblify } from "./packages/pvm/pvm/disassemblify";
 import { Play, RefreshCcw, StepForward, Check } from "lucide-react";
 import { Header } from "@/components/Header";
 import { ProgramLoader } from "@/components/ProgramLoader";
-// import { MemoryPreview } from "@/components/MemoryPreview";
+import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { ProgramUpload } from "@/components/ProgramUpload";
 import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
@@ -20,7 +20,7 @@ import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 import { worker } from "./packages/web-worker";
 
-import { Commands, PvmTypes, TargerOnMessageParams } from "./packages/web-worker/worker";
+import { Commands, PvmTypes, TargetOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
@@ -44,6 +44,7 @@ function App() {
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
   const [isRunMode, setIsRunMode] = useState(false);
+  const [memoryPage, setMemoryPage] = useState<Uint8Array>();
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
@@ -68,7 +69,7 @@ function App() {
       return;
     }
 
-    worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
+    worker.onmessage = (e: MessageEvent<TargetOnMessageParams>) => {
       if (e.data.command === Commands.STEP) {
         const { state, isFinished, isRunMode } = e.data.payload;
         setCurrentState((prevState) => {
@@ -79,7 +80,6 @@ function App() {
         if (e.data.command === Commands.STEP) {
           setCurrentInstruction(e.data.payload.result);
         }
-
         if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
           worker.postMessage({ command: "step", payload: { program } });
         }
@@ -95,6 +95,9 @@ function App() {
       }
       if (e.data.command === Commands.LOAD) {
         restartProgram(initialState);
+      }
+      if (e.data.command === Commands.MEMORY_PAGE) {
+        setMemoryPage(e.data.payload.memoryPage);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -299,7 +302,12 @@ function App() {
               />
             </div>
 
-            <div className="max-sm:hidden col-span-12 md:col-span-3">{/* <MemoryPreview /> */}</div>
+            <div className="max-sm:hidden col-span-12 md:col-span-3">
+              <MemoryPreview
+                memoryPage={memoryPage}
+                onPageChange={(pageNumber) => worker.postMessage({ command: "memory_page", payload: { pageNumber } })}
+              />
+            </div>
 
             <div className="max-sm:hidden md:col-span-3 overflow-hidden">
               <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
