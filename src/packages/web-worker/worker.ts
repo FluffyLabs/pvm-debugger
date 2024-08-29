@@ -1,6 +1,7 @@
 import { CurrentInstruction, ExpectedState, InitialState, RegistersArray, Status } from "@/types/pvm";
 import { initPvm, nextInstruction } from "./pvm";
 import { Pvm as PvmInstance } from "@typeberry/pvm";
+import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
 
 export enum Commands {
   LOAD = "load",
@@ -68,7 +69,8 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
           const bytes = await file.arrayBuffer();
           const wasmModule = await WebAssembly.instantiate(bytes, {});
           console.log("WASM module loaded", wasmModule.instance.exports);
-          pvm = wasmModule.instance.exports;
+          wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
+          pvm = wasmPvmShell;
           postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
         } catch (error) {
           console.error(error);
@@ -88,7 +90,8 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
           const bytes = await response.arrayBuffer();
           const wasmModule = await WebAssembly.instantiate(bytes, {});
           console.log("WASM module loaded", wasmModule.instance.exports);
-          pvm = wasmModule.instance.exports;
+          wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
+          pvm = wasmPvmShell;
           postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
         } catch (error) {
           console.error(error);
@@ -101,18 +104,24 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       // TODO: unify the api
       if (pvm?.reset) {
         console.log("pvm reset", pvm);
-        pvm.reset(e.data.payload.program, e.data.payload.initialState);
+        pvm.reset(
+          e.data.payload.program,
+          e.data.payload.initialState.regs,
+          BigInt(e.data.payload.initialState.gas || 10000),
+        );
       } else {
-        console.log("pvm onit", pvm);
+        console.log("pvm init", pvm);
         pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       }
       postMessage({ command: Commands.INIT, result: CommandResult.SUCCESS });
       break;
     case Commands.STEP:
-      console.log({
-        pvm,
-      });
-      isFinished = pvm.nextStep() !== Status.OK;
+      if (pvm?.getStatus) {
+        pvm.nextStep();
+        isFinished = pvm.getStatus();
+      } else {
+        isFinished = pvm.nextStep() !== Status.OK;
+      }
       result = nextInstruction(pvm, e.data.payload.program);
       state = {
         pc: pvm.getPC ? pvm.getPC() : pvm.getProgramCounter(),
