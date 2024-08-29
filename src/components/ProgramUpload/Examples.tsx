@@ -93,6 +93,12 @@ export const Examples = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFi
             ADD instruction
           </Label>
         </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="storeU16" id="option-storeU16" />
+          <Label htmlFor="option-storeU16" className="cursor-pointer">
+            ADD instruction
+          </Label>
+        </div>
       </RadioGroup>
     </div>
   );
