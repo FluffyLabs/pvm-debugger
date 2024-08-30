@@ -142,7 +142,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       break;
     case Commands.STEP:
       if (!pvm) {
-        throw new Error("PVM is unitialized.");
+        throw new Error("PVM is uninitialized.");
       }
       if (isInternalPvm(pvm)) {
         isFinished = pvm.nextStep() !== Status.OK;
@@ -181,7 +181,7 @@ function getState(pvm: PvmApiInterface): ExpectedState {
   if (isInternalPvm(pvm)) {
     newState = {
       pc: pvm.getPC(),
-      regs: pvm.getRegisters(),
+      regs: Array.from(pvm.getRegisters()) as RegistersArray,
       gas: pvm.getGas(),
       status: pvm.getStatus(),
     };
