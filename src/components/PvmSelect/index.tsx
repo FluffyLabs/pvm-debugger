@@ -12,6 +12,18 @@ import { ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
+import path from "path-browserify";
+
+interface WasmMetadata {
+  name: string;
+  version: string;
+  capabilities: {
+    resetJAM: boolean;
+    resetGeneric: boolean;
+    resetPolkaVM: boolean;
+  };
+  wasmBlobUrl: string;
+}
 
 export const PvmSelect = ({
   value,
@@ -21,6 +33,7 @@ export const PvmSelect = ({
   onValueChange: (value: { type: string; param: string | Blob }) => void;
 }) => {
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  const [wasmUrlMetadata, setWasmUrlMetadata] = useState<WasmMetadata | null>(null);
 
   const handlePvmUpload = (file: Blob) => {
     onValueChange({
@@ -33,7 +46,7 @@ export const PvmSelect = ({
     <>
       <Select
         value={value}
-        onValueChange={(value) => {
+        onValueChange={async (value) => {
           if (value === "wasm-file") {
             setIsFileDialogOpen(true);
           }
@@ -45,22 +58,26 @@ export const PvmSelect = ({
             });
           }
           if (value === "wasm-url") {
-            // URL to test: https://fluffylabs.dev/pvm-shell/pkg/pvm_shell_bg.wasm
+            // URL to test: https://fluffylabs.dev/pvm-shell/pvm-metadata.json
             const url = prompt(
-              "Enter the URL of the PVM implementation (e.g. https://fluffylabs.dev/pvm-shell/pkg/pvm_shell_bg.wasm)",
+              "Enter the URL of the PVM implementation (e.g. https://fluffylabs.dev/pvm-shell/pvm-metadata.json)",
             );
 
             try {
               const isValidUrl = Boolean(new URL(url ?? ""));
               if (url && isValidUrl) {
+                const wasmMetadata = await fetch(url).then((res) => res.json());
+                setWasmUrlMetadata(wasmMetadata);
+                console.log("Getting path of the WASM file: ", path.join(url, "../", wasmMetadata.wasmBlobUrl));
                 onValueChange({
                   type: value,
-                  param: url,
+                  param: path.join(url, "../", wasmMetadata.wasmBlobUrl),
                 });
               } else {
                 alert("Invalid URL");
               }
             } catch (error) {
+              console.log(error);
               alert("Invalid URL");
             }
           } else {
@@ -78,7 +95,11 @@ export const PvmSelect = ({
           <SelectGroup>
             <SelectItem value="built-in">@typeberry/pvm-{import.meta.env.TYPEBERRY_PVM_VERSION}</SelectItem>
             <SelectSeparator />
-            <SelectItem value="wasm-url">Load custom PVM from URL as a WASM file</SelectItem>
+            <SelectItem value="wasm-url">
+              {wasmUrlMetadata
+                ? `${wasmUrlMetadata.name} ${wasmUrlMetadata.version} - click to choose another url`
+                : "Load custom PVM from URL as a WASM file"}
+            </SelectItem>
             <SelectItem value="wasm-file">Upload custom PVM from a file as a WASM</SelectItem>
 
             <SelectLabel>
