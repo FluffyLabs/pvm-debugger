@@ -1,6 +1,13 @@
-import { CurrentInstruction, ExpectedState, InitialState, RegistersArray, Status } from "@/types/pvm";
+import {
+  CurrentInstruction,
+  ExpectedState,
+  InitialState,
+  Pvm as InternalPvm,
+  RegistersArray,
+  Status,
+} from "@/types/pvm";
 import { initPvm, nextInstruction } from "./pvm";
-import { Pvm as PvmInstance } from "@typeberry/pvm";
+import { Pvm as InternalPvmInstance } from "@typeberry/pvm";
 import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
 
 export enum Commands {
@@ -23,13 +30,13 @@ export enum CommandResult {
 }
 
 // TODO: unify the api
-export type PvmApiInterface = typeof PvmInstance & { getProgramCounter?: () => void };
+export type PvmApiInterface = typeof wasmPvmShell | InternalPvm;
 let pvm: PvmApiInterface | null = null;
 let isRunMode = false;
 
 export type TargerOnMessageParams =
-  | { command: Commands.LOAD }
-  | { command: Commands.INIT; payload: { program: number[]; initialState: InitialState } }
+  | { command: Commands.LOAD; result: CommandResult }
+  | { command: Commands.INIT; payload: { initialState: InitialState } }
   | {
       command: Commands.STEP;
       payload: { state: ExpectedState; result: CurrentInstruction; isFinished: boolean; isRunMode: boolean };
@@ -43,6 +50,10 @@ export type WorkerOnMessageParams =
   | { command: Commands.STEP; payload: { program: number[] } }
   | { command: Commands.RUN }
   | { command: Commands.STOP };
+
+function postTypedMessage(msg: TargerOnMessageParams) {
+  postMessage(msg);
+}
 
 onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   if (!e.data?.command) {
@@ -71,10 +82,10 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
           console.log("WASM module loaded", wasmModule.instance.exports);
           wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
           pvm = wasmPvmShell;
-          postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
+          postTypedMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
         } catch (error) {
           console.error(error);
-          postMessage({ command: Commands.LOAD, result: CommandResult.ERROR });
+          postTypedMessage({ command: Commands.LOAD, result: CommandResult.ERROR });
         }
       }
       if (e.data.payload.type === PvmTypes.WASM_URL) {
@@ -92,55 +103,71 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
           console.log("WASM module loaded", wasmModule.instance.exports);
           wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
           pvm = wasmPvmShell;
-          postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
+          postTypedMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
         } catch (error) {
           console.error(error);
-          postMessage({ command: Commands.LOAD, result: CommandResult.ERROR });
+          postTypedMessage({ command: Commands.LOAD, result: CommandResult.ERROR });
         }
       }
       break;
     case Commands.INIT:
+      if (e.data.payload.program.length === 0) {
+        console.warn("Skiping init, no program yet.");
+        postTypedMessage({
+          command: Commands.INIT,
+          payload: {
+            initialState: {},
+          },
+        });
+        break;
+      }
       console.log(" was there init");
       // TODO: unify the api
-      if (pvm?.reset) {
-        console.log("pvm reset", pvm);
+      if (pvm && "reset" in pvm) {
         pvm.reset(
           e.data.payload.program,
-          e.data.payload.initialState.regs,
+          regsAsUint8(e.data.payload.initialState.regs),
           BigInt(e.data.payload.initialState.gas || 10000),
         );
       } else {
         console.log("pvm init", pvm);
         pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       }
-      postMessage({ command: Commands.INIT, result: CommandResult.SUCCESS });
+      postTypedMessage({
+        command: Commands.INIT,
+        payload: {
+          initialState: pvm ? getState(pvm) : {},
+        },
+      });
       break;
     case Commands.STEP:
-      if (pvm?.getStatus) {
-        pvm.nextStep();
-        isFinished = pvm.getStatus();
-      } else {
-        isFinished = pvm.nextStep() !== Status.OK;
+      if (!pvm) {
+        throw new Error("PVM is unitialized.");
       }
-      result = nextInstruction(pvm, e.data.payload.program);
-      state = {
-        pc: pvm.getPC ? pvm.getPC() : pvm.getProgramCounter(),
-        regs: pvm.getRegisters() ? Array.from(pvm.getRegisters()) : (new Array(13).fill(0) as RegistersArray),
-        gas: pvm.getGas ? pvm.getGas() : pvm.getGasLeft(),
-        // pageMap: pvm.getMemory() as unknown as PageMapItem[],
-        // memory: pvm.getMemory(),
-        status: pvm.getStatus() as unknown as Status,
-      };
+      if (isInternalPvm(pvm)) {
+        isFinished = pvm.nextStep() !== Status.OK;
+      } else {
+        isFinished = !pvm.nextStep();
+      }
+      state = getState(pvm);
+      result = nextInstruction(state.pc ?? 0, e.data.payload.program) as unknown as CurrentInstruction;
 
-      postMessage({ command: Commands.STEP, payload: { result, state, isFinished, isRunMode } });
+      postTypedMessage({ command: Commands.STEP, payload: { result, state, isFinished, isRunMode } });
       break;
     case Commands.RUN:
       isRunMode = true;
-      postMessage({ command: Commands.RUN, payload: { isRunMode, isFinished: true } });
+      postTypedMessage({ command: Commands.RUN, payload: { isRunMode, isFinished: true, state: state ?? {} } });
       break;
     case Commands.STOP:
       isRunMode = false;
-      postMessage({ command: Commands.RUN, payload: { isRunMode } });
+      postTypedMessage({
+        command: Commands.RUN,
+        payload: {
+          isRunMode,
+          isFinished: isFinished ?? true,
+          state: state ?? {},
+        },
+      });
       break;
     default:
       break;
@@ -148,3 +175,58 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
 
   postMessage(["received", e.data]);
 };
+
+function getState(pvm: PvmApiInterface): ExpectedState {
+  let newState: ExpectedState;
+  if (isInternalPvm(pvm)) {
+    newState = {
+      pc: pvm.getPC(),
+      regs: pvm.getRegisters(),
+      gas: pvm.getGas(),
+      status: pvm.getStatus(),
+    };
+  } else {
+    newState = {
+      pc: pvm.getProgramCounter(),
+      regs: uint8asRegs(pvm.getRegisters()),
+      gas: pvm.getGasLeft(),
+      status: pvm.getStatus() as Status,
+    };
+  }
+  return newState;
+}
+
+function regsAsUint8(regs?: RegistersArray): Uint8Array {
+  const arr = new Uint8Array(13 * 4);
+  if (!regs) {
+    return arr;
+  }
+
+  let i = 0;
+  for (const reg of regs) {
+    arr[i] = reg & 0xff;
+    arr[i + 1] = (reg >> 8) & 0xff;
+    arr[i + 2] = (reg >> 16) & 0xff;
+    arr[i + 3] = (reg >> 24) & 0xff;
+    i += 4;
+  }
+  return arr;
+}
+
+function uint8asRegs(arr: Uint8Array): RegistersArray {
+  const regs: RegistersArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  let idx = 0;
+  for (const regIdx of regs) {
+    let num = arr[idx + 3];
+    num = (num << 8) + arr[idx + 2];
+    num = (num << 8) + arr[idx + 1];
+    num = (num << 8) + arr[idx];
+    regs[regIdx] = num;
+    idx += 4;
+  }
+  return regs;
+}
+
+function isInternalPvm(pvm: PvmApiInterface): pvm is InternalPvm {
+  return pvm instanceof InternalPvmInstance;
+}

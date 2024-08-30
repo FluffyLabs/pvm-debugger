@@ -1,22 +1,22 @@
-import { Args, InitialState, Pvm, Status } from "@/types/pvm";
+import { Args, InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
 // The only files we need from PVM repo:
 import { ProgramDecoder } from "../../packages/pvm/pvm/program-decoder/program-decoder";
 import { ArgsDecoder } from "../../packages/pvm/pvm/args-decoder/args-decoder";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
-import { Pvm as PvmInstance } from "@typeberry/pvm";
-import { PvmApiInterface } from "@/packages/web-worker/worker.ts";
+import { Pvm as InternalPvmInstance } from "@typeberry/pvm";
 
 export const initPvm = (program: number[], initialState: InitialState) => {
-  const pvm = new PvmInstance(new Uint8Array(program), initialState);
+  const pvm = new InternalPvmInstance(new Uint8Array(program), initialState);
 
   return pvm;
 };
 
-export const runAllInstructions = (pvm: Pvm, program: number[]) => {
+export const runAllInstructions = (pvm: InternalPvm, program: number[]) => {
   const programPreviewResult = [];
 
   do {
-    const result = nextInstruction(pvm, program);
+    const pc = pvm.getPC();
+    const result = nextInstruction(pc, program);
     programPreviewResult.push(result);
   } while (pvm.nextStep() === Status.OK);
 
@@ -33,12 +33,10 @@ export const runAllInstructions = (pvm: Pvm, program: number[]) => {
   };
 };
 
-export const nextInstruction = (pvm: PvmApiInterface, program: number[]) => {
+export const nextInstruction = (programCounter: number, program: number[]) => {
   const programDecoder = new ProgramDecoder(new Uint8Array(program));
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();
-  // TODO: unify the api
-  const programCounter = pvm.getPC ? pvm.getPC() : pvm.getProgramCounter();
   const argsDecoder = new ArgsDecoder(code, mask);
   const currentInstruction = code[programCounter];
 
