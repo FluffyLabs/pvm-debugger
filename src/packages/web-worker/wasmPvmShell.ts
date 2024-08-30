@@ -33,6 +33,7 @@ export function reset(program, registers, gas) {
   const len0 = WASM_VECTOR_LEN;
   const ptr1 = passArray8ToWasm0(registers, wasm.__wbindgen_malloc);
   const len1 = WASM_VECTOR_LEN;
+  console.log("---- reset ----", wasm, ptr0, len0, ptr1, len1, gas);
   wasm.reset(ptr0, len0, ptr1, len1, gas);
 }
 
