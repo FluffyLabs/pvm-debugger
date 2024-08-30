@@ -57,7 +57,6 @@ export const PvmSelect = ({
                   type: value,
                   param: url,
                 });
-                alert(`Loading PVM`);
               } else {
                 alert("Invalid URL");
               }
@@ -103,6 +102,7 @@ export const PvmSelect = ({
               onChange={(e) => {
                 if (e.target.files?.length) {
                   handlePvmUpload(e.target.files[0]);
+                  setIsFileDialogOpen(false);
                 }
               }}
             />
