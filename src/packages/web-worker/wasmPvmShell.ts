@@ -4,6 +4,8 @@
 let wasm;
 export function __wbg_set_wasm(val) {
   wasm = val;
+  cachedUint8ArrayMemory0 = null;
+  cachedDataViewMemory0 = null;
 }
 
 let cachedUint8ArrayMemory0 = null;
