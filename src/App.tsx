@@ -1,6 +1,6 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
 import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
@@ -18,14 +18,13 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
-import { worker } from "./packages/web-worker";
 
 import { Commands, PvmTypes, TargetOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
-import { WithStore } from "./AppProviders";
+import { Store, WithStore } from "./AppProviders";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -45,12 +44,12 @@ function App() {
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
   const [isRunMode, setIsRunMode] = useState(false);
-  const [memoryPage, setMemoryPage] = useState<Uint8Array>();
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
 
   const mobileView = useRef<HTMLDivElement | null>(null);
+  const { worker, memory } = useContext(Store);
 
   const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
     if (ins === null) {
@@ -65,11 +64,18 @@ function App() {
     worker.postMessage({ command: "load", payload: { type: "built-in" } });
   }, []);
 
-  useEffect(() => {
-    if (!worker) {
-      return;
-    }
+  const restartProgram = useCallback(
+    (state: InitialState) => {
+      setIsDebugFinished(false);
+      setCurrentState(state);
+      setPreviousState(state);
+      setCurrentInstruction(programPreviewResult?.[0]);
+      worker.postMessage({ command: "init", payload: { program, initialState: state } });
+    },
+    [program, programPreviewResult, setCurrentInstruction, worker],
+  );
 
+  useEffect(() => {
     worker.onmessage = (e: MessageEvent<TargetOnMessageParams>) => {
       if (e.data.command === Commands.STEP) {
         const { state, isFinished, isRunMode } = e.data.payload;
@@ -98,10 +104,9 @@ function App() {
         restartProgram(initialState);
       }
       if (e.data.command === Commands.MEMORY_PAGE) {
-        setMemoryPage(e.data.payload.memoryPage);
+        memory.page.setState({ ...memory.page.state, data: e.data.payload.memoryPage, isLoading: false });
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isRunMode,
     breakpointAddresses,
@@ -110,6 +115,9 @@ function App() {
     setCurrentInstruction,
     programPreviewResult,
     initialState,
+    worker,
+    memory.page,
+    restartProgram,
   ]);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
@@ -169,14 +177,6 @@ function App() {
     worker.postMessage({ command: "step", payload: { program } });
   };
 
-  const restartProgram = (state: InitialState) => {
-    setIsDebugFinished(false);
-    setCurrentState(state);
-    setPreviousState(state);
-    setCurrentInstruction(programPreviewResult?.[0]);
-    worker.postMessage({ command: "init", payload: { program, initialState: state } });
-  };
-
   const handleBreakpointClick = (address: number) => {
     if (breakpointAddresses.includes(address)) {
       setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address));
@@ -205,7 +205,7 @@ function App() {
   };
 
   return (
-    <WithStore>
+    <>
       <Header />
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
@@ -306,7 +306,6 @@ function App() {
 
             <div className="max-sm:hidden col-span-12 md:col-span-3">
               <MemoryPreview
-                memoryPage={memoryPage}
                 onPageChange={(pageNumber) => worker.postMessage({ command: "memory_page", payload: { pageNumber } })}
               />
             </div>
@@ -344,8 +343,13 @@ function App() {
           </div>
         </div>
       </div>
-    </WithStore>
+    </>
   );
 }
+const WrappedApp = () => (
+  <WithStore>
+    <App />
+  </WithStore>
+);
 
-export default App;
+export default WrappedApp;

@@ -1,6 +1,8 @@
+import { Store } from "@/AppProviders";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { chunk } from "lodash";
+import { useContext } from "react";
 
 const SPLIT_STEP = 8 as const;
 
@@ -13,8 +15,10 @@ const toMemoryPageTabData = (memoryPage: Uint8Array | undefined) => {
     };
   });
 };
-const PageMemory = ({ memoryPage, onPageChange }: MemoryPreviewProps) => {
-  const data = toMemoryPageTabData(memoryPage);
+const PageMemory = ({ onPageChange }: MemoryPreviewProps) => {
+  const memory = useContext(Store).memory;
+
+  const data = toMemoryPageTabData(memory.page.state.data);
   return (
     <div>
       <div className="grid grid-cols-3">
@@ -37,7 +41,7 @@ const PageMemory = ({ memoryPage, onPageChange }: MemoryPreviewProps) => {
 
 type MemoryPreviewProps = {
   onPageChange: (page: number) => void;
-  memoryPage: Uint8Array | undefined;
+  // memoryPage: Uint8Array | undefined;
 };
 export const MemoryPreview = (props: MemoryPreviewProps) => {
   return (
@@ -48,7 +52,7 @@ export const MemoryPreview = (props: MemoryPreviewProps) => {
           <TabsTrigger value="ranges">Ranges</TabsTrigger>
         </TabsList>
         <TabsContent className="m-2" value="pages">
-          <PageMemory memoryPage={props.memoryPage} onPageChange={props.onPageChange} />
+          <PageMemory onPageChange={props.onPageChange} />
         </TabsContent>
         <TabsContent className="m-2" value="ranges">
           Coming soon
