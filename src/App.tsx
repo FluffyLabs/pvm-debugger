@@ -44,7 +44,6 @@ function App() {
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
   const [isRunMode, setIsRunMode] = useState(false);
-  const [selectedPvmType, setSelectedPvmType] = useState<PvmTypes>(PvmTypes.BUILT_IN);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
@@ -189,8 +188,6 @@ function App() {
   };
 
   const handlePvmTypeChange = ({ type, param }: { type: string; param: string | Blob }) => {
-    setSelectedPvmType(type as PvmTypes);
-    // setSelectedPvmParam(param);
     console.log("Selected PVM type", type, param);
 
     if (type === PvmTypes.WASM_FILE) {
@@ -250,7 +247,7 @@ function App() {
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
               <div className="w-full md:w-[300px]">
-                <PvmSelect value={selectedPvmType} onValueChange={handlePvmTypeChange} />
+                <PvmSelect onValueChange={handlePvmTypeChange} />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
