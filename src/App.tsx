@@ -20,7 +20,7 @@ import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 import { worker } from "./packages/web-worker";
 
-import { Commands, TargerOnMessageParams } from "./packages/web-worker/worker";
+import { Commands, PvmTypes, TargerOnMessageParams } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
@@ -44,6 +44,7 @@ function App() {
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
   const [isRunMode, setIsRunMode] = useState(false);
+  const [selectedPvmType, setSelectedPvmType] = useState<PvmTypes>(PvmTypes.BUILT_IN);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
@@ -57,6 +58,10 @@ function App() {
       setCurrentInstructionState(ins);
     }
     setClickedInstruction(null);
+  }, []);
+
+  useEffect(() => {
+    worker.postMessage({ command: "load", payload: { type: "built-in" } });
   }, []);
 
   useEffect(() => {
@@ -89,8 +94,20 @@ function App() {
           setIsDebugFinished(true);
         }
       }
+      if (e.data.command === Commands.LOAD) {
+        restartProgram(initialState);
+      }
     };
-  }, [isRunMode, breakpointAddresses, currentState, program, setCurrentInstruction, programPreviewResult]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isRunMode,
+    breakpointAddresses,
+    currentState,
+    program,
+    setCurrentInstruction,
+    programPreviewResult,
+    initialState,
+  ]);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
     setInitialState(initialState);
@@ -171,6 +188,20 @@ function App() {
     return mobileView?.current?.offsetParent !== null;
   };
 
+  const handlePvmTypeChange = ({ type, param }: { type: string; param: string | Blob }) => {
+    setSelectedPvmType(type as PvmTypes);
+    // setSelectedPvmParam(param);
+    console.log("Selected PVM type", type, param);
+
+    if (type === PvmTypes.WASM_FILE) {
+      worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
+    } else if (type === PvmTypes.WASM_URL) {
+      worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
+    } else {
+      worker.postMessage({ command: "load", payload: { type } });
+    }
+  };
+
   return (
     <>
       <Header />
@@ -219,7 +250,7 @@ function App() {
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
               <div className="w-full md:w-[300px]">
-                <PvmSelect />
+                <PvmSelect value={selectedPvmType} onValueChange={handlePvmTypeChange} />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
