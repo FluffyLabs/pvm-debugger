@@ -142,6 +142,9 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       } else {
         isFinished = !pvm.nextStep();
       }
+      if (isFinished) {
+        isRunMode = false;
+      }
       state = getState(pvm);
       result = nextInstruction(state.pc ?? 0, e.data.payload.program) as unknown as CurrentInstruction;
 
