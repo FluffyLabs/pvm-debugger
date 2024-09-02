@@ -1,5 +1,6 @@
+import { Store } from "@/AppProviders";
 import { Commands, TargetOnMessageParams } from "@/packages/web-worker/worker";
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 
 export type MemoryFeatureState = {
   page: {
@@ -55,7 +56,8 @@ export const useMemoryFeatureState = () => {
   };
 };
 export const useMemoryFeature = ({ worker }: { worker: Worker }) => {
-  const state = useMemoryFeatureState();
+  const state = useContext(Store).memory;
+
   return {
     listeners: {
       onMessage: useCallback(
