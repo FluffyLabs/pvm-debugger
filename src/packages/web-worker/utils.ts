@@ -42,14 +42,9 @@ export function regsAsUint8(regs?: RegistersArray): Uint8Array {
 
 export function uint8asRegs(arr: Uint8Array): RegistersArray {
   const regs: RegistersArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  let idx = 0;
+  const u32Regs = new Uint32Array(arr.buffer);
   for (const regIdx of regs) {
-    let num = arr[idx + 3];
-    num = (num << 8) + arr[idx + 2];
-    num = (num << 8) + arr[idx + 1];
-    num = (num << 8) + arr[idx];
-    regs[regIdx] = num;
-    idx += 4;
+    regs[regIdx] = u32Regs[regIdx];
   }
   return regs;
 }
