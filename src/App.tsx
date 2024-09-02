@@ -118,6 +118,7 @@ function App() {
       pc: 0,
       regs: initialState.regs,
       gas: initialState.gas,
+      pageMap: initialState.pageMap,
       status: Status.OK,
     };
     setCurrentState(currentState);
