@@ -2,12 +2,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { chunk } from "lodash";
 
-// const momoryPage = [
-//   { address: "000000", bits: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-//   { address: "000000", bits: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-//   { address: "000000", bits: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-// ];
-
 const SPLIT_STEP = 8 as const;
 
 const toMemoryPageTabData = (memoryPage: Uint8Array | undefined) => {

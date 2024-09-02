@@ -25,6 +25,7 @@ import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
+import { WithStore } from "./AppProviders";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -204,7 +205,7 @@ function App() {
   };
 
   return (
-    <>
+    <WithStore>
       <Header />
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
@@ -343,7 +344,7 @@ function App() {
           </div>
         </div>
       </div>
-    </>
+    </WithStore>
   );
 }
 

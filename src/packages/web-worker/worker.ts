@@ -37,7 +37,7 @@ export type TargetOnMessageParams =
     }
   | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
   | { command: Commands.STOP; payload: { isRunMode: boolean } }
-  | { command: Commands.MEMORY_PAGE; payload: { memoryPage: Uint8Array } };
+  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array } };
 
 export type WorkerOnMessageParams =
   | { command: Commands.LOAD; payload: { type: PvmTypes; params: { url?: string; file?: Blob } } }
@@ -169,10 +169,9 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       });
       break;
     case Commands.MEMORY_PAGE:
-      console.log(e.data.payload.pageNumber, pvm.getMemoryPage(e.data.payload.pageNumber));
       postMessage({
         command: Commands.MEMORY_PAGE,
-        payload: { memoryPage: pvm.getMemoryPage(e.data.payload.pageNumber) },
+        payload: { pageNumber: e.data.payload.pageNumber, memoryPage: pvm.getMemoryPage(e.data.payload.pageNumber) },
       });
       break;
     default:
