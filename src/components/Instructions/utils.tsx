@@ -4,12 +4,15 @@ import { Args } from "@/types/pvm";
 import { ImmediateDecoder } from "@/packages/pvm/pvm/args-decoder/decoders/immediate-decoder.ts";
 
 export const valueToNumeralSystem = (
-  value: number | undefined,
+  value: number | bigint | undefined,
   numeralSystem: NumeralSystem,
   padStartVal?: number,
 ): string => {
+  const stringValue =
+    typeof value === "bigint" ? BigInt.asUintN(32, value).toString(16) : ((value ?? 0) >>> 0).toString(16);
+
   return numeralSystem === NumeralSystem.HEXADECIMAL
-    ? `0x${((value ?? 0) >>> 0).toString(16).padStart(padStartVal || 0, "0")}`
+    ? `0x${stringValue.padStart(padStartVal || 0, "0")}`
     : (value ?? 0).toString().padStart(padStartVal || 0, "0");
 };
 
