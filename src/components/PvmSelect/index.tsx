@@ -11,8 +11,24 @@ import {
 import { ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import path from "path-browserify";
+
+const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
+
+const fetchWasmMetadata = async (url: string) => {
+  try {
+    const isValidUrl = Boolean(new URL(url ?? ""));
+    if (isValidUrl) {
+      return fetch(url).then((res) => res.json());
+    } else {
+      alert("Invalid URL");
+    }
+  } catch (error) {
+    console.log(error);
+    alert("Invalid URL");
+  }
+};
 
 interface WasmMetadata {
   name: string;
@@ -25,15 +41,22 @@ interface WasmMetadata {
   wasmBlobUrl: string;
 }
 
+enum AvailablePvms {
+  TYPEBERRY = "typeberry",
+  POLKAVM = "polkavm",
+  WASM_URL = "wasm-url",
+  WASM_FILE = "wasm-file",
+}
+
 export const PvmSelect = ({
-  value,
   onValueChange,
 }: {
-  value: string;
   onValueChange: (value: { type: string; param: string | Blob }) => void;
 }) => {
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
   const [wasmUrlMetadata, setWasmUrlMetadata] = useState<WasmMetadata | null>(null);
+  const [polkavmMetadata, setPolkavmMetadata] = useState<WasmMetadata | null>(null);
+  const [selectedPvm, setSelectedPvm] = useState<AvailablePvms>(AvailablePvms.TYPEBERRY);
 
   const handlePvmUpload = (file: Blob) => {
     onValueChange({
@@ -42,11 +65,17 @@ export const PvmSelect = ({
     });
   };
 
+  useEffect(() => {
+    fetchWasmMetadata(POLKAVM_URL).then(setPolkavmMetadata);
+  }, []);
+
   return (
     <>
       <Select
-        value={value}
+        value={selectedPvm}
         onValueChange={async (value) => {
+          setSelectedPvm(value as AvailablePvms);
+
           if (value === "wasm-file") {
             setIsFileDialogOpen(true);
           }
@@ -58,32 +87,31 @@ export const PvmSelect = ({
             });
           }
           if (value === "wasm-url") {
-            // URL to test: https://fluffylabs.dev/pvm-shell/pvm-metadata.json
             const url = prompt(
               "Enter the URL of the PVM implementation (e.g. https://fluffylabs.dev/pvm-shell/pvm-metadata.json)",
             );
-
-            try {
-              const isValidUrl = Boolean(new URL(url ?? ""));
-              if (url && isValidUrl) {
-                const wasmMetadata = await fetch(url).then((res) => res.json());
-                setWasmUrlMetadata(wasmMetadata);
-                console.log("Getting path of the WASM file: ", path.join(url, "../", wasmMetadata.wasmBlobUrl));
-                onValueChange({
-                  type: value,
-                  param: path.join(url, "../", wasmMetadata.wasmBlobUrl),
-                });
-              } else {
-                alert("Invalid URL");
-              }
-            } catch (error) {
-              console.log(error);
-              alert("Invalid URL");
+            if (!url) {
+              alert("No URL provided");
+              return;
             }
-          } else {
+            const wasmMetadata = await fetchWasmMetadata(url);
+            setWasmUrlMetadata(wasmMetadata);
+            console.log("Getting path of the WASM file: ", path.join(url, "../", wasmMetadata.wasmBlobUrl));
+            onValueChange({
+              type: value,
+              param: path.join(url, "../", wasmMetadata.wasmBlobUrl),
+            });
+          }
+          if (value === "typeberry") {
             onValueChange({
               type: "built-in",
               param: "typeberry",
+            });
+          }
+          if (value === "polkavm") {
+            onValueChange({
+              type: "wasm-url",
+              param: path.join(POLKAVM_URL, "../", polkavmMetadata?.wasmBlobUrl as string),
             });
           }
         }}
@@ -93,14 +121,19 @@ export const PvmSelect = ({
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectItem value="built-in">@typeberry/pvm-{import.meta.env.TYPEBERRY_PVM_VERSION}</SelectItem>
+            <SelectItem value={AvailablePvms.TYPEBERRY}>
+              @typeberry/pvm-{import.meta.env.TYPEBERRY_PVM_VERSION}
+            </SelectItem>
+            <SelectItem value={AvailablePvms.POLKAVM}>
+              {polkavmMetadata?.name} {polkavmMetadata?.version}
+            </SelectItem>
             <SelectSeparator />
-            <SelectItem value="wasm-url">
+            <SelectItem value={AvailablePvms.WASM_URL}>
               {wasmUrlMetadata
                 ? `${wasmUrlMetadata.name} ${wasmUrlMetadata.version} - click to choose another url`
                 : "Load custom PVM from URL as a WASM file"}
             </SelectItem>
-            <SelectItem value="wasm-file">Upload custom PVM from a file as a WASM</SelectItem>
+            <SelectItem value={AvailablePvms.WASM_FILE}>Upload custom PVM from a file as a WASM</SelectItem>
 
             <SelectLabel>
               <span>
