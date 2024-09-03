@@ -1,8 +1,6 @@
-# typeberry 🫐 tools
+# PVM disassembler & debugger
 
-Additional web-based tooling for typeberry.
-
-- [x] PVM disassembler (live @ https://pvm.fluffylabs.dev)
+Live @ https://pvm.fluffylabs.dev
 
 ## Requirements
 
