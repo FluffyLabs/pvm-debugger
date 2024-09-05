@@ -101,7 +101,12 @@ function App() {
       restartProgram(initialState);
     }
     if (worker.lastEvent.command === Commands.MEMORY_PAGE) {
-      memory.page.setState({ ...memory.page.state, data: worker.lastEvent.payload.memoryPage, isLoading: false });
+      memory.page.setState({
+        ...memory.page.state,
+        data: worker.lastEvent.payload.memoryPage,
+        pageNumber: worker.lastEvent.payload.pageNumber,
+        isLoading: false,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker.lastEvent]);

@@ -58,7 +58,6 @@ export const initPvm = (program: number[], initialState: InitialState) => {
     ...initialState,
     memory,
   });
-
   return pvm;
 };
 
