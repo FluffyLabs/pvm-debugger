@@ -3,10 +3,61 @@ import { Args, InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
 import { ProgramDecoder } from "../../packages/pvm/pvm/program-decoder/program-decoder";
 import { ArgsDecoder } from "../../packages/pvm/pvm/args-decoder/args-decoder";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
-import { Pvm as InternalPvmInstance } from "@typeberry/pvm";
+import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm";
 
 export const initPvm = (program: number[], initialState: InitialState) => {
-  const pvm = new InternalPvmInstance(new Uint8Array(program), initialState);
+  const initialMemory = initialState.memory ?? [];
+  const pageMap = initialState.pageMap ?? [];
+
+  const memoryBuilder = new InternalPvmMemoryBuilder();
+  for (const page of pageMap) {
+    const startPageIndex = page.address;
+    const endPageIndex = startPageIndex + page.length;
+    const isWriteable = page["is-writable"];
+
+    const memoryChunksOnThisPage = initialMemory.filter(
+      ({ address }) => address >= startPageIndex && address < endPageIndex,
+    );
+
+    if (memoryChunksOnThisPage.length === 0) {
+      if (isWriteable) {
+        memoryBuilder.setWriteable(startPageIndex, endPageIndex, new Uint8Array());
+      } else {
+        memoryBuilder.setReadable(startPageIndex, endPageIndex, new Uint8Array());
+        continue;
+      }
+    }
+
+    if (memoryChunksOnThisPage.length > 1) {
+      throw new Error("The current implementation assumes 1 memory chunk on 1 page");
+    }
+
+    if (memoryChunksOnThisPage.length === 0) {
+      continue;
+    }
+
+    const memoryChunk = memoryChunksOnThisPage[0];
+    const address = memoryChunk.address;
+    const contents = new Uint8Array([
+      ...(address > startPageIndex ? new Uint8Array(address - startPageIndex) : []),
+      ...memoryChunk.contents,
+    ]);
+
+    if (isWriteable) {
+      memoryBuilder.setWriteable(startPageIndex, endPageIndex, contents);
+    } else {
+      memoryBuilder.setReadable(startPageIndex, endPageIndex, contents);
+    }
+  }
+
+  const HEAP_START_PAGE = 4 * 2 ** 16;
+  const HEAP_END_PAGE = 2 ** 32 - 2 * 2 ** 16 - 2 ** 24;
+
+  const memory = memoryBuilder.finalize(HEAP_START_PAGE, HEAP_END_PAGE);
+  const pvm = new InternalPvmInstance(new Uint8Array(program), {
+    ...initialState,
+    memory,
+  });
 
   return pvm;
 };
@@ -25,8 +76,8 @@ export const runAllInstructions = (pvm: InternalPvm, program: number[]) => {
       pc: pvm.getPC(),
       regs: Array.from(pvm.getRegisters()),
       gas: pvm.getGas(),
-      pageMap: pvm.getMemory(),
-      memory: pvm.getMemory(),
+      pageMap: [],
+      memory: [],
       status: pvm.getStatus(),
     },
     programPreviewResult,
