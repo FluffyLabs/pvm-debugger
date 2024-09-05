@@ -169,14 +169,14 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       });
       break;
     case Commands.MEMORY_PAGE:
+      // eslint-disable-next-line no-case-declarations
+      const memoryPage = pvm && "getMemoryPage" in pvm ? pvm.getMemoryPage(e.data.payload.pageNumber) : [];
       postMessage({
         command: Commands.MEMORY_PAGE,
-        payload: { pageNumber: e.data.payload.pageNumber, memoryPage: pvm.getMemoryPage(e.data.payload.pageNumber) },
+        payload: { pageNumber: e.data.payload.pageNumber, memoryPage },
       });
       break;
     default:
       break;
   }
-
-  postMessage(["received", e.data]);
 };

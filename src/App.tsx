@@ -19,12 +19,12 @@ import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 
-import { Commands, PvmTypes, TargetOnMessageParams } from "./packages/web-worker/worker";
+import { Commands, PvmTypes } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
-import { Store, WithStore } from "./AppProviders";
+import { Store, StoreProvider } from "./AppProviders";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -43,7 +43,6 @@ function App() {
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
-  const [isRunMode, setIsRunMode] = useState(false);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
@@ -60,65 +59,52 @@ function App() {
     setClickedInstruction(null);
   }, []);
 
-  useEffect(() => {
-    worker.postMessage({ command: "load", payload: { type: "built-in" } });
-  }, []);
-
   const restartProgram = useCallback(
     (state: InitialState) => {
       setIsDebugFinished(false);
       setCurrentState(state);
       setPreviousState(state);
       setCurrentInstruction(programPreviewResult?.[0]);
-      worker.postMessage({ command: "init", payload: { program, initialState: state } });
+      worker.worker.postMessage({ command: "init", payload: { program, initialState: state } });
     },
     [program, programPreviewResult, setCurrentInstruction, worker],
   );
 
   useEffect(() => {
-    worker.onmessage = (e: MessageEvent<TargetOnMessageParams>) => {
-      if (e.data.command === Commands.STEP) {
-        const { state, isFinished, isRunMode } = e.data.payload;
-        setCurrentState((prevState) => {
-          setPreviousState(prevState);
-          return state;
-        });
+    if (!worker.lastEvent) {
+      return;
+    }
 
-        if (e.data.command === Commands.STEP) {
-          setCurrentInstruction(e.data.payload.result);
-        }
-        if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
-          worker.postMessage({ command: "step", payload: { program } });
-        }
+    if (worker.lastEvent.command === Commands.STEP) {
+      const { state, isFinished, isRunMode } = worker.lastEvent.payload;
+      setCurrentState((prevState) => {
+        setPreviousState(prevState);
+        return state;
+      });
 
-        if (isRunMode && breakpointAddresses.includes(state.pc)) {
-          worker.postMessage({ command: "stop", payload: { program } });
-          setIsRunMode(false);
-        }
+      if (worker.lastEvent.command === Commands.STEP) {
+        setCurrentInstruction(worker.lastEvent.payload.result);
+      }
+      if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
+        worker.worker.postMessage({ command: "step", payload: { program } });
+      }
 
-        if (isFinished) {
-          setIsDebugFinished(true);
-        }
+      if (isRunMode && breakpointAddresses.includes(state.pc)) {
+        worker.worker.postMessage({ command: "stop", payload: { program } });
       }
-      if (e.data.command === Commands.LOAD) {
-        restartProgram(initialState);
+
+      if (isFinished) {
+        setIsDebugFinished(true);
       }
-      if (e.data.command === Commands.MEMORY_PAGE) {
-        memory.page.setState({ ...memory.page.state, data: e.data.payload.memoryPage, isLoading: false });
-      }
-    };
-  }, [
-    isRunMode,
-    breakpointAddresses,
-    currentState,
-    program,
-    setCurrentInstruction,
-    programPreviewResult,
-    initialState,
-    worker,
-    memory.page,
-    restartProgram,
-  ]);
+    }
+    if (worker.lastEvent.command === Commands.LOAD) {
+      restartProgram(initialState);
+    }
+    if (worker.lastEvent.command === Commands.MEMORY_PAGE) {
+      memory.page.setState({ ...memory.page.state, data: worker.lastEvent.payload.memoryPage, isLoading: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [worker.lastEvent]);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
     setInitialState(initialState);
@@ -135,7 +121,7 @@ function App() {
 
     setIsDebugFinished(false);
 
-    worker.postMessage({ command: "init", payload: { program, initialState } });
+    worker.worker.postMessage({ command: "init", payload: { program, initialState } });
 
     try {
       const result = disassemblify(new Uint8Array(program));
@@ -153,8 +139,6 @@ function App() {
   };
 
   const onNext = () => {
-    setIsRunMode(false);
-
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
@@ -162,7 +146,7 @@ function App() {
     if (!currentInstruction) {
       setCurrentState(initialState);
     } else {
-      worker.postMessage({ command: "step", payload: { program } });
+      worker.worker.postMessage({ command: "step", payload: { program } });
     }
 
     setIsProgramEditMode(false);
@@ -172,9 +156,8 @@ function App() {
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
-    setIsRunMode(true);
-    worker.postMessage({ command: "run", payload: { program } });
-    worker.postMessage({ command: "step", payload: { program } });
+    worker.worker.postMessage({ command: "run", payload: { program } });
+    worker.worker.postMessage({ command: "step", payload: { program } });
   };
 
   const handleBreakpointClick = (address: number) => {
@@ -196,11 +179,11 @@ function App() {
     console.log("Selected PVM type", type, param);
 
     if (type === PvmTypes.WASM_FILE) {
-      worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
+      worker.worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
     } else if (type === PvmTypes.WASM_URL) {
-      worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
+      worker.worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
     } else {
-      worker.postMessage({ command: "load", payload: { type } });
+      worker.worker.postMessage({ command: "load", payload: { type } });
     }
   };
 
@@ -306,7 +289,9 @@ function App() {
 
             <div className="max-sm:hidden col-span-12 md:col-span-3">
               <MemoryPreview
-                onPageChange={(pageNumber) => worker.postMessage({ command: "memory_page", payload: { pageNumber } })}
+                onPageChange={(pageNumber) =>
+                  worker.worker.postMessage({ command: "memory_page", payload: { pageNumber } })
+                }
               />
             </div>
 
@@ -347,9 +332,9 @@ function App() {
   );
 }
 const WrappedApp = () => (
-  <WithStore>
+  <StoreProvider>
     <App />
-  </WithStore>
+  </StoreProvider>
 );
 
 export default WrappedApp;
