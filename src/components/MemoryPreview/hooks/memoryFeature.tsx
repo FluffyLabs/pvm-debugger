@@ -1,8 +1,11 @@
 import { Store } from "@/AppProviders";
-import { Commands, TargetOnMessageParams } from "@/packages/web-worker/worker";
-import { useCallback, useContext, useState } from "react";
+import { Commands } from "@/packages/web-worker/worker";
+import { useContext, useState } from "react";
 
 export type MemoryFeatureState = {
+  meta: {
+    pageSize: number | undefined;
+  };
   page: {
     state: {
       data?: Uint8Array;
@@ -13,7 +16,7 @@ export type MemoryFeatureState = {
   };
   range: {
     state: {
-      data: { start: number; end: number; data: Uint8Array | [] }[];
+      data: { start: number; end: number; data: Uint8Array | undefined }[];
       isLoading: boolean;
       ranges: { start: number; end: number }[];
     };
@@ -22,6 +25,9 @@ export type MemoryFeatureState = {
 };
 
 export const initialMemoryState: MemoryFeatureState = {
+  meta: {
+    pageSize: 32,
+  },
   page: {
     state: {
       data: undefined,
@@ -32,9 +38,9 @@ export const initialMemoryState: MemoryFeatureState = {
   },
   range: {
     state: {
-      data: [{ start: 0, end: 0, data: [] }],
+      data: [],
       isLoading: false,
-      ranges: [{ start: 0, end: 0 }],
+      ranges: [],
     },
     setState: () => {},
   },
@@ -45,6 +51,7 @@ export const useMemoryFeatureState = () => {
   const [rangeState, setRangeState] = useState<MemoryFeatureState["range"]["state"]>(initialMemoryState.range.state);
 
   return {
+    meta: initialMemoryState.meta,
     page: {
       state: pageState,
       setState: setPageState,
@@ -55,46 +62,66 @@ export const useMemoryFeatureState = () => {
     },
   };
 };
-export const useMemoryFeature = ({ worker }: { worker: Worker }) => {
-  const state = useContext(Store).memory;
+export const useMemoryFeature = () => {
+  const { memory, worker } = useContext(Store);
 
   return {
-    listeners: {
-      onMessage: useCallback(
-        (e: MessageEvent<TargetOnMessageParams>) => {
-          if (e.data.command === Commands.MEMORY_PAGE) {
-            if (state.page.state.pageNumber === e.data.payload.pageNumber && state.page.state.isLoading) {
-              state.page.setState({
-                data: e.data.payload.memoryPage,
-                pageNumber: e.data.payload.pageNumber,
-                isLoading: false,
-              });
-            } else if (state.range.state.isLoading) {
-              const { start, end } = state.range.state.ranges[0];
-              state.range.setState({
-                data: [...state.range.state.data, { start, end, data: e.data.payload.memoryPage }],
-                isLoading: false,
-                ranges: [{ start, end }],
-              });
-            }
-          }
-        },
-        [state.page, state.range],
-      ),
-    },
+    // listeners: {
+    //   onMessage: useCallback(
+    //     (e: MessageEvent<TargetOnMessageParams>) => {
+    //       if (e.data.command === Commands.MEMORY_PAGE) {
+    //         if (memory.page.state.pageNumber === e.data.payload.pageNumber && memory.page.state.isLoading) {
+    //           memory.page.setState({
+    //             data: e.data.payload.memoryPage,
+    //             pageNumber: e.data.payload.pageNumber,
+    //             isLoading: false,
+    //           });
+    //         } else if (memory.range.state.isLoading) {
+    //           const { start, end } = memory.range.state.ranges[0];
+    //           memory.range.setState({
+    //             data: [...memory.range.state.data, { start, end, data: e.data.payload.memoryPage }],
+    //             isLoading: false,
+    //             ranges: [{ start, end }],
+    //           });
+    //         }
+    //       } else if (e.data.command === Commands.MEMORY_RANGE) {
+    //         console.log("MEMORY_RANGE", e.data.payload);
+    //         if (memory.range.state.isLoading) {
+    //           const { start, end, memoryRange } = e.data.payload;
+    //           memory.range.setState({
+    //             ...memory.range.state,
+    //             data: [
+    //               ...memory.range.state.data.map((el) =>
+    //                 el.start === start && el.end === end ? { start, end, data: memoryRange } : el,
+    //               ),
+    //             ],
+    //             isLoading: false,
+    //           });
+    //         }
+    //       }
+    //     },
+    //     [memory.page, memory.range],
+    //   ),
+    // },
     actions: {
-      changePage: (pageNumber: 0) => {
-        state.page.setState({ ...state.page.state, isLoading: true });
-        worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber } });
+      changePage: (pageNumber: number) => {
+        memory.page.setState({ ...memory.page.state, isLoading: true });
+        worker.worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber } });
       },
-      changeRange: (pageNumber: 0) => {
-        state.range.setState({ ...state.range.state, isLoading: true });
-        worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber } });
+      changeRange: (start: number, end: number) => {
+        memory.range.setState({
+          ...memory.range.state,
+          ranges: [...memory.range.state.ranges, { start, end }],
+          data: [...memory.range.state.data, { start, end, data: undefined as Uint8Array | undefined }],
+          isLoading: true,
+        });
+
+        worker.worker.postMessage({ command: Commands.MEMORY_RANGE, payload: { start, end } });
       },
     },
     state: {
-      page: state.page.state,
-      range: state.range.state,
+      page: memory.page.state,
+      range: memory.range.state,
     },
   };
 };

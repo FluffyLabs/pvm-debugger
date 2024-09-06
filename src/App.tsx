@@ -107,6 +107,18 @@ function App() {
         pageNumber: worker.lastEvent.payload.pageNumber,
         isLoading: false,
       });
+    } else if (worker.lastEvent.command === Commands.MEMORY_RANGE) {
+      console.log("ddddddd", worker.lastEvent, memory.range.state);
+      const { start, end, memoryRange } = worker.lastEvent.payload;
+      memory.range.setState({
+        ...memory.range.state,
+        data: [
+          ...memory.range.state.data.map((el) =>
+            el.start === start && el.end === end ? { start, end, data: memoryRange } : el,
+          ),
+        ],
+        isLoading: false,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker.lastEvent]);
@@ -293,11 +305,7 @@ function App() {
             </div>
 
             <div className="max-sm:hidden col-span-12 md:col-span-3">
-              <MemoryPreview
-                onPageChange={(pageNumber) =>
-                  worker.worker.postMessage({ command: "memory_page", payload: { pageNumber } })
-                }
-              />
+              <MemoryPreview />
             </div>
 
             <div className="max-sm:hidden md:col-span-3 overflow-hidden">

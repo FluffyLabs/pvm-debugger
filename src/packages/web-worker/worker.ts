@@ -2,7 +2,7 @@ import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm, St
 import { initPvm, nextInstruction } from "./pvm";
 import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
 import { getState, isInternalPvm, loadArrayBufferAsWasm, regsAsUint8 } from "@/packages/web-worker/utils.ts";
-import { getPage } from "./memoryMock";
+import { getPage, memory } from "./memoryMock";
 
 export enum Commands {
   LOAD = "load",
@@ -11,6 +11,7 @@ export enum Commands {
   RUN = "run",
   STOP = "stop",
   MEMORY_PAGE = "memory_page",
+  MEMORY_RANGE = "memory_range",
 }
 
 export enum PvmTypes {
@@ -38,7 +39,8 @@ export type TargetOnMessageParams =
     }
   | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
   | { command: Commands.STOP; payload: { isRunMode: boolean } }
-  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array } };
+  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array } }
+  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number; memoryRange: Uint8Array } };
 
 export type WorkerOnMessageParams =
   | { command: Commands.LOAD; payload: { type: PvmTypes; params: { url?: string; file?: Blob } } }
@@ -46,7 +48,8 @@ export type WorkerOnMessageParams =
   | { command: Commands.STEP; payload: { program: number[] } }
   | { command: Commands.RUN }
   | { command: Commands.STOP }
-  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } };
+  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } }
+  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number } };
 
 function postTypedMessage(msg: TargetOnMessageParams) {
   postMessage(msg);
@@ -177,6 +180,20 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       postMessage({
         command: Commands.MEMORY_PAGE,
         payload: { pageNumber: e.data.payload.pageNumber, memoryPage: getPage(e.data.payload.pageNumber) },
+      });
+      break;
+    case Commands.MEMORY_RANGE:
+      // debugger;
+      // const memoryPage = pvm && "getPageDump" in pvm ? pvm.memory.getPageDump(e.data.payload.pageNumber) : [];
+      // eslint-disable-next-line no-case-declarations
+      const memoryRange = Object.values(memory).flat().slice(e.data.payload.start, e.data.payload.end);
+      postMessage({
+        command: Commands.MEMORY_RANGE,
+        payload: {
+          start: e.data.payload.start,
+          end: e.data.payload.end,
+          memoryRange: memoryRange,
+        },
       });
       break;
     default:
