@@ -18,7 +18,6 @@ export type MemoryFeatureState = {
     state: {
       data: { start: number; end: number; data: Uint8Array | undefined }[];
       isLoading: boolean;
-      ranges: { start: number; end: number }[];
     };
     setState: React.Dispatch<React.SetStateAction<MemoryFeatureState["range"]["state"]>>;
   };
@@ -40,7 +39,6 @@ export const initialMemoryState: MemoryFeatureState = {
     state: {
       data: [],
       isLoading: false,
-      ranges: [],
     },
     setState: () => {},
   },
@@ -111,12 +109,18 @@ export const useMemoryFeature = () => {
       changeRange: (start: number, end: number) => {
         memory.range.setState({
           ...memory.range.state,
-          ranges: [...memory.range.state.ranges, { start, end }],
           data: [...memory.range.state.data, { start, end, data: undefined as Uint8Array | undefined }],
           isLoading: true,
         });
 
         worker.worker.postMessage({ command: Commands.MEMORY_RANGE, payload: { start, end } });
+      },
+      removeRange: (index: number) => {
+        memory.range.setState({
+          ...memory.range.state,
+          data: [...memory.range.state.data.filter((_, i) => i !== index)],
+          isLoading: true,
+        });
       },
     },
     state: {

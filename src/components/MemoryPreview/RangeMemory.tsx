@@ -14,9 +14,11 @@ import { Label } from "../ui/label";
 import { Store } from "@/AppProviders";
 import { X } from "lucide-react";
 import { MemoryTable } from "./PageMemory";
+import { useMemoryFeature } from "./hooks/memoryFeature";
 
 export const RangeMemory = (props: { onRangeChange: (start: number, end: number) => void }) => {
   const memory = useContext(Store).memory;
+  const feature = useMemoryFeature();
 
   const [start, setStart] = useState<number>();
   const [end, setEnd] = useState<number>();
@@ -26,19 +28,22 @@ export const RangeMemory = (props: { onRangeChange: (start: number, end: number)
       return;
     }
     props.onRangeChange(start, end);
+    setStart(undefined);
+    setEnd(undefined);
   };
 
-  console.log("memory", memory.range.state);
   return (
     <div>
       <div className="mb-3">
         {memory.range.state.data.map((range, i) => (
           <div className="my-7">
             <div className="flex justify-between items-center">
-              <span>Range&nbsp;#${i + 1}</span>
-              <Input className="rounded-xl w-[90px] h-[24px]" value={range.start} />
-              <Input className="rounded-xl w-[90px] h-[24px]" value={range.end} />
-              <X />
+              <span>Range&nbsp;#{i + 1}</span>
+              <Input className="rounded-xl h-[24px] mx-2" value={range.start} />
+              <Input className="rounded-xl h-[24px] mx-2" value={range.end} />
+              <Button size="icon" variant="ghost" onClick={() => feature.actions.removeRange(i)}>
+                <X />
+              </Button>
             </div>
             <div>
               <MemoryTable data={range.data} addressStart={range.start} />
@@ -64,7 +69,11 @@ export const RangeMemory = (props: { onRangeChange: (start: number, end: number)
                 type="number"
                 className="col-span-3"
                 value={start}
-                onChange={(e) => setStart(+e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setStart(+e.target.value);
+                  }
+                }}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -76,7 +85,11 @@ export const RangeMemory = (props: { onRangeChange: (start: number, end: number)
                 type="number"
                 className="col-span-3"
                 value={end}
-                onChange={(e) => setEnd(+e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setEnd(+e.target.value);
+                  }
+                }}
               />
             </div>
           </div>
