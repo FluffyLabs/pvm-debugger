@@ -10,44 +10,21 @@ export const initPvm = (program: number[], initialState: InitialState) => {
   const pageMap = initialState.pageMap ?? [];
 
   const memoryBuilder = new InternalPvmMemoryBuilder();
+
   for (const page of pageMap) {
     const startPageIndex = page.address;
     const endPageIndex = startPageIndex + page.length;
     const isWriteable = page["is-writable"];
 
-    const memoryChunksOnThisPage = initialMemory.filter(
-      ({ address }) => address >= startPageIndex && address < endPageIndex,
-    );
-
-    if (memoryChunksOnThisPage.length === 0) {
-      if (isWriteable) {
-        memoryBuilder.setWriteable(startPageIndex, endPageIndex, new Uint8Array());
-      } else {
-        memoryBuilder.setReadable(startPageIndex, endPageIndex, new Uint8Array());
-        continue;
-      }
-    }
-
-    if (memoryChunksOnThisPage.length > 1) {
-      throw new Error("The current implementation assumes 1 memory chunk on 1 page");
-    }
-
-    if (memoryChunksOnThisPage.length === 0) {
-      continue;
-    }
-
-    const memoryChunk = memoryChunksOnThisPage[0];
-    const address = memoryChunk.address;
-    const contents = new Uint8Array([
-      ...(address > startPageIndex ? new Uint8Array(address - startPageIndex) : []),
-      ...memoryChunk.contents,
-    ]);
-
     if (isWriteable) {
-      memoryBuilder.setWriteable(startPageIndex, endPageIndex, contents);
+      memoryBuilder.setWriteable(startPageIndex, endPageIndex, new Uint8Array(page.length));
     } else {
-      memoryBuilder.setReadable(startPageIndex, endPageIndex, contents);
+      memoryBuilder.setReadable(startPageIndex, endPageIndex, new Uint8Array(page.length));
     }
+  }
+
+  for (const memoryChunk of initialMemory) {
+    memoryBuilder.setData(memoryChunk.address, memoryChunk.contents);
   }
 
   const HEAP_START_PAGE = 4 * 2 ** 16;
