@@ -14,6 +14,7 @@ import { FileUpload } from "./FileUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Examples } from "./Examples";
 import { Bytecode } from "./Bytecode";
+import { Assembly } from "./Assembly";
 
 export const ProgramUpload = ({
   onFileUpload,
@@ -40,6 +41,7 @@ export const ProgramUpload = ({
             <TabsTrigger value="upload">JSON tests</TabsTrigger>
             <TabsTrigger value="examples">Examples</TabsTrigger>
             <TabsTrigger value="bytecode">RAW bytecode</TabsTrigger>
+            <TabsTrigger value="assembly">Assembly</TabsTrigger>
           </TabsList>
           <div className="border-2 rounded mt-2 p-4 grow w-full">
             <TabsContent value="upload">
@@ -50,6 +52,9 @@ export const ProgramUpload = ({
             </TabsContent>
             <TabsContent value="bytecode">
               <Bytecode onFileUpload={setFile} program={program} />
+            </TabsContent>
+            <TabsContent value="assembly">
+              <Assembly onFileUpload={setFile} program={program} />
             </TabsContent>
           </div>
         </Tabs>
