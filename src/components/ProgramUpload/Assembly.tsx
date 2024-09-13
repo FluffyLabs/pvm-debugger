@@ -37,7 +37,7 @@ function assemblyFromInputProgram(program: number[]) {
     return DEFAULT_ASSEMBLY;
   }
   try {
-    const raw = disassemble(program);
+    const raw = disassemble(new Uint8Array(program));
     const lines = raw.split("\n");
     const fixedLines: string[] = lines.map((l: string) => {
       // remove leading whitespace
