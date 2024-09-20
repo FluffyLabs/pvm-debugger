@@ -2,10 +2,15 @@ import { Textarea } from "@/components/ui/textarea.tsx";
 import { useEffect, useState } from "react";
 import classNames from "classnames";
 
-export const ProgramLoader = ({ program, setProgram }: { program?: number[]; setProgram: (val: number[]) => void }) => {
+export const ProgramLoader = ({
+  program,
+  setProgram,
+}: {
+  program?: number[];
+  setProgram: (val?: number[]) => void;
+}) => {
   const [programInput, setProgramInput] = useState(program?.length ? JSON.stringify(program) : "");
   const [isInvalidProgram, setIsInvalidProgram] = useState(false);
-  console.log(programInput);
   useEffect(() => {
     setProgramInput(program?.length ? JSON.stringify(program) : "");
   }, [program]);
@@ -33,6 +38,7 @@ export const ProgramLoader = ({ program, setProgram }: { program?: number[]; set
             } catch (e) {
               console.log("wrong json");
               setIsInvalidProgram(true);
+              setProgram();
             }
           }}
         />

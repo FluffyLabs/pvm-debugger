@@ -40,7 +40,9 @@ export const ProgramUpload = ({
           <TabsList>
             <TabsTrigger value="upload">JSON tests</TabsTrigger>
             <TabsTrigger value="examples">Examples</TabsTrigger>
-            <TabsTrigger value="bytecode">RAW bytecode</TabsTrigger>
+            <TabsTrigger className="hidden lg:inline-flex" value="bytecode">
+              RAW bytecode
+            </TabsTrigger>
             <TabsTrigger value="assembly">Assembly</TabsTrigger>
           </TabsList>
           <div className="border-2 rounded mt-2 p-4 grow w-full">

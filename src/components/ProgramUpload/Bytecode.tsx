@@ -27,13 +27,18 @@ export const Bytecode = ({
   onFileUpload,
   program,
 }: {
-  onFileUpload: (val: ProgramUploadFileOutput) => void;
+  onFileUpload: (val?: ProgramUploadFileOutput) => void;
   program: number[];
 }) => {
   return (
     <div>
       <p className="mb-3">Edit array of program code (bytes, decimal)</p>
-      <ProgramLoader program={program} setProgram={(program) => onFileUpload({ initial, program, name: "custom" })} />
+      <ProgramLoader
+        program={program}
+        setProgram={(program) =>
+          program ? onFileUpload({ initial, program, name: "custom" }) : onFileUpload(undefined)
+        }
+      />
     </div>
   );
 };

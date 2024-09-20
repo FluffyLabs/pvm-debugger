@@ -75,9 +75,11 @@ function assemblyFromInputProgram(program: number[]) {
 export const Assembly = ({
   onFileUpload,
   program,
+  rows = 17,
 }: {
-  onFileUpload: (val: ProgramUploadFileOutput) => void;
+  onFileUpload: (val?: ProgramUploadFileOutput) => void;
   program: number[];
+  rows?: number;
 }) => {
   const defaultAssembly = useMemo(() => {
     return assemblyFromInputProgram(program);
@@ -88,16 +90,21 @@ export const Assembly = ({
       setAssembly(input);
       try {
         const programJson = compile_assembly(input);
-        const program = JSON.parse(programJson);
-        const output = mapUploadFileInputToOutput(program);
+        const newProgram = JSON.parse(programJson);
+        const output = mapUploadFileInputToOutput(newProgram);
+        // avoid re-rendering when the code is the same.
+        if (JSON.stringify(program) === JSON.stringify(newProgram.program)) {
+          output.program = program;
+        }
         onFileUpload(output);
         setError(undefined);
       } catch (e) {
         console.log(e);
+        onFileUpload(undefined);
         setError(`${e}`);
       }
     },
-    [onFileUpload],
+    [onFileUpload, program],
   );
 
   const [error, setError] = useState<string>();
@@ -112,9 +119,22 @@ export const Assembly = ({
 
   return (
     <div>
-      <div className={classNames("flex gap-1 flex-col border-2 rounded-md h-full", { "border-red-500": isError })}>
+      <p className="pb-2 -mt-4">
+        <small>
+          Experimental assembler format as defined in{" "}
+          <a
+            target="_blank"
+            href="https://github.com/koute/polkavm/blob/master/crates/polkavm-common/src/assembler.rs"
+            className="underline"
+          >
+            koute/polkavm
+          </a>
+          .
+        </small>
+      </p>
+      <div className={classNames("flex gap-1 flex-col border-2 rounded-md", { "border-red-500": isError })}>
         <Textarea
-          rows={20}
+          rows={rows}
           autoFocus
           className={classNames("w-full h-full font-mono border-0", {
             "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
@@ -126,8 +146,11 @@ export const Assembly = ({
           style={{ fontSize: "10px" }}
         />
       </div>
-      <br />
-      <p className={classNames({ "text-red-500": isError }, "h-8")}>{error ?? "OK"}</p>
+      <div className="h-14 overflow-auto">
+        <p className={classNames(isError ? "text-red-500" : "text-green-500", "pt-4")}>
+          {error ?? "Compilation successful"}
+        </p>
+      </div>
     </div>
   );
 };
