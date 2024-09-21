@@ -18,13 +18,13 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
-import { worker } from "./packages/web-worker";
 
-import { Commands, PvmTypes, TargerOnMessageParams } from "./packages/web-worker/worker";
+import { PvmTypes } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
+import { spawnWorker } from "@/packages/web-worker/spawnWorker.ts";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -43,10 +43,11 @@ function App() {
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
-  const [isRunMode, setIsRunMode] = useState(false);
+  const [, setIsRunMode] = useState(false);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
+  const [currentWorker, setCurrentWorker] = useState<Worker | null>(null);
 
   const mobileView = useRef<HTMLDivElement | null>(null);
 
@@ -59,54 +60,48 @@ function App() {
     setClickedInstruction(null);
   }, []);
 
-  useEffect(() => {
-    worker.postMessage({ command: "load", payload: { type: "built-in" } });
-  }, []);
+  const restartProgram = useCallback(
+    (state: InitialState) => {
+      setIsDebugFinished(false);
+      setCurrentState(state);
+      setPreviousState(state);
+      setCurrentInstruction(programPreviewResult?.[0]);
 
-  useEffect(() => {
-    if (!worker) {
-      return;
-    }
-
-    worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
-      if (e.data.command === Commands.STEP) {
-        const { state, isFinished, isRunMode } = e.data.payload;
-        setCurrentState((prevState) => {
-          setPreviousState(prevState);
-          return state;
-        });
-
-        if (e.data.command === Commands.STEP) {
-          setCurrentInstruction(e.data.payload.result);
-        }
-
-        if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
-          worker.postMessage({ command: "step", payload: { program } });
-        }
-
-        if (isRunMode && breakpointAddresses.includes(state.pc)) {
-          worker.postMessage({ command: "stop", payload: { program } });
-          setIsRunMode(false);
-        }
-
-        if (isFinished) {
-          setIsDebugFinished(true);
-        }
+      if (currentWorker) {
+        currentWorker.postMessage({ command: "init", payload: { program, initialState: state } });
+      } else {
+        console.error("Worker is not initialized");
       }
-      if (e.data.command === Commands.LOAD) {
-        restartProgram(initialState);
+    },
+    [setCurrentInstruction, program, programPreviewResult, currentWorker],
+  );
+
+  useEffect(() => {
+    const initializeDefaultWorker = async () => {
+      const worker = await spawnWorker({
+        setCurrentState,
+        setPreviousState,
+        setCurrentInstruction,
+        breakpointAddresses,
+        initialState,
+        program,
+        setIsRunMode,
+        setIsDebugFinished,
+        restartProgram,
+      });
+      worker?.postMessage({ command: "load", payload: { type: "built-in" } });
+      setCurrentWorker(worker);
+    };
+
+    initializeDefaultWorker();
+
+    return () => {
+      if (currentWorker) {
+        currentWorker.terminate();
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isRunMode,
-    breakpointAddresses,
-    currentState,
-    program,
-    setCurrentInstruction,
-    programPreviewResult,
-    initialState,
-  ]);
+  }, []);
 
   const startProgram = (initialState: ExpectedState, program: number[]) => {
     setInitialState(initialState);
@@ -122,7 +117,7 @@ function App() {
 
     setIsDebugFinished(false);
 
-    worker.postMessage({ command: "init", payload: { program, initialState } });
+    currentWorker?.postMessage({ command: "init", payload: { program, initialState } });
 
     try {
       const result = disassemblify(new Uint8Array(program));
@@ -149,7 +144,7 @@ function App() {
     if (!currentInstruction) {
       setCurrentState(initialState);
     } else {
-      worker.postMessage({ command: "step", payload: { program } });
+      currentWorker?.postMessage({ command: "step", payload: { program } });
     }
 
     setIsProgramEditMode(false);
@@ -160,16 +155,8 @@ function App() {
       startProgram(initialState, program);
     }
     setIsRunMode(true);
-    worker.postMessage({ command: "run", payload: { program } });
-    worker.postMessage({ command: "step", payload: { program } });
-  };
-
-  const restartProgram = (state: InitialState) => {
-    setIsDebugFinished(false);
-    setCurrentState(state);
-    setPreviousState(state);
-    setCurrentInstruction(programPreviewResult?.[0]);
-    worker.postMessage({ command: "init", payload: { program, initialState: state } });
+    currentWorker?.postMessage({ command: "run", payload: { program } });
+    currentWorker?.postMessage({ command: "step", payload: { program } });
   };
 
   const handleBreakpointClick = (address: number) => {
@@ -187,15 +174,38 @@ function App() {
     return mobileView?.current?.offsetParent !== null;
   };
 
-  const handlePvmTypeChange = ({ type, param }: { type: string; param: string | Blob }) => {
+  const handlePvmTypeChange = async ({ type, param }: { type: string; param: string | Blob }) => {
     console.log("Selected PVM type", type, param);
 
+    if (currentWorker) {
+      currentWorker.terminate();
+    }
+
+    // TODO: move to some function
+    const worker = await spawnWorker({
+      setCurrentState,
+      setPreviousState,
+      setCurrentInstruction,
+      breakpointAddresses,
+      initialState,
+      program,
+      setIsRunMode,
+      setIsDebugFinished,
+      restartProgram,
+    });
+
+    console.log({
+      worker,
+    });
+    // currentWorker?.postMessage({ command: "load", payload: { type: "built-in" } });
+    setCurrentWorker(worker);
+
     if (type === PvmTypes.WASM_FILE) {
-      worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
+      worker?.postMessage({ command: "load", payload: { type, params: { file: param } } });
     } else if (type === PvmTypes.WASM_URL) {
-      worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
+      worker?.postMessage({ command: "load", payload: { type, params: { url: param } } });
     } else {
-      worker.postMessage({ command: "load", payload: { type } });
+      worker?.postMessage({ command: "load", payload: { type } });
     }
   };
 
