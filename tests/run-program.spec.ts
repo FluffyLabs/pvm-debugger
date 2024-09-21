@@ -2,7 +2,7 @@ import { test, expect, Page } from "@playwright/test";
 
 async function runProgramTest(page: Page, pvmType: string) {
   // Navigate to your app
-  await page.goto("http://localhost:5173");
+  await page.goto("/");
 
   // Select the PVM type
   await page.waitForSelector('button[test-id="pvm-select"]');
