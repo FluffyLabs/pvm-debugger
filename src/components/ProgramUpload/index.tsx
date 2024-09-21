@@ -71,7 +71,11 @@ export const ProgramUpload = ({
           </div>
         </Tabs>
         <DialogFooter>
-          <Button type="button" disabled={!file} onClick={handleLoad}>
+          <Button
+            id="load-button"
+            type="button"
+            disabled={!file}
+            onClick={handleLoad}>
             Load
           </Button>
         </DialogFooter>
