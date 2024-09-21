@@ -31,7 +31,7 @@ export const Bytecode = ({
   program: number[];
 }) => {
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <p className="mb-3">Edit array of program code (bytes, decimal)</p>
       <ProgramLoader
         program={program}

@@ -222,7 +222,7 @@ function App() {
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
             <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
               <div className="md:mr-3">
-                <ProgramUpload onFileUpload={handleFileUpload} program={program} />
+                <ProgramUpload initialState={initialState} onFileUpload={handleFileUpload} program={program} />
               </div>
               <Button
                 className="md:mr-3"
@@ -230,16 +230,24 @@ function App() {
                   restartProgram(initialState);
                   setCurrentInstruction(programPreviewResult?.[0]);
                 }}
-                disabled={!pvmInitialized}
+                disabled={!pvmInitialized || isProgramEditMode}
               >
                 <RefreshCcw className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Reset</span>
               </Button>
-              <Button className="md:mr-3" onClick={handleRunProgram} disabled={isDebugFinished || !pvmInitialized}>
+              <Button
+                className="md:mr-3"
+                onClick={handleRunProgram}
+                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode}
+              >
                 <Play className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Run</span>
               </Button>
-              <Button className="md:mr-3" onClick={onNext} disabled={isDebugFinished || !pvmInitialized}>
+              <Button
+                className="md:mr-3"
+                onClick={onNext}
+                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode}
+              >
                 <StepForward className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Step</span>
               </Button>
@@ -258,7 +266,7 @@ function App() {
                 <>
                   {isProgramEditMode && (
                     <div className="border-2 rounded-md h-full p-2 pt-8">
-                      <Assembly rows={22} program={program} onFileUpload={handleFileUpload} />
+                      <Assembly program={program} onFileUpload={handleFileUpload} initialState={initialState} />
                     </div>
                   )}
 

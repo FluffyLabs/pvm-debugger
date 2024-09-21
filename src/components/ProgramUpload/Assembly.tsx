@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Textarea } from "../ui/textarea";
 import { ProgramUploadFileOutput } from "./types";
+import { InitialState } from "../../types/pvm";
 import classNames from "classnames";
 import { compile_assembly, disassemble } from "@typeberry/spectool-wasm";
 import { mapUploadFileInputToOutput } from "./utils";
@@ -32,7 +33,7 @@ pub @expected_exit:
     ret
 `;
 
-function assemblyFromInputProgram(program: number[]) {
+function assemblyFromInputProgram(initialState: InitialState, program: number[]) {
   if (program.length === 0) {
     return DEFAULT_ASSEMBLY;
   }
@@ -65,7 +66,20 @@ function assemblyFromInputProgram(program: number[]) {
         return `jump ${basicBlocks.get(num)}`;
       });
     }
-    return fixedLines.join("\n");
+
+    const newProgram = fixedLines.join("\n");
+    // now append initial registers
+    const registers: string[] = [];
+    for (const [idx, reg] of (initialState.regs ?? []).entries()) {
+      if (reg !== 0) {
+        registers.push(`pre: r${idx} = ${reg}`);
+      }
+    }
+    if (registers.length) {
+      registers.push("");
+      registers.push("");
+    }
+    return `${registers.join("\n")}${newProgram}`;
   } catch (e) {
     console.error("Error disassembling input: ", e);
     return DEFAULT_ASSEMBLY;
@@ -73,17 +87,17 @@ function assemblyFromInputProgram(program: number[]) {
 }
 
 export const Assembly = ({
+  initialState,
   onFileUpload,
   program,
-  rows = 17,
 }: {
+  initialState: InitialState;
   onFileUpload: (val?: ProgramUploadFileOutput) => void;
   program: number[];
-  rows?: number;
 }) => {
   const defaultAssembly = useMemo(() => {
-    return assemblyFromInputProgram(program);
-  }, [program]);
+    return assemblyFromInputProgram(initialState, program);
+  }, [program, initialState]);
 
   const compile = useCallback(
     (input: string) => {
@@ -92,10 +106,30 @@ export const Assembly = ({
         const programJson = compile_assembly(input);
         const newProgram = JSON.parse(programJson);
         const output = mapUploadFileInputToOutput(newProgram);
-        // avoid re-rendering when the code is the same.
-        if (JSON.stringify(program) === JSON.stringify(newProgram.program)) {
+        // avoid re-rendering when the code & state is the same.
+        if (isArrayEqual(program, output.program)) {
           output.program = program;
         }
+        initialState.regs = output.initial.regs;
+        // this is incorrect, but we would need to alter the
+        // assembly to include the actual data:
+        // pub @main: (pc)
+        // %rw_data / %ro_data (memory)
+        // for now we are just going to assume we are "editing"
+        // that code.
+        if (output.initial.pc !== 0) {
+          initialState.pc = output.initial.pc;
+        }
+        if ((output.initial.memory?.length ?? 0) !== 0) {
+          initialState.memory = output.initial.memory;
+        }
+        if ((output.initial.pageMap?.length ?? 0) !== 0) {
+          initialState.pageMap = output.initial.pageMap;
+        }
+        // we want to keep all of the old stuff to avoid re-rendering.
+        output.initial = {
+          ...initialState,
+        };
         onFileUpload(output);
         setError(undefined);
       } catch (e) {
@@ -104,21 +138,25 @@ export const Assembly = ({
         setError(`${e}`);
       }
     },
-    [onFileUpload, program],
+    [onFileUpload, program, initialState],
   );
 
   const [error, setError] = useState<string>();
   const [assembly, setAssembly] = useState(defaultAssembly);
+  const [isFirstCompilation, setFirstCompilation] = useState(true);
 
   // compile the assembly for the first time
   useEffect(() => {
-    compile(assembly);
-  }, [compile, assembly]);
+    if (isFirstCompilation) {
+      compile(assembly);
+      setFirstCompilation(false);
+    }
+  }, [compile, assembly, isFirstCompilation]);
 
   const isError = !!error;
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       <p className="pb-2 -mt-4">
         <small>
           Experimental assembler format as defined in{" "}
@@ -132,21 +170,19 @@ export const Assembly = ({
           .
         </small>
       </p>
-      <div className={classNames("flex gap-1 flex-col border-2 rounded-md", { "border-red-500": isError })}>
-        <Textarea
-          rows={rows}
-          autoFocus
-          className={classNames("w-full h-full font-mono border-0", {
-            "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
-          })}
-          id="assembly"
-          placeholder="Try writing some PolkaVM assembly code."
-          value={assembly}
-          onChange={(e) => compile(e.target.value)}
-          style={{ fontSize: "10px" }}
-        />
-      </div>
-      <div className="h-14 overflow-auto">
+      <Textarea
+        autoFocus
+        className={classNames("flex-auto gap-1 font-mono border-2 rounded-md", {
+          "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
+          "border-red-500": isError,
+        })}
+        id="assembly"
+        placeholder="Try writing some PolkaVM assembly code."
+        value={assembly}
+        onChange={(e) => compile(e.target.value)}
+        style={{ fontSize: "10px" }}
+      />
+      <div>
         <p className={classNames(isError ? "text-red-500" : "text-green-500", "pt-4")}>
           {error ?? "Compilation successful"}
         </p>
@@ -154,3 +190,17 @@ export const Assembly = ({
     </div>
   );
 };
+
+function isArrayEqual<T>(a: T[], b: T[]) {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
