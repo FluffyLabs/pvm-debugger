@@ -41,13 +41,14 @@ function App() {
   const [clickedInstruction, setClickedInstruction] = useState<CurrentInstruction | null>(null);
   const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
+  const [currentAlternativeState, setCurrentAlternativeState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
   const [, setIsRunMode] = useState(false);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
-  const [currentWorker, setCurrentWorker] = useState<Worker | null>(null);
+  const [currentWorkers, setCurrentWorkers] = useState<Worker[] | null>(null);
 
   const mobileView = useRef<HTMLDivElement | null>(null);
 
@@ -67,13 +68,15 @@ function App() {
       setPreviousState(state);
       setCurrentInstruction(programPreviewResult?.[0]);
 
-      if (currentWorker) {
-        currentWorker.postMessage({ command: "init", payload: { program, initialState: state } });
+      if (currentWorkers) {
+        currentWorkers.forEach((currentWorker) => {
+          currentWorker.postMessage({ command: "init", payload: { program, initialState: state } });
+        });
       } else {
         console.error("Worker is not initialized");
       }
     },
-    [setCurrentInstruction, program, programPreviewResult, currentWorker],
+    [setCurrentInstruction, program, programPreviewResult, currentWorkers],
   );
 
   useEffect(() => {
@@ -90,14 +93,16 @@ function App() {
         restartProgram,
       });
       worker?.postMessage({ command: "load", payload: { type: "built-in" } });
-      setCurrentWorker(worker);
+      setCurrentWorkers([worker]);
     };
 
     initializeDefaultWorker();
 
     return () => {
-      if (currentWorker) {
-        currentWorker.terminate();
+      if (currentWorkers) {
+        currentWorkers.forEach((currentWorker) => {
+          currentWorker.terminate();
+        });
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,7 +122,9 @@ function App() {
 
     setIsDebugFinished(false);
 
-    currentWorker?.postMessage({ command: "init", payload: { program, initialState } });
+    currentWorkers?.forEach((currentWorker) => {
+      currentWorker?.postMessage({ command: "init", payload: { program, initialState } });
+    });
 
     try {
       const result = disassemblify(new Uint8Array(program));
@@ -144,7 +151,9 @@ function App() {
     if (!currentInstruction) {
       setCurrentState(initialState);
     } else {
-      currentWorker?.postMessage({ command: "step", payload: { program } });
+      currentWorkers?.forEach((currentWorker) => {
+        currentWorker?.postMessage({ command: "step", payload: { program } });
+      });
     }
 
     setIsProgramEditMode(false);
@@ -155,8 +164,11 @@ function App() {
       startProgram(initialState, program);
     }
     setIsRunMode(true);
-    currentWorker?.postMessage({ command: "run", payload: { program } });
-    currentWorker?.postMessage({ command: "step", payload: { program } });
+
+    currentWorkers?.forEach((currentWorker) => {
+      currentWorker?.postMessage({ command: "run", payload: { program } });
+      currentWorker?.postMessage({ command: "step", payload: { program } });
+    });
   };
 
   const handleBreakpointClick = (address: number) => {
@@ -174,8 +186,23 @@ function App() {
     return mobileView?.current?.offsetParent !== null;
   };
 
-  const handlePvmTypeChange = async ({ type, param }: { type: string; param: string | Blob }) => {
+  const handlePvmTypeChange = async ({
+    pvmSlot,
+    type,
+    param,
+  }: {
+    pvmSlot: number;
+    type: string;
+    param: string | Blob;
+  }) => {
     console.log("Selected PVM type", type, param);
+
+    if (!currentWorkers) {
+      console.error("No worker is initialized");
+      return;
+    }
+
+    const currentWorker = currentWorkers?.[pvmSlot];
 
     if (currentWorker) {
       currentWorker.terminate();
@@ -183,7 +210,7 @@ function App() {
 
     // TODO: move to some function
     const worker = await spawnWorker({
-      setCurrentState,
+      setCurrentState: pvmSlot === 0 ? setCurrentState : setCurrentAlternativeState,
       setPreviousState,
       setCurrentInstruction,
       breakpointAddresses,
@@ -198,7 +225,7 @@ function App() {
       worker,
     });
     // currentWorker?.postMessage({ command: "load", payload: { type: "built-in" } });
-    setCurrentWorker(worker);
+    setCurrentWorkers([...currentWorkers.slice(0, pvmSlot), worker, ...currentWorkers.slice(pvmSlot + 1)]);
 
     if (type === PvmTypes.WASM_FILE) {
       worker?.postMessage({ command: "load", payload: { type, params: { file: param } } });
@@ -257,7 +284,26 @@ function App() {
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
               <div className="w-full md:w-[300px]">
-                <PvmSelect onValueChange={handlePvmTypeChange} />
+                <PvmSelect
+                  onValueChange={({ type, param }) =>
+                    handlePvmTypeChange({
+                      pvmSlot: 0,
+                      type,
+                      param,
+                    })
+                  }
+                />
+              </div>
+              <div className="w-full md:w-[300px]">
+                <PvmSelect
+                  onValueChange={({ type, param }) =>
+                    handlePvmTypeChange({
+                      pvmSlot: 1,
+                      type,
+                      param,
+                    })
+                  }
+                />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
@@ -292,6 +338,7 @@ function App() {
             <div className="max-sm:hidden md:col-span-2">
               <Registers
                 currentState={isProgramEditMode ? initialState : currentState}
+                currentAlternativeState={isProgramEditMode ? initialState : currentAlternativeState}
                 previousState={isProgramEditMode ? initialState : previousState}
                 onCurrentStateChange={(state) => {
                   setInitialState(state);

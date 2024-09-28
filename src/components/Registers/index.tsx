@@ -8,13 +8,35 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Input } from "@/components/ui/input.tsx";
 import { getStatusColor } from "./utils";
 
+const ColorWhenStateDiffers = ({
+  value,
+  alternativeValue,
+}: {
+  value?: number | string;
+  alternativeValue?: number | string;
+}) => {
+  return (
+    <>
+      {value !== alternativeValue ? (
+        <span className="text-red-500">
+          {value} <span className="text-xs">({alternativeValue})</span>
+        </span>
+      ) : (
+        value
+      )}
+    </>
+  );
+};
+
 export const Registers = ({
   currentState,
+  currentAlternativeState,
   previousState,
   onCurrentStateChange,
   allowEditing,
 }: {
   currentState: ExpectedState;
+  currentAlternativeState: ExpectedState;
   previousState: ExpectedState;
   onCurrentStateChange: (changedState: ExpectedState) => void;
   allowEditing: boolean;
@@ -23,6 +45,7 @@ export const Registers = ({
 
   console.log({
     currentState,
+    currentAlternativeState,
     previousState,
   });
 
@@ -39,7 +62,12 @@ export const Registers = ({
                   "text-blue-500": currentState.pc !== previousState.pc,
                 })}
               >
-                {currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
+                {currentState.pc !== undefined ? (
+                  <ColorWhenStateDiffers value={currentState.pc} alternativeValue={currentAlternativeState.pc} />
+                ) : (
+                  ""
+                )}
+                {/*{currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}*/}
               </p>
             </div>
             <div className="flex flex-row items-center justify-between w-full mb-2">
