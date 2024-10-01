@@ -10,7 +10,7 @@ export type MemoryPreviewProps = {
 export const MemoryPreview = () => {
   const feature = useMemoryFeature();
   return (
-    <div className="border-2 rounded-md min-h-64 h-full">
+    <div className="border-2 rounded-md min-h-64 h-full max-h-[70vh]">
       <Tabs defaultValue="pages" className="m-1">
         <TabsList>
           <TabsTrigger value="pages">Pages</TabsTrigger>

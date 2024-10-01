@@ -17,7 +17,7 @@ export const MemoryTable = ({ data, addressStart }: { addressStart: number; data
   const tableData = toMemoryPageTabData(data, addressStart);
 
   return (
-    <div className="mt-5">
+    <div className="mt-5 max-h-[calc(70vh-150px)] overflow-y-auto">
       {tableData.map(({ address, bits }) => (
         <div className="grid grid-cols-3" key={address}>
           <div className="opacity-40">{address}</div>
@@ -46,7 +46,7 @@ export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => v
       </div>
       <MemoryTable
         data={memory.page.state.data}
-        addressStart={memory.page.state.pageNumber * (memory.meta.pageSize || 0)}
+        addressStart={(memory.page.state.pageNumber || 0) * (memory.meta.state.pageSize || 0)}
       />
     </div>
   );

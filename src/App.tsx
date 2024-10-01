@@ -73,10 +73,8 @@ function App() {
         setPreviousState(prevState);
         return state;
       });
+      setCurrentInstruction(worker.lastEvent.payload.result);
 
-      if (worker.lastEvent.command === Commands.STEP) {
-        setCurrentInstruction(worker.lastEvent.payload.result);
-      }
       if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
         worker.worker.postMessage({ command: "step", payload: { program } });
       }
@@ -88,12 +86,21 @@ function App() {
       if (isFinished) {
         setIsDebugFinished(true);
       }
+
+      // Refresh page on each step
+      if (memory.page.state.pageNumber !== undefined) {
+        memoryActions.changePage(memory.page.state.pageNumber);
+      }
     }
     if (worker.lastEvent.command === Commands.LOAD) {
       restartProgram(initialState);
     }
     if (worker.lastEvent.command === Commands.INIT) {
       memoryActions.initSetPageSize();
+    }
+
+    if (worker.lastEvent.command === Commands.MEMORY_SIZE) {
+      memoryActions.setPageSize(worker.lastEvent.payload.memoryPage.length);
     }
     if (worker.lastEvent.command === Commands.MEMORY_PAGE) {
       if (memory.page.state.isLoading) {
@@ -103,10 +110,6 @@ function App() {
           pageNumber: worker.lastEvent.payload.pageNumber,
           isLoading: false,
         });
-      }
-
-      if (memory.meta.state.isPageSizeLoading) {
-        memoryActions.setPageSize(worker.lastEvent.payload.memoryPage.length);
       }
     } else if (worker.lastEvent.command === Commands.MEMORY_RANGE) {
       const { start, end, memoryRange } = worker.lastEvent.payload;

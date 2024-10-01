@@ -14,7 +14,7 @@ export type MemoryFeatureState = {
     state: {
       data?: Uint8Array;
       isLoading: boolean;
-      pageNumber: number;
+      pageNumber: number | undefined;
     };
     setState: React.Dispatch<React.SetStateAction<MemoryFeatureState["page"]["state"]>>;
   };
@@ -30,7 +30,7 @@ export type MemoryFeatureState = {
 export const initialMemoryState: MemoryFeatureState = {
   meta: {
     state: {
-      pageSize: 32,
+      pageSize: undefined,
       isPageSizeLoading: false,
     },
     setState: () => {},
@@ -39,7 +39,7 @@ export const initialMemoryState: MemoryFeatureState = {
     state: {
       data: undefined,
       isLoading: false,
-      pageNumber: 0,
+      pageNumber: undefined,
     },
     setState: () => {},
   },
@@ -55,9 +55,13 @@ export const initialMemoryState: MemoryFeatureState = {
 export const useMemoryFeatureState = () => {
   const [pageState, setPageState] = useState<MemoryFeatureState["page"]["state"]>(initialMemoryState.page.state);
   const [rangeState, setRangeState] = useState<MemoryFeatureState["range"]["state"]>(initialMemoryState.range.state);
+  const [metaState, setMetaState] = useState<MemoryFeatureState["meta"]["state"]>(initialMemoryState.meta.state);
 
   return {
-    meta: initialMemoryState.meta,
+    meta: {
+      state: metaState,
+      setState: setMetaState,
+    },
     page: {
       state: pageState,
       setState: setPageState,
@@ -112,10 +116,9 @@ export const useMemoryFeature = () => {
     actions: {
       initSetPageSize: () => {
         memory.meta.setState({ ...memory.meta.state, isPageSizeLoading: true });
-        worker.worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber: 0 } });
+        worker.worker.postMessage({ command: Commands.MEMORY_SIZE });
       },
       setPageSize: (pageSize: number) => {
-        console.log("set memory page size", pageSize);
         memory.meta.setState({ ...memory.meta.state, isPageSizeLoading: false, pageSize });
       },
       changePage: (pageNumber: number) => {

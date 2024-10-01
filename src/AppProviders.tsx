@@ -16,7 +16,7 @@ const useWorkerState = () => {
 
   useEffect(() => {
     worker.onmessage = (e: MessageEvent<TargetOnMessageParams>) => {
-      console.log("worker.onmessage", e.data);
+      console.log("Main thread received message:", e.data);
       setLastEvent(e.data);
     };
     worker.postMessage({ command: "load", payload: { type: "built-in" } });

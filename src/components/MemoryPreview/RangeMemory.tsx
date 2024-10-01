@@ -32,6 +32,8 @@ export const RangeMemory = (props: { onRangeChange: (start: number, end: number)
     setEnd(undefined);
   };
 
+  return <span>Comming very soon</span>;
+
   return (
     <div>
       <div className="mb-3">
