@@ -29,8 +29,8 @@ const useWorkerState = () => {
 };
 
 export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
-  const memory = useMemoryFeatureState();
   const worker = useWorkerState();
+  const memory = useMemoryFeatureState();
 
   return (
     <Store.Provider

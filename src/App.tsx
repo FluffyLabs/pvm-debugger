@@ -25,6 +25,7 @@ import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 import { Store, StoreProvider } from "./AppProviders";
+import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
@@ -49,6 +50,7 @@ function App() {
 
   const mobileView = useRef<HTMLDivElement | null>(null);
   const { worker, memory } = useContext(Store);
+  const { actions: memoryActions } = useMemoryFeature();
 
   const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
     if (ins === null) {
@@ -100,15 +102,23 @@ function App() {
     if (worker.lastEvent.command === Commands.LOAD) {
       restartProgram(initialState);
     }
+    if (worker.lastEvent.command === Commands.INIT) {
+      memoryActions.initSetPageSize();
+    }
     if (worker.lastEvent.command === Commands.MEMORY_PAGE) {
-      memory.page.setState({
-        ...memory.page.state,
-        data: worker.lastEvent.payload.memoryPage,
-        pageNumber: worker.lastEvent.payload.pageNumber,
-        isLoading: false,
-      });
+      if (memory.page.state.isLoading) {
+        memory.page.setState({
+          ...memory.page.state,
+          data: worker.lastEvent.payload.memoryPage,
+          pageNumber: worker.lastEvent.payload.pageNumber,
+          isLoading: false,
+        });
+      }
+
+      if (memory.meta.state.isPageSizeLoading) {
+        memoryActions.setPageSize(worker.lastEvent.payload.memoryPage.length);
+      }
     } else if (worker.lastEvent.command === Commands.MEMORY_RANGE) {
-      console.log("ddddddd", worker.lastEvent, memory.range.state);
       const { start, end, memoryRange } = worker.lastEvent.payload;
       memory.range.setState({
         ...memory.range.state,

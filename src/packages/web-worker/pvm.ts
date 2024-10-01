@@ -4,13 +4,11 @@ import { ProgramDecoder } from "../../packages/pvm/pvm/program-decoder/program-d
 import { ArgsDecoder } from "../../packages/pvm/pvm/args-decoder/args-decoder";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
 import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm";
-
 export const initPvm = (program: number[], initialState: InitialState) => {
   const initialMemory = initialState.memory ?? [];
   const pageMap = initialState.pageMap ?? [];
 
   const memoryBuilder = new InternalPvmMemoryBuilder();
-
   for (const page of pageMap) {
     const startPageIndex = page.address;
     const endPageIndex = startPageIndex + page.length;

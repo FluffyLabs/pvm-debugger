@@ -4,7 +4,11 @@ import { useContext, useState } from "react";
 
 export type MemoryFeatureState = {
   meta: {
-    pageSize: number | undefined;
+    state: {
+      pageSize: number | undefined;
+      isPageSizeLoading: boolean;
+    };
+    setState: React.Dispatch<React.SetStateAction<MemoryFeatureState["meta"]["state"]>>;
   };
   page: {
     state: {
@@ -25,7 +29,11 @@ export type MemoryFeatureState = {
 
 export const initialMemoryState: MemoryFeatureState = {
   meta: {
-    pageSize: 32,
+    state: {
+      pageSize: 32,
+      isPageSizeLoading: false,
+    },
+    setState: () => {},
   },
   page: {
     state: {
@@ -62,7 +70,7 @@ export const useMemoryFeatureState = () => {
 };
 export const useMemoryFeature = () => {
   const { memory, worker } = useContext(Store);
-
+  console.log("memory", memory);
   return {
     // listeners: {
     //   onMessage: useCallback(
@@ -102,6 +110,14 @@ export const useMemoryFeature = () => {
     //   ),
     // },
     actions: {
+      initSetPageSize: () => {
+        memory.meta.setState({ ...memory.meta.state, isPageSizeLoading: true });
+        worker.worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber: 0 } });
+      },
+      setPageSize: (pageSize: number) => {
+        console.log("set memory page size", pageSize);
+        memory.meta.setState({ ...memory.meta.state, isPageSizeLoading: false, pageSize });
+      },
       changePage: (pageNumber: number) => {
         memory.page.setState({ ...memory.page.state, isLoading: true });
         worker.worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber } });

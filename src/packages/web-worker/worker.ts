@@ -2,7 +2,7 @@ import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm, St
 import { initPvm, nextInstruction } from "./pvm";
 import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
 import { getState, isInternalPvm, loadArrayBufferAsWasm, regsAsUint8 } from "@/packages/web-worker/utils.ts";
-import { getPage, memory } from "./memoryMock";
+import { memory } from "./memoryMock";
 
 export enum Commands {
   LOAD = "load",
@@ -176,10 +176,14 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       break;
     case Commands.MEMORY_PAGE:
       // debugger;
-      // const memoryPage = pvm && "getPageDump" in pvm ? pvm.memory.getPageDump(e.data.payload.pageNumber) : [];
+      // eslint-disable-next-line no-case-declarations
+      const memoryPage = pvm && "getMemoryPage" in pvm ? pvm.getMemoryPage(e.data.payload.pageNumber) : [];
+      if (pvm && "getMemoryPage" in pvm) {
+        console.log(memoryPage, e.data.payload.pageNumber, pvm.getMemoryPage);
+      }
       postMessage({
         command: Commands.MEMORY_PAGE,
-        payload: { pageNumber: e.data.payload.pageNumber, memoryPage: getPage(e.data.payload.pageNumber) },
+        payload: { pageNumber: e.data.payload.pageNumber, memoryPage },
       });
       break;
     case Commands.MEMORY_RANGE:
