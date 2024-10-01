@@ -6,9 +6,8 @@ import { Registers } from "./components/Registers";
 import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
-import { Play, RefreshCcw, StepForward, Check } from "lucide-react";
+import { Play, RefreshCcw, StepForward, Pencil, PencilOff } from "lucide-react";
 import { Header } from "@/components/Header";
-import { ProgramLoader } from "@/components/ProgramLoader";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { ProgramUpload } from "@/components/ProgramUpload";
@@ -26,9 +25,11 @@ import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 import { Store, StoreProvider } from "./AppProviders";
 import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
+import { Assembly } from "./components/ProgramUpload/Assembly";
 
 function App() {
   const [program, setProgram] = useState<number[]>([]);
+  const [isAsmError, setAsmError] = useState(false);
   const [isProgramEditMode, setIsProgramEditMode] = useState(false);
   const [initialState, setInitialState] = useState<InitialState>({
     regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -60,17 +61,6 @@ function App() {
     }
     setClickedInstruction(null);
   }, []);
-
-  const restartProgram = useCallback(
-    (state: InitialState) => {
-      setIsDebugFinished(false);
-      setCurrentState(state);
-      setPreviousState(state);
-      setCurrentInstruction(programPreviewResult?.[0]);
-      worker.worker.postMessage({ command: "init", payload: { program, initialState: state } });
-    },
-    [program, programPreviewResult, setCurrentInstruction, worker],
-  );
 
   useEffect(() => {
     if (!worker.lastEvent) {
@@ -133,37 +123,48 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [worker.lastEvent]);
 
-  const startProgram = (initialState: ExpectedState, program: number[]) => {
-    setInitialState(initialState);
-    setProgram(program);
-    const currentState = {
-      pc: 0,
-      regs: initialState.regs,
-      gas: initialState.gas,
-      pageMap: initialState.pageMap,
-      status: Status.OK,
-    };
-    setCurrentState(currentState);
-    setPreviousState(currentState);
+  const startProgram = useCallback(
+    (initialState: ExpectedState, newProgram: number[]) => {
+      setInitialState(initialState);
+      setProgram(newProgram);
+      const currentState = {
+        pc: 0,
+        regs: initialState.regs,
+        gas: initialState.gas,
+        pageMap: initialState.pageMap,
+        status: Status.OK,
+      };
+      setCurrentState(currentState);
+      setPreviousState(currentState);
 
-    setIsDebugFinished(false);
+      setIsDebugFinished(false);
 
-    worker.worker.postMessage({ command: "init", payload: { program, initialState } });
+      worker.worker.postMessage({ command: "init", payload: { program: newProgram, initialState } });
 
-    try {
-      const result = disassemblify(new Uint8Array(program));
-      console.info("Disassembly result:", result);
-      setProgramPreviewResult(result);
-      setCurrentInstruction(result?.[0]);
-      setPvmInitialized(true);
-    } catch (e) {
-      console.log("Error disassembling program", e);
-    }
-  };
+      try {
+        const result = disassemblify(new Uint8Array(newProgram));
+        console.info("Disassembly result:", result);
+        setProgramPreviewResult(result);
+        setCurrentInstruction(result?.[0]);
+        setPvmInitialized(true);
+      } catch (e) {
+        console.log("Error disassembling program", e);
+      }
+    },
+    [setCurrentInstruction, worker.worker],
+  );
 
-  const handleFileUpload = ({ initial, program }: ProgramUploadFileOutput) => {
-    startProgram(initial, program);
-  };
+  const handleFileUpload = useCallback(
+    (data?: ProgramUploadFileOutput) => {
+      if (data) {
+        startProgram(data.initial, data.program);
+        setAsmError(false);
+      } else {
+        setAsmError(true);
+      }
+    },
+    [startProgram],
+  );
 
   const onNext = () => {
     if (!pvmInitialized) {
@@ -183,9 +184,21 @@ function App() {
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
+
     worker.worker.postMessage({ command: "run", payload: { program } });
     worker.worker.postMessage({ command: "step", payload: { program } });
   };
+
+  const restartProgram = useCallback(
+    (state: InitialState) => {
+      setIsDebugFinished(false);
+      setCurrentState(state);
+      setPreviousState(state);
+      setCurrentInstruction(programPreviewResult?.[0]);
+      worker.worker.postMessage({ command: "init", payload: { program, initialState: state } });
+    },
+    [worker, setCurrentInstruction, program, programPreviewResult],
+  );
 
   const handleBreakpointClick = (address: number) => {
     if (breakpointAddresses.includes(address)) {
@@ -222,39 +235,32 @@ function App() {
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
             <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
               <div className="md:mr-3">
-                <ProgramUpload onFileUpload={handleFileUpload} program={program} />
+                <ProgramUpload initialState={initialState} onFileUpload={handleFileUpload} program={program} />
               </div>
-              <Button
-                className="md:mr-3 hidden-button"
-                disabled={!program.length}
-                onClick={() => {
-                  if (isProgramEditMode) {
-                    startProgram(initialState, program);
-                    setIsProgramEditMode(false);
-                  } else {
-                    restartProgram(initialState);
-                    setIsProgramEditMode(true);
-                  }
-                }}
-              >
-                {isProgramEditMode ? <Check /> : "Edit"}
-              </Button>
               <Button
                 className="md:mr-3"
                 onClick={() => {
                   restartProgram(initialState);
                   setCurrentInstruction(programPreviewResult?.[0]);
                 }}
-                disabled={!pvmInitialized}
+                disabled={!pvmInitialized || isProgramEditMode}
               >
                 <RefreshCcw className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Reset</span>
               </Button>
-              <Button className="md:mr-3" onClick={handleRunProgram} disabled={isDebugFinished || !pvmInitialized}>
+              <Button
+                className="md:mr-3"
+                onClick={handleRunProgram}
+                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode}
+              >
                 <Play className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Run</span>
               </Button>
-              <Button className="md:mr-3" onClick={onNext} disabled={isDebugFinished || !pvmInitialized}>
+              <Button
+                className="md:mr-3"
+                onClick={onNext}
+                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode}
+              >
                 <StepForward className="w-3.5 md:mr-1.5" />
                 <span className="hidden md:block">Step</span>
               </Button>
@@ -272,9 +278,9 @@ function App() {
               {!!program.length && (
                 <>
                   {isProgramEditMode && (
-                    <>
-                      <ProgramLoader program={program} setProgram={setProgram} />
-                    </>
+                    <div className="border-2 rounded-md h-full p-2 pt-8">
+                      <Assembly program={program} onFileUpload={handleFileUpload} initialState={initialState} />
+                    </div>
                   )}
 
                   {!isProgramEditMode && (
@@ -302,7 +308,7 @@ function App() {
                   setInitialState(state);
                   restartProgram(state);
                 }}
-                allowEditing={isProgramEditMode}
+                allowEditing={false}
               />
             </div>
 
@@ -330,21 +336,38 @@ function App() {
               />
             </div>
 
-            <div className="col-span-12 md:col-span-3 max-sm:order-first flex items-center justify-between my-3">
-              <div>
-                {!isProgramEditMode && (
-                  <div className="flex items-center space-x-2">
-                    <Label htmlFor="instruction-mode">ASM</Label>
-                    <Switch
-                      id="instruction-mode"
-                      checked={instructionMode === InstructionMode.BYTECODE}
-                      onCheckedChange={(checked) =>
-                        setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
-                      }
-                    />
-                    <Label htmlFor="instruction-mode">RAW</Label>
-                  </div>
-                )}
+            <div className="col-span-12 md:col-span-4 max-sm:order-first flex items-center justify-between my-3">
+              <div className={`flex items-center space-x-2 ${!program.length ? "invisible" : "visible"}`}>
+                <Label htmlFor="instruction-mode">ASM</Label>
+                <Switch
+                  disabled={isProgramEditMode}
+                  id="instruction-mode"
+                  checked={instructionMode === InstructionMode.BYTECODE}
+                  onCheckedChange={(checked) =>
+                    setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
+                  }
+                />
+                <Label htmlFor="instruction-mode">RAW</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="link"
+                  size="icon"
+                  className={!program.length ? "invisible" : "visible"}
+                  disabled={!program.length || isAsmError}
+                  title="Edit the code"
+                  onClick={() => {
+                    if (isProgramEditMode) {
+                      startProgram(initialState, program);
+                      setIsProgramEditMode(false);
+                    } else {
+                      restartProgram(initialState);
+                      setIsProgramEditMode(true);
+                    }
+                  }}
+                >
+                  {isProgramEditMode ? <PencilOff /> : <Pencil />}
+                </Button>
               </div>
               <NumeralSystemSwitch className="ml-3 md:hidden" />
             </div>
