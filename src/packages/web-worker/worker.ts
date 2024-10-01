@@ -2,7 +2,6 @@ import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm, St
 import { initPvm, nextInstruction } from "./pvm";
 import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
 import { getState, isInternalPvm, loadArrayBufferAsWasm, regsAsUint8 } from "@/packages/web-worker/utils.ts";
-import { memory } from "./memoryMock";
 
 export enum Commands {
   LOAD = "load",
@@ -183,15 +182,16 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       command: Commands.MEMORY_SIZE,
       payload: { pageNumber: 0, memoryPage },
     });
-  } else if (e.data.command === Commands.MEMORY_RANGE) {
-    const memoryRange = Object.values(memory).flat().slice(e.data.payload.start, e.data.payload.end);
-    postMessage({
-      command: Commands.MEMORY_RANGE,
-      payload: {
-        start: e.data.payload.start,
-        end: e.data.payload.end,
-        memoryRange: memoryRange,
-      },
-    });
   }
+  // else if (e.data.command === Commands.MEMORY_RANGE) {
+  //   const memoryRange = Object.values(memory).flat().slice(e.data.payload.start, e.data.payload.end);
+  //   postMessage({
+  //     command: Commands.MEMORY_RANGE,
+  //     payload: {
+  //       start: e.data.payload.start,
+  //       end: e.data.payload.end,
+  //       memoryRange: memoryRange,
+  //     },
+  //   });
+  // }
 };
