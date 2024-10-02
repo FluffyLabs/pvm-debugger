@@ -122,6 +122,11 @@ export const useMemoryFeature = () => {
         memory.meta.setState({ ...memory.meta.state, isPageSizeLoading: false, pageSize });
       },
       changePage: (pageNumber: number) => {
+        if (pageNumber === -1) {
+          memory.page.setState({ ...memory.page.state, pageNumber: undefined, data: undefined });
+          return;
+        }
+
         memory.page.setState({ ...memory.page.state, isLoading: true });
         worker.worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber } });
       },

@@ -1,7 +1,13 @@
 import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
 import { initPvm, nextInstruction } from "./pvm";
 import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
-import { getState, isInternalPvm, loadArrayBufferAsWasm, regsAsUint8 } from "@/packages/web-worker/utils.ts";
+import {
+  getMemoryPage,
+  getState,
+  isInternalPvm,
+  loadArrayBufferAsWasm,
+  regsAsUint8,
+} from "@/packages/web-worker/utils.ts";
 
 export enum Commands {
   LOAD = "load",
@@ -41,7 +47,7 @@ export type TargetOnMessageParams =
   | { command: Commands.STOP; payload: { isRunMode: boolean } }
   | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array } }
   | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number; memoryRange: Uint8Array } }
-  | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memoryPage: Uint8Array } };
+  | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memorySize: number } };
 
 export type WorkerOnMessageParams =
   | { command: Commands.LOAD; payload: { type: PvmTypes; params: { url?: string; file?: Blob } } }
@@ -170,19 +176,24 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       },
     });
   } else if (e.data.command === Commands.MEMORY_PAGE) {
-    const memoryPage = pvm && "getMemoryPage" in pvm ? pvm.getMemoryPage(e.data.payload.pageNumber) : [];
+    const memoryPage = getMemoryPage(e.data.payload.pageNumber, pvm);
 
     postMessage({
       command: Commands.MEMORY_PAGE,
       payload: { pageNumber: e.data.payload.pageNumber, memoryPage },
     });
   } else if (e.data.command === Commands.MEMORY_SIZE) {
-    const memoryPage = pvm && "getMemoryPage" in pvm ? pvm.getMemoryPage(1) : [];
+    // Get first page to check the memory size
+    const memoryPage = getMemoryPage(0, pvm);
+
+    console.log("memoryPage", memoryPage);
     postMessage({
       command: Commands.MEMORY_SIZE,
-      payload: { pageNumber: 0, memoryPage },
+      // TODO fix types
+      payload: { pageNumber: 0, memorySize: (memoryPage as unknown as Array<number>)?.length },
     });
   }
+  // TODO uncomennet and finish implementation
   // else if (e.data.command === Commands.MEMORY_RANGE) {
   //   const memoryRange = Object.values(memory).flat().slice(e.data.payload.start, e.data.payload.end);
   //   postMessage({

@@ -62,6 +62,8 @@ function App() {
     setClickedInstruction(null);
   }, []);
 
+  console.log("pvmInitialized", pvmInitialized);
+
   useEffect(() => {
     if (!worker.lastEvent) {
       return;
@@ -100,7 +102,7 @@ function App() {
     }
 
     if (worker.lastEvent.command === Commands.MEMORY_SIZE) {
-      memoryActions.setPageSize(worker.lastEvent.payload.memoryPage.length);
+      memoryActions.setPageSize(worker.lastEvent.payload.memorySize);
     }
     if (worker.lastEvent.command === Commands.MEMORY_PAGE) {
       if (memory.page.state.isLoading) {
