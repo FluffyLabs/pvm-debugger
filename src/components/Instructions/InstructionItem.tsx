@@ -81,6 +81,7 @@ export const InstructionItem = ({
     <TableRow
       ref={ref}
       className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
+      test-id="instruction-item"
       style={{ backgroundColor: isHighlighted ? bgColor : "initial" }}
     >
       {instructionMode === InstructionMode.BYTECODE && (

@@ -116,7 +116,7 @@ export const PvmSelect = ({
           }
         }}
       >
-        <SelectTrigger>
+        <SelectTrigger test-id="pvm-select">
           <SelectValue placeholder="Select a PVM" />
         </SelectTrigger>
         <SelectContent>
