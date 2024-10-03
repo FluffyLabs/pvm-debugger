@@ -7,7 +7,7 @@ const programs: {
     program: number[];
     regs: [number, number, number, number, number, number, number, number, number, number, number, number, number];
     pc: number;
-    pageMap: [];
+    pageMap: { address: number; length: number; "is-writable": boolean }[];
     gas: number;
     memory: [];
   };
@@ -36,6 +36,20 @@ const programs: {
     regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     pc: 0,
     pageMap: [],
+    memory: [],
+    gas: 10000,
+  },
+  storeU16: {
+    program: [0, 0, 5, 69, 7, 0, 0, 2, 225],
+    regs: [0, 0, 0, 0, 0, 0, 0, 305419896, 0, 0, 0, 0, 0],
+    pc: 0,
+    pageMap: [
+      {
+        address: 131072,
+        length: 4096,
+        "is-writable": true,
+      },
+    ],
     memory: [],
     gas: 10000,
   },
@@ -77,6 +91,12 @@ export const Examples = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFi
           <RadioGroupItem value="add" id="option-add" />
           <Label htmlFor="option-add" className="cursor-pointer">
             ADD instruction
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="storeU16" id="option-storeU16" />
+          <Label htmlFor="option-storeU16" className="cursor-pointer">
+            Store U16 instruction
           </Label>
         </div>
       </RadioGroup>

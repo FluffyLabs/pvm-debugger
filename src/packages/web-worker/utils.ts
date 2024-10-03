@@ -59,3 +59,16 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiI
   wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
   return wasmPvmShell;
 }
+
+export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
+  console.log("getMemoryPage", pageNumber, pvm);
+  if (!pvm) {
+    return [];
+  }
+
+  if (isInternalPvm(pvm)) {
+    return pvm.getMemoryPage(pageNumber) || [];
+  }
+  console.log("getpagedump", pageNumber, pvm.getPageDump(pageNumber));
+  return pvm.getPageDump(pageNumber) || [];
+}

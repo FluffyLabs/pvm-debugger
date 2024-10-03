@@ -1,6 +1,6 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
 import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
@@ -17,13 +17,14 @@ import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
-import { worker } from "./packages/web-worker";
 
-import { Commands, PvmTypes, TargerOnMessageParams } from "./packages/web-worker/worker";
+import { Commands, PvmTypes } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
+import { Store, StoreProvider } from "./AppProviders";
+import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
 import { Assembly } from "./components/ProgramUpload/Assembly";
 
 function App() {
@@ -44,12 +45,13 @@ function App() {
   const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
   const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
   const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
-  const [isRunMode, setIsRunMode] = useState(false);
 
   const [isDebugFinished, setIsDebugFinished] = useState(false);
   const [pvmInitialized, setPvmInitialized] = useState(false);
 
   const mobileView = useRef<HTMLDivElement | null>(null);
+  const { worker, memory } = useContext(Store);
+  const { actions: memoryActions } = useMemoryFeature();
 
   const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
     if (ins === null) {
@@ -60,54 +62,71 @@ function App() {
     setClickedInstruction(null);
   }, []);
 
-  useEffect(() => {
-    worker.postMessage({ command: "load", payload: { type: "built-in" } });
-  }, []);
+  console.log("pvmInitialized", pvmInitialized);
 
   useEffect(() => {
-    if (!worker) {
+    if (!worker.lastEvent) {
       return;
     }
 
-    worker.onmessage = (e: MessageEvent<TargerOnMessageParams>) => {
-      if (e.data.command === Commands.STEP) {
-        const { state, isFinished, isRunMode } = e.data.payload;
-        setCurrentState((prevState) => {
-          setPreviousState(prevState);
-          return state;
+    if (worker.lastEvent.command === Commands.STEP) {
+      const { state, isFinished, isRunMode } = worker.lastEvent.payload;
+      setCurrentState((prevState) => {
+        setPreviousState(prevState);
+        return state;
+      });
+      setCurrentInstruction(worker.lastEvent.payload.result);
+
+      if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
+        worker.worker.postMessage({ command: "step", payload: { program } });
+      }
+
+      if (isRunMode && breakpointAddresses.includes(state.pc)) {
+        worker.worker.postMessage({ command: "stop", payload: { program } });
+      }
+
+      if (isFinished) {
+        setIsDebugFinished(true);
+      }
+
+      // Refresh page on each step
+      if (memory.page.state.pageNumber !== undefined) {
+        memoryActions.changePage(memory.page.state.pageNumber);
+      }
+    }
+    if (worker.lastEvent.command === Commands.LOAD) {
+      restartProgram(initialState);
+    }
+    if (worker.lastEvent.command === Commands.INIT) {
+      memoryActions.initSetPageSize();
+    }
+
+    if (worker.lastEvent.command === Commands.MEMORY_SIZE) {
+      memoryActions.setPageSize(worker.lastEvent.payload.memorySize);
+    }
+    if (worker.lastEvent.command === Commands.MEMORY_PAGE) {
+      if (memory.page.state.isLoading) {
+        memory.page.setState({
+          ...memory.page.state,
+          data: worker.lastEvent.payload.memoryPage,
+          pageNumber: worker.lastEvent.payload.pageNumber,
+          isLoading: false,
         });
-
-        if (e.data.command === Commands.STEP) {
-          setCurrentInstruction(e.data.payload.result);
-        }
-
-        if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
-          worker.postMessage({ command: "step", payload: { program } });
-        }
-
-        if (isRunMode && breakpointAddresses.includes(state.pc)) {
-          worker.postMessage({ command: "stop", payload: { program } });
-          setIsRunMode(false);
-        }
-
-        if (isFinished) {
-          setIsDebugFinished(true);
-        }
       }
-      if (e.data.command === Commands.LOAD) {
-        restartProgram(initialState);
-      }
-    };
+    } else if (worker.lastEvent.command === Commands.MEMORY_RANGE) {
+      const { start, end, memoryRange } = worker.lastEvent.payload;
+      memory.range.setState({
+        ...memory.range.state,
+        data: [
+          ...memory.range.state.data.map((el) =>
+            el.start === start && el.end === end ? { start, end, data: memoryRange } : el,
+          ),
+        ],
+        isLoading: false,
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isRunMode,
-    breakpointAddresses,
-    currentState,
-    program,
-    setCurrentInstruction,
-    programPreviewResult,
-    initialState,
-  ]);
+  }, [worker.lastEvent]);
 
   const startProgram = useCallback(
     (initialState: ExpectedState, newProgram: number[]) => {
@@ -117,6 +136,7 @@ function App() {
         pc: 0,
         regs: initialState.regs,
         gas: initialState.gas,
+        pageMap: initialState.pageMap,
         status: Status.OK,
       };
       setCurrentState(currentState);
@@ -124,7 +144,7 @@ function App() {
 
       setIsDebugFinished(false);
 
-      worker.postMessage({ command: "init", payload: { program: newProgram, initialState } });
+      worker.worker.postMessage({ command: "init", payload: { program: newProgram, initialState } });
 
       try {
         const result = disassemblify(new Uint8Array(newProgram));
@@ -136,7 +156,7 @@ function App() {
         console.log("Error disassembling program", e);
       }
     },
-    [setCurrentInstruction],
+    [setCurrentInstruction, worker.worker],
   );
 
   const handleFileUpload = useCallback(
@@ -152,8 +172,6 @@ function App() {
   );
 
   const onNext = () => {
-    setIsRunMode(false);
-
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
@@ -161,7 +179,7 @@ function App() {
     if (!currentInstruction) {
       setCurrentState(initialState);
     } else {
-      worker.postMessage({ command: "step", payload: { program } });
+      worker.worker.postMessage({ command: "step", payload: { program } });
     }
 
     setIsProgramEditMode(false);
@@ -171,9 +189,9 @@ function App() {
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
-    setIsRunMode(true);
-    worker.postMessage({ command: "run", payload: { program } });
-    worker.postMessage({ command: "step", payload: { program } });
+
+    worker.worker.postMessage({ command: "run", payload: { program } });
+    worker.worker.postMessage({ command: "step", payload: { program } });
   };
 
   const restartProgram = useCallback(
@@ -182,9 +200,9 @@ function App() {
       setCurrentState(state);
       setPreviousState(state);
       setCurrentInstruction(programPreviewResult?.[0]);
-      worker.postMessage({ command: "init", payload: { program, initialState: state } });
+      worker.worker.postMessage({ command: "init", payload: { program, initialState: state } });
     },
-    [setCurrentInstruction, program, programPreviewResult],
+    [worker, setCurrentInstruction, program, programPreviewResult],
   );
 
   const handleBreakpointClick = (address: number) => {
@@ -206,11 +224,11 @@ function App() {
     console.log("Selected PVM type", type, param);
 
     if (type === PvmTypes.WASM_FILE) {
-      worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
+      worker.worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
     } else if (type === PvmTypes.WASM_URL) {
-      worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
+      worker.worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
     } else {
-      worker.postMessage({ command: "load", payload: { type } });
+      worker.worker.postMessage({ command: "load", payload: { type } });
     }
   };
 
@@ -364,5 +382,10 @@ function App() {
     </>
   );
 }
+const WrappedApp = () => (
+  <StoreProvider>
+    <App />
+  </StoreProvider>
+);
 
-export default App;
+export default WrappedApp;
