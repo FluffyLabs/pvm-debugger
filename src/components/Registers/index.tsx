@@ -83,7 +83,7 @@ export const Registers = ({
             </div>
             <div className="flex flex-row items-center justify-between w-full">
               <p className="flex-[2]">Status</p>
-              <p className="flex-[3]" style={{ color: getStatusColor(currentState.status) }}>
+              <p className="flex-[3]" style={{ color: getStatusColor(currentState.status) }} test-id="program-status">
                 {currentState.status !== undefined ? Status[currentState.status] : null}
               </p>
             </div>
