@@ -1,7 +1,5 @@
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
-import { ArgumentType } from "@/packages/pvm/pvm/args-decoder/argument-type";
-import { Args } from "@/types/pvm";
-import { ImmediateDecoder } from "@/packages/pvm/pvm/args-decoder/decoders/immediate-decoder.ts";
+import { ArgumentType, Args } from "@typeberry/pvm-debugger-adapter";
 
 export const valueToNumeralSystem = (
   value: number | bigint | undefined,
@@ -16,47 +14,40 @@ export const valueToNumeralSystem = (
     : (value ?? 0).toString().padStart(padStartVal || 0, "0");
 };
 
-// TODO remove type casting when PVM changed
-const getUnsignedImmediate = (immediateDecoder: ImmediateDecoder) => immediateDecoder?.unsignedImmediate[0];
-
-export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: NumeralSystem) => {
+export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: NumeralSystem, counter: number) => {
   switch (args?.type) {
     case ArgumentType.NO_ARGUMENTS:
       return "";
     case ArgumentType.ONE_IMMEDIATE:
-      return (
-        <span>{valueToNumeralSystem(getUnsignedImmediate(args as unknown as ImmediateDecoder), numeralSystem)}</span>
-      );
+      return <span>{valueToNumeralSystem(args.immediateDecoder.getUnsigned(), numeralSystem)}</span>;
     case ArgumentType.TWO_IMMEDIATES:
       return (
         <span>
-          {valueToNumeralSystem(getUnsignedImmediate(args?.firstImmediateDecoder), numeralSystem)},{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.secondImmediateDecoder), numeralSystem)}
+          {valueToNumeralSystem(args?.firstImmediateDecoder.getUnsigned(), numeralSystem)},{" "}
+          {valueToNumeralSystem(args?.secondImmediateDecoder.getUnsigned(), numeralSystem)}
         </span>
       );
     case ArgumentType.ONE_OFFSET:
-      return <span>{valueToNumeralSystem(args?.offset, numeralSystem)}</span>;
+      return <span>{valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}</span>;
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
       return (
         <span>
-          ω<sub>{args?.firstRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.immediateDecoder), numeralSystem)}
+          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args.immediateDecoder.getUnsigned(), numeralSystem)}
         </span>
       );
     case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES:
       return (
         <span>
           ω<sub>{args?.registerIndex}</sub>,{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.firstImmediateDecoder), numeralSystem)},{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.secondImmediateDecoder), numeralSystem)}
+          {valueToNumeralSystem(args?.firstImmediateDecoder.getUnsigned(), numeralSystem)},{" "}
+          {valueToNumeralSystem(args?.secondImmediateDecoder.getUnsigned(), numeralSystem)}
         </span>
       );
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
       return (
         <span>
-          ω<sub>{args?.firstRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.immediateDecoder), numeralSystem)},{" "}
-          {valueToNumeralSystem(args?.offset, numeralSystem)}
+          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getUnsigned(), numeralSystem)}
+          , {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
         </span>
       );
     case ArgumentType.TWO_REGISTERS:
@@ -69,22 +60,22 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
       return (
         <span>
           ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.immediateDecoder), numeralSystem)}
+          {valueToNumeralSystem(args?.immediateDecoder.getUnsigned(), numeralSystem)}
         </span>
       );
     case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
       return (
         <span>
           ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(args?.offset, numeralSystem)}
+          {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
         </span>
       );
     case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES:
       return (
         <span>
           ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.firstImmediateDecoder), numeralSystem)},{" "}
-          {valueToNumeralSystem(getUnsignedImmediate(args?.secondImmediateDecoder), numeralSystem)}
+          {valueToNumeralSystem(args?.firstImmediateDecoder.getUnsigned(), numeralSystem)},{" "}
+          {valueToNumeralSystem(args?.secondImmediateDecoder.getUnsigned(), numeralSystem)}
         </span>
       );
     case ArgumentType.THREE_REGISTERS:
