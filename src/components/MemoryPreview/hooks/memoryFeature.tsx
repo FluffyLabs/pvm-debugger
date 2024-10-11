@@ -73,7 +73,7 @@ export const useMemoryFeatureState = () => {
   };
 };
 export const useMemoryFeature = () => {
-  const { memory, worker } = useContext(Store);
+  const { memory, workers } = useContext(Store);
   console.log("memory", memory);
   return {
     // listeners: {

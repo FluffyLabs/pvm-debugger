@@ -25,98 +25,157 @@ import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 import { spawnWorker } from "@/packages/web-worker/spawnWorker.ts";
 import { Store, StoreProvider } from "./AppProviders";
-import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
+// import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
 import { Assembly } from "./components/ProgramUpload/Assembly";
+import {
+  createWorker,
+  initAllWorkers,
+  initWorker,
+  loadWorker, runAllWorkers,
+  setAllWorkersCurrentInstruction,
+  setAllWorkersCurrentState,
+  setAllWorkersPreviousState, stepAllWorkers
+} from "@/store/workers/workersSlice.ts";
+import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
+import {
+  setBreakpointAddresses,
+  setClickedInstruction,
+  setInitialState, setInstructionMode,
+  setIsAsmError,
+  setIsDebugFinished,
+  setIsProgramEditMode,
+  setIsRunMode,
+  setProgram,
+  setProgramPreviewResult,
+  setPvmInitialized
+} from "@/store/debugger/debuggerSlice.ts";
 
 function App() {
-  const [program, setProgram] = useState<number[]>([]);
-  const [isAsmError, setAsmError] = useState(false);
-  const [isProgramEditMode, setIsProgramEditMode] = useState(false);
-  const [initialState, setInitialState] = useState<InitialState>({
-    regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    pc: 0,
-    pageMap: [],
-    memory: [],
-    gas: 10000,
-  });
-  const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  const [currentInstruction, setCurrentInstructionState] = useState<CurrentInstruction>();
-  const [clickedInstruction, setClickedInstruction] = useState<CurrentInstruction | null>(null);
-  const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
-  const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
-  const [currentAlternativeState, setCurrentAlternativeState] = useState<ExpectedState>(initialState as ExpectedState);
-  const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
-  const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
-  const [, setIsRunMode] = useState(false);
+  const {
+    program,
+    initialState,
+    isProgramEditMode,
+    isAsmError,
+    programPreviewResult,
+    // currentInstruction,
+    clickedInstruction,
+    instructionMode,
+    // currentState,
+    // currentAlternativeState,
+    // previousState,
+    breakpointAddresses,
+    isDebugFinished,
+    pvmInitialized,
+  } = useAppSelector((state) => state.debugger);
 
-  const [isDebugFinished, setIsDebugFinished] = useState(false);
-  const [pvmInitialized, setPvmInitialized] = useState(false);
-  const [currentWorkers, setCurrentWorkers] = useState<Worker[] | null>(null);
+  const workers = useAppSelector((state) => state.workers);
+  const dispatch = useAppDispatch();
+  const { currentInstruction, currentState, previousState } = workers[0] || {
+    currentInstruction: null,
+    currentState: initialState,
+    previousState: initialState,
+  };
+
+  console.log({
+    currentInstruction
+  })
+
+  // const [program, setProgram] = useState<number[]>([]);
+  // const [isAsmError, setAsmError] = useState(false);
+  // const [isProgramEditMode, setIsProgramEditMode] = useState(false);
+  // map above to equivalent redux state
+
+  // const [initialState, setInitialState] = useState<InitialState>({
+  //   regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  //   pc: 0,
+  //   pageMap: [],
+  //   memory: [],
+  //   gas: 10000,
+  // });
+  // const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
+  // const [currentInstruction, setCurrentInstructionState] = useState<CurrentInstruction>();
+  // const [clickedInstruction, setClickedInstruction] = useState<CurrentInstruction | null>(null);
+  // const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
+  // const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
+  // const [currentAlternativeState, setCurrentAlternativeState] = useState<ExpectedState>(initialState as ExpectedState);
+  // const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
+  // const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
+  // const [, setIsRunMode] = useState(false);
+
+  // const [isDebugFinished, setIsDebugFinished] = useState(false);
+  // const [pvmInitialized, setPvmInitialized] = useState(false);
+  // const [currentWorkers, setCurrentWorkers] = useState<Worker[] | null>(null);
 
   const mobileView = useRef<HTMLDivElement | null>(null);
-  const { worker, memory } = useContext(Store);
-  const { actions: memoryActions } = useMemoryFeature();
+  // const { workers: currentWorkers, createWorker } = useContext(Store);
+  // const workers = useSelector((state) => state.workers);
+
+  // const { actions: memoryActions } = useMemoryFeature();
 
   const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
     if (ins === null) {
-      setCurrentInstruction(virtualTrapInstruction);
+      dispatch(setAllWorkersCurrentInstruction(virtualTrapInstruction));
     } else {
-      setCurrentInstructionState(ins);
+      dispatch(setAllWorkersCurrentInstruction(ins));
     }
-    setClickedInstruction(null);
+    dispatch(setClickedInstruction(null));
   }, []);
 
   const restartProgram = useCallback(
     (state: InitialState) => {
-      setIsDebugFinished(false);
-      setCurrentState(state);
-      setPreviousState(state);
+      dispatch(setIsDebugFinished(false));
+      dispatch(setAllWorkersCurrentState(state));
+      dispatch(setAllWorkersPreviousState(state));
       setCurrentInstruction(programPreviewResult?.[0]);
 
-      if (currentWorkers) {
-        currentWorkers.forEach((currentWorker) => {
-          currentWorker.postMessage({ command: "init", payload: { program, initialState: state } });
-        });
-      } else {
-        console.error("Worker is not initialized");
-      }
+      // if (currentWorkers) {
+      //   currentWorkers.forEach((currentWorker) => {
+      //     currentWorker.postMessage({ command: "init", payload: { program, initialState: state } });
+      //   });
+      // } else {
+      //   console.error("Worker is not initialized");
+      // }
     },
-    [setCurrentInstruction, program, programPreviewResult, currentWorkers],
+    [setCurrentInstruction, program, programPreviewResult],
   );
 
   useEffect(() => {
     const initializeDefaultWorker = async () => {
-      const worker = await spawnWorker({
-        setCurrentState,
-        setPreviousState,
-        setCurrentInstruction,
-        breakpointAddresses,
-        initialState,
-        program,
-        setIsRunMode,
-        setIsDebugFinished,
-        restartProgram,
-      });
-      worker?.postMessage({ command: "load", payload: { type: "built-in" } });
-      setCurrentWorkers([worker]);
+      // const worker = await spawnWorker({
+      //   setCurrentState,
+      //   setPreviousState,
+      //   setCurrentInstruction,
+      //   breakpointAddresses,
+      //   initialState,
+      //   program,
+      //   setIsRunMode,
+      //   setIsDebugFinished,
+      //   restartProgram,
+      //   memory,
+      //   memoryActions,
+      // });
+      // worker?.postMessage({ command: "load", payload: { type: "built-in" } });
+      await dispatch(createWorker("0")).unwrap();
+      await dispatch(loadWorker("0")).unwrap();
+      // setCurrentWorkers([worker]);
     };
 
     initializeDefaultWorker();
 
     return () => {
-      if (currentWorkers) {
-        currentWorkers.forEach((currentWorker) => {
-          currentWorker.terminate();
-        });
-      }
+      // if (currentWorkers) {
+      //   currentWorkers.forEach((currentWorker) => {
+      //     currentWorker.terminate();
+      //   });
+      // }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startProgram = useCallback(
     (initialState: ExpectedState, newProgram: number[]) => {
-      setInitialState(initialState);
-      setProgram(newProgram);
+      dispatch(setInitialState(initialState));
+      dispatch(setProgram(newProgram));
       const currentState = {
         pc: 0,
         regs: initialState.regs,
@@ -124,35 +183,37 @@ function App() {
         pageMap: initialState.pageMap,
         status: Status.OK,
       };
-      setCurrentState(currentState);
-      setPreviousState(currentState);
+      dispatch(setAllWorkersCurrentState(currentState));
+      dispatch(setAllWorkersPreviousState(currentState));
 
       setIsDebugFinished(false);
 
-    currentWorkers?.forEach((currentWorker) => {
-      currentWorker?.postMessage({ command: "init", payload: { program: newProgram, initialState } });
-    });
+      dispatch(initAllWorkers());
+
+      // currentWorkers?.forEach((currentWorker) => {
+      //   currentWorker?.postMessage({ command: "init", payload: { program: newProgram, initialState } });
+      // });
 
       try {
         const result = disassemblify(new Uint8Array(newProgram));
         console.info("Disassembly result:", result);
-        setProgramPreviewResult(result);
-        setCurrentInstruction(result?.[0]);
-        setPvmInitialized(true);
+        dispatch(setProgramPreviewResult(result));
+        dispatch(setAllWorkersCurrentInstruction(result?.[0]));
+        dispatch(setPvmInitialized(true));
       } catch (e) {
         console.log("Error disassembling program", e);
       }
     },
-    [setCurrentInstruction, worker.worker],
+    [setCurrentInstruction],
   );
 
   const handleFileUpload = useCallback(
     (data?: ProgramUploadFileOutput) => {
       if (data) {
         startProgram(data.initial, data.program);
-        setAsmError(false);
+        dispatch(setIsAsmError(false));
       } else {
-        setAsmError(true);
+        dispatch(setIsAsmError(true));
       }
     },
     [startProgram],
@@ -164,37 +225,40 @@ function App() {
     }
 
     if (!currentInstruction) {
-      setCurrentState(initialState);
+      dispatch(setAllWorkersCurrentState(initialState));
     } else {
-      currentWorkers?.forEach((currentWorker) => {
-        currentWorker?.postMessage({ command: "step", payload: { program } });
-      });
+      dispatch(stepAllWorkers());
+      // currentWorkers?.forEach((currentWorker) => {
+      //   currentWorker?.postMessage({ command: "step", payload: { program } });
+      // });
     }
 
-    setIsProgramEditMode(false);
+    dispatch(setIsProgramEditMode(false));
   };
 
   const handleRunProgram = () => {
     if (!pvmInitialized) {
       startProgram(initialState, program);
     }
-    setIsRunMode(true);
+    dispatch(setIsRunMode(true));
 
-    currentWorkers?.forEach((currentWorker) => {
-      currentWorker?.postMessage({ command: "run", payload: { program } });
-      currentWorker?.postMessage({ command: "step", payload: { program } });
-    });
+    dispatch(runAllWorkers());
+    dispatch(stepAllWorkers());
+    // currentWorkers?.forEach((currentWorker) => {
+    //   currentWorker?.postMessage({ command: "run", payload: { program } });
+    //   currentWorker?.postMessage({ command: "step", payload: { program } });
+    // });
   };
 
   const handleBreakpointClick = (address: number) => {
     if (breakpointAddresses.includes(address)) {
-      setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address));
+      dispatch(setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address)));
     } else {
-      setBreakpointAddresses([...breakpointAddresses, address]);
+      dispatch(setBreakpointAddresses([...breakpointAddresses, address]));
     }
   };
   const onInstructionClick = useCallback((row: CurrentInstruction) => {
-    setClickedInstruction(row);
+    dispatch(setClickedInstruction(row));
   }, []);
 
   const isMobileViewActive = () => {
@@ -212,43 +276,45 @@ function App() {
   }) => {
     console.log("Selected PVM type", type, param);
 
-    if (!currentWorkers) {
-      console.error("No worker is initialized");
-      return;
-    }
+    // if (!currentWorkers) {
+    //   console.error("No worker is initialized");
+    //   return;
+    // }
+    //
+    // const currentWorker = currentWorkers?.[pvmSlot];
 
-    const currentWorker = currentWorkers?.[pvmSlot];
-
-    if (currentWorker) {
-      currentWorker.terminate();
-    }
+    // if (currentWorker) {
+    //   currentWorker.terminate();
+    // }
 
     // TODO: move to some function
-    const worker = await spawnWorker({
-      setCurrentState: pvmSlot === 0 ? setCurrentState : setCurrentAlternativeState,
-      setPreviousState,
-      setCurrentInstruction,
-      breakpointAddresses,
-      initialState,
-      program,
-      setIsRunMode,
-      setIsDebugFinished,
-      restartProgram,
-    });
+    // const worker = await spawnWorker({
+    //   setCurrentState: pvmSlot === 0 ? setCurrentState : setCurrentAlternativeState,
+    //   setPreviousState,
+    //   setCurrentInstruction,
+    //   breakpointAddresses,
+    //   initialState,
+    //   program,
+    //   setIsRunMode,
+    //   setIsDebugFinished,
+    //   restartProgram,
+    //   memory: {},
+    //   memoryActions: {},
+    // });
 
-    console.log({
-      worker,
-    });
+    // console.log({
+    //   worker,
+    // });
     // currentWorker?.postMessage({ command: "load", payload: { type: "built-in" } });
-    setCurrentWorkers([...currentWorkers.slice(0, pvmSlot), worker, ...currentWorkers.slice(pvmSlot + 1)]);
+    // setCurrentWorkers([...currentWorkers.slice(0, pvmSlot), worker, ...currentWorkers.slice(pvmSlot + 1)]);
 
-    if (type === PvmTypes.WASM_FILE) {
-      worker?.postMessage({ command: "load", payload: { type, params: { file: param } } });
-    } else if (type === PvmTypes.WASM_URL) {
-      worker?.postMessage({ command: "load", payload: { type, params: { url: param } } });
-    } else {
-      worker?.postMessage({ command: "load", payload: { type } });
-    }
+    // if (type === PvmTypes.WASM_FILE) {
+    //   worker?.postMessage({ command: "load", payload: { type, params: { file: param } } });
+    // } else if (type === PvmTypes.WASM_URL) {
+    //   worker?.postMessage({ command: "load", payload: { type, params: { url: param } } });
+    // } else {
+    //   worker?.postMessage({ command: "load", payload: { type } });
+    // }
   };
 
   return (
@@ -346,7 +412,7 @@ function App() {
             <div className="max-sm:hidden md:col-span-2">
               <Registers
                 currentState={isProgramEditMode ? initialState : currentState}
-                currentAlternativeState={isProgramEditMode ? initialState : currentAlternativeState}
+                currentAlternativeState={isProgramEditMode ? initialState : currentState}
                 previousState={isProgramEditMode ? initialState : previousState}
                 onCurrentStateChange={(state) => {
                   setInitialState(state);
@@ -364,9 +430,7 @@ function App() {
               />
             </div>
 
-            <div className="max-sm:hidden col-span-12 md:col-span-3">
-              <MemoryPreview />
-            </div>
+            <div className="max-sm:hidden col-span-12 md:col-span-3">{/*<MemoryPreview />*/}</div>
 
             <div className="max-sm:hidden md:col-span-3 overflow-hidden">
               <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
@@ -388,7 +452,7 @@ function App() {
                   id="instruction-mode"
                   checked={instructionMode === InstructionMode.BYTECODE}
                   onCheckedChange={(checked) =>
-                    setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
+                    dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))
                   }
                 />
                 <Label htmlFor="instruction-mode">RAW</Label>

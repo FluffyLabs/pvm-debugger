@@ -48,9 +48,18 @@ export const Instructions = ({
         </div>
       );
     };
+    console.log({
+      programPreviewResult
+    })
     const programRows = programPreviewResult?.map((result) => {
-      Object.assign(result, { addressEl: getAddressEl(result.address), counter: result.address });
-      return result;
+      // TODO: due to this assignment, programPreviewResult cannot be moved to the store
+      // Object.assign(result, { addressEl: getAddressEl(result.address), counter: result.address });
+      // return result;
+      return {
+        ...result,
+        addressEl: getAddressEl(result.address),
+        counter: result.address
+      };
     });
     return programRows as ProgramRow[];
   }, [numeralSystem, programPreviewResult]);
