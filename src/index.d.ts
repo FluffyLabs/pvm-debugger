@@ -162,8 +162,22 @@ declare module "@typeberry/pvm-debugger-adapter" {
   };
 
   class Memory {}
+
+  enum Status {
+    OK = 0,
+    HALT = 1,
+    PANIC = 2,
+    OUT_OF_GAS = 3,
+  }
+
   export class Pvm {
     constructor(program: Uint8Array, initialState?: InitialState);
+    nextStep(): Status;
+    getRegisters(): number[];
+    getPC(): number;
+    getGas(): number;
+    getStatus(): Status;
+    getMemoryPage(pageNumber: number): null | Uint8Array;
   }
 
   export class MemoryBuilder {

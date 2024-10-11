@@ -35,15 +35,12 @@ export type ExpectedState = InitialState & {
 };
 
 export type Pvm = {
-  printProgram: () => void;
-  runProgram: () => void;
   nextStep: () => Status;
-  getRegisters: () => RegistersArray;
-  getMemory: () => MemoryChunkItem[];
+  getRegisters: () => number[];
   getPC: () => number;
   getGas: () => number;
   getStatus: () => Status;
-  getMemoryPage: (pageNumber: number) => MemoryChunkItem | null;
+  getMemoryPage: (pageNumber: number) => Uint8Array | null;
 };
 
 export type CurrentInstruction =
