@@ -61,8 +61,7 @@ export const Examples = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFi
       <p className="mb-2">Load example test file</p>
       <RadioGroup
         defaultValue="option-fibonacci"
-        onValueChange={(val) => {
-          console.log(programs[val]);
+        onValueChange={(val) =>
           onFileUpload({
             initial: {
               regs: programs[val].regs,
@@ -73,8 +72,8 @@ export const Examples = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFi
             },
             program: programs[val].program,
             name: val,
-          });
-        }}
+          })
+        }
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="fibonacci" id="option-fibonacci" />
