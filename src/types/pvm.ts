@@ -1,4 +1,4 @@
-import { Result } from "@/packages/pvm/pvm/args-decoder/args-decoder";
+import { Args } from "@typeberry/pvm-debugger-adapter";
 
 type GrowToSize<T, N extends number, A extends T[]> = A["length"] extends N ? A : GrowToSize<T, N, [...A, T]>;
 type FixedArray<T, N extends number> = GrowToSize<T, N, []>;
@@ -35,18 +35,13 @@ export type ExpectedState = InitialState & {
 };
 
 export type Pvm = {
-  printProgram: () => void;
-  runProgram: () => void;
   nextStep: () => Status;
-  getRegisters: () => RegistersArray;
-  getMemory: () => MemoryChunkItem[];
+  getRegisters: () => number[];
   getPC: () => number;
   getGas: () => number;
   getStatus: () => Status;
-  getMemoryPage: (pageNumber: number) => MemoryChunkItem | null;
+  getMemoryPage: (pageNumber: number) => Uint8Array | null;
 };
-
-export type Args = Result;
 
 export type CurrentInstruction =
   | {

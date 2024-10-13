@@ -116,7 +116,7 @@ export const InstructionItem = ({
           </TableCell>
           <TableCell className="p-1.5">
             <span className="">
-              {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem)}
+              {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
             </span>
           </TableCell>
         </>

@@ -1,5 +1,5 @@
 import { ExpectedState, Pvm as InternalPvm, RegistersArray, Status } from "@/types/pvm.ts";
-import { Pvm as InternalPvmInstance } from "@typeberry/pvm";
+import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { PvmApiInterface } from "@/packages/web-worker/worker.ts";
 import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
 

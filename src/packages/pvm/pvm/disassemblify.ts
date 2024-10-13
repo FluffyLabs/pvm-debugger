@@ -1,7 +1,11 @@
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction";
-import { ArgsDecoder } from "./args-decoder/args-decoder";
 import { byteToOpCodeMap } from "./assemblify";
-import { ProgramDecoder } from "./program-decoder/program-decoder";
+import {
+  ProgramDecoder,
+  ArgsDecoder,
+  instructionArgumentTypeMap,
+  createResults,
+} from "@typeberry/pvm-debugger-adapter";
 import { Instruction } from "./instruction";
 
 export function disassemblify(rawProgram: Uint8Array) {
@@ -15,10 +19,11 @@ export function disassemblify(rawProgram: Uint8Array) {
 
   while (i < code.length) {
     const currentInstruction = code[i];
-    let args;
+    const argumentType = instructionArgumentTypeMap[currentInstruction];
+    const args = createResults()[argumentType];
 
     try {
-      args = argsDecoder.getArgs(i);
+      argsDecoder.fillArgs(i, args);
       address = i;
       i += args.noOfBytesToSkip ?? 0;
     } catch (e) {
@@ -38,8 +43,7 @@ export function disassemblify(rawProgram: Uint8Array) {
       name: Instruction[currentInstruction],
       instructionBytes: code.slice(i - (args.noOfBytesToSkip ?? 0), i),
       address,
-      // TODO remove object casting when PVM changed
-      args: JSON.parse(JSON.stringify(args)),
+      args,
     };
 
     printableProgram.push(currentInstructionDebug);
