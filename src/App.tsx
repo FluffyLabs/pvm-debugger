@@ -1,21 +1,20 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
 import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
-import { Play, RefreshCcw, StepForward, Pencil, PencilOff } from "lucide-react";
+import { Pencil, PencilOff, Play, RefreshCcw, StepForward } from "lucide-react";
 import { Header } from "@/components/Header";
-import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { ProgramUpload } from "@/components/ProgramUpload";
 import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
-import { PvmSelect } from "@/components/PvmSelect";
+import { AvailablePvms, PvmSelect, SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 
 import { PvmTypes } from "./packages/web-worker/worker";
@@ -23,31 +22,33 @@ import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
-import { spawnWorker } from "@/packages/web-worker/spawnWorker.ts";
-import { Store, StoreProvider } from "./AppProviders";
 // import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
 import { Assembly } from "./components/ProgramUpload/Assembly";
 import {
   createWorker,
+  destroyWorker,
   initAllWorkers,
-  initWorker,
-  loadWorker, runAllWorkers,
+  loadWorker,
+  runAllWorkers,
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
-  setAllWorkersPreviousState, stepAllWorkers
+  setAllWorkersPreviousState,
+  stepAllWorkers,
+  WorkerState,
 } from "@/store/workers/workersSlice.ts";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import {
   setBreakpointAddresses,
   setClickedInstruction,
-  setInitialState, setInstructionMode,
+  setInitialState,
+  setInstructionMode,
   setIsAsmError,
   setIsDebugFinished,
   setIsProgramEditMode,
   setIsRunMode,
   setProgram,
   setProgramPreviewResult,
-  setPvmInitialized
+  setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
 
 function App() {
@@ -77,8 +78,8 @@ function App() {
   };
 
   console.log({
-    currentInstruction
-  })
+    currentInstruction,
+  });
 
   // const [program, setProgram] = useState<number[]>([]);
   // const [isAsmError, setAsmError] = useState(false);
@@ -140,7 +141,6 @@ function App() {
   );
 
   useEffect(() => {
-    console.log('twice as fuc?')
     const initializeDefaultWorker = async () => {
       // const worker = await spawnWorker({
       //   setCurrentState,
@@ -156,8 +156,15 @@ function App() {
       //   memoryActions,
       // });
       // worker?.postMessage({ command: "load", payload: { type: "built-in" } });
-      await dispatch(createWorker("0")).unwrap();
-      await dispatch(loadWorker("0")).unwrap();
+      await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
+      await dispatch(
+        loadWorker({
+          id: AvailablePvms.TYPEBERRY,
+          payload: {
+            type: PvmTypes.BUILT_IN,
+          },
+        }),
+      ).unwrap();
       // setCurrentWorkers([worker]);
     };
 
@@ -229,9 +236,6 @@ function App() {
       dispatch(setAllWorkersCurrentState(initialState));
     } else {
       dispatch(stepAllWorkers());
-      // currentWorkers?.forEach((currentWorker) => {
-      //   currentWorker?.postMessage({ command: "step", payload: { program } });
-      // });
     }
 
     dispatch(setIsProgramEditMode(false));
@@ -245,10 +249,6 @@ function App() {
 
     dispatch(runAllWorkers());
     dispatch(stepAllWorkers());
-    // currentWorkers?.forEach((currentWorker) => {
-    //   currentWorker?.postMessage({ command: "run", payload: { program } });
-    //   currentWorker?.postMessage({ command: "step", payload: { program } });
-    // });
   };
 
   const handleBreakpointClick = (address: number) => {
@@ -266,16 +266,71 @@ function App() {
     return mobileView?.current?.offsetParent !== null;
   };
 
-  const handlePvmTypeChange = async ({
-    pvmSlot,
-    type,
-    param,
-  }: {
-    pvmSlot: number;
-    type: string;
-    param: string | Blob;
-  }) => {
-    console.log("Selected PVM type", type, param);
+  const handlePvmTypeChange = async (selectedPvms: SelectedPvmWithPayload[]) => {
+    console.log("selectedPvms vs workers ", selectedPvms, workers);
+
+    await Promise.all(
+      workers.map((worker: WorkerState) => {
+        dispatch(destroyWorker(worker.id)).unwrap();
+      }),
+    );
+
+    await Promise.all(
+      selectedPvms.map(async ({ value, type, param }) => {
+        console.log("Selected PVM type", type, param);
+
+        if (workers.find((worker: WorkerState) => worker.id === type)) {
+          console.log("Worker already initialized");
+          // TODO: for now just initialize the worker one more time
+        }
+        console.log("Worker not initialized");
+
+        if (value === AvailablePvms.WASM_FILE) {
+          console.log("create worker wasm file");
+          await dispatch(createWorker(AvailablePvms.WASM_FILE)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.WASM_FILE,
+              payload: {
+                type: PvmTypes.WASM_FILE,
+                params: { file: param as Blob },
+              },
+            }),
+          ).unwrap();
+        } else if (value === AvailablePvms.WASM_URL) {
+          await dispatch(createWorker(AvailablePvms.WASM_URL)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.WASM_URL,
+              payload: {
+                type: PvmTypes.WASM_URL,
+                params: { url: param as string },
+              },
+            }),
+          ).unwrap();
+        } else if (value === AvailablePvms.POLKAVM) {
+          await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.POLKAVM,
+              payload: {
+                type: type as PvmTypes,
+              },
+            }),
+          ).unwrap;
+        } else if (value === AvailablePvms.TYPEBERRY) {
+          await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.TYPEBERRY,
+              payload: {
+                type: type as PvmTypes,
+              },
+            }),
+          ).unwrap();
+        }
+      }),
+    );
 
     // if (!currentWorkers) {
     //   console.error("No worker is initialized");
@@ -359,26 +414,7 @@ function App() {
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
               <div className="w-full md:w-[300px]">
-                <PvmSelect
-                  onValueChange={({ type, param }) =>
-                    handlePvmTypeChange({
-                      pvmSlot: 0,
-                      type,
-                      param,
-                    })
-                  }
-                />
-              </div>
-              <div className="w-full md:w-[300px]">
-                <PvmSelect
-                  onValueChange={({ type, param }) =>
-                    handlePvmTypeChange({
-                      pvmSlot: 1,
-                      type,
-                      param,
-                    })
-                  }
-                />
+                <PvmSelect onValueChange={(selectedPvms) => handlePvmTypeChange(selectedPvms)} />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>

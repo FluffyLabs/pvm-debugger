@@ -2,14 +2,15 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { spawnWorker } from "@/packages/web-worker/spawnWorker.ts";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
-import {
-  selectBreakpointAddresses,
-  selectInitialState,
-  selectProgram,
-  setIsDebugFinished,
-  setIsRunMode,
-} from "@/store/debugger/debuggerSlice.ts";
-import { Commands } from "@/packages/web-worker/worker.ts";
+import { setIsDebugFinished, setIsRunMode } from "@/store/debugger/debuggerSlice.ts";
+import { Commands, PvmTypes } from "@/packages/web-worker/worker.ts";
+
+// TODO: remove this when found a workaround for BigInt support in JSON.stringify
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+BigInt.prototype["toJSON"] = function () {
+  return this.toString();
+};
 
 export interface WorkerState {
   id: string;
@@ -25,7 +26,6 @@ const initialState: WorkerState[] = [];
 
 export const createWorker = createAsyncThunk("workers/createWorker", async (id: string, { getState, dispatch }) => {
   const state = getState() as RootState;
-  // const workersState = state.workers;
   const debuggerState = state.debugger;
 
   const worker = await spawnWorker({
@@ -37,31 +37,46 @@ export const createWorker = createAsyncThunk("workers/createWorker", async (id: 
           instruction: value,
         }),
       ),
-    breakpointAddresses: () => selectBreakpointAddresses(getState() as RootState),
-    initialState: () => selectInitialState(getState() as RootState),
-    program: () => selectProgram(getState() as RootState),
+    breakpointAddresses: debuggerState.breakpointAddresses,
+    initialState: debuggerState.initialState,
+    program: debuggerState.program,
     setIsRunMode: () => {},
     setIsDebugFinished: () => {},
     restartProgram: () => {},
-    memoryActions: {},
-    memory: {},
+    // memoryActions: {},
+    // memory: {},
   });
 
-  return worker;
+  return {
+    id,
+    worker,
+  };
 });
 
-export const loadWorker = createAsyncThunk("workers/loadWorker", async (id: string, { getState }) => {
-  const state = getState() as RootState;
-  const worker = state.workers.find((worker) => worker.id === id);
-  if (!worker) {
-    return;
-  }
+export const loadWorker = createAsyncThunk(
+  "workers/loadWorker",
+  async (
+    {
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: { type: PvmTypes; params?: { url?: string; file?: Blob } };
+    },
+    { getState },
+  ) => {
+    const state = getState() as RootState;
+    const worker = state.workers.find((worker) => worker.id === id);
+    if (!worker) {
+      return;
+    }
 
-  return worker.worker.postMessage({
-    type: "load",
-    payload: { type: "built-in" },
-  });
-});
+    return worker.worker.postMessage({
+      command: "load",
+      payload,
+    });
+  },
+);
 
 export const initWorker = createAsyncThunk("workers/initWorker", async (id: string, { getState }) => {
   const state = getState() as RootState;
@@ -75,7 +90,7 @@ export const initWorker = createAsyncThunk("workers/initWorker", async (id: stri
   console.log("is init ");
 
   worker.worker.postMessage({
-    type: "init",
+    command: "init",
     payload: {
       initialState: debuggerState.initialState,
       program: debuggerState.program,
@@ -88,7 +103,6 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   const debuggerState = state.debugger;
 
   state.workers.forEach((worker) => {
-    console.log("is initod ");
     worker.worker.postMessage({
       command: "init",
       payload: {
@@ -195,6 +209,18 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   });
 });
 
+export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
+  const state = getState() as RootState;
+  const worker = state.workers.find((worker) => worker.id === id);
+  if (!worker) {
+    return;
+  }
+
+  worker.worker.terminate();
+
+  return id;
+});
+
 const getWorker = (state: WorkerState[], id: string) => state.find((worker) => worker.id === id);
 
 const workers = createSlice({
@@ -228,24 +254,6 @@ const workers = createSlice({
         }
       });
     },
-    // setWorkerPreviousState(
-    //   state,
-    //   action: {
-    //     payload: {
-    //       id: string;
-    //       previousState: ExpectedState | ((state: ExpectedState) => ExpectedState);
-    //     };
-    //   },
-    // ) {
-    //   const worker = getWorker(state, action.payload.id);
-    //   if (worker) {
-    //     if (typeof action.payload.previousState === "function") {
-    //       worker.previousState = action.payload.previousState(worker.previousState);
-    //     } else {
-    //       worker.previousState = action.payload.previousState;
-    //     }
-    //   }
-    // },
     setAllWorkersPreviousState(state, action) {
       state.forEach((worker) => {
         worker.previousState = action.payload;
@@ -268,19 +276,22 @@ const workers = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(createWorker.fulfilled, (state, action) => {
+      console.log("Worker created", action.payload);
       state.push({
-        worker: action.payload,
-        id: "0",
+        worker: action.payload.worker,
+        id: action.payload.id,
         currentState: {},
         previousState: {},
       });
+    });
+    builder.addCase(destroyWorker.fulfilled, (state, action) => {
+      return state.filter((worker) => worker.id !== action.payload);
     });
   },
 });
 
 export const {
   setWorkerCurrentState,
-  // setWorkerPreviousState,
   setWorkerCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,

@@ -1,32 +1,32 @@
 import PvmWorker from "./worker?worker&inline";
 import { Commands, TargetOnMessageParams } from "@/packages/web-worker/worker.ts";
 import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm.ts";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch } from "react";
 
 export const spawnWorker = async ({
   setCurrentState,
   // setPreviousState,
   setCurrentInstruction,
-  breakpointAddresses,
+  // breakpointAddresses,
   initialState,
   program,
-  setIsRunMode,
+  // setIsRunMode,
   setIsDebugFinished,
   restartProgram,
-  memoryActions,
-  memory,
+  // memoryActions,
+  // memory,
 }: {
-  setCurrentState: Dispatch<SetStateAction<ExpectedState>>;
+  setCurrentState: Dispatch<ExpectedState>;
   // setPreviousState: Dispatch<SetStateAction<ExpectedState>>;
   setCurrentInstruction: (instruction: CurrentInstruction) => void;
-  breakpointAddresses: () => number[];
-  initialState: () => InitialState;
-  program: () => number[];
+  breakpointAddresses: number[];
+  initialState: InitialState;
+  program: number[];
   setIsRunMode: (isRunMode: boolean) => void;
   setIsDebugFinished: (isDebugFinished: boolean) => void;
   restartProgram: (initialState: InitialState) => void;
-  memoryActions: any;
-  memory: any;
+  // memoryActions: any;
+  // memory: any;
 }) => {
   const worker = new PvmWorker();
 
@@ -36,7 +36,10 @@ export const spawnWorker = async ({
     }
 
     if (e.data.command === Commands.STEP) {
-      const { state, isFinished, isRunMode } = e.data.payload;
+      // const { state, isFinished, isRunMode } = e.data.payload;
+      const { state, isFinished } = e.data.payload;
+
+      console.log('log me state ', state)
 
       setCurrentState(state);
 
@@ -56,7 +59,7 @@ export const spawnWorker = async ({
       }
     }
     if (e.data.command === Commands.LOAD) {
-      restartProgram(initialState());
+      restartProgram(initialState);
     }
 
     // if (e.data.command === Commands.INIT) {
