@@ -140,6 +140,7 @@ function App() {
   );
 
   useEffect(() => {
+    console.log('twice as fuc?')
     const initializeDefaultWorker = async () => {
       // const worker = await spawnWorker({
       //   setCurrentState,
@@ -220,9 +221,9 @@ function App() {
   );
 
   const onNext = () => {
-    if (!pvmInitialized) {
-      startProgram(initialState, program);
-    }
+    // if (!pvmInitialized) {
+    //   startProgram(initialState, program);
+    // }
 
     if (!currentInstruction) {
       dispatch(setAllWorkersCurrentState(initialState));
@@ -237,9 +238,9 @@ function App() {
   };
 
   const handleRunProgram = () => {
-    if (!pvmInitialized) {
-      startProgram(initialState, program);
-    }
+    // if (!pvmInitialized) {
+    //   startProgram(initialState, program);
+    // }
     dispatch(setIsRunMode(true));
 
     dispatch(runAllWorkers());
@@ -485,10 +486,10 @@ function App() {
     </>
   );
 }
-const WrappedApp = () => (
-  <StoreProvider>
-    <App />
-  </StoreProvider>
-);
+// const WrappedApp = () => (
+//   <StoreProvider>
+//     <App />
+//   </StoreProvider>
+// );
 
-export default WrappedApp;
+export default App;

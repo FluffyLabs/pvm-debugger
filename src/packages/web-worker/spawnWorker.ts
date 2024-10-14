@@ -38,24 +38,18 @@ export const spawnWorker = async ({
     if (e.data.command === Commands.STEP) {
       const { state, isFinished, isRunMode } = e.data.payload;
 
-      // setCurrentState((prevState) => {
-      //   setPreviousState(prevState);
-      //   return state;
-      // });
       setCurrentState(state);
 
-      if (e.data.command === Commands.STEP) {
-        setCurrentInstruction(e.data.payload.result);
-      }
+      setCurrentInstruction(e.data.payload.result);
 
-      if (isRunMode && !isFinished && state.pc && !breakpointAddresses().includes(state.pc)) {
-        worker.postMessage({ command: "step", payload: { program: program() } });
-      }
-
-      if (isRunMode && state.pc && breakpointAddresses().includes(state.pc)) {
-        worker.postMessage({ command: "stop", payload: { program: program() } });
-        setIsRunMode(false);
-      }
+      // if (isRunMode && !isFinished && state.pc && !breakpointAddresses().includes(state.pc)) {
+      //   worker.postMessage({ command: "step", payload: { program: program() } });
+      // }
+      //
+      // if (isRunMode && state.pc && breakpointAddresses().includes(state.pc)) {
+      //   worker.postMessage({ command: "stop", payload: { program: program() } });
+      //   setIsRunMode(false);
+      // }
 
       if (isFinished) {
         setIsDebugFinished(true);
