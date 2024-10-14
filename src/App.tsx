@@ -22,7 +22,6 @@ import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
-// import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
 import { Assembly } from "./components/ProgramUpload/Assembly";
 import {
   createWorker,
@@ -50,6 +49,7 @@ import {
   setProgramPreviewResult,
   setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
+import { MemoryPreview } from "@/components/MemoryPreview";
 
 function App() {
   const {
@@ -467,7 +467,7 @@ function App() {
               />
             </div>
 
-            <div className="max-sm:hidden col-span-12 md:col-span-3">{/*<MemoryPreview />*/}</div>
+            <div className="max-sm:hidden col-span-12 md:col-span-3">{<MemoryPreview />}</div>
 
             <div className="max-sm:hidden md:col-span-3 overflow-hidden">
               <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
@@ -522,10 +522,5 @@ function App() {
     </>
   );
 }
-// const WrappedApp = () => (
-//   <StoreProvider>
-//     <App />
-//   </StoreProvider>
-// );
 
 export default App;

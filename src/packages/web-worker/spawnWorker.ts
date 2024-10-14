@@ -5,19 +5,13 @@ import { Dispatch } from "react";
 
 export const spawnWorker = async ({
   setCurrentState,
-  // setPreviousState,
   setCurrentInstruction,
-  // breakpointAddresses,
   initialState,
   program,
-  // setIsRunMode,
   setIsDebugFinished,
   restartProgram,
-  // memoryActions,
-  // memory,
 }: {
   setCurrentState: Dispatch<ExpectedState>;
-  // setPreviousState: Dispatch<SetStateAction<ExpectedState>>;
   setCurrentInstruction: (instruction: CurrentInstruction) => void;
   breakpointAddresses: number[];
   initialState: InitialState;
@@ -25,8 +19,6 @@ export const spawnWorker = async ({
   setIsRunMode: (isRunMode: boolean) => void;
   setIsDebugFinished: (isDebugFinished: boolean) => void;
   restartProgram: (initialState: InitialState) => void;
-  // memoryActions: any;
-  // memory: any;
 }) => {
   const worker = new PvmWorker();
 
