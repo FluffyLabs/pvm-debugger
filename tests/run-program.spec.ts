@@ -4,14 +4,31 @@ async function runProgramTest(page: Page, pvmType: string) {
   // Navigate to your app
   await page.goto("/");
 
-  // Select the PVM type
-  await page.waitForSelector('button[test-id="pvm-select"]');
+  const selectedPvms = page.locator('button[test-id="pvm-select"] .rounded-full');
 
-  await page.click('button[test-id="pvm-select"]');
+  // Iterate over the selected PVMs and check for given text
+  const pvmTextToFind = pvmType;
+  const pvmCount = await selectedPvms.count();
+  let found = false;
 
-  const pvmOption = page.locator('div[role="option"]', { hasText: new RegExp(pvmType, "i") });
-  await pvmOption.waitFor({ state: "visible" });
-  await pvmOption.click();
+  for (let i = 0; i < pvmCount; i++) {
+    const pvmText = await selectedPvms.nth(i).innerText();
+    if (pvmText.includes(pvmTextToFind)) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    // Select the PVM type
+    await page.waitForSelector('button[test-id="pvm-select"]');
+
+    await page.click('button[test-id="pvm-select"]');
+
+    const pvmOption = page.locator('div[role="option"]', { hasText: new RegExp(pvmType, "i") });
+    await pvmOption.waitFor({ state: "visible" });
+    await pvmOption.click();
+  }
 
   // Wait for the ProgramUpload component to be visible
   await page.waitForSelector('button:has-text("Load")');

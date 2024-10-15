@@ -71,6 +71,7 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
   return (
     <>
       <MultiSelect
+        test-id="pvm-select"
         options={[
           { value: AvailablePvms.TYPEBERRY, label: "@typeberry/pvm" },
           { value: AvailablePvms.POLKAVM, label: polkavmMetadata?.name as string },
