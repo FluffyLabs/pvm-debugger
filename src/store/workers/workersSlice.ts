@@ -186,69 +186,79 @@ export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_,
   const debuggerState = state.debugger;
 
   // TODO: probably run is no more needed
-  // state.workers.forEach((worker) => {
-  //   worker.worker.postMessage({
-  //     command: "run",
-  //     payload: {
-  //       program: debuggerState.program,
-  //     },
-  //   });
-  // });
+  state.workers.forEach((worker) => {
+    worker.worker.postMessage({
+      command: "run",
+      payload: {
+        program: debuggerState.program,
+      },
+    });
+  });
 
   const stepAllWorkersAgain = async () => {
     const responses = await Promise.all(
       state.workers.map((worker) => {
-        return new Promise((resolve: (value: { isFinished: boolean; state: ExpectedState }) => void) => {
-          const messageHandler = (event: MessageEvent) => {
-            if (event.data.command === Commands.STEP) {
-              const { state, isRunMode, isFinished } = event.data.payload;
-              const currentState = getState() as RootState;
-              const debuggerState = currentState.debugger;
+        return new Promise(
+          (resolve: (value: { isFinished: boolean; state: ExpectedState; isRunMode: boolean }) => void) => {
+            const messageHandler = (event: MessageEvent) => {
+              if (event.data.command === Commands.STEP) {
+                const { state, isRunMode, isFinished } = event.data.payload;
+                const currentState = getState() as RootState;
+                const debuggerState = currentState.debugger;
 
-              if (isRunMode && !isFinished && state.pc && !debuggerState.breakpointAddresses.includes(state.pc)) {
-                worker.worker.postMessage({ command: "step", payload: { program: debuggerState.program } });
+                console.log("beaksskksks", debuggerState.breakpointAddresses, state.pc);
+
+                if (isRunMode && !isFinished && state.pc && !debuggerState.breakpointAddresses.includes(state.pc)) {
+                  worker.worker.postMessage({ command: "step", payload: { program: debuggerState.program } });
+                }
+
+                if (isRunMode && state.pc && debuggerState.breakpointAddresses.includes(state.pc)) {
+                  worker.worker.postMessage({ command: "stop", payload: { program: debuggerState.program } });
+                  dispatch(setIsRunMode(false));
+                }
+
+                if (isFinished) {
+                  dispatch(setIsDebugFinished(true));
+                }
+
+                resolve({
+                  isFinished,
+                  state,
+                  isRunMode,
+                });
+
+                console.log("Response from worker:", {
+                  isFinished,
+                  state,
+                  isRunMode,
+                });
+
+                worker.worker.removeEventListener("message", messageHandler);
               }
+            };
 
-              if (isRunMode && state.pc && debuggerState.breakpointAddresses.includes(state.pc)) {
-                worker.worker.postMessage({ command: "stop", payload: { program: debuggerState.program } });
-                dispatch(setIsRunMode(false));
-              }
+            worker.worker.addEventListener("message", messageHandler);
 
-              if (isFinished) {
-                dispatch(setIsDebugFinished(true));
-              }
-
-              resolve({
-                isFinished,
-                state,
-              });
-
-              console.log("Response from worker:", {
-                isFinished,
-                state,
-              });
-            }
-            worker.worker.removeEventListener("message", messageHandler);
-          };
-
-          worker.worker.addEventListener("message", messageHandler);
-
-          worker.worker.postMessage({
-            command: "step",
-            payload: {
-              program: debuggerState.program,
-            },
-          });
-        });
+            worker.worker.postMessage({
+              command: "step",
+              payload: {
+                program: debuggerState.program,
+              },
+            });
+          },
+        );
       }),
     );
 
     const allSame = responses.every(
       (response) => JSON.stringify(response.state) === JSON.stringify(responses[0].state),
     );
+
     const anyFinished = responses.some((response) => response.isFinished);
 
-    if (allSame && !anyFinished) {
+    const allRunning = responses.every((response) => response.isRunMode);
+
+    if (allSame && !anyFinished && allRunning) {
       await stepAllWorkersAgain();
     }
   };

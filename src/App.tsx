@@ -58,12 +58,8 @@ function App() {
     isProgramEditMode,
     isAsmError,
     programPreviewResult,
-    // currentInstruction,
     clickedInstruction,
     instructionMode,
-    // currentState,
-    // currentAlternativeState,
-    // previousState,
     breakpointAddresses,
     isDebugFinished,
     pvmInitialized,
@@ -77,44 +73,14 @@ function App() {
     previousState: initialState,
   };
 
-  console.log({
-    currentInstruction,
-  });
-
-  // const [program, setProgram] = useState<number[]>([]);
-  // const [isAsmError, setAsmError] = useState(false);
-  // const [isProgramEditMode, setIsProgramEditMode] = useState(false);
-  // map above to equivalent redux state
-
-  // const [initialState, setInitialState] = useState<InitialState>({
-  //   regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-  //   pc: 0,
-  //   pageMap: [],
-  //   memory: [],
-  //   gas: 10000,
-  // });
-  // const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  // const [currentInstruction, setCurrentInstructionState] = useState<CurrentInstruction>();
-  // const [clickedInstruction, setClickedInstruction] = useState<CurrentInstruction | null>(null);
-  // const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
-  // const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
-  // const [currentAlternativeState, setCurrentAlternativeState] = useState<ExpectedState>(initialState as ExpectedState);
-  // const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
-  // const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
-  // const [, setIsRunMode] = useState(false);
-
-  // const [isDebugFinished, setIsDebugFinished] = useState(false);
-  // const [pvmInitialized, setPvmInitialized] = useState(false);
-  // const [currentWorkers, setCurrentWorkers] = useState<Worker[] | null>(null);
-
   const mobileView = useRef<HTMLDivElement | null>(null);
-  // const { workers: currentWorkers, createWorker } = useContext(Store);
-  // const workers = useSelector((state) => state.workers);
-
-  // const { actions: memoryActions } = useMemoryFeature();
 
   const setCurrentInstruction = useCallback(
     (ins: CurrentInstruction | null) => {
+      console.log("insinsins", {
+        ins,
+      });
+
       if (ins === null) {
         dispatch(setAllWorkersCurrentInstruction(virtualTrapInstruction));
       } else {
@@ -130,7 +96,9 @@ function App() {
       dispatch(setIsDebugFinished(false));
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
+      console.log("ppppp", programPreviewResult?.[0]);
       setCurrentInstruction(programPreviewResult?.[0]);
+      dispatch(initAllWorkers());
 
       // if (currentWorkers) {
       //   currentWorkers.forEach((currentWorker) => {
@@ -143,22 +111,10 @@ function App() {
     [setCurrentInstruction, programPreviewResult, dispatch],
   );
 
+  console.log("isProgramEditMode", isProgramEditMode);
+
   useEffect(() => {
     const initializeDefaultWorker = async () => {
-      // const worker = await spawnWorker({
-      //   setCurrentState,
-      //   setPreviousState,
-      //   setCurrentInstruction,
-      //   breakpointAddresses,
-      //   initialState,
-      //   program,
-      //   setIsRunMode,
-      //   setIsDebugFinished,
-      //   restartProgram,
-      //   memory,
-      //   memoryActions,
-      // });
-      // worker?.postMessage({ command: "load", payload: { type: "built-in" } });
       await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
       await dispatch(
         loadWorker({
@@ -168,7 +124,6 @@ function App() {
           },
         }),
       ).unwrap();
-      // setCurrentWorkers([worker]);
     };
 
     initializeDefaultWorker();
@@ -201,10 +156,6 @@ function App() {
 
       dispatch(initAllWorkers());
 
-      // currentWorkers?.forEach((currentWorker) => {
-      //   currentWorker?.postMessage({ command: "init", payload: { program: newProgram, initialState } });
-      // });
-
       try {
         const result = disassemblify(new Uint8Array(newProgram));
         console.info("Disassembly result:", result);
@@ -231,6 +182,11 @@ function App() {
   );
 
   const onNext = () => {
+    if (!workers.length) {
+      console.warn("No workers initialized"); // TODO: show error message
+      return;
+    }
+
     // if (!pvmInitialized) {
     //   startProgram(initialState, program);
     // }
@@ -245,13 +201,15 @@ function App() {
   };
 
   const handleRunProgram = () => {
-    // if (!pvmInitialized) {
-    //   startProgram(initialState, program);
-    // }
-    dispatch(setIsRunMode(true));
+    if (!workers.length) {
+      console.warn("No workers initialized"); // TODO: show error message
+      return;
+    }
 
+    startProgram(initialState, program);
+    dispatch(setIsRunMode(true));
     dispatch(runAllWorkers());
-    dispatch(stepAllWorkers());
+    // dispatch(stepAllWorkers());
   };
 
   const handleBreakpointClick = (address: number) => {
@@ -316,14 +274,16 @@ function App() {
           ).unwrap();
         } else if (value === AvailablePvms.POLKAVM) {
           await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
+          console.log("pliasd ", param);
           await dispatch(
             loadWorker({
               id: AvailablePvms.POLKAVM,
               payload: {
-                type: type as PvmTypes,
+                type: PvmTypes.WASM_URL as PvmTypes,
+                params: { url: param as string },
               },
             }),
-          ).unwrap;
+          ).unwrap();
         } else if (value === AvailablePvms.TYPEBERRY) {
           await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
           await dispatch(
@@ -338,45 +298,7 @@ function App() {
       }),
     );
 
-    // if (!currentWorkers) {
-    //   console.error("No worker is initialized");
-    //   return;
-    // }
-    //
-    // const currentWorker = currentWorkers?.[pvmSlot];
-
-    // if (currentWorker) {
-    //   currentWorker.terminate();
-    // }
-
-    // TODO: move to some function
-    // const worker = await spawnWorker({
-    //   setCurrentState: pvmSlot === 0 ? setCurrentState : setCurrentAlternativeState,
-    //   setPreviousState,
-    //   setCurrentInstruction,
-    //   breakpointAddresses,
-    //   initialState,
-    //   program,
-    //   setIsRunMode,
-    //   setIsDebugFinished,
-    //   restartProgram,
-    //   memory: {},
-    //   memoryActions: {},
-    // });
-
-    // console.log({
-    //   worker,
-    // });
-    // currentWorker?.postMessage({ command: "load", payload: { type: "built-in" } });
-    // setCurrentWorkers([...currentWorkers.slice(0, pvmSlot), worker, ...currentWorkers.slice(pvmSlot + 1)]);
-
-    // if (type === PvmTypes.WASM_FILE) {
-    //   worker?.postMessage({ command: "load", payload: { type, params: { file: param } } });
-    // } else if (type === PvmTypes.WASM_URL) {
-    //   worker?.postMessage({ command: "load", payload: { type, params: { url: param } } });
-    // } else {
-    //   worker?.postMessage({ command: "load", payload: { type } });
-    // }
+    restartProgram(initialState);
   };
 
   return (
@@ -393,7 +315,6 @@ function App() {
                 className="md:mr-3"
                 onClick={() => {
                   restartProgram(initialState);
-                  setCurrentInstruction(programPreviewResult?.[0]);
                 }}
                 disabled={!pvmInitialized || isProgramEditMode}
               >
@@ -419,7 +340,7 @@ function App() {
             </div>
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
-              <div className="w-full md:w-[300px]">
+              <div className="w-full md:w-[350px]">
                 <PvmSelect onValueChange={(selectedPvms) => handlePvmTypeChange(selectedPvms)} />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
@@ -510,10 +431,10 @@ function App() {
                   onClick={() => {
                     if (isProgramEditMode) {
                       startProgram(initialState, program);
-                      setIsProgramEditMode(false);
+                      dispatch(setIsProgramEditMode(false));
                     } else {
                       restartProgram(initialState);
-                      setIsProgramEditMode(true);
+                      dispatch(setIsProgramEditMode(true));
                     }
                   }}
                 >

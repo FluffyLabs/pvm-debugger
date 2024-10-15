@@ -1,4 +1,4 @@
-import { ExpectedState, InitialState, Status } from "@/types/pvm";
+import { ExpectedState, InitialState, RegistersArray, Status } from "@/types/pvm";
 import { useContext } from "react";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
@@ -7,24 +7,87 @@ import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input.tsx";
 import { getStatusColor } from "./utils";
+import { useAppSelector } from "@/store/hooks.ts";
+import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 
-const ColorWhenStateDiffers = ({
+const ComputedValue = ({
+  propName,
+  propNameIndex,
   value,
-  alternativeValue,
+  previousValue,
+  workers,
 }: {
-  value?: number | string;
-  alternativeValue?: number | string;
+  propName: keyof ExpectedState;
+  propNameIndex?: number;
+  value?: number;
+  previousValue?: number;
+  workers: WorkerState[];
 }) => {
+  const { numeralSystem } = useContext(NumeralSystemContext);
+  const valuesInAllWorkers = workers.map((worker) =>
+    propNameIndex ? (worker.currentState[propName] as RegistersArray)[propNameIndex] : worker.currentState[propName],
+  );
+  const isEqualAcrossWorkers = valuesInAllWorkers.every((val) => val === value);
+
+  if (isEqualAcrossWorkers && previousValue === value) {
+    return (
+      <p
+        className={classNames({
+          "flex-[3]": true,
+          "text-blue-500": value !== previousValue,
+        })}
+      >
+        {value !== undefined ? valueToNumeralSystem(value, numeralSystem) : ""}
+      </p>
+    );
+  }
+
   return (
-    <>
-      {value !== alternativeValue ? (
-        <span className="text-red-500">
-          {value} <span className="text-xs">({alternativeValue})</span>
-        </span>
-      ) : (
-        value
-      )}
-    </>
+    <div className="flex-[3]">
+      <div
+        className={classNames({
+          "flex-[3]": true,
+          "text-blue-500": value !== previousValue,
+          "text-red-500": !isEqualAcrossWorkers,
+        })}
+      >
+        <TooltipProvider>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <span>
+                {value !== undefined ? (isEqualAcrossWorkers ? valueToNumeralSystem(value, numeralSystem) : "?") : ""}
+              </span>
+            </TooltipTrigger>
+            {isEqualAcrossWorkers && (
+              <TooltipContent>
+                <span>{valueToNumeralSystem(previousValue, numeralSystem)}</span>
+                <span> → </span>
+                <span>{valueToNumeralSystem(value, numeralSystem)}</span>
+              </TooltipContent>
+            )}
+            {!isEqualAcrossWorkers && (
+              <TooltipContent>
+                {/*  show worker name and the value */}
+                {workers.map((worker, index) => (
+                  <div key={index}>
+                    <span>{worker.id}</span>
+                    <span>: </span>
+                    <span>
+                      {valueToNumeralSystem(
+                        propNameIndex
+                          ? (worker.currentState[propName] as RegistersArray)[propNameIndex]
+                          : (worker.currentState[propName] as number),
+                        numeralSystem,
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </div>
   );
 };
 
@@ -42,6 +105,7 @@ export const Registers = ({
   allowEditing: boolean;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
+  const workers = useAppSelector(selectWorkers);
 
   console.log({
     currentState,
@@ -56,30 +120,16 @@ export const Registers = ({
           <div className="font-mono flex flex-col items-start">
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">PC</p>
-              <p
-                className={classNames({
-                  "flex-[3]": true,
-                  "text-blue-500": currentState.pc !== previousState.pc,
-                })}
-              >
-                {currentState.pc !== undefined ? (
-                  <ColorWhenStateDiffers value={currentState.pc} alternativeValue={currentAlternativeState.pc} />
-                ) : (
-                  ""
-                )}
-                {/*{currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}*/}
-              </p>
+              <ComputedValue value={currentState.pc} previousValue={previousState.pc} propName="pc" workers={workers} />
             </div>
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">Gas</p>
-              <p
-                className={classNames({
-                  "flex-[3]": true,
-                  "text-blue-500": currentState.gas !== previousState.gas,
-                })}
-              >
-                {currentState.gas !== undefined ? valueToNumeralSystem(currentState.gas, numeralSystem) : ""}
-              </p>
+              <ComputedValue
+                value={currentState.gas}
+                previousValue={previousState.gas}
+                propName="gas"
+                workers={workers}
+              />
             </div>
             <div className="flex flex-row items-center justify-between w-full">
               <p className="flex-[2]">Status</p>
@@ -120,36 +170,14 @@ export const Registers = ({
                       value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
                     />
                   </div>
-                ) : currentState.regs?.[regNo] !== previousState.regs?.[regNo] ? (
-                  <div className="flex-[3]">
-                    <div
-                      className={classNames({
-                        "text-blue-500": currentState.regs?.[regNo] !== previousState.regs?.[regNo],
-                      })}
-                    >
-                      <TooltipProvider>
-                        <Tooltip delayDuration={0}>
-                          <TooltipTrigger asChild>
-                            <span> {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <span>{valueToNumeralSystem(previousState.regs?.[regNo] ?? 0, numeralSystem)}</span>
-                            <span> → </span>
-                            <span>{valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}</span>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </div>
                 ) : (
-                  <div
-                    className={classNames({
-                      "flex-[3]": true,
-                      "opacity-20": currentState.regs?.[regNo] === 0,
-                    })}
-                  >
-                    {valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
-                  </div>
+                  <ComputedValue
+                    value={currentState.regs?.[regNo]}
+                    previousValue={previousState.regs?.[regNo]}
+                    propName="regs"
+                    propNameIndex={regNo}
+                    workers={workers}
+                  />
                 )}
               </div>
             ))}

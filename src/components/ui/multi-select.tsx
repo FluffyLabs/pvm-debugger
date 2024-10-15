@@ -106,12 +106,17 @@ interface MultiSelectProps
   /**
    * (Custom)
    */
-  showSelectAll?: string;
+  showSelectAll?: boolean;
 
   /**
    * (Custom)
    */
-  showSearch?: string;
+  showSearch?: boolean;
+
+  /**
+   * (Custom)
+   */
+  showClearAll?: boolean;
 }
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
@@ -130,6 +135,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       className,
       showSelectAll,
       showSearch,
+      showClearAll,
       ...props
     },
     ref,
@@ -239,13 +245,15 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <XIcon
-                    className="h-4 mx-2 cursor-pointer text-muted-foreground"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleClear();
-                    }}
-                  />
+                  {showClearAll && (
+                    <XIcon
+                      className="h-4 mx-2 cursor-pointer text-muted-foreground"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleClear();
+                      }}
+                    />
+                  )}
                   <Separator orientation="vertical" className="flex min-h-6 h-full" />
                   <ChevronDown className="h-4 mx-2 cursor-pointer text-muted-foreground" />
                 </div>

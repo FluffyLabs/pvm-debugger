@@ -132,6 +132,12 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       } else {
         console.log("PVM reset", pvm);
+        console.log(
+          "initialState",
+          e.data.payload.program,
+          e.data.payload.initialState.regs,
+          e.data.payload.initialState.gas,
+        );
         pvm.reset(
           e.data.payload.program,
           regsAsUint8(e.data.payload.initialState.regs),
