@@ -64,3 +64,10 @@ export type CurrentInstruction =
       gas: number;
       instructionCode: number;
     };
+
+export enum AvailablePvms {
+  TYPEBERRY = "typeberry",
+  POLKAVM = "polkavm",
+  WASM_URL = "wasm-url",
+  WASM_FILE = "wasm-file",
+}

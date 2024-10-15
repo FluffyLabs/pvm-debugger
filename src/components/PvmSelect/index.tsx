@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { useEffect, useState } from "react";
 import path from "path-browserify";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
+import { AvailablePvms } from "@/types/pvm.ts";
 
 const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
 
@@ -35,13 +36,6 @@ export interface SelectedPvmWithPayload {
   value: string;
   type: string;
   param: string | Blob;
-}
-
-export enum AvailablePvms {
-  TYPEBERRY = "typeberry",
-  POLKAVM = "polkavm",
-  WASM_URL = "wasm-url",
-  WASM_FILE = "wasm-file",
 }
 
 export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPvmWithPayload[]) => void }) => {

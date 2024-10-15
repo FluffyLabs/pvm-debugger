@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
+import { AvailablePvms, CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
 import { Pencil, PencilOff, Play, RefreshCcw, StepForward } from "lucide-react";
@@ -14,7 +14,7 @@ import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
-import { AvailablePvms, PvmSelect, SelectedPvmWithPayload } from "@/components/PvmSelect";
+import { PvmSelect, SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 
 import { PvmTypes } from "./packages/web-worker/worker";
@@ -113,14 +113,17 @@ function App() {
 
   // const { actions: memoryActions } = useMemoryFeature();
 
-  const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
-    if (ins === null) {
-      dispatch(setAllWorkersCurrentInstruction(virtualTrapInstruction));
-    } else {
-      dispatch(setAllWorkersCurrentInstruction(ins));
-    }
-    dispatch(setClickedInstruction(null));
-  }, []);
+  const setCurrentInstruction = useCallback(
+    (ins: CurrentInstruction | null) => {
+      if (ins === null) {
+        dispatch(setAllWorkersCurrentInstruction(virtualTrapInstruction));
+      } else {
+        dispatch(setAllWorkersCurrentInstruction(ins));
+      }
+      dispatch(setClickedInstruction(null));
+    },
+    [dispatch],
+  );
 
   const restartProgram = useCallback(
     (state: InitialState) => {
@@ -137,7 +140,7 @@ function App() {
       //   console.error("Worker is not initialized");
       // }
     },
-    [setCurrentInstruction, program, programPreviewResult],
+    [setCurrentInstruction, programPreviewResult, dispatch],
   );
 
   useEffect(() => {
@@ -212,7 +215,7 @@ function App() {
         console.log("Error disassembling program", e);
       }
     },
-    [setCurrentInstruction],
+    [dispatch],
   );
 
   const handleFileUpload = useCallback(
@@ -224,7 +227,7 @@ function App() {
         dispatch(setIsAsmError(true));
       }
     },
-    [startProgram],
+    [startProgram, dispatch],
   );
 
   const onNext = () => {
@@ -258,9 +261,12 @@ function App() {
       dispatch(setBreakpointAddresses([...breakpointAddresses, address]));
     }
   };
-  const onInstructionClick = useCallback((row: CurrentInstruction) => {
-    dispatch(setClickedInstruction(row));
-  }, []);
+  const onInstructionClick = useCallback(
+    (row: CurrentInstruction) => {
+      dispatch(setClickedInstruction(row));
+    },
+    [dispatch],
+  );
 
   const isMobileViewActive = () => {
     return mobileView?.current?.offsetParent !== null;
