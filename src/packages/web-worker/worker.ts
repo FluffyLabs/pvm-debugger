@@ -159,10 +159,10 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       isRunMode = false;
     }
     state = getState(pvm);
-    console.log('pc', {
+    console.log("pc", {
       state,
-      program: e.data.payload.program
-    })
+      program: e.data.payload.program,
+    });
     result = nextInstruction(state.pc ?? 0, e.data.payload.program) as unknown as CurrentInstruction;
 
     postTypedMessage({ command: Commands.STEP, payload: { result, state, isFinished, isRunMode } });

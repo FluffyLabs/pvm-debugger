@@ -136,7 +136,6 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
         const { start, end, memoryRange } = event.data.payload;
         dispatch(changeRange({ id: worker.id, start, end, memoryRange, isLoading: false }));
       }
-
     };
 
     worker.worker.addEventListener("message", messageHandler);
@@ -427,7 +426,7 @@ const workers = createSlice({
       state.forEach((worker) => {
         worker.memory?.range.data.splice(action.payload.index, 1);
       });
-    }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(createWorker.fulfilled, (state, action) => {
@@ -456,11 +455,12 @@ export const {
   changePage,
   changeRange,
   removeRange,
-  removeRangeForAllWorkers
+  removeRangeForAllWorkers,
 } = workers.actions;
 
 export const selectWorkers = (state: RootState) => state.workers;
-export const selectMemory = (id: string) => (state: RootState) => state.workers.find((worker) => worker.id === id)?.memory;
+export const selectMemory = (id: string) => (state: RootState) =>
+  state.workers.find((worker) => worker.id === id)?.memory;
 export const selectMemoryForFirstWorker = (state: RootState) => state.workers[0]?.memory;
 
 export default workers.reducer;

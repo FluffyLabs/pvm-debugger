@@ -49,8 +49,8 @@ export const Instructions = ({
       );
     };
     console.log({
-      programPreviewResult
-    })
+      programPreviewResult,
+    });
     const programRows = programPreviewResult?.map((result) => {
       // TODO: due to this assignment, programPreviewResult cannot be moved to the store
       // Object.assign(result, { addressEl: getAddressEl(result.address), counter: result.address });
@@ -58,7 +58,7 @@ export const Instructions = ({
       return {
         ...result,
         addressEl: getAddressEl(result.address),
-        counter: result.address
+        counter: result.address,
       };
     });
     return programRows as ProgramRow[];

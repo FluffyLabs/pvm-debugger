@@ -54,7 +54,7 @@ const debuggerSlice = createSlice({
       state.isAsmError = action.payload;
     },
     setIsRunMode(state, action) {
-      state.isRunMode = action.payload
+      state.isRunMode = action.payload;
     },
     setProgramPreviewResult(state, action) {
       state.programPreviewResult = action.payload;

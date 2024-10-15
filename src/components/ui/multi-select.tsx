@@ -260,7 +260,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start" onEscapeKeyDown={() => setIsPopoverOpen(false)}>
           <Command>
-            { showSearch && <CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} /> }
+            {showSearch && <CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} />}
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
