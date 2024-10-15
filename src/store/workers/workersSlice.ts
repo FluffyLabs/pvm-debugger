@@ -123,15 +123,19 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
     });
 
     const messageHandler = (event: MessageEvent) => {
-      const memoryStateOfWorker = state.workers.find((w) => w.id === worker.id)?.memory;
-
       if (event.data.command === Commands.MEMORY_SIZE) {
+        console.log("Memory size:", event.data.payload.memorySize);
         dispatch(setPageSize(event.data.payload.memorySize));
       }
       if (event.data.command === Commands.MEMORY_PAGE) {
-        if (memoryStateOfWorker?.page.isLoading) {
-          dispatch(changePage({ id: worker.id, pageNumber: event.data.payload.pageNumber, isLoading: false }));
-        }
+        dispatch(
+          changePage({
+            id: worker.id,
+            pageNumber: event.data.payload.pageNumber,
+            data: event.data.payload.memoryPage,
+            isLoading: false,
+          }),
+        );
       } else if (event.data.command === Commands.MEMORY_RANGE) {
         const { start, end, memoryRange } = event.data.payload;
         dispatch(changeRange({ id: worker.id, start, end, memoryRange, isLoading: false }));
@@ -364,6 +368,7 @@ const workers = createSlice({
         payload: {
           id: string;
           pageNumber: number;
+          data: Uint8Array;
           isLoading: boolean;
         };
       },
@@ -379,6 +384,8 @@ const workers = createSlice({
         return;
       }
 
+      memory.page.data = action.payload.data;
+      memory.page.pageNumber = action.payload.pageNumber;
       memory.page.isLoading = action.payload.isLoading;
     },
     changeRange: (
@@ -436,6 +443,21 @@ const workers = createSlice({
         id: action.payload.id,
         currentState: {},
         previousState: {},
+        memory: {
+          meta: {
+            pageSize: undefined,
+            isPageSizeLoading: false,
+          },
+          page: {
+            data: undefined,
+            isLoading: false,
+            pageNumber: undefined,
+          },
+          range: {
+            data: [],
+            isLoading: false,
+          },
+        },
       });
     });
     builder.addCase(destroyWorker.fulfilled, (state, action) => {
