@@ -25,7 +25,9 @@ const ComputedValue = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const valuesInAllWorkers = workers.map((worker) =>
-    propNameIndex ? (worker.currentState[propName] as RegistersArray)[propNameIndex] : worker.currentState[propName],
+    propNameIndex !== undefined
+      ? (worker.currentState[propName] as RegistersArray)[propNameIndex]
+      : worker.currentState[propName],
   );
   const isEqualAcrossWorkers = valuesInAllWorkers.every((val) => val === value);
 
@@ -67,7 +69,6 @@ const ComputedValue = ({
             )}
             {!isEqualAcrossWorkers && (
               <TooltipContent>
-                {/*  show worker name and the value */}
                 {workers.map((worker, index) => (
                   <div key={index}>
                     <span>{worker.id}</span>
