@@ -2,6 +2,14 @@ import { ExpectedState, Pvm as InternalPvm, RegistersArray, Status } from "@/typ
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { PvmApiInterface } from "@/packages/web-worker/worker.ts";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmPvmShell.ts";
+import "./goWasmExec.js";
+import "./goWasmExec.d.ts";
+import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoPvmShell.ts";
+
+export enum SupportedLangs {
+  Go = "Go",
+  Rust = "Rust",
+}
 
 export function getState(pvm: PvmApiInterface): ExpectedState {
   let newState: ExpectedState;
@@ -53,12 +61,22 @@ export function isInternalPvm(pvm: PvmApiInterface): pvm is InternalPvm {
   return pvm instanceof InternalPvmInstance;
 }
 
-export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiInterface> {
-  const wasmModule = await WebAssembly.instantiate(bytes, {});
-  console.log("WASM module loaded", wasmModule.instance.exports);
-  const wasmPvmShell = createWasmPvmShell();
-  wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
-  return wasmPvmShell;
+export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: SupportedLangs): Promise<PvmApiInterface> {
+  if (lang === SupportedLangs.Go) {
+    const go = new Go();
+    const wasmModule = await WebAssembly.instantiate(bytes, go.importObject);
+    go.run(wasmModule.instance);
+    console.log("Go WASM module loaded", wasmModule.instance.exports);
+    const wasmPvmShell = createGoWasmPvmShell();
+    wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
+    return wasmPvmShell;
+  } else {
+    const wasmModule = await WebAssembly.instantiate(bytes, {});
+    console.log("Rust WASM module loaded", wasmModule.instance.exports);
+    const wasmPvmShell = createWasmPvmShell();
+    wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
+    return wasmPvmShell;
+  }
 }
 
 export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
