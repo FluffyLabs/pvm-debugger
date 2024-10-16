@@ -75,7 +75,7 @@ const ComputedValue = ({
                     <span>: </span>
                     <span>
                       {valueToNumeralSystem(
-                        propNameIndex
+                        propNameIndex !== undefined
                           ? (worker.currentState[propName] as RegistersArray)[propNameIndex]
                           : (worker.currentState[propName] as number),
                         numeralSystem,
