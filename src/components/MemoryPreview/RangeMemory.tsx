@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -11,14 +11,16 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Store } from "@/AppProviders";
 import { X } from "lucide-react";
 import { MemoryTable } from "./PageMemory";
-import { useMemoryFeature } from "./hooks/memoryFeature";
+import { useSelector } from "react-redux";
+import { removeRangeForAllWorkers, selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
+import { useAppDispatch } from "@/store/hooks.ts";
 
 export const RangeMemory = (props: { onRangeChange: (start: number, end: number) => void }) => {
-  const memory = useContext(Store).memory;
-  const feature = useMemoryFeature();
+  // TODO: get the memory for all of them and compare results
+  const memory = useSelector(selectMemoryForFirstWorker);
+  const dispatch = useAppDispatch();
 
   const [start, setStart] = useState<number>();
   const [end, setEnd] = useState<number>();
@@ -37,13 +39,13 @@ export const RangeMemory = (props: { onRangeChange: (start: number, end: number)
   return (
     <div>
       <div className="mb-3">
-        {memory.range.state.data.map((range, i) => (
+        {memory?.range.data.map((range, i) => (
           <div className="my-7">
             <div className="flex justify-between items-center">
               <span>Range&nbsp;#{i + 1}</span>
               <Input className="rounded-xl h-[24px] mx-2" value={range.start} />
               <Input className="rounded-xl h-[24px] mx-2" value={range.end} />
-              <Button size="icon" variant="ghost" onClick={() => feature.actions.removeRange(i)}>
+              <Button size="icon" variant="ghost" onClick={() => dispatch(removeRangeForAllWorkers(i))}>
                 <X />
               </Button>
             </div>
