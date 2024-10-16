@@ -16,6 +16,9 @@ async function runProgramTest(page: Page, pvmType: string) {
     if (pvmText.includes(pvmTextToFind)) {
       found = true;
       break;
+    } else {
+      await page.waitForSelector('button[test-id="pvm-select"]');
+      await page.click('button[test-id="pvm-select"] svg');
     }
   }
 
