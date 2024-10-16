@@ -24,6 +24,7 @@ import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 import { Assembly } from "./components/ProgramUpload/Assembly";
 import {
+  continueAllWorkers,
   createWorker,
   destroyWorker,
   initAllWorkers,
@@ -63,6 +64,7 @@ function App() {
     breakpointAddresses,
     isDebugFinished,
     pvmInitialized,
+    isRunMode,
   } = useAppSelector((state) => state.debugger);
 
   const workers = useAppSelector((state) => state.workers);
@@ -77,10 +79,6 @@ function App() {
 
   const setCurrentInstruction = useCallback(
     (ins: CurrentInstruction | null) => {
-      console.log("insinsins", {
-        ins,
-      });
-
       if (ins === null) {
         dispatch(setAllWorkersCurrentInstruction(virtualTrapInstruction));
       } else {
@@ -94,24 +92,14 @@ function App() {
   const restartProgram = useCallback(
     (state: InitialState) => {
       dispatch(setIsDebugFinished(false));
+      dispatch(setIsRunMode(false));
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
-      console.log("ppppp", programPreviewResult?.[0]);
-      setCurrentInstruction(programPreviewResult?.[0]);
       dispatch(initAllWorkers());
-
-      // if (currentWorkers) {
-      //   currentWorkers.forEach((currentWorker) => {
-      //     currentWorker.postMessage({ command: "init", payload: { program, initialState: state } });
-      //   });
-      // } else {
-      //   console.error("Worker is not initialized");
-      // }
+      setCurrentInstruction(programPreviewResult?.[0]);
     },
     [setCurrentInstruction, programPreviewResult, dispatch],
   );
-
-  console.log("isProgramEditMode", isProgramEditMode);
 
   useEffect(() => {
     const initializeDefaultWorker = async () => {
@@ -206,9 +194,13 @@ function App() {
       return;
     }
 
-    startProgram(initialState, program);
-    dispatch(setIsRunMode(true));
-    dispatch(runAllWorkers());
+    if (isRunMode) {
+      dispatch(continueAllWorkers());
+    } else {
+      startProgram(initialState, program);
+      dispatch(setIsRunMode(true));
+      dispatch(runAllWorkers());
+    }
     // dispatch(stepAllWorkers());
   };
 
@@ -250,7 +242,6 @@ function App() {
         console.log("Worker not initialized");
 
         if (value === AvailablePvms.WASM_FILE) {
-          console.log("create worker wasm file");
           await dispatch(createWorker(AvailablePvms.WASM_FILE)).unwrap();
           await dispatch(
             loadWorker({
@@ -274,7 +265,6 @@ function App() {
           ).unwrap();
         } else if (value === AvailablePvms.POLKAVM) {
           await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
-          console.log("pliasd ", param);
           await dispatch(
             loadWorker({
               id: AvailablePvms.POLKAVM,

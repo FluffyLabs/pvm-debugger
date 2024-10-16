@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { spawnWorker } from "@/packages/web-worker/spawnWorker.ts";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
-import { setIsDebugFinished, setIsRunMode } from "@/store/debugger/debuggerSlice.ts";
+import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
 import { Commands, PvmTypes } from "@/packages/web-worker/worker.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -181,40 +181,36 @@ export const changeRangeAllWorkers = createAsyncThunk(
   },
 );
 
-export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_, { getState, dispatch }) => {
+export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
   const debuggerState = state.debugger;
-
-  // TODO: probably run is no more needed
-  state.workers.forEach((worker) => {
-    worker.worker.postMessage({
-      command: "run",
-      payload: {
-        program: debuggerState.program,
-      },
-    });
-  });
 
   const stepAllWorkersAgain = async () => {
     const responses = await Promise.all(
       state.workers.map((worker) => {
         return new Promise(
-          (resolve: (value: { isFinished: boolean; state: ExpectedState; isRunMode: boolean }) => void) => {
+          (
+            resolve: (value: {
+              isFinished: boolean;
+              state: ExpectedState;
+              isRunMode: boolean;
+              isBreakpoint: boolean;
+            }) => void,
+          ) => {
             const messageHandler = (event: MessageEvent) => {
               if (event.data.command === Commands.STEP) {
                 const { state, isRunMode, isFinished } = event.data.payload;
                 const currentState = getState() as RootState;
                 const debuggerState = currentState.debugger;
 
-                console.log("beaksskksks", debuggerState.breakpointAddresses, state.pc);
-
+                // TODO: check all of this stuff if needed
                 if (isRunMode && !isFinished && state.pc && !debuggerState.breakpointAddresses.includes(state.pc)) {
-                  worker.worker.postMessage({ command: "step", payload: { program: debuggerState.program } });
+                  // worker.worker.postMessage({ command: "step", payload: { program: debuggerState.program } });
                 }
 
                 if (isRunMode && state.pc && debuggerState.breakpointAddresses.includes(state.pc)) {
-                  worker.worker.postMessage({ command: "stop", payload: { program: debuggerState.program } });
-                  dispatch(setIsRunMode(false));
+                  // worker.worker.postMessage({ command: "stop", payload: { program: debuggerState.program } });
+                  // dispatch(setIsRunMode(false));
                 }
 
                 if (isFinished) {
@@ -225,12 +221,14 @@ export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_,
                   isFinished,
                   state,
                   isRunMode,
+                  isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
                 });
 
                 console.log("Response from worker:", {
                   isFinished,
                   state,
                   isRunMode,
+                  debuggerHit: debuggerState.breakpointAddresses.includes(state.pc),
                 });
 
                 worker.worker.removeEventListener("message", messageHandler);
@@ -258,12 +256,30 @@ export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_,
 
     const allRunning = responses.every((response) => response.isRunMode);
 
-    if (allSame && !anyFinished && allRunning) {
+    const anyBreakpoint = responses.some((response) => response.isBreakpoint);
+
+    if (allSame && !anyFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
     }
   };
 
   await stepAllWorkersAgain();
+});
+
+export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_, { getState, dispatch }) => {
+  const state = getState() as RootState;
+  const debuggerState = state.debugger;
+
+  state.workers.forEach((worker) => {
+    worker.worker.postMessage({
+      command: "run",
+      payload: {
+        program: debuggerState.program,
+      },
+    });
+  });
+
+  dispatch(continueAllWorkers());
 });
 
 export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (_, { getState }) => {

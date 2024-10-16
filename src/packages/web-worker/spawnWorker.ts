@@ -31,8 +31,6 @@ export const spawnWorker = async ({
       // const { state, isFinished, isRunMode } = e.data.payload;
       const { state, isFinished } = e.data.payload;
 
-      console.log("log me state ", state);
-
       setCurrentState(state);
 
       setCurrentInstruction(e.data.payload.result);
