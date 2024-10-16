@@ -1,9 +1,8 @@
-import { Args, InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
-// The only files we need from PVM repo:
-import { ProgramDecoder } from "../../packages/pvm/pvm/program-decoder/program-decoder";
-import { ArgsDecoder } from "../../packages/pvm/pvm/args-decoder/args-decoder";
+import { InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
+import { createResults, instructionArgumentTypeMap, ProgramDecoder } from "@typeberry/pvm-debugger-adapter";
+import { ArgsDecoder } from "@typeberry/pvm-debugger-adapter";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
-import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm";
+import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm-debugger-adapter";
 export const initPvm = (program: number[], initialState: InitialState) => {
   const initialMemory = initialState.memory ?? [];
   const pageMap = initialState.pageMap ?? [];
@@ -64,19 +63,16 @@ export const nextInstruction = (programCounter: number, program: number[]) => {
   const mask = programDecoder.getMask();
   const argsDecoder = new ArgsDecoder(code, mask);
   const currentInstruction = code[programCounter];
-
-  let args;
+  const argumentType = instructionArgumentTypeMap[currentInstruction];
+  const args = createResults()[argumentType];
 
   try {
-    args = argsDecoder.getArgs(programCounter) as Args;
+    argsDecoder.fillArgs(programCounter, args);
 
     const currentInstructionDebug = {
       instructionCode: currentInstruction,
       ...byteToOpCodeMap[currentInstruction],
-      args: {
-        ...args,
-        immediate: "immediateDecoder" in args ? args.immediateDecoder?.getUnsigned() : undefined,
-      },
+      args,
     };
     return currentInstructionDebug;
   } catch (e) {

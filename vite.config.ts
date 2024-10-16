@@ -14,6 +14,8 @@ export default defineConfig({
     },
   },
   define: {
-    "import.meta.env.TYPEBERRY_PVM_VERSION": JSON.stringify(packageJson.dependencies["@typeberry/pvm"]),
+    "import.meta.env.TYPEBERRY_PVM_VERSION": JSON.stringify(
+      packageJson.dependencies["@typeberry/pvm-debugger-adapter"],
+    ),
   },
 });

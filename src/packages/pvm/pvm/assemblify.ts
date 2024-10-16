@@ -1,5 +1,5 @@
 import { Instruction } from "./instruction";
-import type { Mask } from "./program-decoder/mask";
+import { Mask } from "@typeberry/pvm-debugger-adapter";
 
 type Byte = number;
 type Gas = number;
