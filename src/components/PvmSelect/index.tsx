@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import path from "path-browserify";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { AvailablePvms } from "@/types/pvm.ts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SupportedLangs } from "@/packages/web-worker/utils";
 
 const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
 
@@ -35,7 +37,13 @@ interface WasmMetadata {
 export interface SelectedPvmWithPayload {
   value: string;
   type: string;
-  param: string | Blob;
+  param:
+    | string
+    | {
+        file?: Blob;
+        lang?: SupportedLangs;
+        url?: string;
+      };
 }
 
 export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPvmWithPayload[]) => void }) => {
@@ -50,6 +58,7 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       param: "typeberry",
     },
   ]);
+  const [selectedLang, setSelectedLang] = useState<SupportedLangs>(SupportedLangs.Rust);
 
   const handlePvmUpload = (file: Blob) => {
     const newValues = [
@@ -57,7 +66,10 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       {
         value: "wasm-file",
         type: "wasm-file",
-        param: file,
+        param: {
+          lang: selectedLang,
+          file,
+        },
       },
     ];
     setSelectedPvmsWithPayload(newValues);
@@ -165,7 +177,7 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       {/*        }*/}
       {/*        return { type: value, param: "" };*/}
       {/*      })*/}
-      {/*    );*/}
+      {/*    };*/}
 
       {/*    onValueChange(newValues);*/}
       {/*  }}*/}
@@ -202,18 +214,33 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       {/*</Select>*/}
       <Dialog open={isFileDialogOpen} onOpenChange={setIsFileDialogOpen}>
         <DialogContent>
-          <DialogTitle>Dialog Title</DialogTitle>
+          <DialogTitle>Upload WASM file</DialogTitle>
           <DialogDescription>
-            <Input
-              type="file"
-              accept=".wasm"
-              onChange={(e) => {
-                if (e.target.files?.length) {
-                  handlePvmUpload(e.target.files[0]);
-                  setIsFileDialogOpen(false);
-                }
-              }}
-            />
+            <div className="flex justify-between">
+              <div>
+                <Select onValueChange={(value: SupportedLangs) => setSelectedLang(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={SupportedLangs.Go}>Go</SelectItem>
+                    <SelectItem value={SupportedLangs.Rust}>Rust</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Input
+                  type="file"
+                  accept=".wasm"
+                  onChange={(e) => {
+                    if (e.target.files?.length) {
+                      handlePvmUpload(e.target.files[0]);
+                      setIsFileDialogOpen(false);
+                    }
+                  }}
+                />
+              </div>
+            </div>
           </DialogDescription>
         </DialogContent>
       </Dialog>
