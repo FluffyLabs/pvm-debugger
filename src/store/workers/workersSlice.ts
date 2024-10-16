@@ -4,6 +4,7 @@ import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
 import { Commands, PvmTypes } from "@/packages/web-worker/worker.ts";
+import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -74,7 +75,7 @@ export const loadWorker = createAsyncThunk(
       payload,
     }: {
       id: string;
-      payload: { type: PvmTypes; params?: { url?: string; file?: Blob } };
+      payload: { type: PvmTypes; params?: { url?: string; file?: Blob; lang?: SupportedLangs } };
     },
     { getState },
   ) => {
