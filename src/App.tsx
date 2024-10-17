@@ -366,7 +366,6 @@ function App() {
             <div className="max-sm:hidden md:col-span-2">
               <Registers
                 currentState={isProgramEditMode ? initialState : currentState}
-                currentAlternativeState={isProgramEditMode ? initialState : currentState}
                 previousState={isProgramEditMode ? initialState : previousState}
                 onCurrentStateChange={(state) => {
                   setInitialState(state);

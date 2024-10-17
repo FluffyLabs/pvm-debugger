@@ -24,19 +24,24 @@ const ComputedValue = ({
   workers: WorkerState[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
-  const valuesInAllWorkers = workers.map((worker) =>
-    propNameIndex !== undefined
-      ? (worker.currentState[propName] as RegistersArray)[propNameIndex]
-      : worker.currentState[propName],
-  );
-  const isEqualAcrossWorkers = valuesInAllWorkers.every((val) => val === value);
+  console.log("workers", workers.length);
 
-  if (isEqualAcrossWorkers && previousValue === value) {
+  const getWorkerValueFromState = (worker: WorkerState, state: "currentState" | "previousState") =>
+    propNameIndex !== undefined
+      ? (worker[state][propName] as RegistersArray)[propNameIndex]
+      : (worker[state][propName] as number);
+
+  const valuesInAllWorkers = (state: "currentState" | "previousState") =>
+    workers.map((worker) => getWorkerValueFromState(worker, state));
+
+  const isEqualAcrossWorkers = valuesInAllWorkers("currentState").every((val) => val === value);
+  const wasEqualAcrossWorkers = valuesInAllWorkers("previousState").every((val) => val === previousValue);
+
+  if (isEqualAcrossWorkers && wasEqualAcrossWorkers && previousValue === value) {
     return (
       <p
         className={classNames({
           "flex-[3]": true,
-          "text-blue-500": value !== previousValue,
         })}
       >
         {value !== undefined ? valueToNumeralSystem(value, numeralSystem) : ""}
@@ -60,31 +65,18 @@ const ComputedValue = ({
                 {value !== undefined ? (isEqualAcrossWorkers ? valueToNumeralSystem(value, numeralSystem) : "?") : ""}
               </span>
             </TooltipTrigger>
-            {isEqualAcrossWorkers && (
-              <TooltipContent>
-                <span>{valueToNumeralSystem(previousValue, numeralSystem)}</span>
-                <span> → </span>
-                <span>{valueToNumeralSystem(value, numeralSystem)}</span>
-              </TooltipContent>
-            )}
-            {!isEqualAcrossWorkers && (
-              <TooltipContent>
-                {workers.map((worker, index) => (
-                  <div key={index}>
-                    <span>{worker.id}</span>
-                    <span>: </span>
-                    <span>
-                      {valueToNumeralSystem(
-                        propNameIndex !== undefined
-                          ? (worker.currentState[propName] as RegistersArray)[propNameIndex]
-                          : (worker.currentState[propName] as number),
-                        numeralSystem,
-                      )}
-                    </span>
-                  </div>
-                ))}
-              </TooltipContent>
-            )}
+
+            <TooltipContent>
+              {workers.map((worker, index) => (
+                <div key={index}>
+                  <span>{worker.id}</span>
+                  <span>: </span>
+                  <span>{valueToNumeralSystem(getWorkerValueFromState(worker, "previousState"), numeralSystem)}</span>
+                  <span> → </span>
+                  <span>{valueToNumeralSystem(getWorkerValueFromState(worker, "currentState"), numeralSystem)}</span>
+                </div>
+              ))}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
@@ -94,25 +86,17 @@ const ComputedValue = ({
 
 export const Registers = ({
   currentState,
-  currentAlternativeState,
   previousState,
   onCurrentStateChange,
   allowEditing,
 }: {
   currentState: ExpectedState;
-  currentAlternativeState: ExpectedState;
   previousState: ExpectedState;
   onCurrentStateChange: (changedState: ExpectedState) => void;
   allowEditing: boolean;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const workers = useAppSelector(selectWorkers);
-
-  console.log({
-    currentState,
-    currentAlternativeState,
-    previousState,
-  });
 
   return (
     <div className="border-2 rounded-md h-full">
