@@ -133,12 +133,23 @@ export const Assembly = ({
         onFileUpload(output);
         setError(undefined);
       } catch (e) {
+        if (e instanceof Error) {
+          if (
+            e.message.startsWith(
+              "A state mutation was detected between dispatches, in the path 'debugger.initialState.regs'",
+            )
+          ) {
+            console.warn(e);
+            return;
+          }
+        }
         console.log(e);
         onFileUpload(undefined);
         setError(`${e}`);
       }
     },
-    [onFileUpload, program, initialState],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [onFileUpload, program],
   );
 
   const [error, setError] = useState<string>();

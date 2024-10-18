@@ -1,137 +1,135 @@
 import "./App.css";
 import { Button } from "@/components/ui/button";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
+import { AvailablePvms, CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
-import { Play, RefreshCcw, StepForward, Pencil, PencilOff } from "lucide-react";
+import { Pencil, PencilOff, Play, RefreshCcw, StepForward } from "lucide-react";
 import { Header } from "@/components/Header";
-import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { ProgramUpload } from "@/components/ProgramUpload";
 import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
-import { PvmSelect } from "@/components/PvmSelect";
+import { PvmSelect, SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 
-import { Commands, PvmTypes } from "./packages/web-worker/worker";
+import { PvmTypes } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
-import { Store, StoreProvider } from "./AppProviders";
-import { useMemoryFeature } from "./components/MemoryPreview/hooks/memoryFeature";
 import { Assembly } from "./components/ProgramUpload/Assembly";
+import {
+  continueAllWorkers,
+  createWorker,
+  destroyWorker,
+  initAllWorkers,
+  loadWorker,
+  runAllWorkers,
+  setAllWorkersCurrentInstruction,
+  setAllWorkersCurrentState,
+  setAllWorkersPreviousState,
+  stepAllWorkers,
+  WorkerState,
+} from "@/store/workers/workersSlice.ts";
+import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
+import {
+  setBreakpointAddresses,
+  setClickedInstruction,
+  setInitialState,
+  setInstructionMode,
+  setIsAsmError,
+  setIsDebugFinished,
+  setIsProgramEditMode,
+  setIsRunMode,
+  setProgram,
+  setProgramPreviewResult,
+  setPvmInitialized,
+} from "@/store/debugger/debuggerSlice.ts";
+import { MemoryPreview } from "@/components/MemoryPreview";
 
 function App() {
-  const [program, setProgram] = useState<number[]>([]);
-  const [isAsmError, setAsmError] = useState(false);
-  const [isProgramEditMode, setIsProgramEditMode] = useState(false);
-  const [initialState, setInitialState] = useState<InitialState>({
-    regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    pc: 0,
-    pageMap: [],
-    memory: [],
-    gas: 10000,
-  });
-  const [programPreviewResult, setProgramPreviewResult] = useState<CurrentInstruction[]>([]);
-  const [currentInstruction, setCurrentInstructionState] = useState<CurrentInstruction>();
-  const [clickedInstruction, setClickedInstruction] = useState<CurrentInstruction | null>(null);
-  const [instructionMode, setInstructionMode] = useState<InstructionMode>(InstructionMode.ASM);
-  const [currentState, setCurrentState] = useState<ExpectedState>(initialState as ExpectedState);
-  const [previousState, setPreviousState] = useState<ExpectedState>(initialState as ExpectedState);
-  const [breakpointAddresses, setBreakpointAddresses] = useState<(number | undefined)[]>([]);
+  const {
+    program,
+    initialState,
+    isProgramEditMode,
+    isAsmError,
+    programPreviewResult,
+    clickedInstruction,
+    instructionMode,
+    breakpointAddresses,
+    isDebugFinished,
+    pvmInitialized,
+    isRunMode,
+  } = useAppSelector((state) => state.debugger);
 
-  const [isDebugFinished, setIsDebugFinished] = useState(false);
-  const [pvmInitialized, setPvmInitialized] = useState(false);
+  const workers = useAppSelector((state) => state.workers);
+  const dispatch = useAppDispatch();
+  const { currentInstruction, currentState, previousState } = workers[0] || {
+    currentInstruction: null,
+    currentState: initialState,
+    previousState: initialState,
+  };
 
   const mobileView = useRef<HTMLDivElement | null>(null);
-  const { worker, memory } = useContext(Store);
-  const { actions: memoryActions } = useMemoryFeature();
 
-  const setCurrentInstruction = useCallback((ins: CurrentInstruction | null) => {
-    if (ins === null) {
-      setCurrentInstruction(virtualTrapInstruction);
-    } else {
-      setCurrentInstructionState(ins);
-    }
-    setClickedInstruction(null);
-  }, []);
+  const setCurrentInstruction = useCallback(
+    (ins: CurrentInstruction | null) => {
+      if (ins === null) {
+        dispatch(setAllWorkersCurrentInstruction(virtualTrapInstruction));
+      } else {
+        dispatch(setAllWorkersCurrentInstruction(ins));
+      }
+      dispatch(setClickedInstruction(null));
+    },
+    [dispatch],
+  );
 
-  console.log("pvmInitialized", pvmInitialized);
+  const restartProgram = useCallback(
+    (state: InitialState) => {
+      dispatch(setIsDebugFinished(false));
+      dispatch(setIsRunMode(false));
+      dispatch(setAllWorkersCurrentState(state));
+      dispatch(setAllWorkersPreviousState(state));
+      dispatch(initAllWorkers());
+      setCurrentInstruction(programPreviewResult?.[0]);
+    },
+    [setCurrentInstruction, programPreviewResult, dispatch],
+  );
 
   useEffect(() => {
-    if (!worker.lastEvent) {
-      return;
-    }
+    const initializeDefaultWorker = async () => {
+      await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
+      await dispatch(
+        loadWorker({
+          id: AvailablePvms.TYPEBERRY,
+          payload: {
+            type: PvmTypes.BUILT_IN,
+          },
+        }),
+      ).unwrap();
+    };
 
-    if (worker.lastEvent.command === Commands.STEP) {
-      const { state, isFinished, isRunMode } = worker.lastEvent.payload;
-      setCurrentState((prevState) => {
-        setPreviousState(prevState);
-        return state;
-      });
-      setCurrentInstruction(worker.lastEvent.payload.result);
+    initializeDefaultWorker();
 
-      if (isRunMode && !isFinished && !breakpointAddresses.includes(state.pc)) {
-        worker.worker.postMessage({ command: "step", payload: { program } });
-      }
-
-      if (isRunMode && breakpointAddresses.includes(state.pc)) {
-        worker.worker.postMessage({ command: "stop", payload: { program } });
-      }
-
-      if (isFinished) {
-        setIsDebugFinished(true);
-      }
-
-      // Refresh page on each step
-      if (memory.page.state.pageNumber !== undefined) {
-        memoryActions.changePage(memory.page.state.pageNumber);
-      }
-    }
-    if (worker.lastEvent.command === Commands.LOAD) {
-      restartProgram(initialState);
-    }
-    if (worker.lastEvent.command === Commands.INIT) {
-      memoryActions.initSetPageSize();
-    }
-
-    if (worker.lastEvent.command === Commands.MEMORY_SIZE) {
-      memoryActions.setPageSize(worker.lastEvent.payload.memorySize);
-    }
-    if (worker.lastEvent.command === Commands.MEMORY_PAGE) {
-      if (memory.page.state.isLoading) {
-        memory.page.setState({
-          ...memory.page.state,
-          data: worker.lastEvent.payload.memoryPage,
-          pageNumber: worker.lastEvent.payload.pageNumber,
-          isLoading: false,
-        });
-      }
-    } else if (worker.lastEvent.command === Commands.MEMORY_RANGE) {
-      const { start, end, memoryRange } = worker.lastEvent.payload;
-      memory.range.setState({
-        ...memory.range.state,
-        data: [
-          ...memory.range.state.data.map((el) =>
-            el.start === start && el.end === end ? { start, end, data: memoryRange } : el,
-          ),
-        ],
-        isLoading: false,
-      });
-    }
+    return () => {
+      // if (currentWorkers) {
+      //   currentWorkers.forEach((currentWorker) => {
+      //     currentWorker.terminate();
+      //   });
+      // }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [worker.lastEvent]);
+  }, []);
 
   const startProgram = useCallback(
     (initialState: ExpectedState, newProgram: number[]) => {
-      setInitialState(initialState);
-      setProgram(newProgram);
+      dispatch(setInitialState(initialState));
+      dispatch(setProgram(newProgram));
       const currentState = {
         pc: 0,
         regs: initialState.regs,
@@ -139,97 +137,158 @@ function App() {
         pageMap: initialState.pageMap,
         status: Status.OK,
       };
-      setCurrentState(currentState);
-      setPreviousState(currentState);
+      dispatch(setAllWorkersCurrentState(currentState));
+      dispatch(setAllWorkersPreviousState(currentState));
 
       setIsDebugFinished(false);
 
-      worker.worker.postMessage({ command: "init", payload: { program: newProgram, initialState } });
+      dispatch(initAllWorkers());
 
       try {
         const result = disassemblify(new Uint8Array(newProgram));
         console.info("Disassembly result:", result);
-        setProgramPreviewResult(result);
-        setCurrentInstruction(result?.[0]);
-        setPvmInitialized(true);
+        dispatch(setProgramPreviewResult(result));
+        dispatch(setAllWorkersCurrentInstruction(result?.[0]));
+        dispatch(setPvmInitialized(true));
       } catch (e) {
         console.log("Error disassembling program", e);
       }
     },
-    [setCurrentInstruction, worker.worker],
+    [dispatch],
   );
 
   const handleFileUpload = useCallback(
     (data?: ProgramUploadFileOutput) => {
       if (data) {
         startProgram(data.initial, data.program);
-        setAsmError(false);
+        dispatch(setIsAsmError(false));
       } else {
-        setAsmError(true);
+        dispatch(setIsAsmError(true));
       }
     },
-    [startProgram],
+    [startProgram, dispatch],
   );
 
   const onNext = () => {
-    if (!pvmInitialized) {
-      startProgram(initialState, program);
+    if (!workers.length) {
+      console.warn("No workers initialized"); // TODO: show error message
+      return;
     }
+
+    // if (!pvmInitialized) {
+    //   startProgram(initialState, program);
+    // }
 
     if (!currentInstruction) {
-      setCurrentState(initialState);
+      dispatch(setAllWorkersCurrentState(initialState));
     } else {
-      worker.worker.postMessage({ command: "step", payload: { program } });
+      dispatch(stepAllWorkers());
     }
 
-    setIsProgramEditMode(false);
+    dispatch(setIsProgramEditMode(false));
   };
 
   const handleRunProgram = () => {
-    if (!pvmInitialized) {
-      startProgram(initialState, program);
+    if (!workers.length) {
+      console.warn("No workers initialized"); // TODO: show error message
+      return;
     }
 
-    worker.worker.postMessage({ command: "run", payload: { program } });
-    worker.worker.postMessage({ command: "step", payload: { program } });
+    if (isRunMode) {
+      dispatch(continueAllWorkers());
+    } else {
+      startProgram(initialState, program);
+      dispatch(setIsRunMode(true));
+      dispatch(runAllWorkers());
+    }
+    // dispatch(stepAllWorkers());
   };
-
-  const restartProgram = useCallback(
-    (state: InitialState) => {
-      setIsDebugFinished(false);
-      setCurrentState(state);
-      setPreviousState(state);
-      setCurrentInstruction(programPreviewResult?.[0]);
-      worker.worker.postMessage({ command: "init", payload: { program, initialState: state } });
-    },
-    [worker, setCurrentInstruction, program, programPreviewResult],
-  );
 
   const handleBreakpointClick = (address: number) => {
     if (breakpointAddresses.includes(address)) {
-      setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address));
+      dispatch(setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address)));
     } else {
-      setBreakpointAddresses([...breakpointAddresses, address]);
+      dispatch(setBreakpointAddresses([...breakpointAddresses, address]));
     }
   };
-  const onInstructionClick = useCallback((row: CurrentInstruction) => {
-    setClickedInstruction(row);
-  }, []);
+  const onInstructionClick = useCallback(
+    (row: CurrentInstruction) => {
+      dispatch(setClickedInstruction(row));
+    },
+    [dispatch],
+  );
 
   const isMobileViewActive = () => {
     return mobileView?.current?.offsetParent !== null;
   };
 
-  const handlePvmTypeChange = ({ type, param }: { type: string; param: string | Blob }) => {
-    console.log("Selected PVM type", type, param);
+  const handlePvmTypeChange = async (selectedPvms: SelectedPvmWithPayload[]) => {
+    console.log("selectedPvms vs workers ", selectedPvms, workers);
 
-    if (type === PvmTypes.WASM_FILE) {
-      worker.worker.postMessage({ command: "load", payload: { type, params: { file: param } } });
-    } else if (type === PvmTypes.WASM_URL) {
-      worker.worker.postMessage({ command: "load", payload: { type, params: { url: param } } });
-    } else {
-      worker.worker.postMessage({ command: "load", payload: { type } });
-    }
+    await Promise.all(
+      workers.map((worker: WorkerState) => {
+        dispatch(destroyWorker(worker.id)).unwrap();
+      }),
+    );
+
+    await Promise.all(
+      selectedPvms.map(async ({ value, type, param }) => {
+        console.log("Selected PVM type", type, param);
+
+        if (workers.find((worker: WorkerState) => worker.id === type)) {
+          console.log("Worker already initialized");
+          // TODO: for now just initialize the worker one more time
+        }
+        console.log("Worker not initialized");
+
+        if (value === AvailablePvms.WASM_FILE) {
+          await dispatch(createWorker(AvailablePvms.WASM_FILE)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.WASM_FILE,
+              payload: {
+                type: PvmTypes.WASM_FILE,
+                params: { file: param as Blob },
+              },
+            }),
+          ).unwrap();
+        } else if (value === AvailablePvms.WASM_URL) {
+          await dispatch(createWorker(AvailablePvms.WASM_URL)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.WASM_URL,
+              payload: {
+                type: PvmTypes.WASM_URL,
+                params: { url: param as string },
+              },
+            }),
+          ).unwrap();
+        } else if (value === AvailablePvms.POLKAVM) {
+          await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.POLKAVM,
+              payload: {
+                type: PvmTypes.WASM_URL as PvmTypes,
+                params: { url: param as string },
+              },
+            }),
+          ).unwrap();
+        } else if (value === AvailablePvms.TYPEBERRY) {
+          await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
+          await dispatch(
+            loadWorker({
+              id: AvailablePvms.TYPEBERRY,
+              payload: {
+                type: type as PvmTypes,
+              },
+            }),
+          ).unwrap();
+        }
+      }),
+    );
+
+    restartProgram(initialState);
   };
 
   return (
@@ -246,7 +305,6 @@ function App() {
                 className="md:mr-3"
                 onClick={() => {
                   restartProgram(initialState);
-                  setCurrentInstruction(programPreviewResult?.[0]);
                 }}
                 disabled={!pvmInitialized || isProgramEditMode}
               >
@@ -272,8 +330,8 @@ function App() {
             </div>
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
-              <div className="w-full md:w-[300px]">
-                <PvmSelect onValueChange={handlePvmTypeChange} />
+              <div className="w-full md:w-[350px]">
+                <PvmSelect onValueChange={(selectedPvms) => handlePvmTypeChange(selectedPvms)} />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
@@ -325,9 +383,7 @@ function App() {
               />
             </div>
 
-            <div className="max-sm:hidden col-span-12 md:col-span-3">
-              <MemoryPreview />
-            </div>
+            <div className="max-sm:hidden col-span-12 md:col-span-3">{<MemoryPreview />}</div>
 
             <div className="max-sm:hidden md:col-span-3 overflow-hidden">
               <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
@@ -349,7 +405,7 @@ function App() {
                   id="instruction-mode"
                   checked={instructionMode === InstructionMode.BYTECODE}
                   onCheckedChange={(checked) =>
-                    setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM)
+                    dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))
                   }
                 />
                 <Label htmlFor="instruction-mode">RAW</Label>
@@ -364,10 +420,10 @@ function App() {
                   onClick={() => {
                     if (isProgramEditMode) {
                       startProgram(initialState, program);
-                      setIsProgramEditMode(false);
+                      dispatch(setIsProgramEditMode(false));
                     } else {
                       restartProgram(initialState);
-                      setIsProgramEditMode(true);
+                      dispatch(setIsProgramEditMode(true));
                     }
                   }}
                 >
@@ -382,10 +438,5 @@ function App() {
     </>
   );
 }
-const WrappedApp = () => (
-  <StoreProvider>
-    <App />
-  </StoreProvider>
-);
 
-export default WrappedApp;
+export default App;

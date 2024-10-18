@@ -1,7 +1,7 @@
 import { ExpectedState, Pvm as InternalPvm, RegistersArray, Status } from "@/types/pvm.ts";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { PvmApiInterface } from "@/packages/web-worker/worker.ts";
-import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
+import { createWasmPvmShell } from "@/packages/web-worker/wasmPvmShell.ts";
 
 export function getState(pvm: PvmApiInterface): ExpectedState {
   let newState: ExpectedState;
@@ -16,7 +16,7 @@ export function getState(pvm: PvmApiInterface): ExpectedState {
     newState = {
       pc: pvm.getProgramCounter(),
       regs: uint8asRegs(pvm.getRegisters()),
-      gas: pvm.getGasLeft(),
+      gas: Number(pvm.getGasLeft()),
       status: pvm.getStatus() as Status,
     };
   }
@@ -56,6 +56,7 @@ export function isInternalPvm(pvm: PvmApiInterface): pvm is InternalPvm {
 export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiInterface> {
   const wasmModule = await WebAssembly.instantiate(bytes, {});
   console.log("WASM module loaded", wasmModule.instance.exports);
+  const wasmPvmShell = createWasmPvmShell();
   wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
   return wasmPvmShell;
 }
