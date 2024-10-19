@@ -1,6 +1,7 @@
 import { ProgramTextLoader } from "../ProgramTextLoader";
 import { ProgramUploadFileOutput } from "./types";
 import { BinaryFileUpload } from "@/components/ProgramLoader/BinaryFileUpload.tsx";
+import { useState } from "react";
 
 const initial = {
   regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [
@@ -31,16 +32,28 @@ export const Bytecode = ({
   onProgramLoad: (val?: ProgramUploadFileOutput) => void;
   program: number[];
 }) => {
+  const [tempProgram, setTempProgram] = useState<number[]>(program);
+  const handleFileUpload = (val: ProgramUploadFileOutput) => {
+    setTempProgram(val.program);
+    onProgramLoad(val);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <p className="mb-3">Edit program code bytes</p>
       <ProgramTextLoader
-        program={program}
-        setProgram={(program) =>
-          program ? onProgramLoad({ initial, program, name: "custom" }) : onProgramLoad(undefined)
-        }
+        program={tempProgram}
+        setProgram={(program) => {
+          if (program) {
+            setTempProgram(program);
+            onProgramLoad({ initial, program, name: "custom" });
+          } else {
+            setTempProgram(undefined);
+            onProgramLoad(undefined);
+          }
+        }}
       />
-      <BinaryFileUpload onFileUpload={onProgramLoad} />
+      <BinaryFileUpload onFileUpload={handleFileUpload} />
     </div>
   );
 };

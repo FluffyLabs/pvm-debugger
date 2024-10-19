@@ -12,7 +12,8 @@ export function disassemblify(rawProgram: Uint8Array) {
   const programDecoder = new ProgramDecoder(rawProgram);
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();
-  const argsDecoder = new ArgsDecoder(code, mask);
+  const argsDecoder = new ArgsDecoder();
+  argsDecoder.reset(code, mask);
   let i = 0;
   const printableProgram = [];
   let address = 0;

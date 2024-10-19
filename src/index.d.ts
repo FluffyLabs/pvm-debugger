@@ -133,8 +133,13 @@ declare module "@typeberry/pvm-debugger-adapter" {
     | OneRegisterTwoImmediatesArgs;
 
   export class ArgsDecoder {
-    constructor(code: Uint8Array, mask: Mask);
+    reset(code: Uint8Array, mask: Mask);
     fillArgs<T extends Args>(pc: number, result: T): void;
+  }
+
+  export class Registers {
+    reset(): void;
+    copyFrom(regs: Registers | Uint32Array): void;
   }
 
   type Results = [
@@ -164,14 +169,16 @@ declare module "@typeberry/pvm-debugger-adapter" {
   class Memory {}
 
   enum Status {
-    OK = 0,
-    HALT = 1,
-    PANIC = 2,
-    OUT_OF_GAS = 3,
+    OK = -1,
+    HALT = 0,
+    PANIC = 1,
+    FAULT = 2,
+    HOST = 3,
+    OUT_OF_GAS = 4,
   }
 
   export class Pvm {
-    constructor(program: Uint8Array, initialState?: InitialState);
+    reset(program: Uint8Array, pc: number, gas: number, registers: number[], memory: Memory);
     nextStep(): Status;
     getRegisters(): number[];
     getPC(): number;
@@ -186,6 +193,24 @@ declare module "@typeberry/pvm-debugger-adapter" {
     setData(address: number, data: Uint8Array);
     finalize(heapStartIndex: number, heapEndIndex: number): Memory;
   }
+
+  export const decodeStandardProgram: (program: Uint8Array, args: Uint8Array) => DecodedProgram;
+
+  export type MemorySegment = {
+    start: number;
+    end: number;
+    data?: Uint8Array | null;
+  };
+
+  export type DecodedProgram = {
+    code: Uint8Array;
+    memory: {
+      readable: MemorySegment[];
+      writeable: MemorySegment[];
+      sbrkIndex: number;
+    };
+    registers: Uint32Array;
+  };
 
   export const instructionArgumentTypeMap: Array<ArgumentType>;
 }
