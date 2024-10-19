@@ -19,7 +19,7 @@ jobs:
         uses: jakepartusch/wait-for-netlify-action@v1.2
         id: waitFor200
         with:
-          site_name: "typeberry-toolkit"
+          site_name: "pvm-debugger"
           max_timeout: 360 # 6 Minutes, depends on your build pipeline duration
       - name: Run Playwright tests
         run: npx playwright test

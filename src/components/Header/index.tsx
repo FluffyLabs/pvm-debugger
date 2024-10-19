@@ -11,7 +11,7 @@ export const Header = () => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
-              <a target="_blank" href="https://github.com/fluffylabs/typeberry-toolkit" rel="noreferrer">
+              <a target="_blank" href="https://github.com/fluffylabs/pvm-debugger" rel="noreferrer">
                 <img src={GithubLogo} alt="GitHub logo" width={32} />
               </a>
             </TooltipTrigger>
