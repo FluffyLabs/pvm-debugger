@@ -313,7 +313,7 @@ function App() {
                   setInitialState(state);
                   restartProgram(state);
                 }}
-                allowEditing={false}
+                allowEditing={true}
               />
             </div>
 

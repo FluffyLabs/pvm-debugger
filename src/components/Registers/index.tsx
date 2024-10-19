@@ -28,14 +28,39 @@ export const Registers = ({
           <div className="font-mono flex flex-col items-start">
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">PC</p>
-              <p
-                className={classNames({
-                  "flex-[3]": true,
-                  "text-blue-500": currentState.pc !== previousState.pc,
-                })}
-              >
-                {currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
-              </p>
+              {allowEditing ? (
+                <div className="flex-[3]">
+                  <Input
+                    className="w-20 h-6 m-0 p-0"
+                    onChange={(e) => {
+                      const value = e.target?.value;
+                      const valueInDecimal =
+                        numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
+                      const pcValue =
+                        valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : 0;
+                      onCurrentStateChange({
+                        ...currentState,
+                        pc: pcValue,
+                      });
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    value={valueToNumeralSystem(currentState.pc ?? 0, numeralSystem)}
+                  />
+                </div>
+              ) : (
+                <p
+                  className={classNames({
+                    "flex-[3]": true,
+                    "text-blue-500": currentState.pc !== previousState.pc,
+                  })}
+                >
+                  {currentState.pc !== undefined ? valueToNumeralSystem(currentState.pc, numeralSystem) : ""}
+                </p>
+              )}
             </div>
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">Gas</p>
