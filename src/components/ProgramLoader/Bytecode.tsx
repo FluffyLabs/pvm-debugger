@@ -1,5 +1,6 @@
 import { ProgramTextLoader } from "../ProgramTextLoader";
 import { ProgramUploadFileOutput } from "./types";
+import { BinaryFileUpload } from "@/components/ProgramLoader/BinaryFileUpload.tsx";
 
 const initial = {
   regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [
@@ -39,6 +40,7 @@ export const Bytecode = ({
           program ? onProgramLoad({ initial, program, name: "custom" }) : onProgramLoad(undefined)
         }
       />
+      <BinaryFileUpload onFileUpload={onProgramLoad} />
     </div>
   );
 };
