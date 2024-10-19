@@ -192,7 +192,7 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       {/*      <SelectLabel>*/}
       {/*        <span>*/}
       {/*          Learn to add your PVM implementation here{" "}*/}
-      {/*          <a href="https://github.com/FluffyLabs/typeberry-toolkit/issues/81" target="_blank">*/}
+      {/*          <a href="https://github.com/FluffyLabs/pvm-debugger/issues/81" target="_blank">*/}
       {/*            <ExternalLink className="inline w-4 mb-1 text-blue-600" />*/}
       {/*          </a>*/}
       {/*        </span>*/}
