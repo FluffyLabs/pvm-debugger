@@ -5,6 +5,7 @@ import { Status } from "@/types/pvm.ts";
 
 export interface WasmPvmShellInterface {
   __wbg_set_wasm(val: any): void;
+  resume(pc: number, gas: bigint): void;
   reset(program: Uint8Array, registers: Uint8Array, gas: bigint): void;
   nextStep(): boolean;
   getProgramCounter(): number;
@@ -25,6 +26,14 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
     wasm = val;
     cachedUint8ArrayMemory0 = null;
     cachedDataViewMemory0 = null;
+  }
+
+  /**
+   * @param {number} pc
+   * @param {bigint} gas
+   */
+  function resume(pc, gas) {
+    wasm.resume(pc, gas);
   }
 
   function getUint8ArrayMemory0() {
@@ -153,6 +162,7 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
 
   return {
     __wbg_set_wasm,
+    resume,
     reset,
     nextStep,
     getProgramCounter,

@@ -132,14 +132,17 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       } else {
         console.log("PVM reset", pvm);
+        const gas = e.data.payload.initialState.gas || 10000;
         pvm.reset(
           // TODO: check root cause of this type error
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
           e.data.payload.program,
           regsAsUint8(e.data.payload.initialState.regs),
-          BigInt(e.data.payload.initialState.gas || 10000),
+          BigInt(gas),
         );
+        // TODO: will be replaced with setGas, setPC in future
+        pvm.resume(e.data.payload.initialState.pc ?? 0, BigInt(gas));
       }
 
       postTypedMessage({
