@@ -1,4 +1,4 @@
-import { ProgramLoader } from "../ProgramLoader";
+import { ProgramTextLoader } from "../ProgramTextLoader";
 import { ProgramUploadFileOutput } from "./types";
 
 const initial = {
@@ -24,19 +24,19 @@ const initial = {
 };
 
 export const Bytecode = ({
-  onFileUpload,
+  onProgramLoad,
   program,
 }: {
-  onFileUpload: (val?: ProgramUploadFileOutput) => void;
+  onProgramLoad: (val?: ProgramUploadFileOutput) => void;
   program: number[];
 }) => {
   return (
     <div className="h-full flex flex-col">
-      <p className="mb-3">Edit array of program code (bytes, decimal)</p>
-      <ProgramLoader
+      <p className="mb-3">Edit program code bytes</p>
+      <ProgramTextLoader
         program={program}
         setProgram={(program) =>
-          program ? onFileUpload({ initial, program, name: "custom" }) : onFileUpload(undefined)
+          program ? onProgramLoad({ initial, program, name: "custom" }) : onProgramLoad(undefined)
         }
       />
     </div>

@@ -1,47 +1,81 @@
-import { Textarea } from "@/components/ui/textarea.tsx";
-import { useEffect, useState } from "react";
-import classNames from "classnames";
+import { ProgramUploadFileOutput } from "./types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button.tsx";
+import { useCallback, useState } from "react";
+import { FileUpload } from "./FileUpload";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Examples } from "./Examples";
+import { Bytecode } from "./Bytecode";
+import { Assembly } from "./Assembly";
+import { InitialState } from "@/types/pvm";
 
 export const ProgramLoader = ({
+  initialState,
+  onProgramLoad,
   program,
-  setProgram,
 }: {
-  program?: number[];
-  setProgram: (val?: number[]) => void;
+  initialState: InitialState;
+  onProgramLoad: (val: ProgramUploadFileOutput) => void;
+  program: number[];
 }) => {
-  const [programInput, setProgramInput] = useState(program?.length ? JSON.stringify(program) : "");
-  const [isInvalidProgram, setIsInvalidProgram] = useState(false);
-  useEffect(() => {
-    setProgramInput(program?.length ? JSON.stringify(program) : "");
-  }, [program]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
+
+  const handleLoad = useCallback(() => {
+    if (!programLoad) return;
+
+    onProgramLoad(programLoad);
+    setIsDialogOpen(false);
+  }, [programLoad, onProgramLoad]);
 
   return (
-    <div
-      className={classNames("flex-auto flex gap-1 flex-col border-2 rounded-md ", {
-        "border-red-500": isInvalidProgram,
-      })}
-    >
-      <Textarea
-        autoFocus
-        className={classNames("w-full flex-auto font-mono border-0 text-base", {
-          "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isInvalidProgram,
-        })}
-        id="program"
-        placeholder="Paste the program as an array of numbers"
-        value={programInput}
-        onChange={(e) => {
-          setProgramInput(e.target.value);
-          try {
-            JSON.parse(e.target.value);
-            setProgram(JSON.parse(e.target.value));
-            setIsInvalidProgram(false);
-          } catch (e) {
-            console.log("wrong json");
-            setIsInvalidProgram(true);
-            setProgram();
-          }
-        }}
-      />
-    </div>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <Button>Load</Button>
+      </DialogTrigger>
+      <DialogContent className="min-h-[500px] h-[75vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Load program</DialogTitle>
+          <DialogDescription></DialogDescription>
+        </DialogHeader>
+        <Tabs className="flex-1 flex flex-col items-start" defaultValue="upload">
+          <TabsList>
+            <TabsTrigger value="upload">JSON tests</TabsTrigger>
+            <TabsTrigger value="examples">Examples</TabsTrigger>
+            <TabsTrigger className="hidden lg:inline-flex" value="bytecode">
+              RAW bytecode
+            </TabsTrigger>
+            <TabsTrigger value="assembly">Assembly</TabsTrigger>
+          </TabsList>
+          <div className="border-2 rounded mt-2 p-4 flex-1 flex flex-col w-full">
+            <TabsContent value="upload">
+              <FileUpload onFileUpload={setProgramLoad} />
+            </TabsContent>
+            <TabsContent value="examples">
+              <Examples onProgramLoad={setProgramLoad} />
+            </TabsContent>
+            <TabsContent value="bytecode">
+              <Bytecode onProgramLoad={setProgramLoad} program={program} />
+            </TabsContent>
+            <TabsContent value="assembly">
+              <Assembly onProgramLoad={setProgramLoad} program={program} initialState={initialState} />
+            </TabsContent>
+          </div>
+        </Tabs>
+        <DialogFooter>
+          <Button id="load-button" type="button" disabled={!programLoad} onClick={handleLoad}>
+            Load
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
