@@ -65,7 +65,7 @@ export const Instructions = ({
   }, [numeralSystem, programPreviewResult]);
 
   return (
-    <div className="font-mono overflow-auto scroll-auto border-2 rounded-md h-full">
+    <div className="font-mono overflow-auto scroll-auto border-2 rounded-md h-[70vh]">
       <Table>
         <TableBody>
           {!!programPreviewResultWithAddress?.length &&
