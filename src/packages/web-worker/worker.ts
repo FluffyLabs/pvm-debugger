@@ -1,6 +1,5 @@
 import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
 import { initPvm, nextInstruction } from "./pvm";
-import * as wasmPvmShell from "@/packages/web-worker/wasmPvmShell.ts";
 import {
   getMemoryPage,
   getState,
@@ -8,6 +7,7 @@ import {
   loadArrayBufferAsWasm,
   regsAsUint8,
 } from "@/packages/web-worker/utils.ts";
+import { WasmPvmShellInterface } from "@/packages/web-worker/wasmPvmShell.ts";
 
 export enum Commands {
   LOAD = "load",
@@ -32,7 +32,7 @@ export enum CommandResult {
 }
 
 // TODO: unify the api
-export type PvmApiInterface = typeof wasmPvmShell | InternalPvm;
+export type PvmApiInterface = WasmPvmShellInterface | InternalPvm;
 let pvm: PvmApiInterface | null = null;
 let isRunMode = false;
 
@@ -132,11 +132,17 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
       } else {
         console.log("PVM reset", pvm);
+        const gas = e.data.payload.initialState.gas || 10000;
         pvm.reset(
+          // TODO: check root cause of this type error
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
           e.data.payload.program,
           regsAsUint8(e.data.payload.initialState.regs),
-          BigInt(e.data.payload.initialState.gas || 10000),
+          BigInt(gas),
         );
+        // TODO: will be replaced with setGas, setPC in future
+        pvm.resume(e.data.payload.initialState.pc ?? 0, BigInt(gas));
       }
 
       postTypedMessage({

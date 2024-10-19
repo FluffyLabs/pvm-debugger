@@ -1,7 +1,7 @@
-import { Store } from "@/AppProviders";
 import { Input } from "@/components/ui/input";
 import { chunk } from "lodash";
-import { useContext } from "react";
+import { useSelector } from "react-redux";
+import { selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
 
 const SPLIT_STEP = 8 as const;
 const toMemoryPageTabData = (memoryPage: Uint8Array | undefined, addressStart: number) => {
@@ -29,7 +29,11 @@ export const MemoryTable = ({ data, addressStart }: { addressStart: number; data
 };
 
 export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => void }) => {
-  const memory = useContext(Store).memory;
+  // TODO: get the memory for all of them and compare results
+  const memory = useSelector(selectMemoryForFirstWorker);
+  console.log({
+    memory,
+  });
 
   return (
     <div>
@@ -45,8 +49,8 @@ export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => v
         </div>
       </div>
       <MemoryTable
-        data={memory.page.state.data}
-        addressStart={(memory.page.state.pageNumber || 0) * (memory.meta.state.pageSize || 0)}
+        data={memory?.page.data}
+        addressStart={(memory?.page.pageNumber || 0) * (memory?.meta.pageSize || 0)}
       />
     </div>
   );
