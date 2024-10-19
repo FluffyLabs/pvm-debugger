@@ -17,7 +17,7 @@ export const ProgramTextLoader = ({
   }, [program]);
 
   const handleOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newInput = e.target.value;
+    const newInput = e.target.value.trim();
     setProgramInput(newInput);
 
     if (!newInput.startsWith("[")) {
