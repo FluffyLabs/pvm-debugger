@@ -55,14 +55,14 @@ const programs: {
   },
 };
 
-export const Examples = ({ onFileUpload }: { onFileUpload: (val: ProgramUploadFileOutput) => void }) => {
+export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
   return (
     <div>
       <p className="mb-2">Load example test file</p>
       <RadioGroup
         defaultValue="option-fibonacci"
         onValueChange={(val) =>
-          onFileUpload({
+          onProgramLoad({
             initial: {
               regs: programs[val].regs,
               pc: programs[val].pc,

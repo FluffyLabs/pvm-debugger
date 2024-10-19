@@ -88,11 +88,11 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
 
 export const Assembly = ({
   initialState,
-  onFileUpload,
+  onProgramLoad,
   program,
 }: {
   initialState: InitialState;
-  onFileUpload: (val?: ProgramUploadFileOutput) => void;
+  onProgramLoad: (val?: ProgramUploadFileOutput) => void;
   program: number[];
 }) => {
   const defaultAssembly = useMemo(() => {
@@ -130,7 +130,7 @@ export const Assembly = ({
         output.initial = {
           ...initialState,
         };
-        onFileUpload(output);
+        onProgramLoad(output);
         setError(undefined);
       } catch (e) {
         if (e instanceof Error) {
@@ -144,12 +144,12 @@ export const Assembly = ({
           }
         }
         console.log(e);
-        onFileUpload(undefined);
+        onProgramLoad(undefined);
         setError(`${e}`);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onFileUpload, program],
+    [onProgramLoad, program],
   );
 
   const [error, setError] = useState<string>();
