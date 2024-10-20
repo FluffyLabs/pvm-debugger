@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
 
-export const FileUpload = ({
+export const TextFileUpload = ({
   onFileUpload,
   close,
 }: {

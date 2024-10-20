@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button.tsx";
 import { useCallback, useState } from "react";
-import { FileUpload } from "./FileUpload";
+import { TextFileUpload } from "./TextFileUpload.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Examples } from "./Examples";
 import { Bytecode } from "./Bytecode";
@@ -57,7 +57,7 @@ export const ProgramLoader = ({
           </TabsList>
           <div className="border-2 rounded mt-2 p-4 flex-1 flex flex-col w-full">
             <TabsContent value="upload">
-              <FileUpload onFileUpload={setProgramLoad} />
+              <TextFileUpload onFileUpload={setProgramLoad} />
             </TabsContent>
             <TabsContent value="examples">
               <Examples onProgramLoad={setProgramLoad} />

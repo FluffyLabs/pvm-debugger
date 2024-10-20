@@ -25,11 +25,14 @@ export type PageMapItem = {
 };
 
 export enum Status {
-  OK = 0,
-  HALT = 1,
-  PANIC = 2,
-  OUT_OF_GAS = 3,
+  OK = -1,
+  HALT = 0,
+  PANIC = 1,
+  FAULT = 2,
+  HOST = 3,
+  OUT_OF_GAS = 4,
 }
+
 export type ExpectedState = InitialState & {
   status?: Status;
 };
@@ -66,3 +69,5 @@ export enum AvailablePvms {
   WASM_URL = "wasm-url",
   WASM_FILE = "wasm-file",
 }
+
+export type decodeStandardProgram = (program: number[]) => CurrentInstruction;
