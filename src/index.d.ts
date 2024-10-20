@@ -178,7 +178,7 @@ declare module "@typeberry/pvm-debugger-adapter" {
   }
 
   export class Pvm {
-    reset(program: Uint8Array, pc: number, gas: number, registers: number[], memory: Memory);
+    reset(program: Uint8Array, pc: number, gas: number, registers: Registers, memory: Memory);
     nextStep(): Status;
     getRegisters(): number[];
     getPC(): number;

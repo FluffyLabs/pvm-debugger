@@ -25,8 +25,7 @@ export const initPvm = (program: number[], initialState: InitialState) => {
   }
 
   const HEAP_START_PAGE = 4 * 2 ** 16;
-  // const HEAP_END_PAGE = 2 ** 32 - 2 * 2 ** 16 - 2 ** 24;
-  const HEAP_END_PAGE = 4277895168 - 1; // TODO: only for testing purposes DROP IT
+  const HEAP_END_PAGE = 2 ** 32 - 2 * 2 ** 16 - 2 ** 24;
 
   const memory = memoryBuilder.finalize(HEAP_START_PAGE, HEAP_END_PAGE);
   const pvm = new InternalPvmInstance();

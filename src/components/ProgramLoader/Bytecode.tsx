@@ -32,7 +32,7 @@ export const Bytecode = ({
   onProgramLoad: (val?: ProgramUploadFileOutput) => void;
   program: number[];
 }) => {
-  const [tempProgram, setTempProgram] = useState<number[]>(program);
+  const [tempProgram, setTempProgram] = useState<number[] | undefined>(program);
   const handleFileUpload = (val: ProgramUploadFileOutput) => {
     setTempProgram(val.program);
     onProgramLoad(val);
