@@ -49,7 +49,7 @@ export const BinaryFileUpload = ({
         className="mt-3 mr-3"
         id="test-file"
         type="file"
-        // accept="application/json"
+        accept="application/octet-stream"
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => {
           if (e.target.files?.length) {

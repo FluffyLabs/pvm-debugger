@@ -24,7 +24,6 @@ const ComputedValue = ({
   workers: WorkerState[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
-  console.log("workers", workers.length);
 
   const getWorkerValueFromState = (worker: WorkerState, state: "currentState" | "previousState") =>
     propNameIndex !== undefined
