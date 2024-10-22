@@ -31,10 +31,7 @@ export const MemoryTable = ({ data, addressStart }: { addressStart: number; data
 export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => void }) => {
   // TODO: get the memory for all of them and compare results
   const memory = useSelector(selectMemoryForFirstWorker);
-  console.log({
-    memory,
-  });
-
+  console.log("memort", memory?.meta);
   return (
     <div>
       <div className="flex w-full">
