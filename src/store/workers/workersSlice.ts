@@ -161,6 +161,17 @@ export const changePageAllWorkers = createAsyncThunk(
   },
 );
 
+export const refreshPageAllWorkers = createAsyncThunk(
+  "workers/changePageAllWorkers",
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+    const pageNumber = selectMemoryForFirstWorker(state)?.page.pageNumber;
+    if (pageNumber !== undefined && pageNumber !== -1) {
+      dispatch(changePageAllWorkers(state.workers[0].memory?.page.pageNumber || 0));
+    }
+  },
+);
+
 export const changeRangeAllWorkers = createAsyncThunk(
   "workers/changeRangeAllWorkers",
   async (

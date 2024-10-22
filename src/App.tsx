@@ -24,14 +24,13 @@ import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 import { Assembly } from "./components/ProgramLoader/Assembly";
 import {
-  changePageAllWorkers,
   continueAllWorkers,
   createWorker,
   destroyWorker,
   initAllWorkers,
   loadWorker,
+  refreshPageAllWorkers,
   runAllWorkers,
-  selectMemoryForFirstWorker,
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
@@ -53,7 +52,6 @@ import {
   setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
-import { useSelector } from "react-redux";
 
 function App() {
   const {
@@ -71,7 +69,6 @@ function App() {
   } = useAppSelector((state) => state.debugger);
 
   const workers = useAppSelector((state) => state.workers);
-  const memoryCurrentPage = useSelector(selectMemoryForFirstWorker)?.page.pageNumber;
 
   const dispatch = useAppDispatch();
   const { currentInstruction, currentState, previousState } = workers[0] || {
@@ -101,12 +98,10 @@ function App() {
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
       dispatch(initAllWorkers());
-      if (memoryCurrentPage !== undefined) {
-        dispatch(changePageAllWorkers(memoryCurrentPage));
-      }
+      dispatch(refreshPageAllWorkers());
       setCurrentInstruction(programPreviewResult?.[0]);
     },
-    [dispatch, memoryCurrentPage, setCurrentInstruction, programPreviewResult],
+    [dispatch, setCurrentInstruction, programPreviewResult],
   );
 
   useEffect(() => {
@@ -194,10 +189,7 @@ function App() {
     }
 
     dispatch(setIsProgramEditMode(false));
-
-    if (memoryCurrentPage !== undefined) {
-      dispatch(changePageAllWorkers(memoryCurrentPage));
-    }
+    dispatch(refreshPageAllWorkers());
   };
 
   const handleRunProgram = () => {
@@ -213,9 +205,7 @@ function App() {
       dispatch(setIsRunMode(true));
       dispatch(runAllWorkers());
     }
-    if (memoryCurrentPage !== undefined) {
-      dispatch(changePageAllWorkers(memoryCurrentPage));
-    }
+    dispatch(refreshPageAllWorkers());
     // dispatch(stepAllWorkers());
   };
 
