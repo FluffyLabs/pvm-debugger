@@ -9,8 +9,8 @@ import { disassemblify } from "./packages/pvm/pvm/disassemblify";
 import { Pencil, PencilOff, Play, RefreshCcw, StepForward } from "lucide-react";
 import { Header } from "@/components/Header";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
-import { ProgramUpload } from "@/components/ProgramUpload";
-import { ProgramUploadFileOutput } from "@/components/ProgramUpload/types.ts";
+import { ProgramLoader } from "@/components/ProgramLoader";
+import { ProgramUploadFileOutput } from "@/components/ProgramLoader/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
@@ -22,7 +22,7 @@ import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
-import { Assembly } from "./components/ProgramUpload/Assembly";
+import { Assembly } from "./components/ProgramLoader/Assembly";
 import {
   continueAllWorkers,
   createWorker,
@@ -157,7 +157,7 @@ function App() {
     [dispatch],
   );
 
-  const handleFileUpload = useCallback(
+  const handleProgramLoad = useCallback(
     (data?: ProgramUploadFileOutput) => {
       if (data) {
         startProgram(data.initial, data.program);
@@ -299,7 +299,7 @@ function App() {
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
             <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
               <div className="md:mr-3">
-                <ProgramUpload initialState={initialState} onFileUpload={handleFileUpload} program={program} />
+                <ProgramLoader initialState={initialState} onProgramLoad={handleProgramLoad} program={program} />
               </div>
               <Button
                 className="md:mr-3"
@@ -342,7 +342,7 @@ function App() {
                 <>
                   {isProgramEditMode && (
                     <div className="border-2 rounded-md h-full p-2 pt-8">
-                      <Assembly program={program} onFileUpload={handleFileUpload} initialState={initialState} />
+                      <Assembly program={program} onProgramLoad={handleProgramLoad} initialState={initialState} />
                     </div>
                   )}
 

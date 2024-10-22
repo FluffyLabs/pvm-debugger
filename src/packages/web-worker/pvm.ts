@@ -1,6 +1,6 @@
 import { InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
 import { createResults, instructionArgumentTypeMap, ProgramDecoder } from "@typeberry/pvm-debugger-adapter";
-import { ArgsDecoder } from "@typeberry/pvm-debugger-adapter";
+import { ArgsDecoder, Registers } from "@typeberry/pvm-debugger-adapter";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
 import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm-debugger-adapter";
 export const initPvm = (program: number[], initialState: InitialState) => {
@@ -28,10 +28,10 @@ export const initPvm = (program: number[], initialState: InitialState) => {
   const HEAP_END_PAGE = 2 ** 32 - 2 * 2 ** 16 - 2 ** 24;
 
   const memory = memoryBuilder.finalize(HEAP_START_PAGE, HEAP_END_PAGE);
-  const pvm = new InternalPvmInstance(new Uint8Array(program), {
-    ...initialState,
-    memory,
-  });
+  const pvm = new InternalPvmInstance();
+  const registers = new Registers();
+  registers.copyFrom(new Uint32Array(initialState.regs!));
+  pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 0, registers, memory);
   return pvm;
 };
 
@@ -61,7 +61,8 @@ export const nextInstruction = (programCounter: number, program: number[]) => {
   const programDecoder = new ProgramDecoder(new Uint8Array(program));
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();
-  const argsDecoder = new ArgsDecoder(code, mask);
+  const argsDecoder = new ArgsDecoder();
+  argsDecoder.reset(code, mask);
   const currentInstruction = code[programCounter];
   const argumentType = instructionArgumentTypeMap[currentInstruction];
   const args = createResults()[argumentType];
