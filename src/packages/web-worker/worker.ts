@@ -144,9 +144,8 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
           regsAsUint8(e.data.payload.initialState.regs),
           BigInt(gas),
         );
-        // TODO: sync the implementation with typeberry
-        // TODO: will be replaced with setGas, setPC in future
-        // pvm.resume(e.data.payload.initialState.pc ?? 0, BigInt(gas));
+        pvm.setNextProgramCounter(e.data.payload.initialState.pc ?? 0);
+        pvm.setGasLeft(BigInt(gas));
       }
 
       postTypedMessage({
