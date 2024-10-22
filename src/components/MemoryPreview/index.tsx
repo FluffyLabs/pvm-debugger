@@ -13,17 +13,21 @@ export const MemoryPreview = () => {
 
   return (
     <div className="border-2 rounded-md min-h-64 h-full max-h-[70vh]">
-      <Tabs defaultValue="pages" className="m-1">
-        <TabsList>
-          <TabsTrigger value="pages">Pages</TabsTrigger>
-          <TabsTrigger value="ranges">Ranges</TabsTrigger>
-        </TabsList>
-        <TabsContent className="m-2" value="pages">
+      <Tabs defaultValue="pages" className="h-full flex flex-col">
+        <TabsContent className="m-3 h-auto" value="pages">
           <PageMemory onPageChange={(pageNumber) => dispatch(changePageAllWorkers(pageNumber))} />
         </TabsContent>
-        <TabsContent className="m-2" value="ranges">
+        <TabsContent className="" value="ranges">
           <RangeMemory onRangeChange={(start, end) => dispatch(changeRangeAllWorkers({ start, end }))} />
         </TabsContent>
+        <TabsList className="">
+          <TabsTrigger className="w-1/2" value="pages">
+            Pages
+          </TabsTrigger>
+          <TabsTrigger className="w-1/2" value="ranges">
+            Ranges
+          </TabsTrigger>
+        </TabsList>
       </Tabs>
     </div>
   );
