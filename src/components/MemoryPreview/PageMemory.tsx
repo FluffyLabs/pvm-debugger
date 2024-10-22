@@ -37,9 +37,9 @@ export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => v
 
   return (
     <div>
-      <div className="grid grid-cols-3">
-        <div className="font-semibold flex items-center">Page</div>
-        <div className="col-span-2">
+      <div className="flex w-full">
+        <div className="font-semibold flex items-center mr-6 ml-3">Page</div>
+        <div className="flex-grow">
           <Input
             type="number"
             onChange={(ev) => {

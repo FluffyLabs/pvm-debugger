@@ -24,12 +24,14 @@ import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 import { Assembly } from "./components/ProgramLoader/Assembly";
 import {
+  changePageAllWorkers,
   continueAllWorkers,
   createWorker,
   destroyWorker,
   initAllWorkers,
   loadWorker,
   runAllWorkers,
+  selectMemoryForFirstWorker,
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
@@ -51,6 +53,7 @@ import {
   setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
+import { useSelector } from "react-redux";
 
 function App() {
   const {
@@ -68,6 +71,8 @@ function App() {
   } = useAppSelector((state) => state.debugger);
 
   const workers = useAppSelector((state) => state.workers);
+  const memoryCurrentPage = useSelector(selectMemoryForFirstWorker)?.page.pageNumber;
+
   const dispatch = useAppDispatch();
   const { currentInstruction, currentState, previousState } = workers[0] || {
     currentInstruction: null,
@@ -96,9 +101,12 @@ function App() {
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
       dispatch(initAllWorkers());
+      if (memoryCurrentPage !== undefined) {
+        dispatch(changePageAllWorkers(memoryCurrentPage));
+      }
       setCurrentInstruction(programPreviewResult?.[0]);
     },
-    [setCurrentInstruction, programPreviewResult, dispatch],
+    [dispatch, memoryCurrentPage, setCurrentInstruction, programPreviewResult],
   );
 
   useEffect(() => {
@@ -186,6 +194,10 @@ function App() {
     }
 
     dispatch(setIsProgramEditMode(false));
+
+    if (memoryCurrentPage !== undefined) {
+      dispatch(changePageAllWorkers(memoryCurrentPage));
+    }
   };
 
   const handleRunProgram = () => {
@@ -200,6 +212,9 @@ function App() {
       startProgram(initialState, program);
       dispatch(setIsRunMode(true));
       dispatch(runAllWorkers());
+    }
+    if (memoryCurrentPage !== undefined) {
+      dispatch(changePageAllWorkers(memoryCurrentPage));
     }
     // dispatch(stepAllWorkers());
   };
