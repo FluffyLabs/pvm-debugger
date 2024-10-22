@@ -91,6 +91,7 @@ function App() {
 
   const restartProgram = useCallback(
     (state: InitialState) => {
+      setInitialState(state);
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
       dispatch(setAllWorkersCurrentState(state));

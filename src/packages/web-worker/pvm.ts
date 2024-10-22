@@ -3,7 +3,7 @@ import { createResults, instructionArgumentTypeMap, ProgramDecoder } from "@type
 import { ArgsDecoder, Registers } from "@typeberry/pvm-debugger-adapter";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
 import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm-debugger-adapter";
-export const initPvm = (program: number[], initialState: InitialState) => {
+export const initPvm = (pvm: InternalPvmInstance, program: number[], initialState: InitialState) => {
   const initialMemory = initialState.memory ?? [];
   const pageMap = initialState.pageMap ?? [];
 
@@ -28,7 +28,7 @@ export const initPvm = (program: number[], initialState: InitialState) => {
   const HEAP_END_PAGE = 2 ** 32 - 2 * 2 ** 16 - 2 ** 24;
 
   const memory = memoryBuilder.finalize(HEAP_START_PAGE, HEAP_END_PAGE);
-  const pvm = new InternalPvmInstance();
+
   const registers = new Registers();
   registers.copyFrom(new Uint32Array(initialState.regs!));
   pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 0, registers, memory);
