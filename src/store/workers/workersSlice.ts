@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { spawnWorker } from "@/packages/web-worker/spawnWorker.ts";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
 import { Commands, PvmTypes } from "@/packages/web-worker/worker.ts";
+import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -39,26 +39,8 @@ export interface WorkerState {
 
 const initialState: WorkerState[] = [];
 
-export const createWorker = createAsyncThunk("workers/createWorker", async (id: string, { getState, dispatch }) => {
-  const state = getState() as RootState;
-  const debuggerState = state.debugger;
-
-  const worker = await spawnWorker({
-    setCurrentState: (value) => dispatch(setWorkerCurrentState({ id, currentState: value })),
-    setCurrentInstruction: (value) =>
-      dispatch(
-        setWorkerCurrentInstruction({
-          id,
-          instruction: value,
-        }),
-      ),
-    breakpointAddresses: debuggerState.breakpointAddresses,
-    initialState: debuggerState.initialState,
-    program: debuggerState.program,
-    setIsRunMode: () => {},
-    setIsDebugFinished: () => {},
-    restartProgram: () => {},
-  });
+export const createWorker = createAsyncThunk("workers/createWorker", async (id: string) => {
+  const worker = new PvmWorker();
 
   return {
     id,
@@ -84,9 +66,20 @@ export const loadWorker = createAsyncThunk(
       return;
     }
 
-    return worker.worker.postMessage({
-      command: "load",
-      payload,
+    return new Promise<boolean>((resolve) => {
+      const messageHandler = (event: MessageEvent) => {
+        if (event.data.command === Commands.LOAD) {
+          resolve(true);
+          worker.worker.removeEventListener("message", messageHandler);
+        }
+      };
+
+      worker.worker.addEventListener("message", messageHandler);
+
+      worker.worker.postMessage({
+        command: "load",
+        payload,
+      });
     });
   },
 );
@@ -123,6 +116,23 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
     });
 
     const messageHandler = (event: MessageEvent) => {
+      if (event.data.command === Commands.STEP) {
+        const { state, isFinished } = event.data.payload;
+
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+
+        dispatch(
+          setWorkerCurrentInstruction({
+            id: worker.id,
+            instruction: event.data.payload.result,
+          }),
+        );
+
+        if (isFinished) {
+          setIsDebugFinished(true);
+        }
+      }
+
       if (event.data.command === Commands.MEMORY_SIZE) {
         console.log("Memory size:", event.data.payload.memorySize);
         dispatch(setPageSize(event.data.payload.memorySize));

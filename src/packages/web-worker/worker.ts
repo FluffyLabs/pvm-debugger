@@ -8,6 +8,7 @@ import {
   regsAsUint8,
 } from "@/packages/web-worker/utils.ts";
 import { WasmPvmShellInterface } from "@/packages/web-worker/wasmPvmShell.ts";
+import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 
 export enum Commands {
   LOAD = "load",
@@ -76,8 +77,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   let isFinished;
   if (e.data.command === Commands.LOAD) {
     if (e.data.payload.type === PvmTypes.BUILT_IN) {
-      // TODO: currently there's only one built-in PVM so there's no need to load it
-      pvm = null;
+      pvm = new InternalPvmInstance();
       postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
     }
     if (e.data.payload.type === PvmTypes.WASM_FILE) {
@@ -127,9 +127,12 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         },
       });
     } else {
-      if (!pvm || isInternalPvm(pvm)) {
+      if (!pvm) {
+        throw new Error("PVM is uninitialized.");
+      }
+      if (isInternalPvm(pvm)) {
         console.log("PVM init", pvm);
-        pvm = initPvm(e.data.payload.program, e.data.payload.initialState);
+        pvm = initPvm(pvm as InternalPvmInstance, e.data.payload.program, e.data.payload.initialState);
       } else {
         console.log("PVM reset", pvm);
         const gas = e.data.payload.initialState.gas || 10000;
@@ -141,8 +144,8 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
           regsAsUint8(e.data.payload.initialState.regs),
           BigInt(gas),
         );
-        // TODO: will be replaced with setGas, setPC in future
-        pvm.resume(e.data.payload.initialState.pc ?? 0, BigInt(gas));
+        pvm.setNextProgramCounter(e.data.payload.initialState.pc ?? 0);
+        pvm.setGasLeft(BigInt(gas));
       }
 
       postTypedMessage({
