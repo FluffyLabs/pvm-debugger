@@ -6,6 +6,8 @@ import { Status } from "@/types/pvm.ts";
 export interface WasmPvmShellInterface {
   __wbg_set_wasm(val: any): void;
   resume(pc: number, gas: bigint): void;
+  setNextProgramCounter(pc: number): void;
+  setGasLeft(gas: bigint): void;
   reset(program: Uint8Array, registers: Uint8Array, gas: bigint): void;
   nextStep(): boolean;
   getProgramCounter(): number;

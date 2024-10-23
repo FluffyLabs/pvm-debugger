@@ -29,6 +29,7 @@ import {
   destroyWorker,
   initAllWorkers,
   loadWorker,
+  refreshPageAllWorkers,
   runAllWorkers,
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
@@ -68,6 +69,7 @@ function App() {
   } = useAppSelector((state) => state.debugger);
 
   const workers = useAppSelector((state) => state.workers);
+
   const dispatch = useAppDispatch();
   const { currentInstruction, currentState, previousState } = workers[0] || {
     currentInstruction: null,
@@ -91,14 +93,16 @@ function App() {
 
   const restartProgram = useCallback(
     (state: InitialState) => {
+      setInitialState(state);
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
       dispatch(initAllWorkers());
+      dispatch(refreshPageAllWorkers());
       setCurrentInstruction(programPreviewResult?.[0]);
     },
-    [setCurrentInstruction, programPreviewResult, dispatch],
+    [dispatch, setCurrentInstruction, programPreviewResult],
   );
 
   useEffect(() => {
@@ -186,6 +190,7 @@ function App() {
     }
 
     dispatch(setIsProgramEditMode(false));
+    dispatch(refreshPageAllWorkers());
   };
 
   const handleRunProgram = () => {
@@ -201,6 +206,7 @@ function App() {
       dispatch(setIsRunMode(true));
       dispatch(runAllWorkers());
     }
+    dispatch(refreshPageAllWorkers());
     // dispatch(stepAllWorkers());
   };
 
