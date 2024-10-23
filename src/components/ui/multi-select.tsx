@@ -16,6 +16,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { isArray } from "lodash";
 
 /**
  * Variants for the multi-select component to handle different styles.
@@ -117,6 +118,11 @@ interface MultiSelectProps
    * (Custom)
    */
   showClearAll?: boolean;
+
+  /**
+   * (Custom)
+   */
+  children?: React.ReactNode;
 }
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
@@ -136,6 +142,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       showSelectAll,
       showSearch,
       showClearAll,
+      children,
       ...props
     },
     ref,
@@ -309,25 +316,41 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                   );
                 })}
               </CommandGroup>
-              <CommandSeparator />
-              <CommandGroup>
-                <div className="flex items-center justify-between">
-                  {selectedValues.length > 0 && (
-                    <>
-                      <CommandItem onSelect={handleClear} className="flex-1 justify-center cursor-pointer">
-                        Clear
+              {showClearAll && (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup>
+                    <div className="flex items-center justify-between">
+                      {selectedValues.length > 0 && (
+                        <>
+                          <CommandItem onSelect={handleClear} className="flex-1 justify-center cursor-pointer">
+                            Clear
+                          </CommandItem>
+                          <Separator orientation="vertical" className="flex min-h-6 h-full" />
+                        </>
+                      )}
+                      <CommandItem
+                        onSelect={() => setIsPopoverOpen(false)}
+                        className="flex-1 justify-center cursor-pointer max-w-full"
+                      >
+                        Close
                       </CommandItem>
-                      <Separator orientation="vertical" className="flex min-h-6 h-full" />
-                    </>
-                  )}
-                  <CommandItem
-                    onSelect={() => setIsPopoverOpen(false)}
-                    className="flex-1 justify-center cursor-pointer max-w-full"
-                  >
-                    Close
-                  </CommandItem>
-                </div>
-              </CommandGroup>
+                    </div>
+                  </CommandGroup>
+                </>
+              )}
+              {children && (
+                <>
+                  <CommandSeparator />
+                  <CommandGroup>
+                    {isArray(children) ? (
+                      children.map((child, id) => <CommandItem key={id}>{child}</CommandItem>)
+                    ) : (
+                      <CommandItem>{children}</CommandItem>
+                    )}
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>

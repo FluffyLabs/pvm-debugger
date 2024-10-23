@@ -215,55 +215,56 @@ function App() {
     );
 
     await Promise.all(
-      selectedPvms.map(async ({ value, type, param }) => {
-        console.log("Selected PVM type", type, param);
+      selectedPvms.map(async ({ id, type, params }) => {
+        console.log("Selected PVM type", id, type, params);
 
-        if (workers.find((worker: WorkerState) => worker.id === type)) {
+        if (workers.find((worker: WorkerState) => worker.id === id)) {
           console.log("Worker already initialized");
           // TODO: for now just initialize the worker one more time
         }
         console.log("Worker not initialized");
 
-        if (value === AvailablePvms.WASM_FILE) {
-          await dispatch(createWorker(AvailablePvms.WASM_FILE)).unwrap();
-          await dispatch(
-            loadWorker({
-              id: AvailablePvms.WASM_FILE,
-              payload: {
-                type: PvmTypes.WASM_FILE,
-                params: typeof param !== "string" ? { file: param.file, lang: param.lang } : undefined,
-              },
-            }),
-          ).unwrap();
-        } else if (value === AvailablePvms.WASM_URL) {
-          await dispatch(createWorker(AvailablePvms.WASM_URL)).unwrap();
-          await dispatch(
-            loadWorker({
-              id: AvailablePvms.WASM_URL,
-              payload: {
-                type: PvmTypes.WASM_URL,
-                params: { url: param as string },
-              },
-            }),
-          ).unwrap();
-        } else if (value === AvailablePvms.POLKAVM) {
+        if (id === AvailablePvms.POLKAVM) {
           await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
           await dispatch(
             loadWorker({
-              id: AvailablePvms.POLKAVM,
+              id,
               payload: {
                 type: PvmTypes.WASM_URL as PvmTypes,
-                params: { url: param as string },
+                params,
               },
             }),
           ).unwrap();
-        } else if (value === AvailablePvms.TYPEBERRY) {
+        } else if (id === AvailablePvms.TYPEBERRY) {
           await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
           await dispatch(
             loadWorker({
-              id: AvailablePvms.TYPEBERRY,
+              id,
               payload: {
-                type: type as PvmTypes,
+                type: PvmTypes.BUILT_IN,
+              },
+            }),
+          ).unwrap();
+        } else if (type === AvailablePvms.WASM_FILE) {
+          console.log("go wasm file!", id, type, params);
+          await dispatch(createWorker(id)).unwrap();
+          await dispatch(
+            loadWorker({
+              id,
+              payload: {
+                type: PvmTypes.WASM_FILE,
+                params,
+              },
+            }),
+          ).unwrap();
+        } else if (type === AvailablePvms.WASM_URL) {
+          await dispatch(createWorker(id)).unwrap();
+          await dispatch(
+            loadWorker({
+              id,
+              payload: {
+                type: PvmTypes.WASM_URL,
+                params,
               },
             }),
           ).unwrap();
