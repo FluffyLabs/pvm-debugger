@@ -110,7 +110,10 @@ export const Assembly = ({
         if (isArrayEqual(program, output.program)) {
           output.program = program;
         }
-        initialState.regs = output.initial.regs;
+        const newInitialState = {
+          ...initialState,
+        };
+        newInitialState.regs = output.initial.regs;
         // this is incorrect, but we would need to alter the
         // assembly to include the actual data:
         // pub @main: (pc)
@@ -118,18 +121,16 @@ export const Assembly = ({
         // for now we are just going to assume we are "editing"
         // that code.
         if (output.initial.pc !== 0) {
-          initialState.pc = output.initial.pc;
+          newInitialState.pc = output.initial.pc;
         }
         if ((output.initial.memory?.length ?? 0) !== 0) {
-          initialState.memory = output.initial.memory;
+          newInitialState.memory = output.initial.memory;
         }
         if ((output.initial.pageMap?.length ?? 0) !== 0) {
-          initialState.pageMap = output.initial.pageMap;
+          newInitialState.pageMap = output.initial.pageMap;
         }
         // we want to keep all of the old stuff to avoid re-rendering.
-        output.initial = {
-          ...initialState,
-        };
+        output.initial = newInitialState;
         onProgramLoad(output);
         setError(undefined);
       } catch (e) {

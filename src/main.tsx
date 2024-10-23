@@ -5,10 +5,6 @@ import "./globals.css";
 import { NumeralSystemProvider } from "@/context/NumeralSystemProvider";
 import { Provider } from "react-redux";
 import { store } from "./store";
-import { setAutoFreeze } from "immer";
-
-// TODO: remove this when the useEffect issue in Assembly.tsx is fixed
-setAutoFreeze(false);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // TODO: strict mode is disabled because of the App useEffect for init being called twice
