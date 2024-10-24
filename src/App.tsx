@@ -21,7 +21,6 @@ import { PvmTypes } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
-import { virtualTrapInstruction } from "./utils/virtualTrapInstruction";
 import { Assembly } from "./components/ProgramLoader/Assembly";
 import {
   continueAllWorkers,
@@ -79,18 +78,6 @@ function App() {
 
   const mobileView = useRef<HTMLDivElement | null>(null);
 
-  const setCurrentInstruction = useCallback(
-    (ins: CurrentInstruction | null) => {
-      if (ins === null) {
-        dispatch(setAllWorkersCurrentInstruction(virtualTrapInstruction));
-      } else {
-        dispatch(setAllWorkersCurrentInstruction(ins));
-      }
-      dispatch(setClickedInstruction(null));
-    },
-    [dispatch],
-  );
-
   const restartProgram = useCallback(
     (state: InitialState) => {
       setInitialState(state);
@@ -100,13 +87,14 @@ function App() {
       dispatch(setAllWorkersPreviousState(state));
       dispatch(initAllWorkers());
       dispatch(refreshPageAllWorkers());
-      setCurrentInstruction(programPreviewResult?.[0]);
+      dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
+      dispatch(setClickedInstruction(null));
     },
-    [dispatch, setCurrentInstruction, programPreviewResult],
+    [dispatch, programPreviewResult],
   );
 
   useEffect(() => {
-    const initializeDefaultWorker = async () => {
+    const loadDefaultWorker = async () => {
       await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
       await dispatch(
         loadWorker({
@@ -118,17 +106,10 @@ function App() {
       ).unwrap();
     };
 
-    initializeDefaultWorker();
+    loadDefaultWorker();
 
-    return () => {
-      // if (currentWorkers) {
-      //   currentWorkers.forEach((currentWorker) => {
-      //     currentWorker.terminate();
-      //   });
-      // }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {};
+  }, [dispatch]);
 
   const startProgram = useCallback(
     (initialState: ExpectedState, newProgram: number[]) => {
@@ -178,10 +159,6 @@ function App() {
       console.warn("No workers initialized"); // TODO: show error message
       return;
     }
-
-    // if (!pvmInitialized) {
-    //   startProgram(initialState, program);
-    // }
 
     if (!currentInstruction) {
       dispatch(setAllWorkersCurrentState(initialState));
