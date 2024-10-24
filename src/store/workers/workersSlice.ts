@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
-import { Commands, PvmTypes } from "@/packages/web-worker/worker.ts";
+import { Commands, PvmTypes, TargetOnMessageParams } from "@/packages/web-worker/worker.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -115,7 +115,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
       },
     });
 
-    const messageHandler = (event: MessageEvent) => {
+    const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
       if (event.data.command === Commands.STEP) {
         const { state, isFinished } = event.data.payload;
 
@@ -134,8 +134,8 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
       }
 
       if (event.data.command === Commands.MEMORY_SIZE) {
-        console.log("Memory size:", event.data.payload.memorySize);
-        dispatch(setPageSize(event.data.payload.memorySize));
+        const pageSize = event.data.payload.memorySize as number;
+        dispatch(setPageSize({ pageSize, id: worker.id }));
       }
       if (event.data.command === Commands.MEMORY_PAGE) {
         dispatch(
@@ -218,7 +218,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
               isBreakpoint: boolean;
             }) => void,
           ) => {
-            const messageHandler = (event: MessageEvent) => {
+            const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
               if (event.data.command === Commands.STEP) {
                 const { state, isRunMode, isFinished } = event.data.payload;
                 const currentState = getState() as RootState;
@@ -236,6 +236,10 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 
                 if (isFinished) {
                   dispatch(setIsDebugFinished(true));
+                }
+
+                if (state.pc === undefined) {
+                  throw new Error("Program counter is undefined");
                 }
 
                 resolve({
@@ -402,6 +406,7 @@ const workers = createSlice({
         };
       },
     ) => {
+      console.log("action", action);
       const memory = getWorker(state, action.payload.id)?.memory;
       if (!memory) {
         return;
