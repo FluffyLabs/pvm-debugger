@@ -48,9 +48,6 @@ export const Instructions = ({
         </div>
       );
     };
-    console.log({
-      programPreviewResult,
-    });
     const programRows = programPreviewResult?.map((result) => {
       // TODO: due to this assignment, programPreviewResult cannot be moved to the store
       // Object.assign(result, { addressEl: getAddressEl(result.address), counter: result.address });
