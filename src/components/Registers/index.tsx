@@ -129,40 +129,46 @@ export const Registers = ({
                 <p className="flex-[2]">
                   ω<sub>{regNo}</sub>
                 </p>
-                {allowEditing ? (
-                  <div className="flex-[3]">
-                    <Input
-                      className="w-20 h-6 m-0 p-0"
-                      onChange={(e) => {
-                        const value = e.target?.value;
-                        const valueInDecimal =
-                          numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
-                        const regValue =
-                          valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : "";
-                        onCurrentStateChange({
-                          ...currentState,
-                          regs: currentState.regs?.map((val: number, index: number) =>
-                            index === regNo ? regValue : val,
-                          ) as InitialState["regs"],
-                        });
-                      }}
-                      onKeyUp={(e) => {
-                        if (e.key === "Enter") {
-                          e.currentTarget.blur();
-                        }
-                      }}
-                      value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                <div className="mt-1">
+                  {allowEditing ? (
+                    <div className="flex-[3]">
+                      <Input
+                        className="w-20 h-6 m-0 p-0"
+                        onChange={(e) => {
+                          const value = e.target?.value;
+                          const valueInDecimal =
+                            numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
+                          const regValue =
+                            valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : 0;
+                          if (regValue === currentState.regs?.[regNo]) {
+                            return;
+                          }
+
+                          onCurrentStateChange({
+                            ...currentState,
+                            regs: currentState.regs?.map((val: number, index: number) =>
+                              index === regNo ? regValue : val,
+                            ) as InitialState["regs"],
+                          });
+                        }}
+                        onKeyUp={(e) => {
+                          if (e.key === "Enter") {
+                            e.currentTarget.blur();
+                          }
+                        }}
+                        value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem) || "0"}
+                      />
+                    </div>
+                  ) : (
+                    <ComputedValue
+                      value={currentState.regs?.[regNo]}
+                      previousValue={previousState.regs?.[regNo]}
+                      propName="regs"
+                      propNameIndex={regNo}
+                      workers={workers}
                     />
-                  </div>
-                ) : (
-                  <ComputedValue
-                    value={currentState.regs?.[regNo]}
-                    previousValue={previousState.regs?.[regNo]}
-                    propName="regs"
-                    propNameIndex={regNo}
-                    workers={workers}
-                  />
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>

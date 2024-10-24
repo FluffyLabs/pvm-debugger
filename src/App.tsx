@@ -93,6 +93,7 @@ function App() {
 
   const restartProgram = useCallback(
     (state: InitialState) => {
+      console.log("restartProgram");
       setInitialState(state);
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
@@ -374,10 +375,10 @@ function App() {
                 currentState={isProgramEditMode ? initialState : currentState}
                 previousState={isProgramEditMode ? initialState : previousState}
                 onCurrentStateChange={(state) => {
-                  setInitialState(state);
+                  console.log("onCurrentStateChange", state);
                   restartProgram(state);
                 }}
-                allowEditing={false}
+                allowEditing={true}
               />
             </div>
 
