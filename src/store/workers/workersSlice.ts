@@ -71,10 +71,15 @@ export const loadWorker = createAsyncThunk(
     }
 
     return new Promise<boolean>((resolve) => {
-      const messageHandler = (event: MessageEvent) => {
+      const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
         if (event.data.command === Commands.LOAD) {
-          resolve(true);
-          worker.worker.removeEventListener("message", messageHandler);
+          if (event.data.status === "success") {
+            resolve(true);
+            worker.worker.removeEventListener("message", messageHandler);
+          } else if (event.data.status === "error") {
+            resolve(false);
+            worker.worker.removeEventListener("message", messageHandler);
+          }
         }
       };
 

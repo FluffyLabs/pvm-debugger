@@ -80,7 +80,6 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
 }
 
 export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
-  console.log("getMemoryPage", pageNumber, pvm);
   if (!pvm) {
     return [];
   }
