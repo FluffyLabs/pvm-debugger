@@ -6,6 +6,7 @@ import { Commands, PvmTypes, TargetOnMessageParams } from "@/packages/web-worker
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
+import { toast } from "react-toastify";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -78,6 +79,7 @@ export const loadWorker = createAsyncThunk(
             worker.worker.removeEventListener("message", messageHandler);
           } else if (event.data.status === "error") {
             resolve(false);
+            toast.error("Error loading PVM worker");
             worker.worker.removeEventListener("message", messageHandler);
           }
         }

@@ -1,4 +1,7 @@
 import "./App.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef } from "react";
 import { Instructions } from "./components/Instructions";
@@ -418,6 +421,7 @@ function App() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </>
   );
 }
