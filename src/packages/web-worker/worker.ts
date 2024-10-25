@@ -6,6 +6,7 @@ import {
   isInternalPvm,
   loadArrayBufferAsWasm,
   regsAsUint8,
+  SupportedLangs,
 } from "@/packages/web-worker/utils.ts";
 import { WasmPvmShellInterface } from "@/packages/web-worker/wasmPvmShell.ts";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
@@ -51,7 +52,10 @@ export type TargetOnMessageParams =
   | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memorySize: number } };
 
 export type WorkerOnMessageParams =
-  | { command: Commands.LOAD; payload: { type: PvmTypes; params: { url?: string; file?: Blob } } }
+  | {
+      command: Commands.LOAD;
+      payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
+    }
   | { command: Commands.INIT; payload: { program: number[]; initialState: InitialState } }
   | { command: Commands.STEP; payload: { program: number[] } }
   | { command: Commands.RUN }
@@ -87,7 +91,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
 
         console.log("Load WASM from file", file);
         const bytes = await file.arrayBuffer();
-        pvm = await loadArrayBufferAsWasm(bytes);
+        pvm = await loadArrayBufferAsWasm(bytes, e.data.payload.params.lang);
 
         postTypedMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
       } catch (error) {

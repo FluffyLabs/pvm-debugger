@@ -254,7 +254,7 @@ function App() {
               id: AvailablePvms.WASM_FILE,
               payload: {
                 type: PvmTypes.WASM_FILE,
-                params: { file: param as Blob },
+                params: typeof param !== "string" ? { file: param.file, lang: param.lang } : undefined,
               },
             }),
           ).unwrap();
