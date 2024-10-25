@@ -172,7 +172,7 @@ export const changePageAllWorkers = createAsyncThunk(
 );
 
 export const refreshPageAllWorkers = createAsyncThunk(
-  "workers/changePageAllWorkers",
+  "workers/refreshPageAllWorkers",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
     const pageNumber = selectMemoryForFirstWorker(state)?.page.pageNumber;
@@ -406,7 +406,6 @@ const workers = createSlice({
         };
       },
     ) => {
-      console.log("action", action);
       const memory = getWorker(state, action.payload.id)?.memory;
       if (!memory) {
         return;

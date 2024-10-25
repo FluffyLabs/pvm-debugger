@@ -69,8 +69,6 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
     return;
   }
 
-  console.log(e.data?.command);
-
   let result;
   let state;
   // let program;
