@@ -5,6 +5,7 @@ import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
 import { Commands, PvmTypes, TargetOnMessageParams } from "@/packages/web-worker/worker.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
+import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -39,6 +40,8 @@ export interface WorkerState {
 }
 
 const initialState: WorkerState[] = [];
+
+const globalMessageHandlers: Record<string, (event: MessageEvent<TargetOnMessageParams>) => void> = {};
 
 export const createWorker = createAsyncThunk("workers/createWorker", async (id: string) => {
   const worker = new PvmWorker();
@@ -85,29 +88,13 @@ export const loadWorker = createAsyncThunk(
   },
 );
 
-export const initWorker = createAsyncThunk("workers/initWorker", async (id: string, { getState }) => {
-  const state = getState() as RootState;
-  const worker = state.workers.find((worker) => worker.id === id);
-  const debuggerState = state.debugger;
-
-  if (!worker) {
-    return;
-  }
-
-  worker.worker.postMessage({
-    command: "init",
-    payload: {
-      initialState: debuggerState.initialState,
-      program: debuggerState.program,
-    },
-  });
-});
-
 export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
   const debuggerState = state.debugger;
 
   state.workers.forEach((worker) => {
+    worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
+
     worker.worker.postMessage({
       command: "init",
       payload: {
@@ -116,7 +103,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
       },
     });
 
-    const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+    globalMessageHandlers[worker.id] = (event: MessageEvent<TargetOnMessageParams>) => {
       if (event.data.command === Commands.STEP) {
         const { state, isFinished } = event.data.payload;
 
@@ -153,7 +140,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
       }
     };
 
-    worker.worker.addEventListener("message", messageHandler);
+    worker.worker.addEventListener("message", globalMessageHandlers[worker.id]);
 
     worker.worker.postMessage({
       command: Commands.MEMORY_SIZE,
@@ -224,16 +211,6 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
                 const { state, isRunMode, isFinished } = event.data.payload;
                 const currentState = getState() as RootState;
                 const debuggerState = currentState.debugger;
-
-                // TODO: check all of this stuff if needed
-                if (isRunMode && !isFinished && state.pc && !debuggerState.breakpointAddresses.includes(state.pc)) {
-                  // worker.worker.postMessage({ command: "step", payload: { program: debuggerState.program } });
-                }
-
-                if (isRunMode && state.pc && debuggerState.breakpointAddresses.includes(state.pc)) {
-                  // worker.worker.postMessage({ command: "stop", payload: { program: debuggerState.program } });
-                  // dispatch(setIsRunMode(false));
-                }
 
                 if (isFinished) {
                   dispatch(setIsDebugFinished(true));
@@ -308,11 +285,33 @@ export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_,
   dispatch(continueAllWorkers());
 });
 
-export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (_, { getState }) => {
+export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
   const debuggerState = state.debugger;
 
+  if (debuggerState.isDebugFinished) {
+    return;
+  }
+
   state.workers.forEach((worker) => {
+    const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+      if (event.data.command === Commands.STEP) {
+        const { state, isFinished } = event.data.payload;
+
+        if (isFinished) {
+          dispatch(setIsDebugFinished(true));
+        }
+
+        if (state.pc === undefined) {
+          throw new Error("Program counter is undefined");
+        }
+
+        worker.worker.removeEventListener("message", messageHandler);
+      }
+    };
+
+    worker.worker.addEventListener("message", messageHandler);
+
     worker.worker.postMessage({
       command: "step",
       payload: {
@@ -375,7 +374,11 @@ const workers = createSlice({
     setWorkerCurrentInstruction(state, action) {
       const worker = getWorker(state, action.payload.id);
       if (worker) {
-        worker.currentInstruction = action.payload.instruction;
+        if (action.payload.instruction === null) {
+          worker.currentInstruction = virtualTrapInstruction;
+        } else {
+          worker.currentInstruction = action.payload.instruction;
+        }
       }
     },
     setAllWorkersCurrentInstruction(state, action) {
