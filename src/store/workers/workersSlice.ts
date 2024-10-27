@@ -73,10 +73,6 @@ export const loadWorker = createAsyncThunk(
 
     return new Promise<boolean>((resolve) => {
       const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
-        if ("status" in event.data && event.data.status === "error") {
-          logError(`An error occured on command ${event.data.command}`, event.data.error);
-        }
-
         if (event.data.command === Commands.LOAD) {
           if (event.data.status === "success") {
             resolve(true);
@@ -107,7 +103,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
     worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
 
     worker.worker.postMessage({
-      command: "init",
+      command: Commands.INIT,
       payload: {
         initialState: debuggerState.initialState,
         program: debuggerState.program,
@@ -116,7 +112,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
 
     globalMessageHandlers[worker.id] = (event: MessageEvent<TargetOnMessageParams>) => {
       if ("status" in event.data && event.data.status === "error") {
-        logError(`An error occured on command ${event.data.command}`, event.data.error);
+        logError(`An error occured on command "${event.data.command}"`, event.data.error);
       }
 
       if (event.data.command === Commands.STEP) {
@@ -146,7 +142,6 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
             id: worker.id,
             pageNumber: event.data.payload.pageNumber,
             data: event.data.payload.memoryPage,
-
             isLoading: false,
           }),
         );
@@ -157,15 +152,6 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
     };
 
     worker.worker.addEventListener("message", globalMessageHandlers[worker.id]);
-
-    worker.worker.postMessage({
-      command: Commands.INIT,
-      payload: {
-        initialState: debuggerState.initialState,
-        program: debuggerState.program,
-      },
-    });
-
     worker.worker.postMessage({
       command: Commands.MEMORY_SIZE,
     });
