@@ -69,11 +69,19 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       .filter((value) => value !== undefined);
   };
 
+  const generatePvmId = (name: string) => {
+    return pvmsWithPayload.find((pvm) => pvm.id === name)
+      ? `${name}-${pvmsWithPayload.filter((pvm) => pvm.id.startsWith(name)).length}`
+      : name;
+  };
+
   const handlePvmFileUpload = (file: File) => {
+    const id = generatePvmId(file.name);
+
     const newValues = [
       ...pvmsWithPayload,
       {
-        id: file.name,
+        id,
         type: PvmTypes.WASM_FILE,
         params: {
           lang: selectedLang,
@@ -82,12 +90,8 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       },
     ];
     setPvmsWithPayload(newValues);
-    setMultiSelectOptions((prevState) => [...prevState, { value: file.name, label: file.name }]);
-
-    // TODO: update selectedValues checkboxes
-    // const newSelectedPmvs = [...selectedPvms, file.name]
-    // setSelectedPvms(newSelectedPmvs);
-    // onValueChange(mapValuesToPvmWithPayload(newSelectedPmvs));
+    setMultiSelectOptions((prevState) => [...prevState, { value: id, label: id }]);
+    setSelectedPvms([...selectedPvms, id]);
   };
 
   const handlePvmFileOption = () => {
@@ -106,10 +110,12 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
         throw new Error("Invalid metadata");
       }
 
+      const id = generatePvmId(wasmMetadata.name);
+
       const newValues = [
         ...pvmsWithPayload,
         {
-          id: wasmMetadata.name,
+          id,
           type: PvmTypes.WASM_URL,
           params: {
             url: path.join(url, "../", wasmMetadata.wasmBlobUrl),
@@ -117,10 +123,8 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
         },
       ];
       setPvmsWithPayload(newValues);
-      setMultiSelectOptions((prevState) => [
-        ...prevState,
-        { value: wasmMetadata.name, label: `${wasmMetadata.name} v${wasmMetadata.version}` },
-      ]);
+      setMultiSelectOptions((prevState) => [...prevState, { value: id, label: `${id} v${wasmMetadata.version}` }]);
+      setSelectedPvms([...selectedPvms, id]);
     } else {
       alert("No URL provided");
     }
@@ -148,6 +152,11 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
     });
   }, []);
 
+  useEffect(() => {
+    onValueChange(mapValuesToPvmWithPayload(selectedPvms));
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [selectedPvms]);
+
   return (
     <>
       <MultiSelect
@@ -159,7 +168,6 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
         defaultValue={[AvailablePvms.TYPEBERRY]}
         onValueChange={async (values) => {
           setSelectedPvms(values);
-          onValueChange(mapValuesToPvmWithPayload(values));
         }}
       >
         <span className="cursor-pointer" onClick={handlePvmUrlOption}>

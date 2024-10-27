@@ -221,7 +221,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                     selectedValues.length <= maxCount &&
                     selectedValues.slice(0, maxCount).map((value) => {
                       const option = options.find((o) => o.value === value);
-                      return <span className="text-black px-2">{option?.label}</span>;
+                      return (
+                        <span key={value} className="text-black px-2">
+                          {option?.label}
+                        </span>
+                      );
                     })}
                   {!showOptionsAsTags && selectedValues.length > maxCount && (
                     <span className="text-black px-2">Multiple PVMs selected</span>
