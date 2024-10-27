@@ -6,7 +6,7 @@ import { Commands, PvmTypes, TargetOnMessageParams } from "@/packages/web-worker
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
-import { logError } from "@/utils/loggerService";
+import { logError, logInfo } from "@/utils/loggerService";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -255,7 +255,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
                   isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
                 });
 
-                console.log("Response from worker:", {
+                logInfo("Response from worker:", {
                   isFinished,
                   state,
                   isRunMode,
@@ -520,7 +520,7 @@ const workers = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(createWorker.fulfilled, (state, action) => {
-      console.log("Worker created", action.payload);
+      logInfo("Worker created", action.payload);
       state.push({
         worker: action.payload.worker,
         id: action.payload.id,

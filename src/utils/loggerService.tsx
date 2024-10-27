@@ -11,3 +11,13 @@ export const logError = (msg: string, error: unknown) => {
 
   console.error("Catched error:", error);
 };
+
+export const logInfo = (...msg: unknown[]) => {
+  console.info("🪵🪵🪵🪵🪵", ...msg);
+};
+
+export const logDebug = (...msg: unknown[]) => {
+  if (process.env.NODE_ENV === "development") {
+    console.debug("☢️☢️☢️☢️☢️ DEV LOG: \n", ...msg);
+  }
+};

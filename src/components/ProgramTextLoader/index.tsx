@@ -36,6 +36,7 @@ export const ProgramTextLoader = ({
         setProgram(JSON.parse(newInput));
         setIsInvalidProgram(false);
       } catch (e) {
+        // TODO only validate on submit
         console.log("wrong json");
         setIsInvalidProgram(true);
         setProgram();

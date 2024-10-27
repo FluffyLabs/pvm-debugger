@@ -5,6 +5,7 @@ import { createWasmPvmShell } from "@/packages/web-worker/wasmPvmShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
 import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoPvmShell.ts";
+import { logInfo } from "@/utils/loggerService.tsx";
 
 export enum SupportedLangs {
   Go = "Go",
@@ -66,13 +67,13 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
     const go = new Go();
     const wasmModule = await WebAssembly.instantiate(bytes, go.importObject);
     go.run(wasmModule.instance);
-    console.log("Go WASM module loaded", wasmModule.instance.exports);
+    logInfo("Go WASM module loaded", wasmModule.instance.exports);
     const wasmPvmShell = createGoWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;
   } else {
     const wasmModule = await WebAssembly.instantiate(bytes, {});
-    console.log("Rust WASM module loaded", wasmModule.instance.exports);
+    logInfo("Rust WASM module loaded", wasmModule.instance.exports);
     const wasmPvmShell = createWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;
@@ -87,6 +88,5 @@ export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
   if (isInternalPvm(pvm)) {
     return pvm.getMemoryPage(pageNumber) || [];
   }
-  console.log("getpagedump", pageNumber, pvm.getPageDump(pageNumber));
   return pvm.getPageDump(pageNumber) || [];
 }

@@ -54,6 +54,7 @@ import {
   setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
+import { logDebug, logInfo } from "./utils/loggerService";
 
 function App() {
   const {
@@ -134,7 +135,7 @@ function App() {
 
       try {
         const result = disassemblify(new Uint8Array(newProgram));
-        console.info("Disassembly result:", result);
+        logInfo("Disassembly result:", result);
         dispatch(setProgramPreviewResult(result));
         dispatch(setAllWorkersCurrentInstruction(result?.[0]));
         dispatch(setPvmInitialized(true));
@@ -209,7 +210,7 @@ function App() {
   };
 
   const handlePvmTypeChange = async (selectedPvms: SelectedPvmWithPayload[]) => {
-    console.log("selectedPvms vs workers ", selectedPvms, workers);
+    logDebug("selectedPvms vs workers ", selectedPvms, workers);
 
     await Promise.all(
       workers.map((worker: WorkerState) => {
@@ -219,13 +220,13 @@ function App() {
 
     await Promise.all(
       selectedPvms.map(async ({ value, type, param }) => {
-        console.log("Selected PVM type", type, param);
+        logInfo("Selected PVM type", type, param);
 
         if (workers.find((worker: WorkerState) => worker.id === type)) {
-          console.log("Worker already initialized");
+          logInfo("Worker already initialized");
           // TODO: for now just initialize the worker one more time
         }
-        console.log("Worker not initialized");
+        logInfo("Worker not initialized");
 
         if (value === AvailablePvms.WASM_FILE) {
           await dispatch(createWorker(AvailablePvms.WASM_FILE)).unwrap();

@@ -3,9 +3,8 @@ import { NumeralSystem } from "./NumeralSystem";
 
 export const NumeralSystemContext = createContext({
   numeralSystem: NumeralSystem.DECIMAL,
-  setNumeralSystem: (numeralSystem: NumeralSystem) => {
-    console.log(numeralSystem);
-  },
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setNumeralSystem: (_: NumeralSystem) => {},
 });
 
 export const NumeralSystemProvider = ({ children }: { children: ReactNode }) => {

@@ -1,3 +1,4 @@
+import { logInfo } from "@/utils/loggerService";
 import { loadArrayBufferAsWasm, SupportedLangs } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../worker";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
@@ -5,7 +6,7 @@ import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 export type LoadParams = { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
 export type LoadResponse = { pvm: PvmApiInterface | null; status: CommandStatus; error?: unknown };
 
-const loadInstance = async (args: LoadParams): Promise<PvmApiInterface | null> => {
+const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
   if (args.type === PvmTypes.BUILT_IN) {
     return new InternalPvmInstance();
   } else if (args.type === PvmTypes.WASM_FILE) {
@@ -14,7 +15,7 @@ const loadInstance = async (args: LoadParams): Promise<PvmApiInterface | null> =
       throw new Error("No PVM file");
     }
 
-    console.log("Load WASM from file", file);
+    logInfo("Load WASM from file", file);
     const bytes = await file.arrayBuffer();
     return await loadArrayBufferAsWasm(bytes);
   } else if (args.type === PvmTypes.WASM_URL) {
@@ -25,7 +26,7 @@ const loadInstance = async (args: LoadParams): Promise<PvmApiInterface | null> =
       throw new Error("Invalid PVM URL");
     }
 
-    console.log("Load WASM from URL", url);
+    logInfo("Load WASM from URL", url);
     const response = await fetch(url);
     const bytes = await response.arrayBuffer();
 
@@ -35,9 +36,9 @@ const loadInstance = async (args: LoadParams): Promise<PvmApiInterface | null> =
   return null;
 };
 
-export const load = async (args: LoadParams): Promise<LoadResponse> => {
+export const runLoad = async (args: LoadParams): Promise<LoadResponse> => {
   try {
-    const pvm = await loadInstance(args);
+    const pvm = await load(args);
     if (pvm) {
       return { pvm, status: CommandStatus.SUCCESS };
     }
