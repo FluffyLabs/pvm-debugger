@@ -5,7 +5,7 @@ import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 export type LoadParams = { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
 export type LoadResponse = { pvm: PvmApiInterface | null; status: CommandStatus; error?: unknown };
 
-const loadInstance = async (args: LoadParams): Promise<PvmApiInterface | null> => {
+const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
   if (args.type === PvmTypes.BUILT_IN) {
     return new InternalPvmInstance();
   } else if (args.type === PvmTypes.WASM_FILE) {
@@ -35,9 +35,9 @@ const loadInstance = async (args: LoadParams): Promise<PvmApiInterface | null> =
   return null;
 };
 
-export const load = async (args: LoadParams): Promise<LoadResponse> => {
+export const runLoad = async (args: LoadParams): Promise<LoadResponse> => {
   try {
-    const pvm = await loadInstance(args);
+    const pvm = await load(args);
     if (pvm) {
       return { pvm, status: CommandStatus.SUCCESS };
     }

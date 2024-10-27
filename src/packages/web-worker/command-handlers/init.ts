@@ -15,7 +15,24 @@ export type InitResponse = {
   error?: unknown;
 };
 
-export const init = async ({ pvm, program, initialState }: InitParams): Promise<InitResponse> => {
+const init = async ({ pvm, program, initialState }: InitParams) => {
+  if (!pvm) {
+    throw new Error("PVM is uninitialized.");
+  }
+  if (isInternalPvm(pvm)) {
+    console.log("PVM init internal", pvm);
+    // TODO Fix type guards
+    initPvm(pvm as InternalPvmInstance, program, initialState);
+  } else {
+    console.log("PVM init external", pvm);
+    const gas = initialState.gas || 10000;
+    pvm.reset(program, regsAsUint8(initialState.regs), BigInt(gas));
+    pvm.setNextProgramCounter(initialState.pc ?? 0);
+    pvm.setGasLeft(BigInt(gas));
+  }
+};
+
+export const runInit = async ({ pvm, program, initialState }: InitParams): Promise<InitResponse> => {
   if (program.length === 0) {
     console.warn("Skipping init, no program yet.");
     return {
@@ -25,20 +42,7 @@ export const init = async ({ pvm, program, initialState }: InitParams): Promise<
   }
 
   try {
-    if (!pvm) {
-      throw new Error("PVM is uninitialized.");
-    }
-    if (isInternalPvm(pvm)) {
-      console.log("PVM init internal", pvm);
-      // TODO Fix type guards
-      initPvm(pvm as InternalPvmInstance, program, initialState);
-    } else {
-      console.log("PVM init external", pvm);
-      const gas = initialState.gas || 10000;
-      pvm.reset(program, regsAsUint8(initialState.regs), BigInt(gas));
-      pvm.setNextProgramCounter(initialState.pc ?? 0);
-      pvm.setGasLeft(BigInt(gas));
-    }
+    await init({ pvm, program, initialState });
 
     return {
       status: CommandStatus.SUCCESS,
