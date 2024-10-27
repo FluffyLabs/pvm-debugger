@@ -65,7 +65,7 @@ interface MultiSelectProps
   onValueChange: (value: string[]) => void;
 
   /** The default selected values when the component mounts. */
-  defaultValue?: string[];
+  selectedValues?: string[];
 
   /**
    * Placeholder text to be displayed when no values are selected.
@@ -122,6 +122,16 @@ interface MultiSelectProps
   /**
    * (Custom)
    */
+  showOptionsAsTags?: boolean;
+
+  /**
+   * (Custom)
+   */
+  required?: boolean;
+
+  /**
+   * (Custom)
+   */
   children?: React.ReactNode;
 }
 
@@ -131,7 +141,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       options,
       onValueChange,
       variant,
-      defaultValue = [],
+      selectedValues = [],
       placeholder = "Select options",
       animation = 0,
       maxCount = 3,
@@ -142,12 +152,13 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       showSelectAll,
       showSearch,
       showClearAll,
+      showOptionsAsTags,
+      required,
       children,
       ...props
     },
     ref,
   ) => {
-    const [selectedValues, setSelectedValues] = React.useState<string[]>(defaultValue);
     const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
     const [isAnimating, setIsAnimating] = React.useState(false);
 
@@ -157,7 +168,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       } else if (event.key === "Backspace" && !event.currentTarget.value) {
         const newSelectedValues = [...selectedValues];
         newSelectedValues.pop();
-        setSelectedValues(newSelectedValues);
         onValueChange(newSelectedValues);
       }
     };
@@ -166,12 +176,10 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       const newSelectedValues = selectedValues.includes(option)
         ? selectedValues.filter((value) => value !== option)
         : [...selectedValues, option];
-      setSelectedValues(newSelectedValues);
       onValueChange(newSelectedValues);
     };
 
     const handleClear = () => {
-      setSelectedValues([]);
       onValueChange([]);
     };
 
@@ -181,7 +189,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 
     const clearExtraOptions = () => {
       const newSelectedValues = selectedValues.slice(0, maxCount);
-      setSelectedValues(newSelectedValues);
       onValueChange(newSelectedValues);
     };
 
@@ -190,7 +197,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
         handleClear();
       } else {
         const allValues = options.map((option) => option.value);
-        setSelectedValues(allValues);
         onValueChange(allValues);
       }
     };
@@ -205,33 +211,44 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
             className={cn(
               "flex w-full p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit",
               className,
+              required && !selectedValues.length ? "border-destructive" : "border-foreground/10",
             )}
           >
             {selectedValues.length > 0 ? (
               <div className="flex justify-between items-center w-full">
                 <div className="flex flex-wrap items-center">
-                  {selectedValues.slice(0, maxCount).map((value) => {
-                    const option = options.find((o) => o.value === value);
-                    const IconComponent = option?.icon;
-                    return (
-                      <Badge
-                        key={value}
-                        className={cn(isAnimating ? "animate-bounce" : "", multiSelectVariants({ variant }))}
-                        style={{ animationDuration: `${animation}s` }}
-                      >
-                        {IconComponent && <IconComponent className="h-4 w-4 mr-2" />}
-                        {option?.label}
-                        <XCircle
-                          className="ml-2 h-4 w-4 cursor-pointer"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            toggleOption(value);
-                          }}
-                        />
-                      </Badge>
-                    );
-                  })}
-                  {selectedValues.length > maxCount && (
+                  {!showOptionsAsTags &&
+                    selectedValues.length <= maxCount &&
+                    selectedValues.slice(0, maxCount).map((value) => {
+                      const option = options.find((o) => o.value === value);
+                      return <span className="text-black px-2">{option?.label}</span>;
+                    })}
+                  {!showOptionsAsTags && selectedValues.length > maxCount && (
+                    <span className="text-black px-2">Multiple PVMs selected</span>
+                  )}
+                  {showOptionsAsTags &&
+                    selectedValues.slice(0, maxCount).map((value) => {
+                      const option = options.find((o) => o.value === value);
+                      const IconComponent = option?.icon;
+                      return (
+                        <Badge
+                          key={value}
+                          className={cn(isAnimating ? "animate-bounce" : "", multiSelectVariants({ variant }))}
+                          style={{ animationDuration: `${animation}s` }}
+                        >
+                          {IconComponent && <IconComponent className="h-4 w-4 mr-2" />}
+                          {option?.label}
+                          <XCircle
+                            className="ml-2 h-4 w-4 cursor-pointer"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleOption(value);
+                            }}
+                          />
+                        </Badge>
+                      );
+                    })}
+                  {showOptionsAsTags && selectedValues.length > maxCount && (
                     <Badge
                       className={cn(
                         "bg-transparent text-foreground border-foreground/1 hover:bg-transparent",

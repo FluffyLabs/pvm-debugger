@@ -153,8 +153,9 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
       <MultiSelect
         test-id="pvm-select"
         maxCount={1}
+        required
         options={multiSelectOptions}
-        value={selectedPvms}
+        selectedValues={selectedPvms}
         defaultValue={[AvailablePvms.TYPEBERRY]}
         onValueChange={async (values) => {
           setSelectedPvms(values);
