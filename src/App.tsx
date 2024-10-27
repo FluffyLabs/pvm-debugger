@@ -140,7 +140,7 @@ function App() {
         dispatch(setAllWorkersCurrentInstruction(result?.[0]));
         dispatch(setPvmInitialized(true));
       } catch (e) {
-        console.log("Error disassembling program", e);
+        console.error("Error disassembling program", e);
       }
     },
     [dispatch],
