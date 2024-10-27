@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input.tsx";
 import { getStatusColor } from "./utils";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
+import React from "react";
 
 const ComputedValue = ({
   propName,
@@ -66,15 +67,24 @@ const ComputedValue = ({
             </TooltipTrigger>
 
             <TooltipContent>
-              {workers.map((worker, index) => (
-                <div key={index}>
-                  <span>{worker.id}</span>
-                  <span>: </span>
-                  <span>{valueToNumeralSystem(getWorkerValueFromState(worker, "previousState"), numeralSystem)}</span>
-                  <span> → </span>
-                  <span>{valueToNumeralSystem(getWorkerValueFromState(worker, "currentState"), numeralSystem)}</span>
-                </div>
-              ))}
+              <div className="grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                {workers.map((worker, index) => (
+                  <React.Fragment key={index}>
+                    <div>
+                      <span>{worker.id}</span>
+                    </div>
+                    <div className="pl-3">
+                      <span>
+                        {valueToNumeralSystem(getWorkerValueFromState(worker, "previousState"), numeralSystem)}
+                      </span>
+                      <span> → </span>
+                      <span>
+                        {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState"), numeralSystem)}
+                      </span>
+                    </div>
+                  </React.Fragment>
+                ))}
+              </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
