@@ -36,7 +36,11 @@ const fetchWasmMetadata = async (url: string): Promise<WasmMetadata | undefined>
   try {
     const isValidUrl = Boolean(new URL(url ?? ""));
     if (isValidUrl) {
-      return fetch(url).then((res) => res.json());
+      const response = await fetch(url);
+      if (!response.ok) {
+        alert("Failed to fetch metadata for given URL");
+      }
+      return response.json();
     } else {
       alert("Invalid URL");
     }
