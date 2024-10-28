@@ -1,4 +1,4 @@
-import { logInfo } from "@/utils/loggerService";
+import { logger } from "@/utils/loggerService";
 import { loadArrayBufferAsWasm, SupportedLangs } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../worker";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
@@ -15,7 +15,7 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
       throw new Error("No PVM file");
     }
 
-    logInfo("Load WASM from file", file);
+    logger.info("Load WASM from file", file);
     const bytes = await file.arrayBuffer();
     return await loadArrayBufferAsWasm(bytes);
   } else if (args.type === PvmTypes.WASM_URL) {
@@ -26,7 +26,7 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
       throw new Error("Invalid PVM URL");
     }
 
-    logInfo("Load WASM from URL", url);
+    logger.info("Load WASM from URL", url);
     const response = await fetch(url);
     const bytes = await response.arrayBuffer();
 

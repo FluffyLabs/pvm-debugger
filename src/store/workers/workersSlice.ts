@@ -6,7 +6,7 @@ import { Commands, PvmTypes, TargetOnMessageParams } from "@/packages/web-worker
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
-import { logError, logInfo } from "@/utils/loggerService";
+import { logger } from "@/utils/loggerService";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -74,7 +74,7 @@ export const loadWorker = createAsyncThunk(
     return new Promise<boolean>((resolve) => {
       const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
         if ("status" in event.data && event.data.status === "error") {
-          logError(`An error occured on command ${event.data.command}`, event.data.error);
+          logger.error(`An error occured on command ${event.data.command}`, event.data.error);
         }
 
         if (event.data.command === Commands.LOAD) {
@@ -83,7 +83,7 @@ export const loadWorker = createAsyncThunk(
             worker.worker.removeEventListener("message", messageHandler);
           } else if (event.data.status === "error") {
             resolve(false);
-            logError("Error loading PVM worker", event.data.error);
+            logger.error("Error loading PVM worker", event.data.error);
             worker.worker.removeEventListener("message", messageHandler);
           }
         }
@@ -116,7 +116,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
 
     globalMessageHandlers[worker.id] = (event: MessageEvent<TargetOnMessageParams>) => {
       if ("status" in event.data && event.data.status === "error") {
-        logError(`An error occured on command ${event.data.command}`, event.data.error);
+        logger.error(`An error occured on command ${event.data.command}`, event.data.error);
       }
 
       if (event.data.command === Commands.STEP) {
@@ -232,7 +232,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
           ) => {
             const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
               if ("status" in event.data && event.data.status === "error") {
-                logError(`An error occured on command ${event.data.command}`, event.data.error);
+                logger.error(`An error occured on command ${event.data.command}`, event.data.error);
               }
 
               if (event.data.command === Commands.STEP) {
@@ -255,7 +255,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
                   isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
                 });
 
-                logInfo("Response from worker:", {
+                logger.info("Response from worker:", {
                   isFinished,
                   state,
                   isRunMode,
@@ -520,7 +520,7 @@ const workers = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(createWorker.fulfilled, (state, action) => {
-      logInfo("Worker created", action.payload);
+      logger.info("Worker created", action.payload);
       state.push({
         worker: action.payload.worker,
         id: action.payload.id,

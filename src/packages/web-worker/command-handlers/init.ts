@@ -3,7 +3,7 @@ import { initPvm } from "../pvm";
 import { getState, isInternalPvm, regsAsUint8 } from "../utils";
 import { CommandStatus, PvmApiInterface } from "../worker";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
-import { logInfo } from "@/utils/loggerService";
+import { logger } from "@/utils/loggerService";
 
 export type InitParams = {
   pvm: PvmApiInterface | null;
@@ -21,11 +21,11 @@ const init = async ({ pvm, program, initialState }: InitParams) => {
     throw new Error("PVM is uninitialized.");
   }
   if (isInternalPvm(pvm)) {
-    logInfo("PVM init internal", pvm);
+    logger.info("PVM init internal", pvm);
     // TODO Fix type guards
     initPvm(pvm as InternalPvmInstance, program, initialState);
   } else {
-    logInfo("PVM init external", pvm);
+    logger.info("PVM init external", pvm);
     const gas = initialState.gas || 10000;
     pvm.reset(program, regsAsUint8(initialState.regs), BigInt(gas));
     pvm.setNextProgramCounter(initialState.pc ?? 0);

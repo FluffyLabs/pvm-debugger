@@ -5,7 +5,7 @@ import { createWasmPvmShell } from "@/packages/web-worker/wasmPvmShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
 import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoPvmShell.ts";
-import { logInfo } from "@/utils/loggerService.tsx";
+import { logger } from "@/utils/loggerService.tsx";
 
 export enum SupportedLangs {
   Go = "Go",
@@ -67,13 +67,13 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
     const go = new Go();
     const wasmModule = await WebAssembly.instantiate(bytes, go.importObject);
     go.run(wasmModule.instance);
-    logInfo("Go WASM module loaded", wasmModule.instance.exports);
+    logger.info("Go WASM module loaded", wasmModule.instance.exports);
     const wasmPvmShell = createGoWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;
   } else {
     const wasmModule = await WebAssembly.instantiate(bytes, {});
-    logInfo("Rust WASM module loaded", wasmModule.instance.exports);
+    logger.info("Rust WASM module loaded", wasmModule.instance.exports);
     const wasmPvmShell = createWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;

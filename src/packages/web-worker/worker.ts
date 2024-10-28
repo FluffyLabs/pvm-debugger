@@ -2,7 +2,7 @@ import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm } f
 import { getMemoryPage, SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { WasmPvmShellInterface } from "@/packages/web-worker/wasmPvmShell.ts";
 import commandHandlers from "./command-handlers";
-import { logInfo } from "@/utils/loggerService";
+import { logger } from "@/utils/loggerService";
 
 export enum Commands {
   LOAD = "load",
@@ -67,7 +67,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   if (!e.data?.command) {
     return;
   }
-  logInfo("Worker received message", e.data);
+  logger.info("Worker received message", e.data);
 
   let state;
   // let program;
