@@ -27,7 +27,7 @@ export const ProgramTextLoader = ({
         setProgram(Array.prototype.slice.call(parsedBlob.buffer));
       } catch (e) {
         console.warn(e);
-        console.log("wrong binary file");
+        console.error("wrong binary file");
         setIsInvalidProgram(true);
       }
     } else {
@@ -36,7 +36,8 @@ export const ProgramTextLoader = ({
         setProgram(JSON.parse(newInput));
         setIsInvalidProgram(false);
       } catch (e) {
-        console.log("wrong json");
+        // TODO only validate on submit
+        console.error("wrong json");
         setIsInvalidProgram(true);
         setProgram();
       }

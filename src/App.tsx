@@ -1,4 +1,7 @@
 import "./App.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useRef } from "react";
 import { Instructions } from "./components/Instructions";
@@ -51,6 +54,7 @@ import {
   setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
+import { logger } from "./utils/loggerService";
 
 function App() {
   const {
@@ -131,12 +135,12 @@ function App() {
 
       try {
         const result = disassemblify(new Uint8Array(newProgram));
-        console.info("Disassembly result:", result);
+        logger.info("Disassembly result:", result);
         dispatch(setProgramPreviewResult(result));
         dispatch(setAllWorkersCurrentInstruction(result?.[0]));
         dispatch(setPvmInitialized(true));
       } catch (e) {
-        console.log("Error disassembling program", e);
+        console.error("Error disassembling program", e);
       }
     },
     [dispatch],
@@ -206,7 +210,7 @@ function App() {
   };
 
   const handlePvmTypeChange = async (selectedPvms: SelectedPvmWithPayload[]) => {
-    console.log("selectedPvms vs workers ", selectedPvms, workers);
+    logger.debug("selectedPvms vs workers ", selectedPvms, workers);
 
     await Promise.all(
       workers.map((worker: WorkerState) => {
@@ -216,13 +220,13 @@ function App() {
 
     await Promise.all(
       selectedPvms.map(async ({ id, type, params }) => {
-        console.log("Selected PVM type", id, type, params);
+        logger.info("Selected PVM type", id, type, params);
 
         if (workers.find((worker: WorkerState) => worker.id === id)) {
-          console.log("Worker already initialized");
+          logger.info("Worker already initialized");
           // TODO: for now just initialize the worker one more time
         }
-        console.log("Worker not initialized");
+        logger.info("Worker not initialized");
 
         if (id === AvailablePvms.POLKAVM) {
           await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
@@ -246,7 +250,6 @@ function App() {
             }),
           ).unwrap();
         } else if (type === AvailablePvms.WASM_FILE) {
-          console.log("go wasm file!", id, type, params);
           await dispatch(createWorker(id)).unwrap();
           await dispatch(
             loadWorker({
@@ -419,6 +422,7 @@ function App() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </>
   );
 }

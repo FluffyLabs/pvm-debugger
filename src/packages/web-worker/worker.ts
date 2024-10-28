@@ -1,15 +1,8 @@
-import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
-import { initPvm, nextInstruction } from "./pvm";
-import {
-  getMemoryPage,
-  getState,
-  isInternalPvm,
-  loadArrayBufferAsWasm,
-  regsAsUint8,
-  SupportedLangs,
-} from "@/packages/web-worker/utils.ts";
+import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm } from "@/types/pvm";
+import { getMemoryPage, SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { WasmPvmShellInterface } from "@/packages/web-worker/wasmPvmShell.ts";
-import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
+import commandHandlers from "./command-handlers";
+import { logger } from "@/utils/loggerService";
 
 export enum Commands {
   LOAD = "load",
@@ -28,7 +21,7 @@ export enum PvmTypes {
   WASM_FILE = "wasm-file",
 }
 
-export enum CommandResult {
+export enum CommandStatus {
   SUCCESS = "success",
   ERROR = "error",
 }
@@ -39,11 +32,13 @@ let pvm: PvmApiInterface | null = null;
 let isRunMode = false;
 
 export type TargetOnMessageParams =
-  | { command: Commands.LOAD; result: CommandResult }
-  | { command: Commands.INIT; payload: { initialState: InitialState } }
+  | { command: Commands.LOAD; status: CommandStatus; error?: unknown }
+  | { command: Commands.INIT; status: CommandStatus; error?: unknown; payload: { initialState: InitialState } }
   | {
       command: Commands.STEP;
-      payload: { state: ExpectedState; result: CurrentInstruction; isFinished: boolean; isRunMode: boolean };
+      status: CommandStatus;
+      error?: unknown;
+      payload: { state: ExpectedState; result: CurrentInstruction | object; isFinished: boolean; isRunMode: boolean };
     }
   | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
   | { command: Commands.STOP; payload: { isRunMode: boolean } }
@@ -56,7 +51,7 @@ export type WorkerOnMessageParams =
       command: Commands.LOAD;
       payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
     }
-  | { command: Commands.INIT; payload: { program: number[]; initialState: InitialState } }
+  | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
   | { command: Commands.STEP; payload: { program: number[] } }
   | { command: Commands.RUN }
   | { command: Commands.STOP }
@@ -64,7 +59,7 @@ export type WorkerOnMessageParams =
   | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number } }
   | { command: Commands.MEMORY_SIZE };
 
-function postTypedMessage(msg: TargetOnMessageParams) {
+export function postTypedMessage(msg: TargetOnMessageParams) {
   postMessage(msg);
 }
 
@@ -72,107 +67,38 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   if (!e.data?.command) {
     return;
   }
+  logger.info("Worker received message", e.data);
 
-  let result;
   let state;
   // let program;
   let isFinished;
   if (e.data.command === Commands.LOAD) {
-    if (e.data.payload.type === PvmTypes.BUILT_IN) {
-      pvm = new InternalPvmInstance();
-      postMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
-    }
-    if (e.data.payload.type === PvmTypes.WASM_FILE) {
-      try {
-        const file = e.data.payload.params.file;
-        if (!file) {
-          throw new Error("No PVM file");
-        }
-
-        console.log("Load WASM from file", file);
-        const bytes = await file.arrayBuffer();
-        pvm = await loadArrayBufferAsWasm(bytes, e.data.payload.params.lang);
-
-        postTypedMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
-      } catch (error) {
-        console.error(error);
-        postTypedMessage({ command: Commands.LOAD, result: CommandResult.ERROR });
-      }
-    }
-    if (e.data.payload.type === PvmTypes.WASM_URL) {
-      try {
-        const url = e.data.payload.params.url ?? "";
-        const isValidUrl = Boolean(new URL(url));
-
-        if (!isValidUrl) {
-          throw new Error("Invalid PVM URL");
-        }
-
-        console.log("Load WASM from URL", url);
-        const response = await fetch(url);
-        const bytes = await response.arrayBuffer();
-        pvm = await loadArrayBufferAsWasm(bytes);
-
-        postTypedMessage({ command: Commands.LOAD, result: CommandResult.SUCCESS });
-      } catch (error) {
-        console.error(error);
-        postTypedMessage({ command: Commands.LOAD, result: CommandResult.ERROR });
-      }
-    }
+    const data = await commandHandlers.runLoad(e.data.payload);
+    pvm = data.pvm;
+    postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error });
   } else if (e.data.command === Commands.INIT) {
-    if (e.data.payload.program.length === 0) {
-      console.warn("Skipping init, no program yet.");
-      postTypedMessage({
-        command: Commands.INIT,
-        payload: {
-          initialState: {},
-        },
-      });
-    } else {
-      if (!pvm) {
-        throw new Error("PVM is uninitialized.");
-      }
-      if (isInternalPvm(pvm)) {
-        console.log("PVM init", pvm);
-        pvm = initPvm(pvm as InternalPvmInstance, e.data.payload.program, e.data.payload.initialState);
-      } else {
-        console.log("PVM reset", pvm);
-        const gas = e.data.payload.initialState.gas || 10000;
-        pvm.reset(
-          // TODO: check root cause of this type error
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-expect-error
-          e.data.payload.program,
-          regsAsUint8(e.data.payload.initialState.regs),
-          BigInt(gas),
-        );
-        pvm.setNextProgramCounter(e.data.payload.initialState.pc ?? 0);
-        pvm.setGasLeft(BigInt(gas));
-      }
+    const data = await commandHandlers.runInit({
+      pvm,
+      program: e.data.payload.program,
+      initialState: e.data.payload.initialState,
+    });
 
-      postTypedMessage({
-        command: Commands.INIT,
-        payload: {
-          initialState: pvm ? getState(pvm) : {},
-        },
-      });
-    }
+    postTypedMessage({
+      command: Commands.INIT,
+      status: data.status,
+      error: data.error,
+      payload: {
+        initialState: data.initialState,
+      },
+    });
   } else if (e.data.command === Commands.STEP) {
-    if (!pvm) {
-      throw new Error("PVM is uninitialized.");
-    }
-    if (isInternalPvm(pvm)) {
-      isFinished = pvm.nextStep() !== Status.OK;
-    } else {
-      isFinished = !pvm.nextStep();
-    }
-    if (isFinished) {
-      isRunMode = false;
-    }
-    state = getState(pvm);
-    result = nextInstruction(state.pc ?? 0, e.data.payload.program) as unknown as CurrentInstruction;
+    const { result, state, isFinished, status, error } = commandHandlers.runStep({
+      pvm,
+      program: e.data.payload.program,
+    });
+    isRunMode = !isFinished;
 
-    postTypedMessage({ command: Commands.STEP, payload: { result, state, isFinished, isRunMode } });
+    postTypedMessage({ command: Commands.STEP, status, error, payload: { result, state, isFinished, isRunMode } });
   } else if (e.data.command === Commands.RUN) {
     isRunMode = true;
     postTypedMessage({ command: Commands.RUN, payload: { isRunMode, isFinished: true, state: state ?? {} } });
@@ -197,14 +123,13 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
     // Get first page to check the memory size
     const memoryPage = getMemoryPage(0, pvm);
 
-    console.log("memoryPage", memoryPage);
     postMessage({
       command: Commands.MEMORY_SIZE,
       // TODO fix types
       payload: { pageNumber: 0, memorySize: (memoryPage as unknown as Array<number>)?.length },
     });
   }
-  // TODO uncomennet and finish implementation
+  // TODO uncomment and finish implementation
   // else if (e.data.command === Commands.MEMORY_RANGE) {
   //   const memoryRange = Object.values(memory).flat().slice(e.data.payload.start, e.data.payload.end);
   //   postMessage({

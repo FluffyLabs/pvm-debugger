@@ -48,7 +48,7 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
             <div key={i}>
               <p className="font-mono font-bold uppercase my-3">{instruction?.name}</p>
               <div className="text-left">
-                <BlockMath math={currentInstructionFromKnowledgeBase?.latex as string} />
+                <BlockMath math={currentInstructionFromKnowledgeBase?.latex || ""} />
               </div>
               <p className="my-3">{currentInstructionFromKnowledgeBase?.description}</p>
             </div>

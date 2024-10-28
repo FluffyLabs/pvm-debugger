@@ -45,7 +45,7 @@ const fetchWasmMetadata = async (url: string): Promise<WasmMetadata | undefined>
       alert("Invalid URL");
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     alert("Invalid URL");
   }
   return;
