@@ -1,14 +1,16 @@
 import { toast } from "react-toastify";
 
 class Logger {
-  error(msg: string, error: unknown) {
-    toast.error(
-      <div>
-        {msg}
-        <br />
-        Check console for more information
-      </div>,
-    );
+  error(msg: string, { error, showToast }: { error: unknown; showToast?: boolean }) {
+    if (showToast) {
+      toast.error(
+        <div>
+          {msg}
+          <br />
+          Check console for more information
+        </div>,
+      );
+    }
 
     console.error("Catched error:", error);
   }

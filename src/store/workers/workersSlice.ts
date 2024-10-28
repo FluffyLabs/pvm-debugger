@@ -74,7 +74,7 @@ export const loadWorker = createAsyncThunk(
     return new Promise<boolean>((resolve) => {
       const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
         if ("status" in event.data && event.data.status === "error") {
-          logger.error(`An error occured on command ${event.data.command}`, event.data.error);
+          logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
         }
 
         if (event.data.command === Commands.LOAD) {
@@ -83,7 +83,7 @@ export const loadWorker = createAsyncThunk(
             worker.worker.removeEventListener("message", messageHandler);
           } else if (event.data.status === "error") {
             resolve(false);
-            logger.error("Error loading PVM worker", event.data.error);
+            logger.error("Error loading PVM worker", { error: event.data.error });
             worker.worker.removeEventListener("message", messageHandler);
           }
         }
@@ -116,7 +116,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
 
     globalMessageHandlers[worker.id] = (event: MessageEvent<TargetOnMessageParams>) => {
       if ("status" in event.data && event.data.status === "error") {
-        logger.error(`An error occured on command ${event.data.command}`, event.data.error);
+        logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
       }
 
       if (event.data.command === Commands.STEP) {
@@ -232,7 +232,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
           ) => {
             const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
               if ("status" in event.data && event.data.status === "error") {
-                logger.error(`An error occured on command ${event.data.command}`, event.data.error);
+                logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
               }
 
               if (event.data.command === Commands.STEP) {
