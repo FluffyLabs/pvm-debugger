@@ -1,15 +1,20 @@
+import { throttle } from "lodash";
 import { toast } from "react-toastify";
 
+const errorToast = throttle((msg: string) => {
+  toast.error(
+    <div>
+      {msg}
+      <br />
+      Check console for more information
+    </div>,
+    { autoClose: 3000 },
+  );
+}, 6000);
 class Logger {
   error(msg: string, { error, hideToast }: { error: unknown; hideToast?: boolean }) {
     if (!hideToast) {
-      toast.error(
-        <div>
-          {msg}
-          <br />
-          Check console for more information
-        </div>,
-      );
+      errorToast(msg);
     }
 
     console.error("‼️‼️‼️‼️Catched error:", error);
