@@ -3,7 +3,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { Button } from "@/components/ui/button";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
 import { AvailablePvms, CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
@@ -96,24 +96,6 @@ function App() {
     },
     [dispatch, programPreviewResult],
   );
-
-  useEffect(() => {
-    const loadDefaultWorker = async () => {
-      await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
-      await dispatch(
-        loadWorker({
-          id: AvailablePvms.TYPEBERRY,
-          payload: {
-            type: PvmTypes.BUILT_IN,
-          },
-        }),
-      ).unwrap();
-    };
-
-    loadDefaultWorker();
-
-    return () => {};
-  }, [dispatch]);
 
   const startProgram = useCallback(
     (initialState: ExpectedState, newProgram: number[]) => {

@@ -106,14 +106,6 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   state.workers.forEach((worker) => {
     worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
 
-    worker.worker.postMessage({
-      command: "init",
-      payload: {
-        initialState: debuggerState.initialState,
-        program: debuggerState.program,
-      },
-    });
-
     globalMessageHandlers[worker.id] = (event: MessageEvent<TargetOnMessageParams>) => {
       if ("status" in event.data && event.data.status === "error") {
         logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
