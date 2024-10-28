@@ -144,7 +144,7 @@ export const Assembly = ({
             return;
           }
         }
-        console.log(e);
+        console.error(e);
         onProgramLoad(undefined);
         setError(`${e}`);
       }

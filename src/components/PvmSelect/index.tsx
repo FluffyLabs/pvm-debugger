@@ -18,7 +18,7 @@ const fetchWasmMetadata = async (url: string) => {
       alert("Invalid URL");
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     alert("Invalid URL");
   }
 };

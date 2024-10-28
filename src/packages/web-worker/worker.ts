@@ -1,9 +1,8 @@
-import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
-import { nextInstruction } from "./pvm";
-import { getMemoryPage, getState, isInternalPvm, SupportedLangs } from "@/packages/web-worker/utils.ts";
+import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm } from "@/types/pvm";
+import { getMemoryPage, SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { WasmPvmShellInterface } from "@/packages/web-worker/wasmPvmShell.ts";
-import { load } from "./command-handlers/load";
-import { init } from "./command-handlers/init";
+import commandHandlers from "./command-handlers";
+import { logger } from "@/utils/loggerService";
 
 export enum Commands {
   LOAD = "load",
@@ -37,7 +36,9 @@ export type TargetOnMessageParams =
   | { command: Commands.INIT; status: CommandStatus; error?: unknown; payload: { initialState: InitialState } }
   | {
       command: Commands.STEP;
-      payload: { state: ExpectedState; result: CurrentInstruction; isFinished: boolean; isRunMode: boolean };
+      status: CommandStatus;
+      error?: unknown;
+      payload: { state: ExpectedState; result: CurrentInstruction | object; isFinished: boolean; isRunMode: boolean };
     }
   | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
   | { command: Commands.STOP; payload: { isRunMode: boolean } }
@@ -66,18 +67,21 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   if (!e.data?.command) {
     return;
   }
-  console.log("Worker received message", e.data);
+  logger.info("Worker received message", e.data);
 
-  let result;
   let state;
   // let program;
   let isFinished;
   if (e.data.command === Commands.LOAD) {
-    const data = await load(e.data.payload);
+    const data = await commandHandlers.runLoad(e.data.payload);
     pvm = data.pvm;
     postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error });
   } else if (e.data.command === Commands.INIT) {
-    const data = await init({ pvm, program: e.data.payload.program, initialState: e.data.payload.initialState });
+    const data = await commandHandlers.runInit({
+      pvm,
+      program: e.data.payload.program,
+      initialState: e.data.payload.initialState,
+    });
 
     postTypedMessage({
       command: Commands.INIT,
@@ -88,21 +92,13 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       },
     });
   } else if (e.data.command === Commands.STEP) {
-    if (!pvm) {
-      throw new Error("PVM is uninitialized.");
-    }
-    if (isInternalPvm(pvm)) {
-      isFinished = pvm.nextStep() !== Status.OK;
-    } else {
-      isFinished = !pvm.nextStep();
-    }
-    if (isFinished) {
-      isRunMode = false;
-    }
-    state = getState(pvm);
-    result = nextInstruction(state.pc ?? 0, e.data.payload.program) as unknown as CurrentInstruction;
+    const { result, state, isFinished, status, error } = commandHandlers.runStep({
+      pvm,
+      program: e.data.payload.program,
+    });
+    isRunMode = !isFinished;
 
-    postTypedMessage({ command: Commands.STEP, payload: { result, state, isFinished, isRunMode } });
+    postTypedMessage({ command: Commands.STEP, status, error, payload: { result, state, isFinished, isRunMode } });
   } else if (e.data.command === Commands.RUN) {
     isRunMode = true;
     postTypedMessage({ command: Commands.RUN, payload: { isRunMode, isFinished: true, state: state ?? {} } });
@@ -133,7 +129,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       payload: { pageNumber: 0, memorySize: (memoryPage as unknown as Array<number>)?.length },
     });
   }
-  // TODO uncomennet and finish implementation
+  // TODO uncomment and finish implementation
   // else if (e.data.command === Commands.MEMORY_RANGE) {
   //   const memoryRange = Object.values(memory).flat().slice(e.data.payload.start, e.data.payload.end);
   //   postMessage({
