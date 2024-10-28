@@ -1,8 +1,8 @@
 import { toast } from "react-toastify";
 
 class Logger {
-  error(msg: string, { error, showToast }: { error: unknown; showToast?: boolean }) {
-    if (showToast) {
+  error(msg: string, { error, hideToast }: { error: unknown; hideToast?: boolean }) {
+    if (!hideToast) {
       toast.error(
         <div>
           {msg}
@@ -12,7 +12,7 @@ class Logger {
       );
     }
 
-    console.error("Catched error:", error);
+    console.error("‼️‼️‼️‼️Catched error:", error);
   }
 
   warn(...msg: unknown[]) {
