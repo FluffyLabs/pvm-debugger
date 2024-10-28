@@ -23,6 +23,7 @@ export interface WorkerState {
   currentInstruction?: CurrentInstruction;
   isRunMode?: boolean;
   isDebugFinished?: boolean;
+  isLoading?: boolean;
   memory?: {
     meta: {
       pageSize: number | undefined;
@@ -63,13 +64,15 @@ export const loadWorker = createAsyncThunk(
       id: string;
       payload: { type: PvmTypes; params?: { url?: string; file?: Blob; lang?: SupportedLangs } };
     },
-    { getState },
+    { getState, dispatch },
   ) => {
     const state = getState() as RootState;
     const worker = state.workers.find((worker) => worker.id === id);
     if (!worker) {
       return;
     }
+
+    dispatch(setWorkerIsLoading({ id, isLoading: true }));
 
     return new Promise<boolean>((resolve) => {
       const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
@@ -86,13 +89,15 @@ export const loadWorker = createAsyncThunk(
             logger.error("Error loading PVM worker", { error: event.data.error });
             worker.worker.removeEventListener("message", messageHandler);
           }
+
+          dispatch(setWorkerIsLoading({ id, isLoading: false }));
         }
       };
 
       worker.worker.addEventListener("message", messageHandler);
 
       worker.worker.postMessage({
-        command: "load",
+        command: Commands.LOAD,
         payload,
       });
     });
@@ -406,6 +411,12 @@ const workers = createSlice({
         worker.currentInstruction = action.payload;
       });
     },
+    setWorkerIsLoading(state, action) {
+      const worker = getWorker(state, action.payload.id);
+      if (worker) {
+        worker.isLoading = action.payload.isLoading;
+      }
+    },
 
     initSetPageSize: (
       state,
@@ -547,6 +558,7 @@ export const {
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
   setAllWorkersCurrentInstruction,
+  setWorkerIsLoading,
   initSetPageSize,
   setPageSize,
   changePage,
@@ -559,5 +571,6 @@ export const selectWorkers = (state: RootState) => state.workers;
 export const selectMemory = (id: string) => (state: RootState) =>
   state.workers.find((worker) => worker.id === id)?.memory;
 export const selectMemoryForFirstWorker = (state: RootState) => state.workers[0]?.memory;
+export const selectIsAnyWorkerLoading = (state: RootState) => state.workers.some((worker) => worker.isLoading);
 
 export default workers.reducer;

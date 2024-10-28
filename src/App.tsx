@@ -33,6 +33,7 @@ import {
   loadWorker,
   refreshPageAllWorkers,
   runAllWorkers,
+  selectIsAnyWorkerLoading,
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
@@ -55,6 +56,7 @@ import {
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { logger } from "./utils/loggerService";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 function App() {
   const {
@@ -72,6 +74,7 @@ function App() {
   } = useAppSelector((state) => state.debugger);
 
   const workers = useAppSelector((state) => state.workers);
+  const isLoading = useAppSelector(selectIsAnyWorkerLoading);
 
   const dispatch = useAppDispatch();
   const { currentInstruction, currentState, previousState } = workers[0] || {
@@ -283,17 +286,25 @@ function App() {
               <Button
                 className="md:mr-3"
                 onClick={handleRunProgram}
-                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode}
+                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
               >
-                <Play className="w-3.5 md:mr-1.5" />
+                {isLoading ? (
+                  <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
+                ) : (
+                  <Play className="w-3.5 md:mr-1.5" />
+                )}
                 <span className="hidden md:block">Run</span>
               </Button>
               <Button
                 className="md:mr-3"
                 onClick={onNext}
-                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode}
+                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
               >
-                <StepForward className="w-3.5 md:mr-1.5" />
+                {isLoading ? (
+                  <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
+                ) : (
+                  <StepForward className="w-3.5 md:mr-1.5" />
+                )}
                 <span className="hidden md:block">Step</span>
               </Button>
             </div>
