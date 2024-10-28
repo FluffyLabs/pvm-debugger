@@ -228,7 +228,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                       );
                     })}
                   {!showOptionsAsTags && selectedValues.length > maxCount && (
-                    <span className="text-black px-2">Multiple PVMs selected</span>
+                    <span className="text-black px-2">{selectedValues.length} PVMs in parallel</span>
                   )}
                   {showOptionsAsTags &&
                     selectedValues.slice(0, maxCount).map((value) => {
