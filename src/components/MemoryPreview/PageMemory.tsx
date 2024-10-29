@@ -16,7 +16,7 @@ const toMemoryPageTabData = (
   return chunk(memoryPage || [], SPLIT_STEP).map((chunk, index) => {
     return {
       address: (index * SPLIT_STEP + addressStart).toString().padStart(6, "0"),
-      bytes: chunk.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3)),
+      bytes: chunk.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3, false)),
     };
   });
 };
@@ -51,7 +51,7 @@ export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => v
   return (
     <div>
       <div className="flex w-full">
-        <div className="font-semibold flex items-center mr-6 ml-3">Page</div>
+        <div className="font-semibold flex items-center mr-6">Page</div>
         <div className="flex-grow">
           <Input
             type="number"
