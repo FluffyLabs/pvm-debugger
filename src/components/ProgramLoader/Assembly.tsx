@@ -40,6 +40,17 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
   try {
     const raw = disassemble(new Uint8Array(program));
     const lines = raw.split("\n");
+    // Since the disassemble does not produce output that could be passed
+    // directly to `compile_assembly` we do a bit of post-processing
+    // to make sure it's compatible.
+    //
+    // The output produced by disassembler has:
+    // 1. Some extra initial whitespace for alignment
+    // 2. Short, numeric labels like `@2`. We convert them to `@block2`.
+    // 3. line numbers prepended to the code (`0: add`)
+    // 4. `ecalli` instructions seem to have `// INVALID` comments next to them, but
+    //    the assembler does not handle comments at all.
+    // 5. disassembler produces unary minus (i.e. `r0 = -r7`), which isn't handled by the compiler.
     const fixedLines: string[] = lines.map((l: string) => {
       // remove leading whitespace
       l = l.trim();
