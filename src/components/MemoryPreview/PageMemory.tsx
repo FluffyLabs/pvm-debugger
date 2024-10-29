@@ -55,6 +55,7 @@ export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => v
         <div className="flex-grow">
           <Input
             type="number"
+            defaultValue={0}
             onChange={(ev) => {
               onPageChange(parseInt(ev.target.value || "-1"));
             }}
