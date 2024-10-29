@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Textarea } from "../ui/textarea";
 import { ProgramUploadFileOutput } from "./types";
 import { InitialState } from "../../types/pvm";
 import classNames from "classnames";
 import { compile_assembly, disassemble } from "@typeberry/spectool-wasm";
 import { mapUploadFileInputToOutput } from "./utils";
+import CodeMirror from "@uiw/react-codemirror";
 
 const DEFAULT_ASSEMBLY = `pre: a0 = 9
 pre: ra = 0xffff0000
@@ -49,6 +49,8 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
       l = l.replace(/^[0-9]+: /, "\t");
       // fix ecalli comments?
       l = l.replace(/^(.*)\/\/.*/, "$1");
+      // fix unary minus
+      l = l.replace(/= -/, "= 0 -");
       return l;
     });
 
@@ -153,7 +155,7 @@ export const Assembly = ({
   const isError = !!error;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col max-h-[70vh]">
       <p className="pb-2 -mt-4">
         <small>
           Experimental assembler format as defined in{" "}
@@ -167,18 +169,19 @@ export const Assembly = ({
           .
         </small>
       </p>
-      <Textarea
-        autoFocus
-        className={classNames("flex-auto gap-1 font-mono border-2 rounded-md", {
+      <div
+        className={classNames("flex-auto gap-1 font-mono border-2 rounded-md overflow-auto", {
           "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
           "border-red-500": isError,
         })}
-        id="assembly"
-        placeholder="Try writing some PolkaVM assembly code."
-        value={assembly}
-        onChange={(e) => compile(e.target.value)}
-        style={{ fontSize: "10px" }}
-      />
+      >
+        <CodeMirror
+          autoFocus
+          placeholder="Try writing some PolkaVM assembly code."
+          value={assembly}
+          onChange={(value) => compile(value)}
+        />
+      </div>
       <div>
         <p className={classNames(isError ? "text-red-500" : "text-green-500", "pt-4")}>
           {error ?? "Compilation successful"}
