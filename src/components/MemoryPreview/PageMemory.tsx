@@ -29,12 +29,12 @@ export const MemoryTable = ({ data, addressStart }: { addressStart: number; data
     <div className="mt-5 max-h-[calc(70vh-150px)] overflow-y-auto">
       {tableData.map(({ address, bytes }, rowIndex) => (
         <div className="flex" key={address}>
-          <div className="opacity-40 mr-5 w-[50px] grow" style={{ fontVariantNumeric: "tabular-nums" }}>
+          <div className="opacity-40 mr-6 w-[50px]" style={{ fontVariantNumeric: "tabular-nums" }}>
             {address}
           </div>
-          <div className="font-semibold">
+          <div className="font-semibold grow">
             {bytes.map((byte, index) => (
-              <span className={`mr-[1px] ${(index + rowIndex) % 2 === 0 ? "text-gray-600" : "text-gray-950"}`}>
+              <span className={`mr-[1px] ${(index + rowIndex) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
                 {byte}
               </span>
             ))}
