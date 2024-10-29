@@ -25,11 +25,13 @@ async function runProgramTest(page: Page, pvmType: string) {
   await pvmOption.waitFor({ state: "visible" });
   await pvmOption.click();
 
+  // Note: Do not click now on load button as initial page shows options already
+
   // Wait for the ProgramUpload component to be visible
-  await page.waitForSelector('button:has-text("Load")');
+  // await page.waitForSelector('button:has-text("Load")');
 
   // Click the Load Program button
-  await page.click('button:has-text("Load")');
+  // await page.click('button:has-text("Load")');
 
   // Wait for the program to load
   await page.waitForTimeout(1000);

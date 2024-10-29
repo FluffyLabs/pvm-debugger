@@ -6,59 +6,35 @@ import { Button } from "@/components/ui/button";
 import { useCallback, useRef } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { AvailablePvms, CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
-
-import { disassemblify } from "./packages/pvm/pvm/disassemblify";
-import { Pencil, PencilOff, Play, RefreshCcw, StepForward } from "lucide-react";
+import { CurrentInstruction } from "./types/pvm";
+import { Pencil, PencilOff } from "lucide-react";
 import { Header } from "@/components/Header";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
-import { ProgramLoader } from "@/components/ProgramLoader";
-import { ProgramUploadFileOutput } from "@/components/ProgramLoader/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
-import { PvmSelect, SelectedPvmWithPayload } from "@/components/PvmSelect";
+import { PvmSelect } from "@/components/PvmSelect";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 
-import { PvmTypes } from "./packages/web-worker/worker";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { Assembly } from "./components/ProgramLoader/Assembly";
-import {
-  continueAllWorkers,
-  createWorker,
-  destroyWorker,
-  initAllWorkers,
-  loadWorker,
-  refreshPageAllWorkers,
-  runAllWorkers,
-  selectIsAnyWorkerLoading,
-  setAllWorkersCurrentInstruction,
-  setAllWorkersCurrentState,
-  setAllWorkersPreviousState,
-  stepAllWorkers,
-  WorkerState,
-} from "@/store/workers/workersSlice.ts";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import {
-  setBreakpointAddresses,
   setClickedInstruction,
   setInitialState,
   setInstructionMode,
-  setIsAsmError,
-  setIsDebugFinished,
   setIsProgramEditMode,
-  setIsRunMode,
-  setProgram,
-  setProgramPreviewResult,
-  setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
-import { logger } from "./utils/loggerService";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { DebuggerControlls } from "./components/DebuggerControlls";
+import { useDebuggerActions } from "./hooks/useDebuggerActions";
+import { Loader } from "./components/ProgramLoader/Loader";
 
-function App() {
+const DebuggerContent = () => {
+  const dispatch = useAppDispatch();
+  const debuggerActions = useDebuggerActions();
   const {
     program,
     initialState,
@@ -68,15 +44,10 @@ function App() {
     clickedInstruction,
     instructionMode,
     breakpointAddresses,
-    isDebugFinished,
     pvmInitialized,
-    isRunMode,
   } = useAppSelector((state) => state.debugger);
-
   const workers = useAppSelector((state) => state.workers);
-  const isLoading = useAppSelector(selectIsAnyWorkerLoading);
 
-  const dispatch = useAppDispatch();
   const { currentInstruction, currentState, previousState } = workers[0] || {
     currentInstruction: null,
     currentState: initialState,
@@ -85,104 +56,6 @@ function App() {
 
   const mobileView = useRef<HTMLDivElement | null>(null);
 
-  const restartProgram = useCallback(
-    (state: InitialState) => {
-      setInitialState(state);
-      dispatch(setIsDebugFinished(false));
-      dispatch(setIsRunMode(false));
-      dispatch(setAllWorkersCurrentState(state));
-      dispatch(setAllWorkersPreviousState(state));
-      dispatch(initAllWorkers());
-      dispatch(refreshPageAllWorkers());
-      dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
-      dispatch(setClickedInstruction(null));
-    },
-    [dispatch, programPreviewResult],
-  );
-
-  const startProgram = useCallback(
-    (initialState: ExpectedState, newProgram: number[]) => {
-      dispatch(setInitialState(initialState));
-      dispatch(setProgram(newProgram));
-      const currentState = {
-        pc: 0,
-        regs: initialState.regs,
-        gas: initialState.gas,
-        pageMap: initialState.pageMap,
-        status: Status.OK,
-      };
-      dispatch(setAllWorkersCurrentState(currentState));
-      dispatch(setAllWorkersPreviousState(currentState));
-
-      setIsDebugFinished(false);
-
-      dispatch(initAllWorkers());
-
-      try {
-        const result = disassemblify(new Uint8Array(newProgram));
-        logger.info("Disassembly result:", result);
-        dispatch(setProgramPreviewResult(result));
-        dispatch(setAllWorkersCurrentInstruction(result?.[0]));
-        dispatch(setPvmInitialized(true));
-      } catch (e) {
-        console.error("Error disassembling program", e);
-      }
-    },
-    [dispatch],
-  );
-
-  const handleProgramLoad = useCallback(
-    (data?: ProgramUploadFileOutput) => {
-      if (data) {
-        startProgram(data.initial, data.program);
-        dispatch(setIsAsmError(false));
-      } else {
-        dispatch(setIsAsmError(true));
-      }
-    },
-    [startProgram, dispatch],
-  );
-
-  const onNext = () => {
-    if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
-      return;
-    }
-
-    if (!currentInstruction) {
-      dispatch(setAllWorkersCurrentState(initialState));
-    } else {
-      dispatch(stepAllWorkers());
-    }
-
-    dispatch(setIsProgramEditMode(false));
-    dispatch(refreshPageAllWorkers());
-  };
-
-  const handleRunProgram = () => {
-    if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
-      return;
-    }
-
-    if (isRunMode) {
-      dispatch(continueAllWorkers());
-    } else {
-      startProgram(initialState, program);
-      dispatch(setIsRunMode(true));
-      dispatch(runAllWorkers());
-    }
-    dispatch(refreshPageAllWorkers());
-    // dispatch(stepAllWorkers());
-  };
-
-  const handleBreakpointClick = (address: number) => {
-    if (breakpointAddresses.includes(address)) {
-      dispatch(setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address)));
-    } else {
-      dispatch(setBreakpointAddresses([...breakpointAddresses, address]));
-    }
-  };
   const onInstructionClick = useCallback(
     (row: CurrentInstruction) => {
       dispatch(setClickedInstruction(row));
@@ -194,74 +67,115 @@ function App() {
     return mobileView?.current?.offsetParent !== null;
   };
 
-  const handlePvmTypeChange = async (selectedPvms: SelectedPvmWithPayload[]) => {
-    logger.debug("selectedPvms vs workers ", selectedPvms, workers);
+  return (
+    <>
+      <div className="col-span-12 md:col-span-4 max-sm:max-h-[70vh] max-sm:min-h-[330px]">
+        {!program.length && <InitialLoadProgramCTA />}
+        {!!program.length && (
+          <>
+            {isProgramEditMode && (
+              <div className="border-2 rounded-md h-full p-2 pt-8">
+                <Assembly
+                  program={program}
+                  onProgramLoad={debuggerActions.handleProgramLoad}
+                  initialState={initialState}
+                />
+              </div>
+            )}
 
-    await Promise.all(
-      workers.map((worker: WorkerState) => {
-        dispatch(destroyWorker(worker.id)).unwrap();
-      }),
-    );
+            {!isProgramEditMode && (
+              <>
+                <Instructions
+                  status={currentState.status}
+                  currentState={currentState}
+                  programPreviewResult={programPreviewResult}
+                  instructionMode={instructionMode}
+                  onAddressClick={debuggerActions.handleBreakpointClick}
+                  breakpointAddresses={breakpointAddresses}
+                  onInstructionClick={onInstructionClick}
+                />
+              </>
+            )}
+          </>
+        )}
+      </div>
 
-    await Promise.all(
-      selectedPvms.map(async ({ id, type, params }) => {
-        logger.info("Selected PVM type", id, type, params);
+      <div className="max-sm:hidden md:col-span-2">
+        <Registers
+          currentState={isProgramEditMode ? initialState : currentState}
+          previousState={isProgramEditMode ? initialState : previousState}
+          onCurrentStateChange={(state) => {
+            setInitialState(state);
+            debuggerActions.restartProgram(state);
+          }}
+          allowEditing={false}
+        />
+      </div>
 
-        if (workers.find((worker: WorkerState) => worker.id === id)) {
-          logger.info("Worker already initialized");
-          // TODO: for now just initialize the worker one more time
-        }
-        logger.info("Worker not initialized");
+      <div className="col-span-12 md:hidden">
+        <MobileRegisters
+          isEnabled={pvmInitialized}
+          currentState={isProgramEditMode ? initialState : currentState}
+          previousState={isProgramEditMode ? initialState : previousState}
+        />
+      </div>
 
-        if (id === AvailablePvms.POLKAVM) {
-          await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.WASM_URL as PvmTypes,
-                params,
-              },
-            }),
-          ).unwrap();
-        } else if (id === AvailablePvms.TYPEBERRY) {
-          await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.BUILT_IN,
-              },
-            }),
-          ).unwrap();
-        } else if (type === AvailablePvms.WASM_FILE) {
-          await dispatch(createWorker(id)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.WASM_FILE,
-                params,
-              },
-            }),
-          ).unwrap();
-        } else if (type === AvailablePvms.WASM_URL) {
-          await dispatch(createWorker(id)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.WASM_URL,
-                params,
-              },
-            }),
-          ).unwrap();
-        }
-      }),
-    );
+      <div className="max-sm:hidden col-span-12 md:col-span-3">{<MemoryPreview />}</div>
 
-    restartProgram(initialState);
-  };
+      <div className="max-sm:hidden md:col-span-3 overflow-hidden">
+        <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
+      </div>
+
+      <div className="md:hidden col-span-12 order-last" ref={mobileView}>
+        <MobileKnowledgeBase
+          currentInstruction={clickedInstruction ?? currentInstruction}
+          open={clickedInstruction !== null && isMobileViewActive()}
+          onClose={() => setClickedInstruction(null)}
+        />
+      </div>
+
+      <div className="col-span-12 md:col-span-4 max-sm:order-first flex items-center justify-between my-3">
+        <div className={`flex items-center space-x-2 ${!program.length ? "invisible" : "visible"}`}>
+          <Label htmlFor="instruction-mode">ASM</Label>
+          <Switch
+            disabled={isProgramEditMode}
+            id="instruction-mode"
+            checked={instructionMode === InstructionMode.BYTECODE}
+            onCheckedChange={(checked) =>
+              dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))
+            }
+          />
+          <Label htmlFor="instruction-mode">RAW</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="link"
+            size="icon"
+            className={!program.length ? "invisible" : "visible"}
+            disabled={!program.length || isAsmError}
+            title="Edit the code"
+            onClick={() => {
+              if (isProgramEditMode) {
+                debuggerActions.startProgram(initialState, program);
+                dispatch(setIsProgramEditMode(false));
+              } else {
+                debuggerActions.restartProgram(initialState);
+                dispatch(setIsProgramEditMode(true));
+              }
+            }}
+          >
+            {isProgramEditMode ? <PencilOff /> : <Pencil />}
+          </Button>
+        </div>
+        <NumeralSystemSwitch className="ml-3 md:hidden" />
+      </div>
+    </>
+  );
+};
+
+function App() {
+  const debuggerActions = useDebuggerActions();
+  const { pvmInitialized, initialState, program } = useAppSelector((state) => state.debugger);
 
   return (
     <>
@@ -269,149 +183,28 @@ function App() {
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
-              <div className="md:mr-3">
-                <ProgramLoader initialState={initialState} onProgramLoad={handleProgramLoad} program={program} />
-              </div>
-              <Button
-                className="md:mr-3"
-                onClick={() => {
-                  restartProgram(initialState);
-                }}
-                disabled={!pvmInitialized || isProgramEditMode}
-              >
-                <RefreshCcw className="w-3.5 md:mr-1.5" />
-                <span className="hidden md:block">Reset</span>
-              </Button>
-              <Button
-                className="md:mr-3"
-                onClick={handleRunProgram}
-                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
-              >
-                {isLoading ? (
-                  <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
-                ) : (
-                  <Play className="w-3.5 md:mr-1.5" />
-                )}
-                <span className="hidden md:block">Run</span>
-              </Button>
-              <Button
-                className="md:mr-3"
-                onClick={onNext}
-                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
-              >
-                {isLoading ? (
-                  <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
-                ) : (
-                  <StepForward className="w-3.5 md:mr-1.5" />
-                )}
-                <span className="hidden md:block">Step</span>
-              </Button>
-            </div>
+            <DebuggerControlls />
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
               <div className="w-full md:w-[350px]">
-                <PvmSelect onValueChange={(selectedPvms) => handlePvmTypeChange(selectedPvms)} />
+                <PvmSelect onValueChange={(selectedPvms) => debuggerActions.handlePvmTypeChange(selectedPvms)} />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
 
-            <div className="col-span-12 md:col-span-4 max-sm:max-h-[70vh] max-sm:min-h-[330px]">
-              {!program.length && <InitialLoadProgramCTA />}
-              {!!program.length && (
-                <>
-                  {isProgramEditMode && (
-                    <div className="border-2 rounded-md h-full p-2 pt-8">
-                      <Assembly program={program} onProgramLoad={handleProgramLoad} initialState={initialState} />
-                    </div>
-                  )}
-
-                  {!isProgramEditMode && (
-                    <>
-                      <Instructions
-                        status={currentState.status}
-                        currentState={currentState}
-                        programPreviewResult={programPreviewResult}
-                        instructionMode={instructionMode}
-                        onAddressClick={handleBreakpointClick}
-                        breakpointAddresses={breakpointAddresses}
-                        onInstructionClick={onInstructionClick}
-                      />
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="max-sm:hidden md:col-span-2">
-              <Registers
-                currentState={isProgramEditMode ? initialState : currentState}
-                previousState={isProgramEditMode ? initialState : previousState}
-                onCurrentStateChange={(state) => {
-                  setInitialState(state);
-                  restartProgram(state);
-                }}
-                allowEditing={false}
-              />
-            </div>
-
-            <div className="col-span-12 md:hidden">
-              <MobileRegisters
-                isEnabled={pvmInitialized}
-                currentState={isProgramEditMode ? initialState : currentState}
-                previousState={isProgramEditMode ? initialState : previousState}
-              />
-            </div>
-
-            <div className="max-sm:hidden col-span-12 md:col-span-3">{<MemoryPreview />}</div>
-
-            <div className="max-sm:hidden md:col-span-3 overflow-hidden">
-              <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
-            </div>
-
-            <div className="md:hidden col-span-12 order-last" ref={mobileView}>
-              <MobileKnowledgeBase
-                currentInstruction={clickedInstruction ?? currentInstruction}
-                open={clickedInstruction !== null && isMobileViewActive()}
-                onClose={() => setClickedInstruction(null)}
-              />
-            </div>
-
-            <div className="col-span-12 md:col-span-4 max-sm:order-first flex items-center justify-between my-3">
-              <div className={`flex items-center space-x-2 ${!program.length ? "invisible" : "visible"}`}>
-                <Label htmlFor="instruction-mode">ASM</Label>
-                <Switch
-                  disabled={isProgramEditMode}
-                  id="instruction-mode"
-                  checked={instructionMode === InstructionMode.BYTECODE}
-                  onCheckedChange={(checked) =>
-                    dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))
-                  }
-                />
-                <Label htmlFor="instruction-mode">RAW</Label>
+            {pvmInitialized ? (
+              <DebuggerContent />
+            ) : (
+              <div className="col-span-12 flex justify-center h-[50vh] align-middle">
+                <div className="w-[500px] min-h-[500px] h-[75vh] flex flex-col">
+                  <Loader
+                    initialState={initialState}
+                    onProgramLoad={debuggerActions.handleProgramLoad}
+                    program={program}
+                  />
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="link"
-                  size="icon"
-                  className={!program.length ? "invisible" : "visible"}
-                  disabled={!program.length || isAsmError}
-                  title="Edit the code"
-                  onClick={() => {
-                    if (isProgramEditMode) {
-                      startProgram(initialState, program);
-                      dispatch(setIsProgramEditMode(false));
-                    } else {
-                      restartProgram(initialState);
-                      dispatch(setIsProgramEditMode(true));
-                    }
-                  }}
-                >
-                  {isProgramEditMode ? <PencilOff /> : <Pencil />}
-                </Button>
-              </div>
-              <NumeralSystemSwitch className="ml-3 md:hidden" />
-            </div>
+            )}
           </div>
         </div>
       </div>

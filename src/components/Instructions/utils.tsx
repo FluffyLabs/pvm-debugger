@@ -4,14 +4,15 @@ import { ArgumentType, Args } from "@typeberry/pvm-debugger-adapter";
 export const valueToNumeralSystem = (
   value: number | bigint | undefined,
   numeralSystem: NumeralSystem,
-  padStartVal?: number,
+  padStartVal: number = 0,
+  withPrefix: boolean = true,
 ): string => {
   const stringValue =
     typeof value === "bigint" ? BigInt.asUintN(32, value).toString(16) : ((value ?? 0) >>> 0).toString(16);
 
   return numeralSystem === NumeralSystem.HEXADECIMAL
-    ? `0x${stringValue.padStart(padStartVal || 0, "0")}`
-    : (value ?? 0).toString().padStart(padStartVal || 0, "0");
+    ? `${withPrefix ? "0x" : ""}${stringValue.padStart(padStartVal, "0")}`
+    : (value ?? 0).toString().padStart(padStartVal, "0");
 };
 
 export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: NumeralSystem, counter: number) => {
