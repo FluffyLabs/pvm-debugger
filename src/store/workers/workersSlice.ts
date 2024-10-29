@@ -537,7 +537,7 @@ const workers = createSlice({
           page: {
             data: undefined,
             isLoading: false,
-            pageNumber: undefined,
+            pageNumber: 0,
           },
           range: {
             data: [],
