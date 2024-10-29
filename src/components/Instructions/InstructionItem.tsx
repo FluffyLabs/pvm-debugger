@@ -1,12 +1,26 @@
 import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { getStatusColor } from "../Registers/utils";
-import { Status } from "@/types/pvm";
+import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
 import { useCallback, useContext, useRef, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from ".";
+import { useAppSelector } from "@/store/hooks.ts";
+import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
+import { hexToRgb } from "@/lib/utils.ts";
+import { logger } from "@/utils/loggerService.tsx";
+
+const getWorkerValueFromState = (
+  worker: WorkerState,
+  state: "currentState" | "previousState",
+  propName: keyof ExpectedState,
+  propNameIndex?: number,
+) =>
+  propNameIndex !== undefined
+    ? (worker[state][propName] as RegistersArray)[propNameIndex]
+    : (worker[state][propName] as number);
 
 function getBackgroundColor(status: Status | undefined, isHighlighted: boolean) {
   if (status === Status.OK && isHighlighted) {
@@ -66,8 +80,12 @@ export const InstructionItem = ({
   const { numeralSystem } = useContext(NumeralSystemContext);
   const ref = useRef<HTMLTableRowElement>(null);
 
+  const workers = useAppSelector(selectWorkers);
+  const pcInAllWorkers = (state: "currentState" | "previousState") =>
+    workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
+
   const isActive = (programRow: ProgramRow) => {
-    return programRow.address === currentPc;
+    return pcInAllWorkers("currentState").includes(programRow.address);
   };
 
   const fillSearch = useCallback(() => {
@@ -77,12 +95,21 @@ export const InstructionItem = ({
   const isHighlighted = isActive(programRow);
   const bgColor = getBackgroundColor(status, isHighlighted).toUpperCase();
 
+  logger.debug({
+    currentPc,
+    bgColor,
+  });
+
+  const bgOpacity =
+    pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
+    pcInAllWorkers("currentState").length;
+
   return (
     <TableRow
       ref={ref}
       className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
       test-id="instruction-item"
-      style={{ backgroundColor: isHighlighted ? bgColor : "initial" }}
+      style={{ backgroundColor: isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : "initial" }}
     >
       {instructionMode === InstructionMode.BYTECODE && (
         <>
