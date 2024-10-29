@@ -9,10 +9,9 @@ import { Registers } from "./components/Registers";
 import { AvailablePvms, CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
 
 import { disassemblify } from "./packages/pvm/pvm/disassemblify";
-import { Pencil, PencilOff, Play, RefreshCcw, StepForward } from "lucide-react";
+import { Pencil, PencilOff } from "lucide-react";
 import { Header } from "@/components/Header";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
-import { ProgramLoader } from "@/components/ProgramLoader";
 import { ProgramUploadFileOutput } from "@/components/ProgramLoader/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
@@ -26,18 +25,14 @@ import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { Assembly } from "./components/ProgramLoader/Assembly";
 import {
-  continueAllWorkers,
   createWorker,
   destroyWorker,
   initAllWorkers,
   loadWorker,
   refreshPageAllWorkers,
-  runAllWorkers,
-  selectIsAnyWorkerLoading,
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
-  stepAllWorkers,
   WorkerState,
 } from "@/store/workers/workersSlice.ts";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
@@ -56,7 +51,7 @@ import {
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { logger } from "./utils/loggerService";
-import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { DebuggerControlls } from "./components/DebuggerControlls";
 
 function App() {
   const {
@@ -68,13 +63,10 @@ function App() {
     clickedInstruction,
     instructionMode,
     breakpointAddresses,
-    isDebugFinished,
     pvmInitialized,
-    isRunMode,
   } = useAppSelector((state) => state.debugger);
 
   const workers = useAppSelector((state) => state.workers);
-  const isLoading = useAppSelector(selectIsAnyWorkerLoading);
 
   const dispatch = useAppDispatch();
   const { currentInstruction, currentState, previousState } = workers[0] || {
@@ -142,39 +134,6 @@ function App() {
     },
     [startProgram, dispatch],
   );
-
-  const onNext = () => {
-    if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
-      return;
-    }
-
-    if (!currentInstruction) {
-      dispatch(setAllWorkersCurrentState(initialState));
-    } else {
-      dispatch(stepAllWorkers());
-    }
-
-    dispatch(setIsProgramEditMode(false));
-    dispatch(refreshPageAllWorkers());
-  };
-
-  const handleRunProgram = () => {
-    if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
-      return;
-    }
-
-    if (isRunMode) {
-      dispatch(continueAllWorkers());
-    } else {
-      startProgram(initialState, program);
-      dispatch(setIsRunMode(true));
-      dispatch(runAllWorkers());
-    }
-    dispatch(refreshPageAllWorkers());
-    // dispatch(stepAllWorkers());
-  };
 
   const handleBreakpointClick = (address: number) => {
     if (breakpointAddresses.includes(address)) {
@@ -269,45 +228,11 @@ function App() {
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
-              <div className="md:mr-3">
-                <ProgramLoader initialState={initialState} onProgramLoad={handleProgramLoad} program={program} />
-              </div>
-              <Button
-                className="md:mr-3"
-                onClick={() => {
-                  restartProgram(initialState);
-                }}
-                disabled={!pvmInitialized || isProgramEditMode}
-              >
-                <RefreshCcw className="w-3.5 md:mr-1.5" />
-                <span className="hidden md:block">Reset</span>
-              </Button>
-              <Button
-                className="md:mr-3"
-                onClick={handleRunProgram}
-                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
-              >
-                {isLoading ? (
-                  <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
-                ) : (
-                  <Play className="w-3.5 md:mr-1.5" />
-                )}
-                <span className="hidden md:block">Run</span>
-              </Button>
-              <Button
-                className="md:mr-3"
-                onClick={onNext}
-                disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
-              >
-                {isLoading ? (
-                  <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
-                ) : (
-                  <StepForward className="w-3.5 md:mr-1.5" />
-                )}
-                <span className="hidden md:block">Step</span>
-              </Button>
-            </div>
+            <DebuggerControlls
+              handleProgramLoad={handleProgramLoad}
+              restartProgram={restartProgram}
+              startProgram={startProgram}
+            />
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
               <div className="w-full md:w-[350px]">
