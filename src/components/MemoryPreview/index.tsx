@@ -12,7 +12,7 @@ export const MemoryPreview = () => {
   const dispatch = useAppDispatch();
 
   return (
-    <div className="border-2 rounded-md min-h-64 h-full max-h-[70vh]">
+    <div className="border-2 rounded-md overflow-auto h-[70vh]">
       <Tabs defaultValue="pages" className="h-full flex flex-col">
         <TabsContent className="m-3 h-auto" value="pages">
           <PageMemory onPageChange={(pageNumber) => dispatch(changePageAllWorkers(pageNumber))} />

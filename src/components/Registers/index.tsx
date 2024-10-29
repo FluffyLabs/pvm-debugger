@@ -108,7 +108,7 @@ export const Registers = ({
   const workers = useAppSelector(selectWorkers);
 
   return (
-    <div className="border-2 rounded-md h-full">
+    <div className="border-2 rounded-md h-[70vh] overflow-auto">
       <div className="p-3">
         <div>
           <div className="font-mono flex flex-col items-start">
