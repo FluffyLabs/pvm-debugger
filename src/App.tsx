@@ -6,13 +6,10 @@ import { Button } from "@/components/ui/button";
 import { useCallback, useRef } from "react";
 import { Instructions } from "./components/Instructions";
 import { Registers } from "./components/Registers";
-import { AvailablePvms, CurrentInstruction, ExpectedState, InitialState, Status } from "./types/pvm";
-
-import { disassemblify } from "./packages/pvm/pvm/disassemblify";
+import { AvailablePvms, CurrentInstruction } from "./types/pvm";
 import { Pencil, PencilOff } from "lucide-react";
 import { Header } from "@/components/Header";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
-import { ProgramUploadFileOutput } from "@/components/ProgramLoader/types.ts";
 import { Switch } from "@/components/ui/switch.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
@@ -24,36 +21,22 @@ import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { Assembly } from "./components/ProgramLoader/Assembly";
-import {
-  createWorker,
-  destroyWorker,
-  initAllWorkers,
-  loadWorker,
-  refreshPageAllWorkers,
-  setAllWorkersCurrentInstruction,
-  setAllWorkersCurrentState,
-  setAllWorkersPreviousState,
-  WorkerState,
-} from "@/store/workers/workersSlice.ts";
+import { createWorker, destroyWorker, loadWorker, WorkerState } from "@/store/workers/workersSlice.ts";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import {
-  setBreakpointAddresses,
   setClickedInstruction,
   setInitialState,
   setInstructionMode,
-  setIsAsmError,
-  setIsDebugFinished,
   setIsProgramEditMode,
-  setIsRunMode,
-  setProgram,
-  setProgramPreviewResult,
-  setPvmInitialized,
 } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { logger } from "./utils/loggerService";
 import { DebuggerControlls } from "./components/DebuggerControlls";
+import { useDebuggerActions } from "./hooks/useDebuggerActions";
 
 function App() {
+  const debuggerActions = useDebuggerActions();
+
   const {
     program,
     initialState,
@@ -77,71 +60,6 @@ function App() {
 
   const mobileView = useRef<HTMLDivElement | null>(null);
 
-  const restartProgram = useCallback(
-    (state: InitialState) => {
-      setInitialState(state);
-      dispatch(setIsDebugFinished(false));
-      dispatch(setIsRunMode(false));
-      dispatch(setAllWorkersCurrentState(state));
-      dispatch(setAllWorkersPreviousState(state));
-      dispatch(initAllWorkers());
-      dispatch(refreshPageAllWorkers());
-      dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
-      dispatch(setClickedInstruction(null));
-    },
-    [dispatch, programPreviewResult],
-  );
-
-  const startProgram = useCallback(
-    (initialState: ExpectedState, newProgram: number[]) => {
-      dispatch(setInitialState(initialState));
-      dispatch(setProgram(newProgram));
-      const currentState = {
-        pc: 0,
-        regs: initialState.regs,
-        gas: initialState.gas,
-        pageMap: initialState.pageMap,
-        status: Status.OK,
-      };
-      dispatch(setAllWorkersCurrentState(currentState));
-      dispatch(setAllWorkersPreviousState(currentState));
-
-      setIsDebugFinished(false);
-
-      dispatch(initAllWorkers());
-
-      try {
-        const result = disassemblify(new Uint8Array(newProgram));
-        logger.info("Disassembly result:", result);
-        dispatch(setProgramPreviewResult(result));
-        dispatch(setAllWorkersCurrentInstruction(result?.[0]));
-        dispatch(setPvmInitialized(true));
-      } catch (e) {
-        console.error("Error disassembling program", e);
-      }
-    },
-    [dispatch],
-  );
-
-  const handleProgramLoad = useCallback(
-    (data?: ProgramUploadFileOutput) => {
-      if (data) {
-        startProgram(data.initial, data.program);
-        dispatch(setIsAsmError(false));
-      } else {
-        dispatch(setIsAsmError(true));
-      }
-    },
-    [startProgram, dispatch],
-  );
-
-  const handleBreakpointClick = (address: number) => {
-    if (breakpointAddresses.includes(address)) {
-      dispatch(setBreakpointAddresses(breakpointAddresses.filter((x) => x !== address)));
-    } else {
-      dispatch(setBreakpointAddresses([...breakpointAddresses, address]));
-    }
-  };
   const onInstructionClick = useCallback(
     (row: CurrentInstruction) => {
       dispatch(setClickedInstruction(row));
@@ -219,7 +137,7 @@ function App() {
       }),
     );
 
-    restartProgram(initialState);
+    debuggerActions.restartProgram(initialState);
   };
 
   return (
@@ -228,11 +146,7 @@ function App() {
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
-            <DebuggerControlls
-              handleProgramLoad={handleProgramLoad}
-              restartProgram={restartProgram}
-              startProgram={startProgram}
-            />
+            <DebuggerControlls />
 
             <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
               <div className="w-full md:w-[350px]">
@@ -247,7 +161,11 @@ function App() {
                 <>
                   {isProgramEditMode && (
                     <div className="border-2 rounded-md h-full p-2 pt-8">
-                      <Assembly program={program} onProgramLoad={handleProgramLoad} initialState={initialState} />
+                      <Assembly
+                        program={program}
+                        onProgramLoad={debuggerActions.handleProgramLoad}
+                        initialState={initialState}
+                      />
                     </div>
                   )}
 
@@ -258,7 +176,7 @@ function App() {
                         currentState={currentState}
                         programPreviewResult={programPreviewResult}
                         instructionMode={instructionMode}
-                        onAddressClick={handleBreakpointClick}
+                        onAddressClick={debuggerActions.handleBreakpointClick}
                         breakpointAddresses={breakpointAddresses}
                         onInstructionClick={onInstructionClick}
                       />
@@ -274,7 +192,7 @@ function App() {
                 previousState={isProgramEditMode ? initialState : previousState}
                 onCurrentStateChange={(state) => {
                   setInitialState(state);
-                  restartProgram(state);
+                  debuggerActions.restartProgram(state);
                 }}
                 allowEditing={false}
               />
@@ -324,10 +242,10 @@ function App() {
                   title="Edit the code"
                   onClick={() => {
                     if (isProgramEditMode) {
-                      startProgram(initialState, program);
+                      debuggerActions.startProgram(initialState, program);
                       dispatch(setIsProgramEditMode(false));
                     } else {
-                      restartProgram(initialState);
+                      debuggerActions.restartProgram(initialState);
                       dispatch(setIsProgramEditMode(true));
                     }
                   }}

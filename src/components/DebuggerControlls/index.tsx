@@ -2,8 +2,6 @@ import { RefreshCcw, Play, StepForward } from "lucide-react";
 import { LoadingSpinner } from "../LoadingSpinner";
 import { ProgramLoader } from "../ProgramLoader";
 import { Button } from "../ui/button";
-import { ExpectedState, InitialState } from "@/types/pvm";
-import { ProgramUploadFileOutput } from "../ProgramLoader/types";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   continueAllWorkers,
@@ -14,14 +12,10 @@ import {
   stepAllWorkers,
 } from "@/store/workers/workersSlice";
 import { setIsProgramEditMode, setIsRunMode } from "@/store/debugger/debuggerSlice";
+import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 
-interface DebuggerControllsProps {
-  handleProgramLoad: (data?: ProgramUploadFileOutput) => void;
-  restartProgram: (state: InitialState) => void;
-  startProgram: (initialState: ExpectedState, newProgram: number[]) => void;
-}
-
-export const DebuggerControlls = ({ handleProgramLoad, restartProgram, startProgram }: DebuggerControllsProps) => {
+export const DebuggerControlls = () => {
+  const debuggerActions = useDebuggerActions();
   const { program, initialState, isProgramEditMode, isDebugFinished, pvmInitialized, isRunMode } = useAppSelector(
     (state) => state.debugger,
   );
@@ -61,7 +55,7 @@ export const DebuggerControlls = ({ handleProgramLoad, restartProgram, startProg
     if (isRunMode) {
       dispatch(continueAllWorkers());
     } else {
-      startProgram(initialState, program);
+      debuggerActions.startProgram(initialState, program);
       dispatch(setIsRunMode(true));
       dispatch(runAllWorkers());
     }
@@ -72,12 +66,16 @@ export const DebuggerControlls = ({ handleProgramLoad, restartProgram, startProg
   return (
     <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
       <div className="md:mr-3">
-        <ProgramLoader initialState={initialState} onProgramLoad={handleProgramLoad} program={program} />
+        <ProgramLoader
+          initialState={initialState}
+          onProgramLoad={debuggerActions.handleProgramLoad}
+          program={program}
+        />
       </div>
       <Button
         className="md:mr-3"
         onClick={() => {
-          restartProgram(initialState);
+          debuggerActions.restartProgram(initialState);
         }}
         disabled={!pvmInitialized || isProgramEditMode}
       >
