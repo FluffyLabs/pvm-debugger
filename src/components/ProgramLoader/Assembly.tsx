@@ -44,28 +44,13 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
       // remove leading whitespace
       l = l.trim();
       // replace labels
-      l = l.replace(/: @(.+)$/, "@block$1:");
+      l = l.replace(/(: )?@(.+)$/, "@block$2$1");
+      // remove line number
+      l = l.replace(/^[0-9]+: /, "\t");
+      // fix ecalli comments?
+      l = l.replace(/^(.*)\/\/.*/, "$1");
       return l;
     });
-
-    // make a map of line targets into basic block labels
-    const basicBlocks = new Map<string, string>();
-    for (let i = 0; i < fixedLines.length; i += 1) {
-      if (fixedLines[i].startsWith("@")) {
-        const blockName = fixedLines[i].replace(":", "");
-        const number = fixedLines[i + 1].split(":")[0];
-        basicBlocks.set(number, blockName);
-      }
-      // remove line number
-      fixedLines[i] = fixedLines[i].replace(/[0-9]+: /, "\t");
-    }
-
-    // fix jumps
-    for (let i = 0; i < fixedLines.length; i += 1) {
-      fixedLines[i] = fixedLines[i].replace(/jump ([0-9]+)/, (_, num) => {
-        return `jump ${basicBlocks.get(num)}`;
-      });
-    }
 
     const newProgram = fixedLines.join("\n");
     // now append initial registers
