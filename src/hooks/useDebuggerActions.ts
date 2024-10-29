@@ -25,9 +25,9 @@ import {
   loadWorker,
   WorkerState,
 } from "@/store/workers/workersSlice";
-import { AvailablePvms, ExpectedState } from "@/types/pvm";
+import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
-import { InitialState, Status } from "@typeberry/pvm-debugger-adapter";
+import { InitialState } from "@typeberry/pvm-debugger-adapter";
 import { useCallback } from "react";
 
 export const useDebuggerActions = () => {

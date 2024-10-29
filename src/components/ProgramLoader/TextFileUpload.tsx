@@ -35,7 +35,7 @@ export const TextFileUpload = ({
 
   return (
     <div className="block pb-[100px]">
-      <p>Load JSON testfile compatible with JAM TestVectors JSON&nbsp;</p>
+      <p>Load JSON testfile compatible with JAM TestVectors JSON</p>
       <p>
         <small>
           Examples can be found in <a href="https://github.com/w3f/jamtestvectors">wf3/jamtestvectors</a> Github repo.
