@@ -27,9 +27,10 @@ const init = async ({ pvm, program, initialState }: InitParams) => {
   } else {
     logger.info("PVM init external", pvm);
     const gas = initialState.gas || 10000;
-    pvm.reset(program, regsAsUint8(initialState.regs), BigInt(gas));
+    pvm.resetGeneric(program, regsAsUint8(initialState.regs), BigInt(gas));
     pvm.setNextProgramCounter(initialState.pc ?? 0);
     pvm.setGasLeft(BigInt(gas));
+    pvm.nextStep();
   }
 };
 
