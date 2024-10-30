@@ -11,6 +11,7 @@ import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
 import { logger } from "@/utils/loggerService.tsx";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 const getWorkerValueFromState = (
   worker: WorkerState,
@@ -83,6 +84,7 @@ export const InstructionItem = ({
   const workers = useAppSelector(selectWorkers);
   const pcInAllWorkers = (state: "currentState" | "previousState") =>
     workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
+  const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
 
   const isActive = (programRow: ProgramRow) => {
     return pcInAllWorkers("currentState").includes(programRow.address);
@@ -104,50 +106,74 @@ export const InstructionItem = ({
     pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
     pcInAllWorkers("currentState").length;
 
-  return (
-    <TableRow
-      ref={ref}
-      className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
-      test-id="instruction-item"
-      style={{ backgroundColor: isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : "initial" }}
-    >
-      {instructionMode === InstructionMode.BYTECODE && (
-        <>
-          <AddressCell
-            breakpointAddresses={breakpointAddresses}
-            programRow={programRow}
-            onAddressClick={onAddressClick}
-          />
-          <TableCell className="p-1.5">
-            {"instructionBytes" in programRow && programRow.instructionBytes && (
-              <span className="text-gray-500">
-                {[...programRow.instructionBytes]
-                  ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
-                  .join(" ")}
+  const renderContent = () => {
+    return (
+      <TableRow
+        ref={ref}
+        className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
+        test-id="instruction-item"
+        style={{ backgroundColor: isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : "initial" }}
+      >
+        {instructionMode === InstructionMode.BYTECODE && (
+          <>
+            <AddressCell
+              breakpointAddresses={breakpointAddresses}
+              programRow={programRow}
+              onAddressClick={onAddressClick}
+            />
+            <TableCell className="p-1.5">
+              {"instructionBytes" in programRow && programRow.instructionBytes && (
+                <span className="text-gray-500">
+                  {[...programRow.instructionBytes]
+                    ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
+                    .join(" ")}
+                </span>
+              )}
+            </TableCell>
+          </>
+        )}
+        {instructionMode === InstructionMode.ASM && (
+          <>
+            <AddressCell
+              breakpointAddresses={breakpointAddresses}
+              programRow={programRow}
+              onAddressClick={onAddressClick}
+            />
+            <TableCell className="p-1.5">
+              <a onClick={fillSearch} className="cursor-pointer">
+                <span className="uppercase font-bold">{programRow.name}</span>
+              </a>
+            </TableCell>
+            <TableCell className="p-1.5">
+              <span className="">
+                {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
               </span>
-            )}
-          </TableCell>
-        </>
-      )}
-      {instructionMode === InstructionMode.ASM && (
-        <>
-          <AddressCell
-            breakpointAddresses={breakpointAddresses}
-            programRow={programRow}
-            onAddressClick={onAddressClick}
-          />
-          <TableCell className="p-1.5">
-            <a onClick={fillSearch} className="cursor-pointer">
-              <span className="uppercase font-bold">{programRow.name}</span>
-            </a>
-          </TableCell>
-          <TableCell className="p-1.5">
-            <span className="">
-              {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
-            </span>
-          </TableCell>
-        </>
-      )}
-    </TableRow>
+            </TableCell>
+          </>
+        )}
+      </TableRow>
+    );
+  };
+
+  return bgOpacity > 0 && bgOpacity < 1 ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
+        <TooltipContent side="left">
+          {workersWithCurrentPc.map((worker, index) => (
+            <div key={index}>
+              <span>{worker.id} - PC:</span>
+              <span className="pl-3">
+                <span>
+                  {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState", "pc"), numeralSystem)}
+                </span>
+              </span>
+            </div>
+          ))}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : (
+    renderContent()
   );
 };
