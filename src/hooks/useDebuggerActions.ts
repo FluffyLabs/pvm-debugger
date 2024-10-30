@@ -27,7 +27,6 @@ import {
 } from "@/store/workers/workersSlice";
 import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
-import { InitialState } from "@typeberry/pvm-debugger-adapter";
 import { useCallback } from "react";
 
 export const useDebuggerActions = () => {
@@ -37,7 +36,7 @@ export const useDebuggerActions = () => {
   const dispatch = useAppDispatch();
 
   const restartProgram = useCallback(
-    (state: InitialState) => {
+    (state: ExpectedState) => {
       setInitialState(state);
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
@@ -85,7 +84,7 @@ export const useDebuggerActions = () => {
   const handleProgramLoad = useCallback(
     (data?: ProgramUploadFileOutput) => {
       if (data) {
-        startProgram(data.initial, data.program);
+        startProgram({ ...data.initial, status: -1 }, data.program);
         dispatch(setIsAsmError(false));
       } else {
         dispatch(setIsAsmError(true));
