@@ -3,9 +3,11 @@ import { Table, TableBody } from "@/components/ui/table.tsx";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
-import { ReactNode, useContext, useMemo } from "react";
+import { ReactNode, useContext, useEffect, useMemo, useRef } from "react";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { InstructionItem } from "./InstructionItem";
+import { useAppSelector } from "@/store/hooks.ts";
+import { selectWorkers } from "@/store/workers/workersSlice.ts";
 
 export type ProgramRow = CurrentInstruction & { addressEl: ReactNode; counter: number };
 
@@ -27,6 +29,9 @@ export const Instructions = ({
   breakpointAddresses: (number | undefined)[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
+  const workers = useAppSelector(selectWorkers);
+  const scrollToRef = useRef<HTMLTableRowElement>(null);
+  const maxPc = workers.reduce((acc, worker) => Math.max(acc, worker.currentState.pc ?? 0), 0);
 
   const programPreviewResultWithAddress = useMemo(() => {
     if (!programPreviewResult) {
@@ -49,9 +54,6 @@ export const Instructions = ({
       );
     };
     const programRows = programPreviewResult?.map((result) => {
-      // TODO: due to this assignment, programPreviewResult cannot be moved to the store
-      // Object.assign(result, { addressEl: getAddressEl(result.address), counter: result.address });
-      // return result;
       return {
         ...result,
         addressEl: getAddressEl(result.address),
@@ -60,6 +62,15 @@ export const Instructions = ({
     });
     return programRows as ProgramRow[];
   }, [numeralSystem, programPreviewResult]);
+
+  useEffect(() => {
+    if (scrollToRef.current) {
+      scrollToRef.current.scrollIntoView({
+        behavior: "smooth", // Enables smooth scrolling
+        block: "nearest", // Aligns element to nearest scroll position
+      });
+    }
+  }, [scrollToRef, maxPc]);
 
   return (
     <div className="font-mono overflow-auto scroll-auto border-2 rounded-md h-[70vh]">
@@ -77,6 +88,7 @@ export const Instructions = ({
                 currentPc={currentState.pc}
                 onAddressClick={onAddressClick}
                 breakpointAddresses={breakpointAddresses}
+                ref={maxPc === programRow.counter ? scrollToRef : undefined}
               />
             ))}
         </TableBody>
