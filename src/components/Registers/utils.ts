@@ -9,5 +9,5 @@ export const getStatusColor = (status?: Status) => {
     return "#f44336";
   }
 
-  return "#55b3f3";
+  return "#22cccc";
 };

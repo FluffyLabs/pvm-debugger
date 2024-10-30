@@ -4,10 +4,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 export const Header = () => {
   return (
-    <div className="bg-[#55B3F3] w-full flex flex-row items-center justify-between p-1 h-16 overflow-hidden">
-      <img src={Logo} alt="FluffyLabs logo" className="w-[70px] ml-3" />
+    <div className="bg-black w-full flex flex-row items-center justify-between p-1 h-16 overflow-hidden">
+      <div className="flex items-center gap-5">
+        <img src={Logo} alt="FluffyLabs logo" className="w-[90px] ml-3" />
+        <pre className="text-brand">PVM debugger</pre>
+      </div>
       <div className="mr-3 text-white flex flex-row items-center justify-center gap-5">
-        <pre>PVM debugger</pre>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>
