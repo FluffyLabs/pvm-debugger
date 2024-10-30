@@ -64,7 +64,7 @@ export const useDebuggerActions = () => {
       dispatch(setAllWorkersCurrentState(currentState));
       dispatch(setAllWorkersPreviousState(currentState));
 
-      setIsDebugFinished(false);
+      dispatch(setIsDebugFinished(false));
 
       dispatch(initAllWorkers());
 
