@@ -20,14 +20,16 @@ export const Loader = ({
   setIsDialogOpen?: (val: boolean) => void;
 }) => {
   const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
+  const [error, setError] = useState<string>();
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleLoad = useCallback(() => {
+    setIsSubmitted(true);
     if (!programLoad) return;
 
     onProgramLoad(programLoad);
     setIsDialogOpen?.(false);
   }, [programLoad, onProgramLoad, setIsDialogOpen]);
-
   return (
     <>
       <Tabs className="flex-1 flex flex-col items-start" defaultValue="upload">
@@ -41,20 +43,45 @@ export const Loader = ({
         </TabsList>
         <div className="border-2 rounded mt-2 p-4 flex-1 flex flex-col w-full">
           <TabsContent value="upload">
-            <TextFileUpload onFileUpload={setProgramLoad} />
+            <TextFileUpload
+              onFileUpload={(val) => {
+                setProgramLoad(val);
+                setIsSubmitted(false);
+              }}
+            />
           </TabsContent>
           <TabsContent value="examples">
-            <Examples onProgramLoad={setProgramLoad} />
+            <Examples
+              onProgramLoad={(val) => {
+                setProgramLoad(val);
+                setIsSubmitted(false);
+              }}
+            />
           </TabsContent>
           <TabsContent value="bytecode">
-            <Bytecode onProgramLoad={setProgramLoad} program={program} />
+            <Bytecode
+              onProgramLoad={(val, error) => {
+                setProgramLoad(val);
+                setIsSubmitted(false);
+                setError(error);
+              }}
+              program={program}
+            />
           </TabsContent>
           <TabsContent value="assembly">
-            <Assembly onProgramLoad={setProgramLoad} program={program} initialState={initialState} />
+            <Assembly
+              onProgramLoad={(val) => {
+                setProgramLoad(val);
+                setIsSubmitted(false);
+              }}
+              program={program}
+              initialState={initialState}
+            />
           </TabsContent>
+          {error && isSubmitted && <p className="text-red-500">{error}</p>}
         </div>
       </Tabs>
-      <Button id="load-button" type="button" disabled={!programLoad} onClick={handleLoad}>
+      <Button className="mt-3" id="load-button" type="button" onClick={handleLoad}>
         Load
       </Button>
     </>

@@ -46,7 +46,7 @@ export const BinaryFileUpload = ({
     <div className="block">
       <p className="mt-10 mb-3">or upload program as a binary file</p>
       <Input
-        className="mt-3 mr-3"
+        className="my-6 mr-3"
         id="test-file"
         type="file"
         accept="application/octet-stream"

@@ -31,6 +31,7 @@ import { MemoryPreview } from "@/components/MemoryPreview";
 import { DebuggerControlls } from "./components/DebuggerControlls";
 import { useDebuggerActions } from "./hooks/useDebuggerActions";
 import { Loader } from "./components/ProgramLoader/Loader";
+import classNames from "classnames";
 
 const DebuggerContent = () => {
   const dispatch = useAppDispatch();
@@ -183,9 +184,13 @@ function App() {
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
-            <DebuggerControlls />
+            {pvmInitialized ? <DebuggerControlls /> : null}
 
-            <div className="col-span-12 md:col-span-6 max-sm:order-first flex align-middle items-center justify-end">
+            <div
+              className={classNames("col-span-12 max-sm:order-first flex align-middle items-center justify-end", {
+                "md:col-span-6": pvmInitialized,
+              })}
+            >
               <div className="w-full md:w-[350px]">
                 <PvmSelect onValueChange={(selectedPvms) => debuggerActions.handlePvmTypeChange(selectedPvms)} />
               </div>
