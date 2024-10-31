@@ -29,7 +29,7 @@ export const Bytecode = ({
   onProgramLoad,
   program,
 }: {
-  onProgramLoad: (val?: ProgramUploadFileOutput) => void;
+  onProgramLoad: (val?: ProgramUploadFileOutput, error?: string) => void;
   program: number[];
 }) => {
   const [tempProgram, setTempProgram] = useState<number[] | undefined>(program);
@@ -43,13 +43,13 @@ export const Bytecode = ({
       <p className="mb-3">Edit program code bytes</p>
       <ProgramTextLoader
         program={tempProgram}
-        setProgram={(program) => {
+        setProgram={(program, error) => {
           if (program) {
             setTempProgram(program);
-            onProgramLoad({ initial, program, name: "custom" });
+            onProgramLoad({ initial, program, name: "custom" }, error);
           } else {
             setTempProgram(undefined);
-            onProgramLoad(undefined);
+            onProgramLoad(undefined, error);
           }
         }}
       />
