@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
-import { Commands, PvmTypes, TargetOnMessageParams } from "@/packages/web-worker/worker.ts";
+import { Commands, PvmTypes, TargetOnMessageParams, WorkerOnMessageParams } from "@/packages/web-worker/worker.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
@@ -169,13 +169,28 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   });
 });
 
+const asyncPostMessage = (worker: Worker, message: unknown) => {
+  const messageId = Math.random().toString(36).substring(7);
+  return new Promise((resolve) => {
+    const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+      if (event.data.messageId === messageId) {
+        resolve(event.data);
+        worker.removeEventListener("message", messageHandler);
+      }
+    };
+    worker.addEventListener("message", messageHandler);
+    worker.postMessage({ ...(message as WorkerOnMessageParams), messageId });
+  });
+};
 export const changePageAllWorkers = createAsyncThunk(
   "workers/changePageAllWorkers",
   async (pageNumber: number, { getState }) => {
     const state = getState() as RootState;
 
-    state.workers.forEach((worker) => {
-      worker.worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber } });
+    state.workers.forEach(async (worker) => {
+      const resp = await asyncPostMessage(worker.worker, { command: Commands.MEMORY_PAGE, payload: { pageNumber } });
+      // eslint-disable-next-line no-console
+      console.log("Response from async wait worker:", resp);
     });
   },
 );

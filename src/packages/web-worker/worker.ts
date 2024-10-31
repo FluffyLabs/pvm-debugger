@@ -32,32 +32,48 @@ let pvm: PvmApiInterface | null = null;
 let isRunMode = false;
 
 export type TargetOnMessageParams =
-  | { command: Commands.LOAD; status: CommandStatus; error?: unknown }
-  | { command: Commands.INIT; status: CommandStatus; error?: unknown; payload: { initialState: InitialState } }
+  | { command: Commands.LOAD; status: CommandStatus; error?: unknown; messageId: string }
+  | {
+      command: Commands.INIT;
+      status: CommandStatus;
+      error?: unknown;
+      payload: { initialState: InitialState };
+      messageId: string;
+    }
   | {
       command: Commands.STEP;
       status: CommandStatus;
       error?: unknown;
       payload: { state: ExpectedState; result: CurrentInstruction | object; isFinished: boolean; isRunMode: boolean };
+      messageId: string;
     }
-  | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
-  | { command: Commands.STOP; payload: { isRunMode: boolean } }
-  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array } }
-  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number; memoryRange: Uint8Array } }
-  | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memorySize: number } };
+  | {
+      command: Commands.RUN;
+      payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean };
+      messageId: string;
+    }
+  | { command: Commands.STOP; payload: { isRunMode: boolean }; messageId: string }
+  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array }; messageId: string }
+  | {
+      command: Commands.MEMORY_RANGE;
+      payload: { start: number; end: number; memoryRange: Uint8Array };
+      messageId: string;
+    }
+  | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memorySize: number }; messageId: string };
 
 export type WorkerOnMessageParams =
   | {
       command: Commands.LOAD;
       payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
+      messageId: string;
     }
-  | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
-  | { command: Commands.STEP; payload: { program: number[] } }
-  | { command: Commands.RUN }
-  | { command: Commands.STOP }
-  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } }
-  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number } }
-  | { command: Commands.MEMORY_SIZE };
+  | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState }; messageId: string }
+  | { command: Commands.STEP; payload: { program: number[] }; messageId: string }
+  | { command: Commands.RUN; messageId: string }
+  | { command: Commands.STOP; messageId: string }
+  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number }; messageId: string }
+  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number }; messageId: string }
+  | { command: Commands.MEMORY_SIZE; messageId: string };
 
 export function postTypedMessage(msg: TargetOnMessageParams) {
   postMessage(msg);
@@ -75,7 +91,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
   if (e.data.command === Commands.LOAD) {
     const data = await commandHandlers.runLoad(e.data.payload);
     pvm = data.pvm;
-    postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error });
+    postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error, messageId: e.data.messageId });
   } else if (e.data.command === Commands.INIT) {
     const data = await commandHandlers.runInit({
       pvm,
@@ -90,6 +106,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       payload: {
         initialState: data.initialState,
       },
+      messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.STEP) {
     const { result, state, isFinished, status, error } = commandHandlers.runStep({
@@ -98,10 +115,20 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
     });
     isRunMode = !isFinished;
 
-    postTypedMessage({ command: Commands.STEP, status, error, payload: { result, state, isFinished, isRunMode } });
+    postTypedMessage({
+      command: Commands.STEP,
+      status,
+      error,
+      payload: { result, state, isFinished, isRunMode },
+      messageId: e.data.messageId,
+    });
   } else if (e.data.command === Commands.RUN) {
     isRunMode = true;
-    postTypedMessage({ command: Commands.RUN, payload: { isRunMode, isFinished: true, state: state ?? {} } });
+    postTypedMessage({
+      command: Commands.RUN,
+      payload: { isRunMode, isFinished: true, state: state ?? {} },
+      messageId: e.data.messageId,
+    });
   } else if (e.data.command === Commands.STOP) {
     isRunMode = false;
     postTypedMessage({
@@ -111,12 +138,14 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
         isFinished: isFinished ?? true,
         state: state ?? {},
       },
+      messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.MEMORY_PAGE) {
     const memoryPage = getMemoryPage(e.data.payload.pageNumber, pvm);
 
     postMessage({
       command: Commands.MEMORY_PAGE,
+      messageId: e.data.messageId,
       payload: { pageNumber: e.data.payload.pageNumber, memoryPage },
     });
   } else if (e.data.command === Commands.MEMORY_SIZE) {
@@ -125,6 +154,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
 
     postMessage({
       command: Commands.MEMORY_SIZE,
+      messageId: e.data.messageId,
       // TODO fix types
       payload: { pageNumber: 0, memorySize: (memoryPage as unknown as Array<number>)?.length },
     });
