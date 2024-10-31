@@ -51,6 +51,16 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
                 <BlockMath math={currentInstructionFromKnowledgeBase?.latex || ""} />
               </div>
               <p className="my-3">{currentInstructionFromKnowledgeBase?.description}</p>
+              <div className="flex mb-3 mr-3 justify-end">
+                <Button
+                  size={"sm"}
+                  onClick={() => {
+                    window.open(currentInstructionFromKnowledgeBase?.linkInGrayPaperReader, "_blank");
+                  }}
+                >
+                  Open in GP
+                </Button>
+              </div>
             </div>
           );
         })}
