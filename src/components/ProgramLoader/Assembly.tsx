@@ -166,7 +166,7 @@ export const Assembly = ({
   const isError = !!error;
 
   return (
-    <div className="h-full flex flex-col max-h-[70vh]">
+    <div className="h-full flex flex-col">
       <p className="pb-2 -mt-4">
         <small>
           Experimental assembler format as defined in{" "}

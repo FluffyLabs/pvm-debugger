@@ -32,7 +32,7 @@ export const Loader = ({
   }, [programLoad, onProgramLoad, setIsDialogOpen]);
   return (
     <>
-      <Tabs className="flex-1 flex flex-col items-start" defaultValue="upload">
+      <Tabs className="flex-1 flex flex-col items-start overflow-auto" defaultValue="upload">
         <TabsList>
           <TabsTrigger value="upload">JSON tests</TabsTrigger>
           <TabsTrigger value="examples">Examples</TabsTrigger>
@@ -41,7 +41,7 @@ export const Loader = ({
           </TabsTrigger>
           <TabsTrigger value="assembly">Assembly</TabsTrigger>
         </TabsList>
-        <div className="border-2 rounded mt-2 p-4 flex-1 flex flex-col w-full">
+        <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto">
           <TabsContent value="upload">
             <TextFileUpload
               onFileUpload={(val) => {
