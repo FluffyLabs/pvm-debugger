@@ -3,9 +3,9 @@ import { SupportedLangs } from "./utils";
 import { WasmPvmShellInterface } from "./wasmPvmShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
 
-type CommonWorkerRequestParams = { status: CommandStatus; error?: unknown; messageId: string };
+type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 
-export type WorkerRequestParams = CommonWorkerRequestParams &
+export type WorkerResponseParams = CommonWorkerResponseParams &
   (
     | { command: Commands.LOAD }
     | {
@@ -30,22 +30,21 @@ export type WorkerRequestParams = CommonWorkerRequestParams &
     | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memorySize: number } }
   );
 
-type CommonWorkerResponseParams = { messageId: string };
+type CommonWorkerRequestParams = { messageId: string };
+export type CommandWorkerRequestParams =
+  | {
+      command: Commands.LOAD;
+      payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
+    }
+  | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
+  | { command: Commands.STEP; payload: { program: number[] } }
+  | { command: Commands.RUN }
+  | { command: Commands.STOP }
+  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } }
+  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number } }
+  | { command: Commands.MEMORY_SIZE };
 
-export type WorkerResponseParams = CommonWorkerResponseParams &
-  (
-    | {
-        command: Commands.LOAD;
-        payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
-      }
-    | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
-    | { command: Commands.STEP; payload: { program: number[] } }
-    | { command: Commands.RUN }
-    | { command: Commands.STOP }
-    | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } }
-    | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number } }
-    | { command: Commands.MEMORY_SIZE }
-  );
+export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
 
 export enum Commands {
   LOAD = "load",

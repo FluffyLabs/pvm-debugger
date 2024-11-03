@@ -1,16 +1,16 @@
 import { getMemoryPage } from "@/packages/web-worker/utils.ts";
 import commandHandlers from "./command-handlers";
 import { logger } from "@/utils/loggerService";
-import { WorkerResponseParams, WorkerRequestParams, PvmApiInterface, Commands, CommandStatus } from "./types";
+import { WorkerRequestParams, WorkerResponseParams, PvmApiInterface, Commands, CommandStatus } from "./types";
 
 let pvm: PvmApiInterface | null = null;
 let isRunMode = false;
 
-export function postTypedMessage(msg: WorkerRequestParams) {
+export function postTypedMessage(msg: WorkerResponseParams) {
   postMessage(msg);
 }
 
-onmessage = async (e: MessageEvent<WorkerResponseParams>) => {
+onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
   if (!e.data?.command) {
     return;
   }

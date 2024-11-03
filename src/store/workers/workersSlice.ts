@@ -6,7 +6,7 @@ import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
-import { Commands, PvmTypes, WorkerRequestParams } from "@/packages/web-worker/types";
+import { Commands, PvmTypes, WorkerResponseParams } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage } from "../utils";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -44,7 +44,7 @@ export interface WorkerState {
 
 const initialState: WorkerState[] = [];
 
-const globalMessageHandlers: Record<string, (event: MessageEvent<WorkerRequestParams>) => void> = {};
+const globalMessageHandlers: Record<string, (event: MessageEvent<WorkerResponseParams>) => void> = {};
 
 export const createWorker = createAsyncThunk("workers/createWorker", async (id: string) => {
   const worker = new PvmWorker();
@@ -75,33 +75,18 @@ export const loadWorker = createAsyncThunk(
 
     dispatch(setWorkerIsLoading({ id, isLoading: true }));
 
-    return new Promise<boolean>((resolve) => {
-      const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
-        if ("status" in event.data && event.data.status === "error") {
-          logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
-        }
-
-        if (event.data.command === Commands.LOAD) {
-          if (event.data.status === "success") {
-            resolve(true);
-            worker.worker.removeEventListener("message", messageHandler);
-          } else if (event.data.status === "error") {
-            resolve(false);
-            logger.error("Error loading PVM worker", { error: event.data.error });
-            worker.worker.removeEventListener("message", messageHandler);
-          }
-
-          dispatch(setWorkerIsLoading({ id, isLoading: false }));
-        }
-      };
-
-      worker.worker.addEventListener("message", messageHandler);
-
-      worker.worker.postMessage({
-        command: Commands.LOAD,
-        payload,
-      });
+    const data = await asyncWorkerPostMessage(id, worker.worker, {
+      command: Commands.LOAD,
+      payload: {
+        type: payload.type,
+        params: payload.params || {},
+      },
     });
+    if ("status" in data && data.status === "error") {
+      logger.error(`An error occured on codddmmand ${data.command}`, { error: data.error });
+    }
+
+    dispatch(setWorkerIsLoading({ id, isLoading: false }));
   },
 );
 
@@ -112,7 +97,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   state.workers.forEach((worker) => {
     worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
 
-    globalMessageHandlers[worker.id] = (event: MessageEvent<WorkerRequestParams>) => {
+    globalMessageHandlers[worker.id] = (event: MessageEvent<WorkerResponseParams>) => {
       if ("status" in event.data && event.data.status === "error") {
         logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
       }
@@ -233,7 +218,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
               isBreakpoint: boolean;
             }) => void,
           ) => {
-            const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
+            const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
               if ("status" in event.data && event.data.status === "error") {
                 logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
               }
@@ -325,7 +310,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   }
 
   state.workers.forEach((worker) => {
-    const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
+    const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
       if (event.data.command === Commands.STEP) {
         const { state, isFinished } = event.data.payload;
 

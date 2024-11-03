@@ -1,16 +1,16 @@
-import { WorkerRequestParams, WorkerResponseParams } from "@/packages/web-worker/types";
+import { WorkerResponseParams, CommandWorkerRequestParams, WorkerRequestParams } from "@/packages/web-worker/types";
 
 const RESPONSE_WAIT_TIMEOUT = 5000;
 const getMessageId = () => Math.random().toString(36).substring(7);
 
-export const asyncWorkerPostMessage = (id: string, worker: Worker, message: unknown) => {
-  return new Promise((resolve, reject) => {
+export const asyncWorkerPostMessage = (id: string, worker: Worker, message: CommandWorkerRequestParams) => {
+  return new Promise<WorkerResponseParams>((resolve, reject) => {
     const messageId = getMessageId();
     const timeoutId = setTimeout(() => {
       reject(`PVM ${id} reached max timeout ${RESPONSE_WAIT_TIMEOUT}ms.`);
-    }, 1000);
+    }, RESPONSE_WAIT_TIMEOUT);
 
-    const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
+    const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
       if (event.data.messageId === messageId) {
         clearTimeout(timeoutId);
         worker.removeEventListener("message", messageHandler);
@@ -18,6 +18,8 @@ export const asyncWorkerPostMessage = (id: string, worker: Worker, message: unkn
       }
     };
     worker.addEventListener("message", messageHandler);
-    worker.postMessage({ ...(message as WorkerResponseParams), messageId });
+
+    const request: WorkerRequestParams = { ...message, messageId };
+    worker.postMessage(request);
   });
 };
