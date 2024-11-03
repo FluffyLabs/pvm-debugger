@@ -82,11 +82,12 @@ export const loadWorker = createAsyncThunk(
         params: payload.params || {},
       },
     });
+
+    dispatch(setWorkerIsLoading({ id, isLoading: false }));
+
     if ("status" in data && data.status === "error") {
       logger.error(`An error occured on codddmmand ${data.command}`, { error: data.error });
     }
-
-    dispatch(setWorkerIsLoading({ id, isLoading: false }));
   },
 );
 
@@ -94,65 +95,66 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   const state = getState() as RootState;
   const debuggerState = state.debugger;
 
-  state.workers.forEach((worker) => {
-    worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
+  return Promise.all(
+    state.workers.map(async (worker) => {
+      worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
 
-    globalMessageHandlers[worker.id] = (event: MessageEvent<WorkerResponseParams>) => {
-      if ("status" in event.data && event.data.status === "error") {
-        logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
-      }
-
-      if (event.data.command === Commands.STEP) {
-        const { state, isFinished } = event.data.payload;
-
-        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-
-        dispatch(
-          setWorkerCurrentInstruction({
-            id: worker.id,
-            instruction: event.data.payload.result,
-          }),
-        );
-
-        if (isFinished) {
-          setIsDebugFinished(true);
+      globalMessageHandlers[worker.id] = (event: MessageEvent<WorkerResponseParams>) => {
+        if ("status" in event.data && event.data.status === "error") {
+          logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
         }
-      }
 
-      if (event.data.command === Commands.MEMORY_SIZE) {
-        const pageSize = event.data.payload.memorySize as number;
-        dispatch(setPageSize({ pageSize, id: worker.id }));
-      }
-      if (event.data.command === Commands.MEMORY_PAGE) {
-        dispatch(
-          changePage({
-            id: worker.id,
-            pageNumber: event.data.payload.pageNumber,
-            data: event.data.payload.memoryPage,
+        if (event.data.command === Commands.STEP) {
+          const { state, isFinished } = event.data.payload;
 
-            isLoading: false,
-          }),
-        );
-      } else if (event.data.command === Commands.MEMORY_RANGE) {
-        const { start, end, memoryRange } = event.data.payload;
-        dispatch(changeRange({ id: worker.id, start, end, memoryRange, isLoading: false }));
-      }
-    };
+          dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
 
-    worker.worker.addEventListener("message", globalMessageHandlers[worker.id]);
+          dispatch(
+            setWorkerCurrentInstruction({
+              id: worker.id,
+              instruction: event.data.payload.result,
+            }),
+          );
 
-    worker.worker.postMessage({
-      command: Commands.INIT,
-      payload: {
-        initialState: debuggerState.initialState,
-        program: debuggerState.program,
-      },
-    });
+          if (isFinished) {
+            setIsDebugFinished(true);
+          }
+        }
 
-    worker.worker.postMessage({
-      command: Commands.MEMORY_SIZE,
-    });
-  });
+        if (event.data.command === Commands.MEMORY_PAGE) {
+          dispatch(
+            changePage({
+              id: worker.id,
+              pageNumber: event.data.payload.pageNumber,
+              data: event.data.payload.memoryPage,
+
+              isLoading: false,
+            }),
+          );
+        } else if (event.data.command === Commands.MEMORY_RANGE) {
+          const { start, end, memoryRange } = event.data.payload;
+          dispatch(changeRange({ id: worker.id, start, end, memoryRange, isLoading: false }));
+        }
+      };
+
+      worker.worker.addEventListener("message", globalMessageHandlers[worker.id]);
+
+      await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.INIT,
+        payload: {
+          initialState: debuggerState.initialState,
+          program: new Uint8Array(debuggerState.program),
+        },
+      });
+
+      const memorySizeData = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.MEMORY_SIZE,
+      });
+      const pageSize = memorySizeData.payload.memorySize;
+
+      dispatch(setPageSize({ pageSize, id: worker.id }));
+    }),
+  );
 });
 
 export const changePageAllWorkers = createAsyncThunk(
@@ -257,7 +259,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
             worker.worker.addEventListener("message", messageHandler);
 
             worker.worker.postMessage({
-              command: "step",
+              command: Commands.STEP,
               payload: {
                 program: debuggerState.program,
               },
@@ -329,7 +331,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
     worker.worker.addEventListener("message", messageHandler);
 
     worker.worker.postMessage({
-      command: "step",
+      command: Commands.STEP,
       payload: {
         program: debuggerState.program,
       },
