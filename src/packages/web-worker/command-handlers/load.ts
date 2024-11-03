@@ -1,6 +1,6 @@
 import { logger } from "@/utils/loggerService";
 import { loadArrayBufferAsWasm, SupportedLangs } from "../utils";
-import { CommandStatus, PvmApiInterface, PvmTypes } from "../worker";
+import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 
 export type LoadParams = { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };

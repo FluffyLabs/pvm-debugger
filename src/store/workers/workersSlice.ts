@@ -2,11 +2,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
-import { Commands, PvmTypes, TargetOnMessageParams, WorkerOnMessageParams } from "@/packages/web-worker/worker.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
+import { Commands, PvmTypes, WorkerRequestParams, WorkerResponseParams } from "@/packages/web-worker/types";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -43,7 +43,7 @@ export interface WorkerState {
 
 const initialState: WorkerState[] = [];
 
-const globalMessageHandlers: Record<string, (event: MessageEvent<TargetOnMessageParams>) => void> = {};
+const globalMessageHandlers: Record<string, (event: MessageEvent<WorkerRequestParams>) => void> = {};
 
 export const createWorker = createAsyncThunk("workers/createWorker", async (id: string) => {
   const worker = new PvmWorker();
@@ -75,7 +75,7 @@ export const loadWorker = createAsyncThunk(
     dispatch(setWorkerIsLoading({ id, isLoading: true }));
 
     return new Promise<boolean>((resolve) => {
-      const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+      const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
         if ("status" in event.data && event.data.status === "error") {
           logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
         }
@@ -111,7 +111,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   state.workers.forEach((worker) => {
     worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
 
-    globalMessageHandlers[worker.id] = (event: MessageEvent<TargetOnMessageParams>) => {
+    globalMessageHandlers[worker.id] = (event: MessageEvent<WorkerRequestParams>) => {
       if ("status" in event.data && event.data.status === "error") {
         logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
       }
@@ -172,14 +172,14 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
 const asyncPostMessage = (worker: Worker, message: unknown) => {
   const messageId = Math.random().toString(36).substring(7);
   return new Promise((resolve) => {
-    const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+    const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
       if (event.data.messageId === messageId) {
         resolve(event.data);
         worker.removeEventListener("message", messageHandler);
       }
     };
     worker.addEventListener("message", messageHandler);
-    worker.postMessage({ ...(message as WorkerOnMessageParams), messageId });
+    worker.postMessage({ ...(message as WorkerResponseParams), messageId });
   });
 };
 export const changePageAllWorkers = createAsyncThunk(
@@ -242,7 +242,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
               isBreakpoint: boolean;
             }) => void,
           ) => {
-            const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+            const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
               if ("status" in event.data && event.data.status === "error") {
                 logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
               }
@@ -334,7 +334,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   }
 
   state.workers.forEach((worker) => {
-    const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+    const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
       if (event.data.command === Commands.STEP) {
         const { state, isFinished } = event.data.payload;
 

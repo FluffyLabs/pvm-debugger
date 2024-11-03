@@ -1,11 +1,11 @@
 import { ExpectedState, Pvm as InternalPvm, RegistersArray, Status } from "@/types/pvm.ts";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
-import { PvmApiInterface } from "@/packages/web-worker/worker.ts";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmPvmShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
 import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoPvmShell.ts";
 import { logger } from "@/utils/loggerService.tsx";
+import { PvmApiInterface } from "./types.ts";
 
 export enum SupportedLangs {
   Go = "Go",
@@ -82,11 +82,11 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
 
 export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
   if (!pvm) {
-    return [];
+    return new Uint8Array();
   }
 
   if (isInternalPvm(pvm)) {
-    return pvm.getMemoryPage(pageNumber) || [];
+    return pvm.getMemoryPage(pageNumber) || new Uint8Array();
   }
-  return pvm.getPageDump(pageNumber) || [];
+  return pvm.getPageDump(pageNumber) || new Uint8Array();
 }

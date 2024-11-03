@@ -1,9 +1,9 @@
 import { InitialState } from "@/types/pvm";
 import { initPvm } from "../pvm";
 import { getState, isInternalPvm, regsAsUint8 } from "../utils";
-import { CommandStatus, PvmApiInterface } from "../worker";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { logger } from "@/utils/loggerService";
+import { CommandStatus, PvmApiInterface } from "../types";
 
 export type InitParams = {
   pvm: PvmApiInterface | null;
