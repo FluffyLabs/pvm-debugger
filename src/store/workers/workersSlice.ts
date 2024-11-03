@@ -6,7 +6,8 @@ import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
-import { Commands, PvmTypes, WorkerRequestParams, WorkerResponseParams } from "@/packages/web-worker/types";
+import { Commands, PvmTypes, WorkerRequestParams } from "@/packages/web-worker/types";
+import { asyncWorkerPostMessage } from "../utils";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -169,26 +170,16 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   });
 });
 
-const asyncPostMessage = (worker: Worker, message: unknown) => {
-  const messageId = Math.random().toString(36).substring(7);
-  return new Promise((resolve) => {
-    const messageHandler = (event: MessageEvent<WorkerRequestParams>) => {
-      if (event.data.messageId === messageId) {
-        resolve(event.data);
-        worker.removeEventListener("message", messageHandler);
-      }
-    };
-    worker.addEventListener("message", messageHandler);
-    worker.postMessage({ ...(message as WorkerResponseParams), messageId });
-  });
-};
 export const changePageAllWorkers = createAsyncThunk(
   "workers/changePageAllWorkers",
   async (pageNumber: number, { getState }) => {
     const state = getState() as RootState;
 
     state.workers.forEach(async (worker) => {
-      const resp = await asyncPostMessage(worker.worker, { command: Commands.MEMORY_PAGE, payload: { pageNumber } });
+      const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.MEMORY_PAGE,
+        payload: { pageNumber },
+      });
       // eslint-disable-next-line no-console
       console.log("Response from async wait worker:", resp);
     });
