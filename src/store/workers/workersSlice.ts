@@ -103,38 +103,6 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
         if ("status" in event.data && event.data.status === "error") {
           logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
         }
-
-        if (event.data.command === Commands.STEP) {
-          const { state, isFinished } = event.data.payload;
-
-          dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-
-          dispatch(
-            setWorkerCurrentInstruction({
-              id: worker.id,
-              instruction: event.data.payload.result,
-            }),
-          );
-
-          if (isFinished) {
-            setIsDebugFinished(true);
-          }
-        }
-
-        if (event.data.command === Commands.MEMORY_PAGE) {
-          dispatch(
-            changePage({
-              id: worker.id,
-              pageNumber: event.data.payload.pageNumber,
-              data: event.data.payload.memoryPage,
-
-              isLoading: false,
-            }),
-          );
-        } else if (event.data.command === Commands.MEMORY_RANGE) {
-          const { start, end, memoryRange } = event.data.payload;
-          dispatch(changeRange({ id: worker.id, start, end, memoryRange, isLoading: false }));
-        }
       };
 
       worker.worker.addEventListener("message", globalMessageHandlers[worker.id]);
@@ -159,17 +127,27 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
 
 export const changePageAllWorkers = createAsyncThunk(
   "workers/changePageAllWorkers",
-  async (pageNumber: number, { getState }) => {
+  async (pageNumber: number, { getState, dispatch }) => {
     const state = getState() as RootState;
 
-    state.workers.forEach(async (worker) => {
-      const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.MEMORY_PAGE,
-        payload: { pageNumber },
-      });
-      // eslint-disable-next-line no-console
-      console.log("Response from async wait worker:", resp);
-    });
+    return Promise.all(
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.MEMORY_PAGE,
+          payload: { pageNumber },
+        });
+
+        dispatch(
+          changePage({
+            id: worker.id,
+            pageNumber: resp.payload.pageNumber,
+            data: resp.payload.memoryPage,
+
+            isLoading: false,
+          }),
+        );
+      }),
+    );
   },
 );
 
@@ -194,13 +172,20 @@ export const changeRangeAllWorkers = createAsyncThunk(
       start: number;
       end: number;
     },
-    { getState },
+    { getState, dispatch },
   ) => {
     const state = getState() as RootState;
 
-    state.workers.forEach((worker) => {
-      worker.worker.postMessage({ command: Commands.MEMORY_RANGE, payload: { start, end } });
-    });
+    return Promise.all(
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.MEMORY_RANGE,
+          payload: { start, end },
+        });
+
+        dispatch(changeRange({ id: worker.id, ...resp.payload, isLoading: false }));
+      }),
+    );
   },
 );
 
@@ -227,6 +212,18 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 
               if (event.data.command === Commands.STEP) {
                 const { state, isRunMode, isFinished } = event.data.payload;
+
+                // START MOVED SFOM initAllWorkers
+                dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+                dispatch(
+                  setWorkerCurrentInstruction({
+                    id: worker.id,
+                    instruction: event.data.payload.result,
+                  }),
+                );
+
+                // END MOVED SFOM initAllWorkers
+
                 const currentState = getState() as RootState;
                 const debuggerState = currentState.debugger;
 
@@ -315,6 +312,17 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
     const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
       if (event.data.command === Commands.STEP) {
         const { state, isFinished } = event.data.payload;
+
+        // START MOVED SFOM initAllWorkers
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+        dispatch(
+          setWorkerCurrentInstruction({
+            id: worker.id,
+            instruction: event.data.payload.result,
+          }),
+        );
+
+        // END MOVED SFOM initAllWorkers
 
         if (isFinished) {
           dispatch(setIsDebugFinished(true));
