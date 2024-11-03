@@ -1,7 +1,7 @@
 import { ProgramUploadFileOutput } from "@/components/ProgramLoader/types";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { disassemblify } from "@/packages/pvm/pvm/disassemblify";
-import { PvmTypes } from "@/packages/web-worker/worker";
+import { PvmTypes } from "@/packages/web-worker/types";
 import {
   setInitialState,
   setIsDebugFinished,

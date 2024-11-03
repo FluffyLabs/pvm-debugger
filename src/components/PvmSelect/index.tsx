@@ -7,7 +7,7 @@ import { AvailablePvms } from "@/types/pvm.ts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SupportedLangs } from "@/packages/web-worker/utils";
 import { ExternalLink } from "lucide-react";
-import { PvmTypes } from "@/packages/web-worker/worker.ts";
+import { PvmTypes } from "@/packages/web-worker/types.ts";
 
 const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
 
