@@ -1,4 +1,3 @@
-import { ProgramUploadFileOutput } from "./types";
 import {
   Dialog,
   DialogContent,
@@ -12,11 +11,7 @@ import { useState } from "react";
 import { InitialState } from "@/types/pvm";
 import { Loader } from "./Loader.tsx";
 
-export const ProgramLoader = (props: {
-  initialState: InitialState;
-  onProgramLoad: (val: ProgramUploadFileOutput) => void;
-  program: number[];
-}) => {
+export const ProgramLoader = (props: { initialState: InitialState; program: number[] }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
