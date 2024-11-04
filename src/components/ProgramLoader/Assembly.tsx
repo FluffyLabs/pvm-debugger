@@ -167,7 +167,7 @@ export const Assembly = ({
 
   return (
     <div className="h-full flex flex-col">
-      <p className="pb-2 -mt-4">
+      <p className="pb-2 mb-1">
         <small>
           Experimental assembler format as defined in{" "}
           <a
@@ -188,6 +188,8 @@ export const Assembly = ({
       >
         <CodeMirror
           autoFocus
+          style={{ height: "100%" }}
+          height="100%"
           placeholder="Try writing some PolkaVM assembly code."
           value={assembly}
           onChange={(value) => compile(value)}

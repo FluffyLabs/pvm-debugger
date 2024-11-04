@@ -49,7 +49,7 @@ export const Loader = ({
           </TabsTrigger>
           <TabsTrigger value="assembly">Assembly</TabsTrigger>
         </TabsList>
-        <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto">
+        <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
           <TabsContent value="upload">
             <TextFileUpload
               onFileUpload={(val) => {
