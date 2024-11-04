@@ -7,29 +7,37 @@ import { TextFileUpload } from "./TextFileUpload";
 import { useState, useCallback } from "react";
 import { ProgramUploadFileOutput } from "./types";
 import { InitialState } from "@/types/pvm";
+import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 
 export const Loader = ({
   initialState,
-  onProgramLoad,
   program,
   setIsDialogOpen,
 }: {
   initialState: InitialState;
-  onProgramLoad: (val: ProgramUploadFileOutput) => void;
   program: number[];
   setIsDialogOpen?: (val: boolean) => void;
 }) => {
   const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
   const [error, setError] = useState<string>();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const debuggerActions = useDebuggerActions();
 
   const handleLoad = useCallback(() => {
     setIsSubmitted(true);
     if (!programLoad) return;
 
-    onProgramLoad(programLoad);
+    try {
+      debuggerActions.handleProgramLoad(programLoad);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Unknown error occured");
+      }
+    }
     setIsDialogOpen?.(false);
-  }, [programLoad, onProgramLoad, setIsDialogOpen]);
+  }, [programLoad, debuggerActions, setIsDialogOpen]);
   return (
     <>
       <Tabs className="flex-1 flex flex-col items-start overflow-auto" defaultValue="upload">
@@ -41,7 +49,7 @@ export const Loader = ({
           </TabsTrigger>
           <TabsTrigger value="assembly">Assembly</TabsTrigger>
         </TabsList>
-        <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto">
+        <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
           <TabsContent value="upload">
             <TextFileUpload
               onFileUpload={(val) => {

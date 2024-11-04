@@ -2,11 +2,12 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
-import { Commands, PvmTypes, TargetOnMessageParams } from "@/packages/web-worker/worker.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
+import { Commands, CommandStatus, PvmTypes, WorkerResponseParams } from "@/packages/web-worker/types";
+import { asyncWorkerPostMessage } from "../utils";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -43,8 +44,6 @@ export interface WorkerState {
 
 const initialState: WorkerState[] = [];
 
-const globalMessageHandlers: Record<string, (event: MessageEvent<TargetOnMessageParams>) => void> = {};
-
 export const createWorker = createAsyncThunk("workers/createWorker", async (id: string) => {
   const worker = new PvmWorker();
 
@@ -74,33 +73,19 @@ export const loadWorker = createAsyncThunk(
 
     dispatch(setWorkerIsLoading({ id, isLoading: true }));
 
-    return new Promise<boolean>((resolve) => {
-      const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
-        if ("status" in event.data && event.data.status === "error") {
-          logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
-        }
-
-        if (event.data.command === Commands.LOAD) {
-          if (event.data.status === "success") {
-            resolve(true);
-            worker.worker.removeEventListener("message", messageHandler);
-          } else if (event.data.status === "error") {
-            resolve(false);
-            logger.error("Error loading PVM worker", { error: event.data.error });
-            worker.worker.removeEventListener("message", messageHandler);
-          }
-
-          dispatch(setWorkerIsLoading({ id, isLoading: false }));
-        }
-      };
-
-      worker.worker.addEventListener("message", messageHandler);
-
-      worker.worker.postMessage({
-        command: Commands.LOAD,
-        payload,
-      });
+    const data = await asyncWorkerPostMessage(id, worker.worker, {
+      command: Commands.LOAD,
+      payload: {
+        type: payload.type,
+        params: payload.params || {},
+      },
     });
+
+    dispatch(setWorkerIsLoading({ id, isLoading: false }));
+
+    if ("status" in data && data.status === "error") {
+      logger.error(`An error occured on codddmmand ${data.command}`, { error: data.error });
+    }
   },
 );
 
@@ -108,75 +93,52 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
   const state = getState() as RootState;
   const debuggerState = state.debugger;
 
-  state.workers.forEach((worker) => {
-    worker.worker.removeEventListener("message", globalMessageHandlers[worker.id]);
+  return Promise.all(
+    state.workers.map(async (worker) => {
+      await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.INIT,
+        payload: {
+          initialState: debuggerState.initialState,
+          program: new Uint8Array(debuggerState.program),
+        },
+      });
 
-    globalMessageHandlers[worker.id] = (event: MessageEvent<TargetOnMessageParams>) => {
-      if ("status" in event.data && event.data.status === "error") {
-        logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
-      }
+      const memorySizeData = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.MEMORY_SIZE,
+      });
+      const pageSize = memorySizeData.payload.memorySize;
 
-      if (event.data.command === Commands.STEP) {
-        const { state, isFinished } = event.data.payload;
-
-        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-
-        dispatch(
-          setWorkerCurrentInstruction({
-            id: worker.id,
-            instruction: event.data.payload.result,
-          }),
-        );
-
-        if (isFinished) {
-          setIsDebugFinished(true);
-        }
-      }
-
-      if (event.data.command === Commands.MEMORY_SIZE) {
-        const pageSize = event.data.payload.memorySize as number;
-        dispatch(setPageSize({ pageSize, id: worker.id }));
-      }
-      if (event.data.command === Commands.MEMORY_PAGE) {
-        dispatch(
-          changePage({
-            id: worker.id,
-            pageNumber: event.data.payload.pageNumber,
-            data: event.data.payload.memoryPage,
-
-            isLoading: false,
-          }),
-        );
-      } else if (event.data.command === Commands.MEMORY_RANGE) {
-        const { start, end, memoryRange } = event.data.payload;
-        dispatch(changeRange({ id: worker.id, start, end, memoryRange, isLoading: false }));
-      }
-    };
-
-    worker.worker.addEventListener("message", globalMessageHandlers[worker.id]);
-
-    worker.worker.postMessage({
-      command: Commands.INIT,
-      payload: {
-        initialState: debuggerState.initialState,
-        program: debuggerState.program,
-      },
-    });
-
-    worker.worker.postMessage({
-      command: Commands.MEMORY_SIZE,
-    });
-  });
+      dispatch(setPageSize({ pageSize, id: worker.id }));
+    }),
+  );
 });
 
 export const changePageAllWorkers = createAsyncThunk(
   "workers/changePageAllWorkers",
-  async (pageNumber: number, { getState }) => {
+  async (pageNumber: number, { getState, dispatch }) => {
     const state = getState() as RootState;
 
-    state.workers.forEach((worker) => {
-      worker.worker.postMessage({ command: Commands.MEMORY_PAGE, payload: { pageNumber } });
-    });
+    return Promise.all(
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.MEMORY_PAGE,
+          payload: { pageNumber },
+        });
+
+        if ("status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error) {
+          return Promise.reject(resp.error);
+        }
+
+        dispatch(
+          changePage({
+            id: worker.id,
+            pageNumber: resp.payload.pageNumber,
+            data: resp.payload.memoryPage,
+            isLoading: false,
+          }),
+        );
+      }),
+    );
   },
 );
 
@@ -201,13 +163,20 @@ export const changeRangeAllWorkers = createAsyncThunk(
       start: number;
       end: number;
     },
-    { getState },
+    { getState, dispatch },
   ) => {
     const state = getState() as RootState;
 
-    state.workers.forEach((worker) => {
-      worker.worker.postMessage({ command: Commands.MEMORY_RANGE, payload: { start, end } });
-    });
+    return Promise.all(
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.MEMORY_RANGE,
+          payload: { start, end },
+        });
+
+        dispatch(changeRange({ id: worker.id, ...resp.payload, isLoading: false }));
+      }),
+    );
   },
 );
 
@@ -227,13 +196,25 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
               isBreakpoint: boolean;
             }) => void,
           ) => {
-            const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
-              if ("status" in event.data && event.data.status === "error") {
+            const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
+              if ("status" in event.data && event.data.status === CommandStatus.ERROR) {
                 logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
               }
 
               if (event.data.command === Commands.STEP) {
                 const { state, isRunMode, isFinished } = event.data.payload;
+
+                // START MOVED FROM initAllWorkers
+                dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+                dispatch(
+                  setWorkerCurrentInstruction({
+                    id: worker.id,
+                    instruction: event.data.payload.result,
+                  }),
+                );
+
+                // END MOVED FOM initAllWorkers
+
                 const currentState = getState() as RootState;
                 const debuggerState = currentState.debugger;
 
@@ -266,7 +247,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
             worker.worker.addEventListener("message", messageHandler);
 
             worker.worker.postMessage({
-              command: "step",
+              command: Commands.STEP,
               payload: {
                 program: debuggerState.program,
               },
@@ -319,9 +300,20 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   }
 
   state.workers.forEach((worker) => {
-    const messageHandler = (event: MessageEvent<TargetOnMessageParams>) => {
+    const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
       if (event.data.command === Commands.STEP) {
         const { state, isFinished } = event.data.payload;
+
+        // START MOVED FROM initAllWorkers
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+        dispatch(
+          setWorkerCurrentInstruction({
+            id: worker.id,
+            instruction: event.data.payload.result,
+          }),
+        );
+
+        // END MOVED FROM initAllWorkers
 
         if (isFinished) {
           dispatch(setIsDebugFinished(true));
@@ -338,7 +330,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
     worker.worker.addEventListener("message", messageHandler);
 
     worker.worker.postMessage({
-      command: "step",
+      command: Commands.STEP,
       payload: {
         program: debuggerState.program,
       },

@@ -1,7 +1,7 @@
 import { ProgramUploadFileOutput } from "@/components/ProgramLoader/types";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { disassemblify } from "@/packages/pvm/pvm/disassemblify";
-import { PvmTypes } from "@/packages/web-worker/worker";
+import { PvmTypes } from "@/packages/web-worker/types";
 import {
   setInitialState,
   setIsDebugFinished,
@@ -68,15 +68,11 @@ export const useDebuggerActions = () => {
 
       dispatch(initAllWorkers());
 
-      try {
-        const result = disassemblify(new Uint8Array(newProgram));
-        logger.info("Disassembly result:", result);
-        dispatch(setProgramPreviewResult(result));
-        dispatch(setAllWorkersCurrentInstruction(result?.[0]));
-        dispatch(setPvmInitialized(true));
-      } catch (e) {
-        console.error("Error disassembling program", e);
-      }
+      const result = disassemblify(new Uint8Array(newProgram));
+      logger.info("Disassembly result:", result);
+      dispatch(setProgramPreviewResult(result));
+      dispatch(setAllWorkersCurrentInstruction(result?.[0]));
+      dispatch(setPvmInitialized(true));
     },
     [dispatch],
   );

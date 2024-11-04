@@ -1,81 +1,27 @@
-import { CurrentInstruction, ExpectedState, InitialState, Pvm as InternalPvm } from "@/types/pvm";
-import { getMemoryPage, SupportedLangs } from "@/packages/web-worker/utils.ts";
-import { WasmPvmShellInterface } from "@/packages/web-worker/wasmPvmShell.ts";
+import { getMemoryPage } from "@/packages/web-worker/utils.ts";
 import commandHandlers from "./command-handlers";
 import { logger } from "@/utils/loggerService";
+import { WorkerRequestParams, WorkerResponseParams, PvmApiInterface, Commands, CommandStatus } from "./types";
 
-export enum Commands {
-  LOAD = "load",
-  INIT = "init",
-  STEP = "step",
-  RUN = "run",
-  STOP = "stop",
-  MEMORY_PAGE = "memory_page",
-  MEMORY_RANGE = "memory_range",
-  MEMORY_SIZE = "memory_size",
-}
-
-export enum PvmTypes {
-  BUILT_IN = "built-in",
-  WASM_URL = "wasm-url",
-  WASM_FILE = "wasm-file",
-}
-
-export enum CommandStatus {
-  SUCCESS = "success",
-  ERROR = "error",
-}
-
-// TODO: unify the api
-export type PvmApiInterface = WasmPvmShellInterface | InternalPvm;
 let pvm: PvmApiInterface | null = null;
 let isRunMode = false;
 
-export type TargetOnMessageParams =
-  | { command: Commands.LOAD; status: CommandStatus; error?: unknown }
-  | { command: Commands.INIT; status: CommandStatus; error?: unknown; payload: { initialState: InitialState } }
-  | {
-      command: Commands.STEP;
-      status: CommandStatus;
-      error?: unknown;
-      payload: { state: ExpectedState; result: CurrentInstruction | object; isFinished: boolean; isRunMode: boolean };
-    }
-  | { command: Commands.RUN; payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean } }
-  | { command: Commands.STOP; payload: { isRunMode: boolean } }
-  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array } }
-  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number; memoryRange: Uint8Array } }
-  | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memorySize: number } };
-
-export type WorkerOnMessageParams =
-  | {
-      command: Commands.LOAD;
-      payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
-    }
-  | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
-  | { command: Commands.STEP; payload: { program: number[] } }
-  | { command: Commands.RUN }
-  | { command: Commands.STOP }
-  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } }
-  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number } }
-  | { command: Commands.MEMORY_SIZE };
-
-export function postTypedMessage(msg: TargetOnMessageParams) {
+export function postTypedMessage(msg: WorkerResponseParams) {
   postMessage(msg);
 }
 
-onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
+onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
   if (!e.data?.command) {
     return;
   }
   logger.info("Worker received message", e.data);
 
   let state;
-  // let program;
   let isFinished;
   if (e.data.command === Commands.LOAD) {
     const data = await commandHandlers.runLoad(e.data.payload);
     pvm = data.pvm;
-    postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error });
+    postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error, messageId: e.data.messageId });
   } else if (e.data.command === Commands.INIT) {
     const data = await commandHandlers.runInit({
       pvm,
@@ -90,6 +36,7 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
       payload: {
         initialState: data.initialState,
       },
+      messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.STEP) {
     const { result, state, isFinished, status, error } = commandHandlers.runStep({
@@ -98,33 +45,66 @@ onmessage = async (e: MessageEvent<WorkerOnMessageParams>) => {
     });
     isRunMode = !isFinished;
 
-    postTypedMessage({ command: Commands.STEP, status, error, payload: { result, state, isFinished, isRunMode } });
+    postTypedMessage({
+      command: Commands.STEP,
+      status,
+      error,
+      payload: { result, state, isFinished, isRunMode },
+      messageId: e.data.messageId,
+    });
   } else if (e.data.command === Commands.RUN) {
     isRunMode = true;
-    postTypedMessage({ command: Commands.RUN, payload: { isRunMode, isFinished: true, state: state ?? {} } });
+    postTypedMessage({
+      command: Commands.RUN,
+      status: CommandStatus.SUCCESS,
+      payload: { isRunMode, isFinished: true, state: state ?? {} },
+      messageId: e.data.messageId,
+    });
   } else if (e.data.command === Commands.STOP) {
     isRunMode = false;
     postTypedMessage({
       command: Commands.RUN,
+      status: CommandStatus.SUCCESS,
       payload: {
         isRunMode,
         isFinished: isFinished ?? true,
         state: state ?? {},
       },
+      messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.MEMORY_PAGE) {
-    const memoryPage = getMemoryPage(e.data.payload.pageNumber, pvm);
+    try {
+      const memoryPage = getMemoryPage(e.data.payload.pageNumber, pvm);
 
-    postMessage({
-      command: Commands.MEMORY_PAGE,
-      payload: { pageNumber: e.data.payload.pageNumber, memoryPage },
-    });
+      postTypedMessage({
+        command: Commands.MEMORY_PAGE,
+        status: CommandStatus.SUCCESS,
+        messageId: e.data.messageId,
+        payload: {
+          pageNumber: e.data.payload.pageNumber,
+          memoryPage,
+        },
+      });
+    } catch (error) {
+      postTypedMessage({
+        command: Commands.MEMORY_PAGE,
+        status: CommandStatus.ERROR,
+        messageId: e.data.messageId,
+        error,
+        payload: {
+          pageNumber: e.data.payload.pageNumber,
+          memoryPage: new Uint8Array(),
+        },
+      });
+    }
   } else if (e.data.command === Commands.MEMORY_SIZE) {
     // Get first page to check the memory size
     const memoryPage = getMemoryPage(0, pvm);
 
-    postMessage({
+    postTypedMessage({
       command: Commands.MEMORY_SIZE,
+      status: CommandStatus.SUCCESS,
+      messageId: e.data.messageId,
       // TODO fix types
       payload: { pageNumber: 0, memorySize: (memoryPage as unknown as Array<number>)?.length },
     });

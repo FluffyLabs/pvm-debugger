@@ -201,12 +201,8 @@ function App() {
               <DebuggerContent />
             ) : (
               <div className="col-span-12 flex justify-center h-[50vh] align-middle">
-                <div className="w-[500px] min-h-[500px] h-[75vh] flex flex-col">
-                  <Loader
-                    initialState={initialState}
-                    onProgramLoad={debuggerActions.handleProgramLoad}
-                    program={program}
-                  />
+                <div className="min-w-[50vw] max-md:w-[100%] min-h-[500px] h-[75vh] flex flex-col">
+                  <Loader initialState={initialState} program={program} />
                 </div>
               </div>
             )}

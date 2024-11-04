@@ -66,11 +66,7 @@ export const DebuggerControlls = () => {
   return (
     <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
       <div className="md:mr-3">
-        <ProgramLoader
-          initialState={initialState}
-          onProgramLoad={debuggerActions.handleProgramLoad}
-          program={program}
-        />
+        <ProgramLoader initialState={initialState} program={program} />
       </div>
       <Button
         className="md:mr-3"

@@ -1,7 +1,7 @@
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { nextInstruction } from "../pvm";
 import { isInternalPvm, getState } from "../utils";
-import { CommandStatus, PvmApiInterface } from "../worker";
+import { CommandStatus, PvmApiInterface } from "../types";
 
 export type StepParams = { program: number[]; pvm: PvmApiInterface | null };
 export type StepResponse = {
