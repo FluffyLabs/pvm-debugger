@@ -37,8 +37,6 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
 };
 
 export const runLoad = async (args: LoadParams): Promise<LoadResponse> => {
-  // return { pvm: null, status: CommandStatus.ERROR, error: new Error("Unknown PVM type") };
-
   try {
     const pvm = await load(args);
     if (pvm) {

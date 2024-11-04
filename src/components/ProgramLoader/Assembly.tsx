@@ -188,7 +188,7 @@ export const Assembly = ({
       >
         <CodeMirror
           autoFocus
-          style={{ height: "100%" }}
+          className="h-full"
           height="100%"
           placeholder="Try writing some PolkaVM assembly code."
           value={assembly}

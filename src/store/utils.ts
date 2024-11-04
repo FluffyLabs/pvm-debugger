@@ -5,7 +5,7 @@ import {
   Commands,
 } from "@/packages/web-worker/types";
 
-const RESPONSE_WAIT_TIMEOUT = 5000;
+const RESPONSE_WAIT_TIMEOUT = 60000;
 const getMessageId = () => Math.random().toString(36).substring(7);
 
 export const asyncWorkerPostMessage = <C extends Commands>(
