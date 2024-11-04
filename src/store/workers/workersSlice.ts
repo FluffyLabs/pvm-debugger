@@ -6,7 +6,7 @@ import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
-import { Commands, PvmTypes, WorkerResponseParams } from "@/packages/web-worker/types";
+import { Commands, CommandStatus, PvmTypes, WorkerResponseParams } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage } from "../utils";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -125,6 +125,10 @@ export const changePageAllWorkers = createAsyncThunk(
           payload: { pageNumber },
         });
 
+        if ("status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error) {
+          return Promise.reject(resp.error);
+        }
+
         dispatch(
           changePage({
             id: worker.id,
@@ -193,7 +197,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
             }) => void,
           ) => {
             const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-              if ("status" in event.data && event.data.status === "error") {
+              if ("status" in event.data && event.data.status === CommandStatus.ERROR) {
                 logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
               }
 
