@@ -70,7 +70,7 @@ const DebuggerContent = () => {
 
   return (
     <>
-      <div className="col-span-12 md:col-span-4 max-sm:max-h-[70vh] max-sm:min-h-[330px]">
+      <div className="col-span-12 md:col-span-4 max-h-[70vh] max-sm:min-h-[330px]">
         {!program.length && <InitialLoadProgramCTA />}
         {!!program.length && (
           <>
