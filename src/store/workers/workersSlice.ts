@@ -218,10 +218,6 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
                 const currentState = getState() as RootState;
                 const debuggerState = currentState.debugger;
 
-                if (isFinished) {
-                  dispatch(setIsDebugFinished(true));
-                }
-
                 if (state.pc === undefined) {
                   throw new Error("Program counter is undefined");
                 }
@@ -261,13 +257,17 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
       (response) => JSON.stringify(response.state) === JSON.stringify(responses[0].state),
     );
 
-    const anyFinished = responses.some((response) => response.isFinished);
+    const allFinished = responses.every((response) => response.isFinished);
 
     const allRunning = responses.every((response) => response.isRunMode);
 
     const anyBreakpoint = responses.some((response) => response.isBreakpoint);
 
-    if (allSame && !anyFinished && allRunning && !anyBreakpoint) {
+    if (allFinished) {
+      dispatch(setIsDebugFinished(true));
+    }
+
+    if (allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
     }
   };
@@ -299,43 +299,53 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
     return;
   }
 
-  state.workers.forEach((worker) => {
-    const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-      if (event.data.command === Commands.STEP) {
-        const { state, isFinished } = event.data.payload;
+  const responses = await Promise.all(
+    state.workers.map((worker) => {
+      return new Promise((resolve: (value: { isFinished: boolean }) => void) => {
+        const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
+          if (event.data.command === Commands.STEP) {
+            const { state, isFinished } = event.data.payload;
 
-        // START MOVED FROM initAllWorkers
-        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-        dispatch(
-          setWorkerCurrentInstruction({
-            id: worker.id,
-            instruction: event.data.payload.result,
-          }),
-        );
+            // START MOVED FROM initAllWorkers
+            dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+            dispatch(
+              setWorkerCurrentInstruction({
+                id: worker.id,
+                instruction: event.data.payload.result,
+              }),
+            );
 
-        // END MOVED FROM initAllWorkers
+            // END MOVED FROM initAllWorkers
 
-        if (isFinished) {
-          dispatch(setIsDebugFinished(true));
-        }
+            if (state.pc === undefined) {
+              throw new Error("Program counter is undefined");
+            }
 
-        if (state.pc === undefined) {
-          throw new Error("Program counter is undefined");
-        }
+            resolve({
+              isFinished,
+            });
 
-        worker.worker.removeEventListener("message", messageHandler);
-      }
-    };
+            worker.worker.removeEventListener("message", messageHandler);
+          }
+        };
 
-    worker.worker.addEventListener("message", messageHandler);
+        worker.worker.addEventListener("message", messageHandler);
 
-    worker.worker.postMessage({
-      command: Commands.STEP,
-      payload: {
-        program: debuggerState.program,
-      },
-    });
-  });
+        worker.worker.postMessage({
+          command: Commands.STEP,
+          payload: {
+            program: debuggerState.program,
+          },
+        });
+      });
+    }),
+  );
+
+  const allFinished = responses.every((response) => response.isFinished);
+
+  if (allFinished) {
+    dispatch(setIsDebugFinished(true));
+  }
 });
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
