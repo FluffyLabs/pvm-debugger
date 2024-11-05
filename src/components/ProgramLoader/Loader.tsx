@@ -8,6 +8,8 @@ import { useState, useCallback } from "react";
 import { ProgramUploadFileOutput } from "./types";
 import { InitialState } from "@/types/pvm";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
+import { useAppDispatch } from "@/store/hooks.ts";
+import { setIsProgramEditMode } from "@/store/debugger/debuggerSlice.ts";
 
 export const Loader = ({
   initialState,
@@ -18,6 +20,7 @@ export const Loader = ({
   program: number[];
   setIsDialogOpen?: (val: boolean) => void;
 }) => {
+  const dispatch = useAppDispatch();
   const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
   const [error, setError] = useState<string>();
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -26,6 +29,8 @@ export const Loader = ({
   const handleLoad = useCallback(() => {
     setIsSubmitted(true);
     if (!programLoad) return;
+
+    dispatch(setIsProgramEditMode(false));
 
     try {
       debuggerActions.handleProgramLoad(programLoad);
@@ -37,7 +42,7 @@ export const Loader = ({
       }
     }
     setIsDialogOpen?.(false);
-  }, [programLoad, debuggerActions, setIsDialogOpen]);
+  }, [dispatch, programLoad, debuggerActions, setIsDialogOpen]);
   return (
     <>
       <Tabs className="flex-1 flex flex-col items-start overflow-auto" defaultValue="upload">
