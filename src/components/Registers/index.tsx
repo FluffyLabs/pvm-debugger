@@ -1,27 +1,30 @@
 import { ExpectedState, InitialState, RegistersArray, Status } from "@/types/pvm";
-import { useContext } from "react";
+import { ReactNode, useContext } from "react";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
 import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input.tsx";
-import { getStatusColor } from "./utils";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import React from "react";
+import { isNumber } from "lodash";
+import { getStatusColor } from "@/components/Registers/utils.ts";
 
 const ComputedValue = ({
   propName,
   propNameIndex,
   value,
   previousValue,
+  formatter,
   workers,
 }: {
   propName: keyof ExpectedState;
   propNameIndex?: number;
-  value?: number;
-  previousValue?: number;
+  value?: number | string;
+  previousValue?: number | string;
+  formatter?: (value: number | string) => ReactNode | string;
   workers: WorkerState[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
@@ -37,6 +40,23 @@ const ComputedValue = ({
   const isEqualAcrossWorkers = valuesInAllWorkers("currentState").every((val) => val === value);
   const wasEqualAcrossWorkers = valuesInAllWorkers("previousState").every((val) => val === previousValue);
 
+  const formatValueToDisplay = (value?: number | string, isEqualAcrossWorkers = true) => {
+    if (value === undefined) {
+      return "";
+    }
+
+    if (!isEqualAcrossWorkers) {
+      return "?";
+    }
+
+    if (isNumber(value)) {
+      const numeralValue = valueToNumeralSystem(value, numeralSystem);
+      return formatter ? formatter(numeralValue) : numeralValue;
+    }
+
+    return formatter ? formatter(value) : value;
+  };
+
   if (isEqualAcrossWorkers && wasEqualAcrossWorkers && previousValue === value) {
     return (
       <p
@@ -44,7 +64,7 @@ const ComputedValue = ({
           "flex-[3]": true,
         })}
       >
-        {value !== undefined ? valueToNumeralSystem(value, numeralSystem) : ""}
+        {formatValueToDisplay(value)}
       </p>
     );
   }
@@ -61,9 +81,7 @@ const ComputedValue = ({
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <span>
-                {value !== undefined ? (isEqualAcrossWorkers ? valueToNumeralSystem(value, numeralSystem) : "?") : ""}
-              </span>
+              <span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
             </TooltipTrigger>
 
             <TooltipContent>
@@ -74,13 +92,9 @@ const ComputedValue = ({
                       <span>{worker.id}</span>
                     </div>
                     <div className="pl-3">
-                      <span>
-                        {valueToNumeralSystem(getWorkerValueFromState(worker, "previousState"), numeralSystem)}
-                      </span>
+                      <span>{formatValueToDisplay(getWorkerValueFromState(worker, "previousState"))}</span>
                       <span> → </span>
-                      <span>
-                        {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState"), numeralSystem)}
-                      </span>
+                      <span>{formatValueToDisplay(getWorkerValueFromState(worker, "currentState"))}</span>
                     </div>
                   </React.Fragment>
                 ))}
@@ -127,9 +141,19 @@ export const Registers = ({
             </div>
             <div className="flex flex-row items-center justify-between w-full">
               <p className="flex-[2]">Status</p>
-              <p className="flex-[3]" style={{ color: getStatusColor(currentState.status) }} test-id="program-status">
-                {currentState.status !== undefined ? Status[currentState.status] : null}
-              </p>
+              {currentState.status !== undefined && previousState.status !== undefined && (
+                <ComputedValue
+                  value={currentState.status}
+                  previousValue={previousState.status}
+                  propName="status"
+                  formatter={(value) => (
+                    <span style={{ color: getStatusColor(Number(value) as Status) }} test-id="program-status">
+                      {Status[Number(value) as Status]}
+                    </span>
+                  )}
+                  workers={workers}
+                />
+              )}
             </div>
 
             <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
