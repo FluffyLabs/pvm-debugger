@@ -1,6 +1,7 @@
 # PVM disassembler & debugger
 
-Live @ https://pvm.fluffylabs.dev
+- **Production @ https://pvm.fluffylabs.dev**
+- Beta @ https://pvm-debugger.netlify.app/
 
 ## Requirements
 
