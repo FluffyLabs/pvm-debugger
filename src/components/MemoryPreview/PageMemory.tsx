@@ -1,14 +1,11 @@
-import { chunk, debounce, isString } from "lodash";
+import { Input } from "@/components/ui/input";
+import { chunk } from "lodash";
 import { useSelector } from "react-redux";
-import { changePageAllWorkers, selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
+import { selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { NumeralSystem } from "@/context/NumeralSystem";
-import { useAppDispatch } from "@/store/hooks";
-import classNames from "classnames";
-import { NumericFormat } from "react-number-format";
-import { INPUT_STYLES } from "../ui/input";
 
 const SPLIT_STEP = 8 as const;
 const toMemoryPageTabData = (
@@ -24,20 +21,12 @@ const toMemoryPageTabData = (
   });
 };
 
-export const MemoryTable = ({
-  data,
-  addressStart,
-  hasError,
-}: {
-  addressStart: number;
-  data: Uint8Array | undefined;
-  hasError: boolean;
-}) => {
+export const MemoryTable = ({ data, addressStart }: { addressStart: number; data: Uint8Array | undefined }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const tableData = toMemoryPageTabData(data, addressStart, numeralSystem);
 
   return (
-    <div className={classNames("mt-2 max-h-[calc(70vh-150px)] overflow-y-auto", { "opacity-20": hasError })}>
+    <div className="mt-5 max-h-[calc(70vh-150px)] overflow-y-auto">
       {tableData.map(({ address, bytes }, rowIndex) => (
         <div className="flex" key={address}>
           <div className="opacity-40 mr-6 w-[50px]" style={{ fontVariantNumeric: "tabular-nums" }}>
@@ -59,48 +48,24 @@ export const MemoryTable = ({
   );
 };
 
-export const PageMemory = () => {
+export const PageMemory = ({ onPageChange }: { onPageChange: (page: number) => void }) => {
   // TODO: get the memory for all of them and compare results
   const memory = useSelector(selectMemoryForFirstWorker);
-  const dispatch = useAppDispatch();
-  const [error, setError] = useState<string | null>(null);
-
-  const changePage = debounce(async (pageNumber: number) => {
-    if (pageNumber === undefined) {
-      return;
-    }
-    const resp = await dispatch(changePageAllWorkers(pageNumber));
-    if ("error" in resp && "message" in resp.error && isString(resp.error.message)) {
-      setError(resp.error.message);
-    } else {
-      setError(null);
-    }
-  }, 500);
   return (
     <div>
       <div className="flex w-full">
         <div className="font-semibold flex items-center mr-6">Page</div>
         <div className="flex-grow">
-          <NumericFormat
-            className={INPUT_STYLES}
-            allowNegative={false}
-            decimalScale={0}
-            min={0}
+          <Input
+            type="number"
             defaultValue={0}
-            required
             onChange={(ev) => {
-              if (ev.target.value === "") {
-                setError("Page number is required");
-                return;
-              }
-              changePage(parseInt(ev.target.value));
+              onPageChange(parseInt(ev.target.value || "-1"));
             }}
           />
         </div>
       </div>
-      {error && <div className="text-red-500 mt-3">{error}</div>}
       <MemoryTable
-        hasError={!!error}
         data={memory?.page.data}
         addressStart={(memory?.page.pageNumber || 0) * (memory?.meta.pageSize || 0)}
       />
