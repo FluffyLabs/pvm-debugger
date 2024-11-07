@@ -148,7 +148,7 @@ export const Registers = ({
                   propName="status"
                   formatter={(value) => (
                     <span style={{ color: getStatusColor(Number(value)) }} test-id="program-status">
-                      {Status[Number(value)]}
+                      {Status[Number(value)] ?? `Invalid(${value})`}
                     </span>
                   )}
                   workers={workers}
