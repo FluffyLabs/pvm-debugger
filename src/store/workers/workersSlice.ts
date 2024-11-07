@@ -300,44 +300,31 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   }
 
   const responses = await Promise.all(
-    state.workers.map((worker) => {
-      return new Promise((resolve: (value: { isFinished: boolean }) => void) => {
-        const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-          if (event.data.command === Commands.STEP) {
-            const { state, isFinished } = event.data.payload;
-
-            // START MOVED FROM initAllWorkers
-            dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-            dispatch(
-              setWorkerCurrentInstruction({
-                id: worker.id,
-                instruction: event.data.payload.result,
-              }),
-            );
-
-            // END MOVED FROM initAllWorkers
-
-            if (state.pc === undefined) {
-              throw new Error("Program counter is undefined");
-            }
-
-            resolve({
-              isFinished,
-            });
-
-            worker.worker.removeEventListener("message", messageHandler);
-          }
-        };
-
-        worker.worker.addEventListener("message", messageHandler);
-
-        worker.worker.postMessage({
-          command: Commands.STEP,
-          payload: {
-            program: debuggerState.program,
-          },
-        });
+    state.workers.map(async (worker) => {
+      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.STEP,
+        payload: {
+          program: new Uint8Array(debuggerState.program),
+        },
       });
+
+      const { state, isFinished } = data.payload;
+
+      dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+      dispatch(
+        setWorkerCurrentInstruction({
+          id: worker.id,
+          instruction: data.payload.result,
+        }),
+      );
+
+      if (state.pc === undefined) {
+        throw new Error("Program counter is undefined");
+      }
+
+      return {
+        isFinished,
+      };
     }),
   );
 

@@ -3,7 +3,7 @@ import { nextInstruction } from "../pvm";
 import { isInternalPvm, getState } from "../utils";
 import { CommandStatus, PvmApiInterface } from "../types";
 
-export type StepParams = { program: number[]; pvm: PvmApiInterface | null };
+export type StepParams = { program: Uint8Array; pvm: PvmApiInterface | null };
 export type StepResponse = {
   status: CommandStatus;
   error?: unknown;

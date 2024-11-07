@@ -147,8 +147,8 @@ export const Registers = ({
                   previousValue={previousState.status}
                   propName="status"
                   formatter={(value) => (
-                    <span style={{ color: getStatusColor(Number(value) as Status) }} test-id="program-status">
-                      {Status[Number(value) as Status]}
+                    <span style={{ color: getStatusColor(Number(value)) }} test-id="program-status">
+                      {Status[Number(value)]}
                     </span>
                   )}
                   workers={workers}
