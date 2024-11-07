@@ -97,12 +97,14 @@ export const Registers = ({
   currentState,
   previousState,
   onCurrentStateChange,
-  allowEditing,
+  allowEditingPc,
+  allowEditingRegisters,
 }: {
   currentState: ExpectedState;
   previousState: ExpectedState;
   onCurrentStateChange: (changedState: ExpectedState) => void;
-  allowEditing: boolean;
+  allowEditingPc: boolean;
+  allowEditingRegisters: boolean;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const workers = useAppSelector(selectWorkers);
@@ -114,7 +116,37 @@ export const Registers = ({
           <div className="font-mono flex flex-col items-start">
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">PC</p>
-              <ComputedValue value={currentState.pc} previousValue={previousState.pc} propName="pc" workers={workers} />
+              {allowEditingPc ? (
+                <div className="flex-[3]">
+                  <Input
+                    className="w-20 h-6 m-0 p-0 text-md"
+                    onChange={(e) => {
+                      const value = e.target?.value;
+                      const valueInDecimal =
+                        numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
+                      const pcValue =
+                        valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : 0;
+                      onCurrentStateChange({
+                        ...currentState,
+                        pc: pcValue,
+                      });
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    value={valueToNumeralSystem(currentState.pc ?? 0, numeralSystem)}
+                  />
+                </div>
+              ) : (
+                <ComputedValue
+                  value={currentState.pc}
+                  previousValue={previousState.pc}
+                  propName="pc"
+                  workers={workers}
+                />
+              )}
             </div>
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">Gas</p>
@@ -139,7 +171,7 @@ export const Registers = ({
                 <p className="flex-[2]">
                   ω<sub>{regNo}</sub>
                 </p>
-                {allowEditing ? (
+                {allowEditingRegisters ? (
                   <div className="flex-[3]">
                     <Input
                       className="w-20 h-6 m-0 p-0"

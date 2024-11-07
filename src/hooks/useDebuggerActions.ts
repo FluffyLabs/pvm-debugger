@@ -12,6 +12,7 @@ import {
   setPvmInitialized,
   setIsAsmError,
   setBreakpointAddresses,
+  setIsStepMode,
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -37,9 +38,10 @@ export const useDebuggerActions = () => {
 
   const restartProgram = useCallback(
     (state: ExpectedState) => {
-      setInitialState(state);
+      dispatch(setInitialState(state));
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
+      dispatch(setIsStepMode(false));
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
       dispatch(initAllWorkers());
@@ -55,7 +57,7 @@ export const useDebuggerActions = () => {
       dispatch(setInitialState(initialState));
       dispatch(setProgram(newProgram));
       const currentState = {
-        pc: 0,
+        pc: initialState.pc ?? 0,
         regs: initialState.regs,
         gas: initialState.gas,
         pageMap: initialState.pageMap,

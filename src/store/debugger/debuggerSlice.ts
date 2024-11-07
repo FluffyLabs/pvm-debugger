@@ -9,6 +9,7 @@ export interface DebuggerState {
   isProgramEditMode: boolean;
   isAsmError: boolean;
   isRunMode: boolean;
+  isStepMode: boolean;
   programPreviewResult: CurrentInstruction[];
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
@@ -29,6 +30,7 @@ const initialState: DebuggerState = {
   isProgramEditMode: false,
   isAsmError: false,
   isRunMode: false,
+  isStepMode: false,
   programPreviewResult: [],
   breakpointAddresses: [],
   clickedInstruction: null,
@@ -55,6 +57,9 @@ const debuggerSlice = createSlice({
     },
     setIsRunMode(state, action) {
       state.isRunMode = action.payload;
+    },
+    setIsStepMode(state, action) {
+      state.isStepMode = action.payload;
     },
     setProgramPreviewResult(state, action) {
       state.programPreviewResult = action.payload;
@@ -83,6 +88,7 @@ export const {
   setIsProgramEditMode,
   setIsAsmError,
   setIsRunMode,
+  setIsStepMode,
   setProgramPreviewResult,
   setBreakpointAddresses,
   setClickedInstruction,
