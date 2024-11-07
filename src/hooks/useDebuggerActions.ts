@@ -3,26 +3,26 @@ import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { disassemblify } from "@/packages/pvm/pvm/disassemblify";
 import { PvmTypes } from "@/packages/web-worker/types";
 import {
+  setBreakpointAddresses,
+  setClickedInstruction,
   setInitialState,
+  setIsAsmError,
   setIsDebugFinished,
   setIsRunMode,
-  setClickedInstruction,
   setProgram,
   setProgramPreviewResult,
   setPvmInitialized,
-  setIsAsmError,
-  setBreakpointAddresses,
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  setAllWorkersCurrentState,
-  setAllWorkersPreviousState,
-  initAllWorkers,
-  refreshPageAllWorkers,
-  setAllWorkersCurrentInstruction,
   createWorker,
   destroyWorker,
+  initAllWorkers,
   loadWorker,
+  refreshPageAllWorkers,
+  setAllWorkersCurrentInstruction,
+  setAllWorkersCurrentState,
+  setAllWorkersPreviousState,
   WorkerState,
 } from "@/store/workers/workersSlice";
 import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
@@ -80,7 +80,7 @@ export const useDebuggerActions = () => {
   const handleProgramLoad = useCallback(
     (data?: ProgramUploadFileOutput) => {
       if (data) {
-        startProgram({ ...data.initial, status: -1 }, data.program);
+        startProgram({ ...data.initial, status: Status.OK }, data.program);
         dispatch(setIsAsmError(false));
       } else {
         dispatch(setIsAsmError(true));

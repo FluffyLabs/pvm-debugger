@@ -367,8 +367,18 @@ const workers = createSlice({
     ) {
       const worker = getWorker(state, action.payload.id);
       if (worker) {
-        worker.previousState = worker.currentState;
-        worker.currentState = action.payload.currentState;
+        // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+        if (Number(action.payload.currentState.status) === -1) {
+          worker.previousState = worker.currentState;
+          worker.currentState = {
+            ...action.payload.currentState,
+            status: 255,
+          };
+        } else {
+          // TODO: just these lines should be left as the issue above is resolved
+          worker.previousState = worker.currentState;
+          worker.currentState = action.payload.currentState;
+        }
       }
     },
     setAllWorkersCurrentState(state, action) {
@@ -376,13 +386,29 @@ const workers = createSlice({
         if (typeof action.payload === "function") {
           worker.currentState = action.payload(worker.currentState);
         } else {
-          worker.currentState = action.payload;
+          // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+          if (Number(action.payload.currentState?.status) === -1) {
+            worker.currentState = {
+              ...action.payload,
+              status: 255,
+            };
+          } else {
+            worker.currentState = action.payload;
+          }
         }
       });
     },
     setAllWorkersPreviousState(state, action) {
       state.forEach((worker) => {
-        worker.previousState = action.payload;
+        // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+        if (Number(action.payload.currentState?.status) === -1) {
+          worker.previousState = {
+            ...action.payload,
+            status: 255,
+          };
+        } else {
+          worker.previousState = action.payload;
+        }
       });
     },
     setWorkerCurrentInstruction(state, action) {

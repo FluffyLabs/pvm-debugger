@@ -169,7 +169,7 @@ declare module "@typeberry/pvm-debugger-adapter" {
   class Memory {}
 
   enum Status {
-    OK = -1,
+    OK = 255,
     HALT = 0,
     PANIC = 1,
     FAULT = 2,

@@ -25,7 +25,7 @@ export type PageMapItem = {
 };
 
 export enum Status {
-  OK = -1,
+  OK = 255,
   HALT = 0,
   PANIC = 1,
   FAULT = 2,

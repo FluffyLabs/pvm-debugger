@@ -19,7 +19,9 @@ const step = ({ pvm, program }: StepParams) => {
 
   let isFinished: boolean;
   if (isInternalPvm(pvm)) {
-    isFinished = pvm.nextStep() !== Status.OK;
+    // TODO: remove the -1 check as soon as OK status is not -1 in PVM and PolkaVM anymore
+    const nextStep = pvm.nextStep();
+    isFinished = nextStep !== Status.OK && Number(nextStep) !== -1;
   } else {
     isFinished = !pvm.nextStep();
   }
