@@ -3,7 +3,7 @@ import { nextInstruction } from "../pvm";
 import { isInternalPvm, getState } from "../utils";
 import { CommandStatus, PvmApiInterface } from "../types";
 
-export type StepParams = { program: number[]; pvm: PvmApiInterface | null };
+export type StepParams = { program: Uint8Array; pvm: PvmApiInterface | null };
 export type StepResponse = {
   status: CommandStatus;
   error?: unknown;
@@ -19,7 +19,9 @@ const step = ({ pvm, program }: StepParams) => {
 
   let isFinished: boolean;
   if (isInternalPvm(pvm)) {
-    isFinished = pvm.nextStep() !== Status.OK;
+    // TODO: remove the -1 check as soon as OK status is not -1 in PVM and PolkaVM anymore
+    const nextStep = pvm.nextStep();
+    isFinished = nextStep !== Status.OK && Number(nextStep) !== -1;
   } else {
     isFinished = !pvm.nextStep();
   }

@@ -37,7 +37,7 @@ export type CommandWorkerRequestParams =
       payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
     }
   | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
-  | { command: Commands.STEP; payload: { program: number[] } }
+  | { command: Commands.STEP; payload: { program: Uint8Array } }
   | { command: Commands.RUN }
   | { command: Commands.STOP }
   | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } }

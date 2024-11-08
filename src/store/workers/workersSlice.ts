@@ -218,10 +218,6 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
                 const currentState = getState() as RootState;
                 const debuggerState = currentState.debugger;
 
-                if (isFinished) {
-                  dispatch(setIsDebugFinished(true));
-                }
-
                 if (state.pc === undefined) {
                   throw new Error("Program counter is undefined");
                 }
@@ -261,13 +257,17 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
       (response) => JSON.stringify(response.state) === JSON.stringify(responses[0].state),
     );
 
-    const anyFinished = responses.some((response) => response.isFinished);
+    const allFinished = responses.every((response) => response.isFinished);
 
     const allRunning = responses.every((response) => response.isRunMode);
 
     const anyBreakpoint = responses.some((response) => response.isBreakpoint);
 
-    if (allSame && !anyFinished && allRunning && !anyBreakpoint) {
+    if (allFinished) {
+      dispatch(setIsDebugFinished(true));
+    }
+
+    if (allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
     }
   };
@@ -299,43 +299,40 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
     return;
   }
 
-  state.workers.forEach((worker) => {
-    const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-      if (event.data.command === Commands.STEP) {
-        const { state, isFinished } = event.data.payload;
+  const responses = await Promise.all(
+    state.workers.map(async (worker) => {
+      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.STEP,
+        payload: {
+          program: new Uint8Array(debuggerState.program),
+        },
+      });
 
-        // START MOVED FROM initAllWorkers
-        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-        dispatch(
-          setWorkerCurrentInstruction({
-            id: worker.id,
-            instruction: event.data.payload.result,
-          }),
-        );
+      const { state, isFinished } = data.payload;
 
-        // END MOVED FROM initAllWorkers
+      dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+      dispatch(
+        setWorkerCurrentInstruction({
+          id: worker.id,
+          instruction: data.payload.result,
+        }),
+      );
 
-        if (isFinished) {
-          dispatch(setIsDebugFinished(true));
-        }
-
-        if (state.pc === undefined) {
-          throw new Error("Program counter is undefined");
-        }
-
-        worker.worker.removeEventListener("message", messageHandler);
+      if (state.pc === undefined) {
+        throw new Error("Program counter is undefined");
       }
-    };
 
-    worker.worker.addEventListener("message", messageHandler);
+      return {
+        isFinished,
+      };
+    }),
+  );
 
-    worker.worker.postMessage({
-      command: Commands.STEP,
-      payload: {
-        program: debuggerState.program,
-      },
-    });
-  });
+  const allFinished = responses.every((response) => response.isFinished);
+
+  if (allFinished) {
+    dispatch(setIsDebugFinished(true));
+  }
 });
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
@@ -370,8 +367,18 @@ const workers = createSlice({
     ) {
       const worker = getWorker(state, action.payload.id);
       if (worker) {
-        worker.previousState = worker.currentState;
-        worker.currentState = action.payload.currentState;
+        // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+        if (Number(action.payload.currentState.status) === -1) {
+          worker.previousState = worker.currentState;
+          worker.currentState = {
+            ...action.payload.currentState,
+            status: 255,
+          };
+        } else {
+          // TODO: just these lines should be left as the issue above is resolved
+          worker.previousState = worker.currentState;
+          worker.currentState = action.payload.currentState;
+        }
       }
     },
     setAllWorkersCurrentState(state, action) {
@@ -379,13 +386,29 @@ const workers = createSlice({
         if (typeof action.payload === "function") {
           worker.currentState = action.payload(worker.currentState);
         } else {
-          worker.currentState = action.payload;
+          // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+          if (Number(action.payload.currentState?.status) === -1) {
+            worker.currentState = {
+              ...action.payload,
+              status: 255,
+            };
+          } else {
+            worker.currentState = action.payload;
+          }
         }
       });
     },
     setAllWorkersPreviousState(state, action) {
       state.forEach((worker) => {
-        worker.previousState = action.payload;
+        // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+        if (Number(action.payload.currentState?.status) === -1) {
+          worker.previousState = {
+            ...action.payload,
+            status: 255,
+          };
+        } else {
+          worker.previousState = action.payload;
+        }
       });
     },
     setWorkerCurrentInstruction(state, action) {
