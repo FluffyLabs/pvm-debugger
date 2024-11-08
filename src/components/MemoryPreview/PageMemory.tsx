@@ -40,7 +40,7 @@ export const MemoryTable = ({
     <div className={classNames("mt-2 max-h-[calc(70vh-150px)] overflow-y-auto", { "opacity-20": hasError })}>
       {tableData.map(({ address, bytes }, rowIndex) => (
         <div className="flex" key={address}>
-          <div className="opacity-40 mr-6 w-[50px]" style={{ fontVariantNumeric: "tabular-nums" }}>
+          <div className="opacity-40 mr-6" style={{ fontVariantNumeric: "tabular-nums" }}>
             {address}
           </div>
           <div className="font-semibold grow">
