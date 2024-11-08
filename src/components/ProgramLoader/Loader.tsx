@@ -34,6 +34,7 @@ export const Loader = ({
 
     try {
       debuggerActions.handleProgramLoad(programLoad);
+      setIsDialogOpen?.(false);
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);
@@ -41,7 +42,6 @@ export const Loader = ({
         setError("Unknown error occured");
       }
     }
-    setIsDialogOpen?.(false);
   }, [dispatch, programLoad, debuggerActions, setIsDialogOpen]);
   return (
     <>
