@@ -50,7 +50,7 @@ export const RangeMemory = (props: { onRangeChange: (start: number, end: number)
               </Button>
             </div>
             <div>
-              <MemoryTable data={range.data} addressStart={range.start} />
+              <MemoryTable data={range.data} addressStart={range.start} hasError />
             </div>
           </div>
         ))}
