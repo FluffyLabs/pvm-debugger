@@ -3,6 +3,7 @@ import {
   CommandWorkerRequestParams,
   WorkerRequestParams,
   Commands,
+  CommandStatus,
 } from "@/packages/web-worker/types";
 
 const RESPONSE_WAIT_TIMEOUT = 60000;
@@ -31,4 +32,8 @@ export const asyncWorkerPostMessage = <C extends Commands>(
     const request: WorkerRequestParams = { ...data, messageId };
     worker.postMessage(request);
   });
+};
+
+export const hasCommandStatusError = (resp: WorkerResponseParams): resp is WorkerResponseParams & { error: Error } => {
+  return "status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error;
 };

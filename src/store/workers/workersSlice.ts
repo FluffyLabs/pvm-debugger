@@ -6,8 +6,8 @@ import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
-import { Commands, CommandStatus, PvmTypes, WorkerResponseParams } from "@/packages/web-worker/types";
-import { asyncWorkerPostMessage } from "../utils";
+import { Commands, PvmTypes } from "@/packages/web-worker/types";
+import { asyncWorkerPostMessage, hasCommandStatusError } from "../utils";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -95,7 +95,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
 
   return Promise.all(
     state.workers.map(async (worker) => {
-      await asyncWorkerPostMessage(worker.id, worker.worker, {
+      const initData = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.INIT,
         payload: {
           initialState: debuggerState.initialState,
@@ -103,10 +103,18 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
         },
       });
 
+      if (hasCommandStatusError(initData)) {
+        throw initData.error;
+      }
+
       const memorySizeData = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.MEMORY_SIZE,
       });
       const pageSize = memorySizeData.payload.memorySize;
+
+      if (hasCommandStatusError(memorySizeData)) {
+        logger.error("Failed to initialize memory", { error: memorySizeData.error });
+      }
 
       dispatch(setPageSize({ pageSize, id: worker.id }));
     }),
@@ -125,8 +133,8 @@ export const changePageAllWorkers = createAsyncThunk(
           payload: { pageNumber },
         });
 
-        if ("status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error) {
-          return Promise.reject(resp.error);
+        if (hasCommandStatusError(resp)) {
+          throw resp.error;
         }
 
         dispatch(
@@ -182,74 +190,51 @@ export const changeRangeAllWorkers = createAsyncThunk(
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  const debuggerState = state.debugger;
+  let debuggerState = state.debugger;
 
   const stepAllWorkersAgain = async () => {
     const responses = await Promise.all(
-      state.workers.map((worker) => {
-        return new Promise(
-          (
-            resolve: (value: {
-              isFinished: boolean;
-              state: ExpectedState;
-              isRunMode: boolean;
-              isBreakpoint: boolean;
-            }) => void,
-          ) => {
-            const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-              if ("status" in event.data && event.data.status === CommandStatus.ERROR) {
-                logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
-              }
-
-              if (event.data.command === Commands.STEP) {
-                const { state, isRunMode, isFinished } = event.data.payload;
-
-                // START MOVED FROM initAllWorkers
-                dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-                dispatch(
-                  setWorkerCurrentInstruction({
-                    id: worker.id,
-                    instruction: event.data.payload.result,
-                  }),
-                );
-
-                // END MOVED FOM initAllWorkers
-
-                const currentState = getState() as RootState;
-                const debuggerState = currentState.debugger;
-
-                if (state.pc === undefined) {
-                  throw new Error("Program counter is undefined");
-                }
-
-                resolve({
-                  isFinished,
-                  state,
-                  isRunMode,
-                  isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
-                });
-
-                logger.info("Response from worker:", {
-                  isFinished,
-                  state,
-                  isRunMode,
-                  debuggerHit: debuggerState.breakpointAddresses.includes(state.pc),
-                });
-
-                worker.worker.removeEventListener("message", messageHandler);
-              }
-            };
-
-            worker.worker.addEventListener("message", messageHandler);
-
-            worker.worker.postMessage({
-              command: Commands.STEP,
-              payload: {
-                program: debuggerState.program,
-              },
-            });
+      state.workers.map(async (worker) => {
+        const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.STEP,
+          payload: {
+            program: new Uint8Array(debuggerState.program),
           },
+        });
+
+        const { state, isRunMode, isFinished } = data.payload;
+
+        // START MOVED FROM initAllWorkers
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+        dispatch(
+          setWorkerCurrentInstruction({
+            id: worker.id,
+            instruction: data.payload.result,
+          }),
         );
+
+        // END MOVED FOM initAllWorkers
+
+        const currentState = getState() as RootState;
+        debuggerState = currentState.debugger;
+
+        if (state.pc === undefined) {
+          throw "Program counter is undefined";
+        }
+
+        logger.info("Response from worker:", {
+          isFinished,
+          state,
+          isRunMode,
+          debuggerHit: debuggerState.breakpointAddresses.includes(state.pc),
+        });
+
+        return {
+          isFinished,
+          state,
+          isRunMode,
+          isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
+        };
       }),
     );
 
@@ -281,7 +266,7 @@ export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_,
 
   state.workers.forEach((worker) => {
     worker.worker.postMessage({
-      command: "run",
+      command: Commands.RUN,
       payload: {
         program: debuggerState.program,
       },
@@ -319,7 +304,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
       );
 
       if (state.pc === undefined) {
-        throw new Error("Program counter is undefined");
+        throw "Program counter is undefined";
       }
 
       return {

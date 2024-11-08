@@ -1,4 +1,4 @@
-import { chunk, debounce, isString } from "lodash";
+import { chunk, debounce } from "lodash";
 import { useSelector } from "react-redux";
 import { changePageAllWorkers, selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
@@ -9,6 +9,7 @@ import { useAppDispatch } from "@/store/hooks";
 import classNames from "classnames";
 import { NumericFormat } from "react-number-format";
 import { INPUT_STYLES } from "../ui/input";
+import { isRejected } from "@reduxjs/toolkit";
 
 const SPLIT_STEP = 8 as const;
 const toMemoryPageTabData = (
@@ -70,8 +71,8 @@ export const PageMemory = () => {
       return;
     }
     const resp = await dispatch(changePageAllWorkers(pageNumber));
-    if ("error" in resp && "message" in resp.error && isString(resp.error.message)) {
-      setError(resp.error.message);
+    if (isRejected(resp)) {
+      setError(resp.error.message || "Unknown error");
     } else {
       setError(null);
     }

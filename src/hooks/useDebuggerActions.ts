@@ -27,6 +27,7 @@ import {
 } from "@/store/workers/workersSlice";
 import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
+import { isRejected } from "@reduxjs/toolkit";
 import { useCallback } from "react";
 
 export const useDebuggerActions = () => {
@@ -51,7 +52,7 @@ export const useDebuggerActions = () => {
   );
 
   const startProgram = useCallback(
-    (initialState: ExpectedState, newProgram: number[]) => {
+    async (initialState: ExpectedState, newProgram: number[]) => {
       dispatch(setInitialState(initialState));
       dispatch(setProgram(newProgram));
       const currentState = {
@@ -65,8 +66,11 @@ export const useDebuggerActions = () => {
       dispatch(setAllWorkersPreviousState(currentState));
 
       dispatch(setIsDebugFinished(false));
+      const initAction = await dispatch(initAllWorkers());
 
-      dispatch(initAllWorkers());
+      if (isRejected(initAction)) {
+        throw new Error(initAction.error.message);
+      }
 
       const result = disassemblify(new Uint8Array(newProgram));
       logger.info("Disassembly result:", result);
@@ -78,9 +82,10 @@ export const useDebuggerActions = () => {
   );
 
   const handleProgramLoad = useCallback(
-    (data?: ProgramUploadFileOutput) => {
+    async (data?: ProgramUploadFileOutput) => {
       if (data) {
-        startProgram({ ...data.initial, status: Status.OK }, data.program);
+        await startProgram({ ...data.initial, status: Status.OK }, data.program);
+
         dispatch(setIsAsmError(false));
       } else {
         dispatch(setIsAsmError(true));

@@ -26,14 +26,14 @@ export const Loader = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const debuggerActions = useDebuggerActions();
 
-  const handleLoad = useCallback(() => {
+  const handleLoad = useCallback(async () => {
     setIsSubmitted(true);
     if (!programLoad) return;
 
     dispatch(setIsProgramEditMode(false));
 
     try {
-      debuggerActions.handleProgramLoad(programLoad);
+      await debuggerActions.handleProgramLoad(programLoad);
       setIsDialogOpen?.(false);
     } catch (error) {
       if (error instanceof Error) {
