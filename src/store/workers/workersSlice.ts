@@ -84,7 +84,7 @@ export const loadWorker = createAsyncThunk(
     dispatch(setWorkerIsLoading({ id, isLoading: false }));
 
     if ("status" in data && data.status === "error") {
-      logger.error(`An error occured on codddmmand ${data.command}`, { error: data.error });
+      logger.error(`An error occured on command ${data.command}`, { error: data.error });
     }
   },
 );
