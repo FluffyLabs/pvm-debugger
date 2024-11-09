@@ -179,7 +179,6 @@ const DebuggerContent = () => {
 };
 
 function App() {
-  const debuggerActions = useDebuggerActions();
   const { pvmInitialized, initialState, program } = useAppSelector((state) => state.debugger);
 
   return (
@@ -196,7 +195,7 @@ function App() {
               })}
             >
               <div className="w-full md:w-[350px]">
-                <PvmSelect onValueChange={(selectedPvms) => debuggerActions.handlePvmTypeChange(selectedPvms)} />
+                <PvmSelect />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
