@@ -6,11 +6,11 @@ import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { AvailablePvms } from "@/types/pvm.ts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SupportedLangs } from "@/packages/web-worker/utils";
-import { ExternalLink, TriangleAlertIcon } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import classNames from "classnames";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
+import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
 
 const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
 
@@ -52,21 +52,6 @@ const fetchWasmMetadata = async (url: string): Promise<WasmMetadata | undefined>
     alert("Invalid URL");
   }
   return;
-};
-
-const ErrorTooltip = ({ error }: { error: string }) => {
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger>
-          <TriangleAlertIcon className="text-red-500 mr-3" />
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="border-2 rounded-md bg-white p-2 mt-2 text-red-500">
-          <p>{error}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
 };
 
 export const PvmSelect = () => {
@@ -196,7 +181,7 @@ export const PvmSelect = () => {
 
   return (
     <div className="flex">
-      {error && <ErrorTooltip error={error} />}
+      {error && <ErrorWarningTooltip classNames="mr-3" msg={error} />}
       <MultiSelect
         test-id="pvm-select"
         maxCount={1}

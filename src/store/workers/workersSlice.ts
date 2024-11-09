@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
@@ -202,6 +202,10 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
           },
         });
 
+        if (hasCommandStatusError(data)) {
+          throw data.error;
+        }
+
         const { state, isRunMode, isFinished } = data.payload;
 
         // START MOVED FROM initAllWorkers
@@ -262,18 +266,24 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 
 export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  const debuggerState = state.debugger;
 
-  state.workers.forEach((worker) => {
-    worker.worker.postMessage({
-      command: Commands.RUN,
-      payload: {
-        program: debuggerState.program,
-      },
-    });
-  });
+  await Promise.all(
+    state.workers.map(async (worker) => {
+      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.RUN,
+      });
 
-  dispatch(continueAllWorkers());
+      if (hasCommandStatusError(data)) {
+        throw data.error;
+      }
+    }),
+  );
+
+  const continueAction = await dispatch(continueAllWorkers());
+
+  if (isRejected(continueAction)) {
+    throw continueAction.error;
+  }
 });
 
 export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (_, { getState, dispatch }) => {
@@ -292,6 +302,10 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
           program: new Uint8Array(debuggerState.program),
         },
       });
+
+      if (hasCommandStatusError(data)) {
+        throw data.error;
+      }
 
       const { state, isFinished } = data.payload;
 

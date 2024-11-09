@@ -6,6 +6,8 @@ import {
   CommandStatus,
 } from "@/packages/web-worker/types";
 import { logger } from "@/utils/loggerService";
+import { useAppDispatch } from "./hooks";
+import { isRejected } from "@reduxjs/toolkit";
 
 const RESPONSE_WAIT_TIMEOUT = 60000;
 const getMessageId = () => Math.random().toString(36).substring(7);
@@ -38,4 +40,8 @@ export const asyncWorkerPostMessage = <C extends Commands>(
 
 export const hasCommandStatusError = (resp: WorkerResponseParams): resp is WorkerResponseParams & { error: Error } => {
   return "status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error;
+};
+
+export const isAnyRejected = (...args: ReturnType<ReturnType<typeof useAppDispatch>>[]) => {
+  return args.find(isRejected);
 };

@@ -14,6 +14,7 @@ import {
   setPvmInitialized,
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { isAnyRejected } from "@/store/utils";
 import {
   createWorker,
   destroyWorker,
@@ -27,31 +28,30 @@ import {
 } from "@/store/workers/workersSlice";
 import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
-import { isRejected } from "@reduxjs/toolkit";
 import { useCallback } from "react";
 
 export const useDebuggerActions = () => {
   const { programPreviewResult, breakpointAddresses, initialState } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
-
   const dispatch = useAppDispatch();
 
   const restartProgram = useCallback(
     async (state: ExpectedState) => {
       setInitialState(state);
-      dispatch(setIsDebugFinished(false));
-      dispatch(setIsRunMode(false));
-      dispatch(setAllWorkersCurrentState(state));
-      dispatch(setAllWorkersPreviousState(state));
-      const initAction = await dispatch(initAllWorkers());
+      const rejectedValue = isAnyRejected(
+        dispatch(setIsDebugFinished(false)),
+        dispatch(setIsRunMode(false)),
+        dispatch(setAllWorkersCurrentState(state)),
+        dispatch(setAllWorkersPreviousState(state)),
+        await dispatch(initAllWorkers()),
+        await dispatch(refreshPageAllWorkers()),
+        dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0])),
+        dispatch(setClickedInstruction(null)),
+      );
 
-      if (isRejected(initAction)) {
-        throw new Error(initAction.error.message);
+      if (rejectedValue) {
+        throw new Error(rejectedValue.error.message);
       }
-
-      dispatch(refreshPageAllWorkers());
-      dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
-      dispatch(setClickedInstruction(null));
     },
     [dispatch, programPreviewResult],
   );
@@ -67,16 +67,17 @@ export const useDebuggerActions = () => {
         pageMap: initialState.pageMap,
         status: Status.OK,
       };
-      dispatch(setAllWorkersCurrentState(currentState));
-      dispatch(setAllWorkersPreviousState(currentState));
+      const rejectedValue = isAnyRejected(
+        dispatch(setAllWorkersCurrentState(currentState)),
+        dispatch(setAllWorkersPreviousState(currentState)),
 
-      dispatch(setIsDebugFinished(false));
-      const initAction = await dispatch(initAllWorkers());
+        dispatch(setIsDebugFinished(false)),
+        await dispatch(initAllWorkers()),
+      );
 
-      if (isRejected(initAction)) {
-        throw new Error(initAction.error.message);
+      if (rejectedValue) {
+        throw new Error(rejectedValue.error.message);
       }
-
       const result = disassemblify(new Uint8Array(newProgram));
       logger.info("Disassembly result:", result);
       dispatch(setProgramPreviewResult(result));

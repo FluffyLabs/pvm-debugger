@@ -13,9 +13,13 @@ import {
 } from "@/store/workers/workersSlice";
 import { setIsProgramEditMode, setIsRunMode } from "@/store/debugger/debuggerSlice";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
+import { useState } from "react";
+import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
+import { isRejected } from "@reduxjs/toolkit";
 
 export const DebuggerControlls = () => {
   const debuggerActions = useDebuggerActions();
+  const [error, setError] = useState<string>();
   const { program, initialState, isProgramEditMode, isDebugFinished, pvmInitialized, isRunMode } = useAppSelector(
     (state) => state.debugger,
   );
@@ -30,33 +34,53 @@ export const DebuggerControlls = () => {
     previousState: initialState,
   };
 
-  const onNext = () => {
+  const onNext = async () => {
     if (!workers.length) {
       console.warn("No workers initialized"); // TODO: show error message
       return;
     }
 
     if (!currentInstruction) {
-      dispatch(setAllWorkersCurrentState(initialState));
+      const stepAction = await dispatch(setAllWorkersCurrentState(initialState));
+
+      if (isRejected(stepAction)) {
+        setError(stepAction.error.message);
+      }
     } else {
-      dispatch(stepAllWorkers());
+      const stepAction = await dispatch(stepAllWorkers());
+
+      if (isRejected(stepAction)) {
+        setError(stepAction.error.message);
+      }
     }
 
     dispatch(setIsProgramEditMode(false));
-    dispatch(refreshPageAllWorkers());
+    const refreshStep = await dispatch(refreshPageAllWorkers());
+
+    if (isRejected(refreshStep)) {
+      setError(refreshStep.error.message);
+    }
   };
 
-  const handleRunProgram = () => {
+  const handleRunProgram = async () => {
     if (!workers.length) {
       console.warn("No workers initialized"); // TODO: show error message
       return;
     }
 
     if (isRunMode) {
-      dispatch(continueAllWorkers());
+      const continueAction = await dispatch(continueAllWorkers());
+
+      if (isRejected(continueAction)) {
+        setError(continueAction.error.message);
+      }
     } else {
       dispatch(setIsRunMode(true));
-      dispatch(runAllWorkers());
+      const runAction = await dispatch(runAllWorkers());
+
+      if (isRejected(runAction)) {
+        setError(runAction.error.message);
+      }
     }
     dispatch(refreshPageAllWorkers());
   };
@@ -79,7 +103,7 @@ export const DebuggerControlls = () => {
       <Button
         className="md:mr-3"
         onClick={handleRunProgram}
-        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
+        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
       >
         {isLoading ? <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} /> : <Play className="w-3.5 md:mr-1.5" />}
         <span className="hidden md:block">Run</span>
@@ -87,7 +111,7 @@ export const DebuggerControlls = () => {
       <Button
         className="md:mr-3"
         onClick={onNext}
-        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
+        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
       >
         {isLoading ? (
           <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
@@ -96,6 +120,7 @@ export const DebuggerControlls = () => {
         )}
         <span className="hidden md:block">Step</span>
       </Button>
+      {error && <ErrorWarningTooltip msg={error} />}
     </div>
   );
 };
