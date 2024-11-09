@@ -6,8 +6,7 @@ import {
   CommandStatus,
 } from "@/packages/web-worker/types";
 import { logger } from "@/utils/loggerService";
-import { useAppDispatch } from "./hooks";
-import { isRejected } from "@reduxjs/toolkit";
+import { SerializedError } from "@reduxjs/toolkit";
 
 const RESPONSE_WAIT_TIMEOUT = 60000;
 const getMessageId = () => Math.random().toString(36).substring(7);
@@ -42,6 +41,11 @@ export const hasCommandStatusError = (resp: WorkerResponseParams): resp is Worke
   return "status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error;
 };
 
-export const isAnyRejected = (...args: ReturnType<ReturnType<typeof useAppDispatch>>[]) => {
-  return args.find(isRejected);
+export const isSerializedError = (error: unknown): error is SerializedError => {
+  return (
+    Object.prototype.hasOwnProperty.call(error, "name") ||
+    Object.prototype.hasOwnProperty.call(error, "message") ||
+    Object.prototype.hasOwnProperty.call(error, "stack") ||
+    Object.prototype.hasOwnProperty.call(error, "code")
+  );
 };

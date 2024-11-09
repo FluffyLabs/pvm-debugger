@@ -11,11 +11,19 @@ import { useState } from "react";
 import { InitialState } from "@/types/pvm";
 import { Loader } from "./Loader.tsx";
 
-export const ProgramLoader = (props: { initialState: InitialState; program: number[] }) => {
+export const ProgramLoader = (props: { initialState: InitialState; program: number[]; onOpen: () => void }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(val) => {
+        setIsDialogOpen(val);
+        if (val) {
+          props.onOpen();
+        }
+      }}
+    >
       <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
         <Button>Load</Button>
       </DialogTrigger>

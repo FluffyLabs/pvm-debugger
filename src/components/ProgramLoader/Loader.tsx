@@ -11,6 +11,7 @@ import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { setIsProgramEditMode } from "@/store/debugger/debuggerSlice.ts";
 import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
+import { isSerializedError } from "@/store/utils";
 
 export const Loader = ({
   initialState,
@@ -42,7 +43,7 @@ export const Loader = ({
       await debuggerActions.handleProgramLoad(programLoad);
       setIsDialogOpen?.(false);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof Error || isSerializedError(error)) {
         setError(error.message);
       } else {
         setError("Unknown error occured");

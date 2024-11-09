@@ -11,6 +11,7 @@ import { PvmTypes } from "@/packages/web-worker/types.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import classNames from "classnames";
 import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
+import { isSerializedError } from "@/store/utils";
 
 const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
 
@@ -170,7 +171,7 @@ export const PvmSelect = () => {
         setError("");
         await handlePvmTypeChange(mapValuesToPvmWithPayload(selectedPvms));
       } catch (error) {
-        if (error instanceof Error) {
+        if (error instanceof Error || isSerializedError(error)) {
           setError(error.message);
         }
       }

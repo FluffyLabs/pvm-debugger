@@ -14,7 +14,6 @@ import {
   setPvmInitialized,
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { isAnyRejected } from "@/store/utils";
 import {
   createWorker,
   destroyWorker,
@@ -38,20 +37,14 @@ export const useDebuggerActions = () => {
   const restartProgram = useCallback(
     async (state: ExpectedState) => {
       setInitialState(state);
-      const rejectedValue = isAnyRejected(
-        dispatch(setIsDebugFinished(false)),
-        dispatch(setIsRunMode(false)),
-        dispatch(setAllWorkersCurrentState(state)),
-        dispatch(setAllWorkersPreviousState(state)),
-        await dispatch(initAllWorkers()),
-        await dispatch(refreshPageAllWorkers()),
-        dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0])),
-        dispatch(setClickedInstruction(null)),
-      );
-
-      if (rejectedValue) {
-        throw new Error(rejectedValue.error.message);
-      }
+      dispatch(setIsDebugFinished(false));
+      dispatch(setIsRunMode(false));
+      dispatch(setAllWorkersCurrentState(state));
+      dispatch(setAllWorkersPreviousState(state));
+      await dispatch(initAllWorkers()).unwrap();
+      await dispatch(refreshPageAllWorkers()).unwrap();
+      dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
+      dispatch(setClickedInstruction(null));
     },
     [dispatch, programPreviewResult],
   );
@@ -67,17 +60,12 @@ export const useDebuggerActions = () => {
         pageMap: initialState.pageMap,
         status: Status.OK,
       };
-      const rejectedValue = isAnyRejected(
-        dispatch(setAllWorkersCurrentState(currentState)),
-        dispatch(setAllWorkersPreviousState(currentState)),
+      dispatch(setAllWorkersCurrentState(currentState));
+      dispatch(setAllWorkersPreviousState(currentState));
 
-        dispatch(setIsDebugFinished(false)),
-        await dispatch(initAllWorkers()),
-      );
+      dispatch(setIsDebugFinished(false));
+      await dispatch(initAllWorkers()).unwrap();
 
-      if (rejectedValue) {
-        throw new Error(rejectedValue.error.message);
-      }
       const result = disassemblify(new Uint8Array(newProgram));
       logger.info("Disassembly result:", result);
       dispatch(setProgramPreviewResult(result));

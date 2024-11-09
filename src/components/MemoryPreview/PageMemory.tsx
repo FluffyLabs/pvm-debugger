@@ -9,7 +9,7 @@ import { useAppDispatch } from "@/store/hooks";
 import classNames from "classnames";
 import { NumericFormat } from "react-number-format";
 import { INPUT_STYLES } from "../ui/input";
-import { isRejected } from "@reduxjs/toolkit";
+import { isSerializedError } from "@/store/utils";
 
 const SPLIT_STEP = 8 as const;
 const toMemoryPageTabData = (
@@ -70,11 +70,14 @@ export const PageMemory = () => {
     if (pageNumber === undefined) {
       return;
     }
-    const resp = await dispatch(changePageAllWorkers(pageNumber));
-    if (isRejected(resp)) {
-      setError(resp.error.message || "Unknown error");
-    } else {
-      setError(null);
+    try {
+      await dispatch(changePageAllWorkers(pageNumber)).unwrap();
+    } catch (error) {
+      if (error instanceof Error || isSerializedError(error)) {
+        setError(error.message || "Unknown error");
+      } else {
+        setError("Unknown error");
+      }
     }
   }, 500);
   return (

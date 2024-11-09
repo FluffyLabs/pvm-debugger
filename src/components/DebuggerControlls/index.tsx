@@ -15,7 +15,7 @@ import { setIsProgramEditMode, setIsRunMode } from "@/store/debugger/debuggerSli
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useState } from "react";
 import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
-import { isRejected } from "@reduxjs/toolkit";
+import { isSerializedError } from "@/store/utils";
 
 export const DebuggerControlls = () => {
   const debuggerActions = useDebuggerActions();
@@ -36,64 +36,68 @@ export const DebuggerControlls = () => {
 
   const onNext = async () => {
     if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
+      setError("No workers initialized");
       return;
     }
 
-    if (!currentInstruction) {
-      const stepAction = await dispatch(setAllWorkersCurrentState(initialState));
-
-      if (isRejected(stepAction)) {
-        setError(stepAction.error.message);
+    try {
+      if (!currentInstruction) {
+        await dispatch(setAllWorkersCurrentState(initialState));
+      } else {
+        await dispatch(stepAllWorkers()).unwrap();
       }
-    } else {
-      const stepAction = await dispatch(stepAllWorkers());
 
-      if (isRejected(stepAction)) {
-        setError(stepAction.error.message);
+      dispatch(setIsProgramEditMode(false));
+      await dispatch(refreshPageAllWorkers()).unwrap();
+    } catch (error) {
+      if (error instanceof Error || isSerializedError(error)) {
+        setError(error.message);
+      } else {
+        setError("Unknown error occured");
       }
-    }
-
-    dispatch(setIsProgramEditMode(false));
-    const refreshStep = await dispatch(refreshPageAllWorkers());
-
-    if (isRejected(refreshStep)) {
-      setError(refreshStep.error.message);
     }
   };
 
   const handleRunProgram = async () => {
     if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
+      setError("No workers initialized");
       return;
     }
 
-    if (isRunMode) {
-      const continueAction = await dispatch(continueAllWorkers());
-
-      if (isRejected(continueAction)) {
-        setError(continueAction.error.message);
+    try {
+      if (isRunMode) {
+        await dispatch(continueAllWorkers()).unwrap();
+      } else {
+        dispatch(setIsRunMode(true));
+        await dispatch(runAllWorkers()).unwrap();
       }
-    } else {
-      dispatch(setIsRunMode(true));
-      const runAction = await dispatch(runAllWorkers());
-
-      if (isRejected(runAction)) {
-        setError(runAction.error.message);
+    } catch (error) {
+      if (error instanceof Error || isSerializedError(error)) {
+        setError(error.message);
+      } else {
+        setError("Unknown error occured");
       }
     }
+
     dispatch(refreshPageAllWorkers());
   };
 
   return (
     <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
       <div className="md:mr-3">
-        <ProgramLoader initialState={initialState} program={program} />
+        <ProgramLoader
+          initialState={initialState}
+          program={program}
+          onOpen={() => {
+            setError(undefined);
+          }}
+        />
       </div>
       <Button
         className="md:mr-3"
         onClick={() => {
           debuggerActions.restartProgram(initialState);
+          setError(undefined);
         }}
         disabled={!pvmInitialized || isProgramEditMode}
       >

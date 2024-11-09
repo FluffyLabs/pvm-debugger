@@ -33,8 +33,6 @@ const step = ({ pvm, program }: StepParams) => {
 };
 
 export const runStep = ({ pvm, program }: StepParams): StepResponse => {
-  return { status: CommandStatus.ERROR, error: new Error("dddd"), isFinished: true, result: {}, state: {} };
-
   try {
     const data = step({ pvm, program });
     return { status: CommandStatus.SUCCESS, ...data };
