@@ -5,6 +5,7 @@ import {
   Commands,
   CommandStatus,
 } from "@/packages/web-worker/types";
+import { logger } from "@/utils/loggerService";
 
 const RESPONSE_WAIT_TIMEOUT = 60000;
 const getMessageId = () => Math.random().toString(36).substring(7);
@@ -21,6 +22,7 @@ export const asyncWorkerPostMessage = <C extends Commands>(
     }, RESPONSE_WAIT_TIMEOUT);
 
     const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
+      logger.info("Received message from worker", event.data);
       if (event.data.messageId === messageId) {
         clearTimeout(timeoutId);
         worker.removeEventListener("message", messageHandler);

@@ -55,12 +55,10 @@ export const DebuggerControlls = () => {
     if (isRunMode) {
       dispatch(continueAllWorkers());
     } else {
-      // debuggerActions.startProgram(initialState, program);
       dispatch(setIsRunMode(true));
       dispatch(runAllWorkers());
     }
     dispatch(refreshPageAllWorkers());
-    // dispatch(stepAllWorkers());
   };
 
   return (

@@ -104,7 +104,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
       });
 
       if (hasCommandStatusError(initData)) {
-        throw initData.error;
+        throw new Error(`Failed to initialize "${worker.id}": ${initData.error.message}`);
       }
 
       const memorySizeData = await asyncWorkerPostMessage(worker.id, worker.worker, {

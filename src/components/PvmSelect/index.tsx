@@ -1,13 +1,16 @@
 import { Input } from "@/components/ui/input.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import path from "path-browserify";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { AvailablePvms } from "@/types/pvm.ts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SupportedLangs } from "@/packages/web-worker/utils";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, TriangleAlertIcon } from "lucide-react";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
+import { useDebuggerActions } from "@/hooks/useDebuggerActions";
+import classNames from "classnames";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@radix-ui/react-tooltip";
 
 const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
 
@@ -51,7 +54,24 @@ const fetchWasmMetadata = async (url: string): Promise<WasmMetadata | undefined>
   return;
 };
 
-export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPvmWithPayload[]) => void }) => {
+const ErrorTooltip = ({ error }: { error: string }) => {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger>
+          <TriangleAlertIcon className="text-red-500 mr-3" />
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="border-2 rounded-md bg-white p-2 mt-2 text-red-500">
+          <p>{error}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+export const PvmSelect = () => {
+  const { handlePvmTypeChange } = useDebuggerActions();
+  const [error, setError] = useState<string>();
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
   const [selectedPvms, setSelectedPvms] = useState<string[]>([AvailablePvms.TYPEBERRY]);
   const [pvmsWithPayload, setPvmsWithPayload] = useState<SelectedPvmWithPayload[]>([
@@ -65,13 +85,16 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
   ]);
   const [selectedLang, setSelectedLang] = useState<SupportedLangs>(SupportedLangs.Rust);
 
-  const mapValuesToPvmWithPayload = (values: string[]) => {
-    return values
-      .map((value) => {
-        return pvmsWithPayload.find((pvm) => pvm.id === value);
-      })
-      .filter((value) => value !== undefined);
-  };
+  const mapValuesToPvmWithPayload = useCallback(
+    (values: string[]) => {
+      return values
+        .map((value) => {
+          return pvmsWithPayload.find((pvm) => pvm.id === value);
+        })
+        .filter((value) => value !== undefined);
+    },
+    [pvmsWithPayload],
+  );
 
   const generatePvmId = (name: string) => {
     return pvmsWithPayload.find((pvm) => pvm.id === name)
@@ -157,16 +180,28 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
   }, []);
 
   useEffect(() => {
-    onValueChange(mapValuesToPvmWithPayload(selectedPvms));
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+    const asyncChange = async () => {
+      try {
+        setError("");
+        await handlePvmTypeChange(mapValuesToPvmWithPayload(selectedPvms));
+      } catch (error) {
+        if (error instanceof Error) {
+          setError(error.message);
+        }
+      }
+    };
+    asyncChange();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPvms]);
 
   return (
-    <>
+    <div className="flex">
+      {error && <ErrorTooltip error={error} />}
       <MultiSelect
         test-id="pvm-select"
         maxCount={1}
         required
+        className={classNames({ "border-red-500": !!error })}
         options={multiSelectOptions}
         selectedValues={selectedPvms}
         defaultValue={[AvailablePvms.TYPEBERRY]}
@@ -219,6 +254,6 @@ export const PvmSelect = ({ onValueChange }: { onValueChange: (value: SelectedPv
           </DialogDescription>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };

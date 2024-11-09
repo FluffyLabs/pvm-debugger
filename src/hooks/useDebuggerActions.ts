@@ -37,13 +37,18 @@ export const useDebuggerActions = () => {
   const dispatch = useAppDispatch();
 
   const restartProgram = useCallback(
-    (state: ExpectedState) => {
+    async (state: ExpectedState) => {
       setInitialState(state);
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
-      dispatch(initAllWorkers());
+      const initAction = await dispatch(initAllWorkers());
+
+      if (isRejected(initAction)) {
+        throw new Error(initAction.error.message);
+      }
+
       dispatch(refreshPageAllWorkers());
       dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
       dispatch(setClickedInstruction(null));
@@ -102,74 +107,77 @@ export const useDebuggerActions = () => {
     }
   };
 
-  const handlePvmTypeChange = async (selectedPvms: SelectedPvmWithPayload[]) => {
-    logger.debug("selectedPvms vs workers ", selectedPvms, workers);
+  const handlePvmTypeChange = useCallback(
+    async (selectedPvms: SelectedPvmWithPayload[]) => {
+      logger.debug("selectedPvms vs workers ", selectedPvms, workers);
 
-    await Promise.all(
-      workers.map((worker: WorkerState) => {
-        dispatch(destroyWorker(worker.id)).unwrap();
-      }),
-    );
+      await Promise.all(
+        workers.map((worker: WorkerState) => {
+          dispatch(destroyWorker(worker.id)).unwrap();
+        }),
+      );
 
-    await Promise.all(
-      selectedPvms.map(async ({ id, type, params }) => {
-        logger.info("Selected PVM type", id, type, params);
+      await Promise.all(
+        selectedPvms.map(async ({ id, type, params }) => {
+          logger.info("Selected PVM type", id, type, params);
 
-        if (workers.find((worker: WorkerState) => worker.id === id)) {
-          logger.info("Worker already initialized");
-          // TODO: for now just initialize the worker one more time
-        }
-        logger.info("Worker not initialized");
+          if (workers.find((worker: WorkerState) => worker.id === id)) {
+            logger.info("Worker already initialized");
+            // TODO: for now just initialize the worker one more time
+          }
+          logger.info("Worker not initialized");
 
-        if (id === AvailablePvms.POLKAVM) {
-          await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.WASM_URL as PvmTypes,
-                params,
-              },
-            }),
-          ).unwrap();
-        } else if (id === AvailablePvms.TYPEBERRY) {
-          await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.BUILT_IN,
-              },
-            }),
-          ).unwrap();
-        } else if (type === AvailablePvms.WASM_FILE) {
-          await dispatch(createWorker(id)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.WASM_FILE,
-                params,
-              },
-            }),
-          ).unwrap();
-        } else if (type === AvailablePvms.WASM_URL) {
-          await dispatch(createWorker(id)).unwrap();
-          await dispatch(
-            loadWorker({
-              id,
-              payload: {
-                type: PvmTypes.WASM_URL,
-                params,
-              },
-            }),
-          ).unwrap();
-        }
-      }),
-    );
+          if (id === AvailablePvms.POLKAVM) {
+            await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
+            await dispatch(
+              loadWorker({
+                id,
+                payload: {
+                  type: PvmTypes.WASM_URL as PvmTypes,
+                  params,
+                },
+              }),
+            ).unwrap();
+          } else if (id === AvailablePvms.TYPEBERRY) {
+            await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
+            await dispatch(
+              loadWorker({
+                id,
+                payload: {
+                  type: PvmTypes.BUILT_IN,
+                },
+              }),
+            ).unwrap();
+          } else if (type === AvailablePvms.WASM_FILE) {
+            await dispatch(createWorker(id)).unwrap();
+            await dispatch(
+              loadWorker({
+                id,
+                payload: {
+                  type: PvmTypes.WASM_FILE,
+                  params,
+                },
+              }),
+            ).unwrap();
+          } else if (type === AvailablePvms.WASM_URL) {
+            await dispatch(createWorker(id)).unwrap();
+            await dispatch(
+              loadWorker({
+                id,
+                payload: {
+                  type: PvmTypes.WASM_URL,
+                  params,
+                },
+              }),
+            ).unwrap();
+          }
+        }),
+      );
 
-    restartProgram(initialState);
-  };
+      await restartProgram(initialState);
+    },
+    [dispatch, initialState, restartProgram, workers],
+  );
 
   return {
     startProgram,
