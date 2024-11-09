@@ -223,7 +223,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
         debuggerState = currentState.debugger;
 
         if (state.pc === undefined) {
-          throw "Program counter is undefined";
+          throw new Error("Program counter is undefined");
         }
 
         logger.info("Response from worker:", {
@@ -318,7 +318,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
       );
 
       if (state.pc === undefined) {
-        throw "Program counter is undefined";
+        throw new Error("Program counter is undefined");
       }
 
       return {
