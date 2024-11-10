@@ -38,13 +38,13 @@ export const MemoryTable = ({
   const tableData = toMemoryPageTabData(data, addressStart, numeralSystem);
 
   return (
-    <div className={classNames("mt-2 max-h-[calc(70vh-150px)] overflow-y-auto", { "opacity-20": hasError })}>
+    <div className={classNames("mt-4 max-h-[calc(70vh-150px)] overflow-y-auto", { "opacity-20": hasError })}>
       {tableData.map(({ address, bytes }, rowIndex) => (
         <div className="flex" key={address}>
           <div className="opacity-40 mr-6" style={{ fontVariantNumeric: "tabular-nums" }}>
             {address}
           </div>
-          <div className="font-semibold grow">
+          <div className="font- font-mono grow">
             {bytes.map((byte, index) => (
               <span
                 key={index + rowIndex}
