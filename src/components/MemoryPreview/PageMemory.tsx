@@ -10,6 +10,9 @@ import classNames from "classnames";
 import { NumericFormat } from "react-number-format";
 import { INPUT_STYLES } from "../ui/input";
 import { isSerializedError } from "@/store/utils";
+import InfiniteLoader from "react-window-infinite-loader";
+import { FixedSizeList } from "react-window";
+import { logger } from "@/utils/loggerService";
 
 const SPLIT_STEP = 8 as const;
 const toMemoryPageTabData = (
@@ -25,43 +28,73 @@ const toMemoryPageTabData = (
   });
 };
 
-export const MemoryTable = ({
-  data,
-  addressStart,
-  hasError,
-}: {
-  addressStart: number;
-  data: Uint8Array | undefined;
-  hasError: boolean;
-}) => {
-  const { numeralSystem } = useContext(NumeralSystemContext);
-  const tableData = toMemoryPageTabData(data, addressStart, numeralSystem);
-
+const MemoryRow = ({ address, bytes, style }: { address: string; bytes: string[]; style: React.CSSProperties }) => {
   return (
-    <div className={classNames("mt-4 max-h-[calc(70vh-150px)] overflow-y-auto", { "opacity-20": hasError })}>
-      {tableData.map(({ address, bytes }, rowIndex) => (
-        <div className="flex" key={address}>
-          <div className="opacity-40 mr-6" style={{ fontVariantNumeric: "tabular-nums" }}>
-            {address}
-          </div>
-          <div className="font- font-mono grow">
-            {bytes.map((byte, index) => (
-              <span
-                key={index + rowIndex}
-                className={`mr-[1px] ${(index + rowIndex) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}
-              >
-                {byte}
-              </span>
-            ))}
-          </div>
-        </div>
-      ))}
+    <div className="flex" style={style}>
+      <div className="opacity-40 mr-6" style={{ fontVariantNumeric: "tabular-nums" }}>
+        {address}
+      </div>
+      <div className="font-mono font-medium">
+        {bytes.map((byte, index) => (
+          <span key={index} className={`mr-[1px] ${(index + 1) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
+            {byte}
+          </span>
+        ))}
+      </div>
     </div>
   );
 };
 
+const MemoryTable = ({
+  tableData,
+  hasError,
+}: {
+  tableData: { address: string; bytes: string[] }[];
+  hasError: boolean;
+}) => {
+  const itemCount = tableData.length + 1;
+
+  const Item = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    if (index + 1 >= itemCount) {
+      return <div style={style}>Loading...</div>;
+    }
+
+    const { address, bytes } = tableData[index];
+    return <MemoryRow style={style} address={address} bytes={bytes} />;
+  };
+
+  const hasNextPage = true;
+  const isItemLoaded = (index: number) => !hasNextPage || index < tableData.length;
+
+  return (
+    <InfiniteLoader
+      isItemLoaded={isItemLoaded}
+      itemCount={itemCount}
+      loadMoreItems={() => {
+        logger.debug("next page");
+      }}
+    >
+      {({ onItemsRendered, ref }) => {
+        return (
+          <FixedSizeList
+            className={classNames("mt-4 overflow-y-auto h-full", { "opacity-20": hasError })}
+            itemCount={itemCount}
+            onItemsRendered={onItemsRendered}
+            ref={ref}
+            height={900}
+            itemSize={24}
+            width={300}
+            itemData={"ddd"}
+          >
+            {Item}
+          </FixedSizeList>
+        );
+      }}
+    </InfiniteLoader>
+  );
+};
+
 export const PageMemory = () => {
-  // TODO: get the memory for all of them and compare results
   const memory = useSelector(selectMemoryForFirstWorker);
   const dispatch = useAppDispatch();
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +113,11 @@ export const PageMemory = () => {
       }
     }
   }, 500);
+
+  const { numeralSystem } = useContext(NumeralSystemContext);
+  const addressStart = (memory?.page.pageNumber || 0) * (memory?.meta.pageSize || 0);
+  const tableData = toMemoryPageTabData(memory?.page.data, addressStart, numeralSystem);
+
   return (
     <div>
       <div className="flex w-full">
@@ -103,11 +141,7 @@ export const PageMemory = () => {
         </div>
       </div>
       {error && <div className="text-red-500 mt-3">{error}</div>}
-      <MemoryTable
-        hasError={!!error}
-        data={memory?.page.data}
-        addressStart={(memory?.page.pageNumber || 0) * (memory?.meta.pageSize || 0)}
-      />
+      <MemoryTable tableData={tableData} hasError={!!error} />
     </div>
   );
 };
