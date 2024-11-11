@@ -34,7 +34,7 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
   pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 0, registers, memory);
 };
 
-export const runAllInstructions = (pvm: InternalPvm, program: number[]) => {
+export const runAllInstructions = (pvm: InternalPvm, program: Uint8Array) => {
   const programPreviewResult = [];
 
   do {
@@ -56,7 +56,7 @@ export const runAllInstructions = (pvm: InternalPvm, program: number[]) => {
   };
 };
 
-export const nextInstruction = (programCounter: number, program: number[]) => {
+export const nextInstruction = (programCounter: number, program: Uint8Array) => {
   const programDecoder = new ProgramDecoder(new Uint8Array(program));
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();

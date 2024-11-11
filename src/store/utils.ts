@@ -3,7 +3,10 @@ import {
   CommandWorkerRequestParams,
   WorkerRequestParams,
   Commands,
+  CommandStatus,
 } from "@/packages/web-worker/types";
+import { logger } from "@/utils/loggerService";
+import { SerializedError } from "@reduxjs/toolkit";
 
 const RESPONSE_WAIT_TIMEOUT = 60000;
 const getMessageId = () => Math.random().toString(36).substring(7);
@@ -20,6 +23,7 @@ export const asyncWorkerPostMessage = <C extends Commands>(
     }, RESPONSE_WAIT_TIMEOUT);
 
     const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
+      logger.info("Received message from worker", event.data);
       if (event.data.messageId === messageId) {
         clearTimeout(timeoutId);
         worker.removeEventListener("message", messageHandler);
@@ -31,4 +35,17 @@ export const asyncWorkerPostMessage = <C extends Commands>(
     const request: WorkerRequestParams = { ...data, messageId };
     worker.postMessage(request);
   });
+};
+
+export const hasCommandStatusError = (resp: WorkerResponseParams): resp is WorkerResponseParams & { error: Error } => {
+  return "status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error;
+};
+
+export const isSerializedError = (error: unknown): error is SerializedError => {
+  return (
+    Object.prototype.hasOwnProperty.call(error, "name") ||
+    Object.prototype.hasOwnProperty.call(error, "message") ||
+    Object.prototype.hasOwnProperty.call(error, "stack") ||
+    Object.prototype.hasOwnProperty.call(error, "code")
+  );
 };

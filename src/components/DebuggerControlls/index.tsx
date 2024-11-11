@@ -13,9 +13,13 @@ import {
 } from "@/store/workers/workersSlice";
 import { setIsProgramEditMode, setIsRunMode } from "@/store/debugger/debuggerSlice";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
+import { useState } from "react";
+import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
+import { isSerializedError } from "@/store/utils";
 
 export const DebuggerControlls = () => {
   const debuggerActions = useDebuggerActions();
+  const [error, setError] = useState<string>();
   const { program, initialState, isProgramEditMode, isDebugFinished, pvmInitialized, isRunMode } = useAppSelector(
     (state) => state.debugger,
   );
@@ -30,48 +34,70 @@ export const DebuggerControlls = () => {
     previousState: initialState,
   };
 
-  const onNext = () => {
+  const onNext = async () => {
     if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
+      setError("No workers initialized");
       return;
     }
 
-    if (!currentInstruction) {
-      dispatch(setAllWorkersCurrentState(initialState));
-    } else {
-      dispatch(stepAllWorkers());
-    }
+    try {
+      if (!currentInstruction) {
+        await dispatch(setAllWorkersCurrentState(initialState));
+      } else {
+        await dispatch(stepAllWorkers()).unwrap();
+      }
 
-    dispatch(setIsProgramEditMode(false));
-    dispatch(refreshPageAllWorkers());
+      dispatch(setIsProgramEditMode(false));
+      await dispatch(refreshPageAllWorkers()).unwrap();
+    } catch (error) {
+      if (error instanceof Error || isSerializedError(error)) {
+        setError(error.message);
+      } else {
+        setError("Unknown error occured");
+      }
+    }
   };
 
-  const handleRunProgram = () => {
+  const handleRunProgram = async () => {
     if (!workers.length) {
-      console.warn("No workers initialized"); // TODO: show error message
+      setError("No workers initialized");
       return;
     }
 
-    if (isRunMode) {
-      dispatch(continueAllWorkers());
-    } else {
-      debuggerActions.startProgram(initialState, program);
-      dispatch(setIsRunMode(true));
-      dispatch(runAllWorkers());
+    try {
+      if (isRunMode) {
+        await dispatch(continueAllWorkers()).unwrap();
+      } else {
+        dispatch(setIsRunMode(true));
+        await dispatch(runAllWorkers()).unwrap();
+      }
+    } catch (error) {
+      if (error instanceof Error || isSerializedError(error)) {
+        setError(error.message);
+      } else {
+        setError("Unknown error occured");
+      }
     }
+
     dispatch(refreshPageAllWorkers());
-    // dispatch(stepAllWorkers());
   };
 
   return (
     <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
       <div className="md:mr-3">
-        <ProgramLoader initialState={initialState} program={program} />
+        <ProgramLoader
+          initialState={initialState}
+          program={program}
+          onOpen={() => {
+            setError(undefined);
+          }}
+        />
       </div>
       <Button
         className="md:mr-3"
         onClick={() => {
           debuggerActions.restartProgram(initialState);
+          setError(undefined);
         }}
         disabled={!pvmInitialized || isProgramEditMode}
       >
@@ -81,7 +107,7 @@ export const DebuggerControlls = () => {
       <Button
         className="md:mr-3"
         onClick={handleRunProgram}
-        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
+        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
       >
         {isLoading ? <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} /> : <Play className="w-3.5 md:mr-1.5" />}
         <span className="hidden md:block">Run</span>
@@ -89,7 +115,7 @@ export const DebuggerControlls = () => {
       <Button
         className="md:mr-3"
         onClick={onNext}
-        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading}
+        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
       >
         {isLoading ? (
           <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />
@@ -98,6 +124,7 @@ export const DebuggerControlls = () => {
         )}
         <span className="hidden md:block">Step</span>
       </Button>
+      {error && <ErrorWarningTooltip msg={error} />}
     </div>
   );
 };

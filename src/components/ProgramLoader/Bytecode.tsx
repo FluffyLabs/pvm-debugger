@@ -48,7 +48,6 @@ export const Bytecode = ({
             setTempProgram(program);
             onProgramLoad({ initial, program, name: "custom" }, error);
           } else {
-            setTempProgram(undefined);
             onProgramLoad(undefined, error);
           }
         }}

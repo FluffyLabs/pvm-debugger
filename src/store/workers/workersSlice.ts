@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { setIsDebugFinished, setIsStepMode } from "@/store/debugger/debuggerSlice.ts";
@@ -6,8 +6,8 @@ import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
-import { Commands, CommandStatus, PvmTypes, WorkerResponseParams } from "@/packages/web-worker/types";
-import { asyncWorkerPostMessage } from "../utils";
+import { Commands, PvmTypes } from "@/packages/web-worker/types";
+import { asyncWorkerPostMessage, hasCommandStatusError } from "../utils";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -84,7 +84,7 @@ export const loadWorker = createAsyncThunk(
     dispatch(setWorkerIsLoading({ id, isLoading: false }));
 
     if ("status" in data && data.status === "error") {
-      logger.error(`An error occured on codddmmand ${data.command}`, { error: data.error });
+      logger.error(`An error occured on command ${data.command}`, { error: data.error });
     }
   },
 );
@@ -95,7 +95,7 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
 
   return Promise.all(
     state.workers.map(async (worker) => {
-      await asyncWorkerPostMessage(worker.id, worker.worker, {
+      const initData = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.INIT,
         payload: {
           initialState: debuggerState.initialState,
@@ -103,10 +103,18 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
         },
       });
 
+      if (hasCommandStatusError(initData)) {
+        throw new Error(`Failed to initialize "${worker.id}": ${initData.error.message}`);
+      }
+
       const memorySizeData = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.MEMORY_SIZE,
       });
       const pageSize = memorySizeData.payload.memorySize;
+
+      if (hasCommandStatusError(memorySizeData)) {
+        logger.error("Failed to initialize memory", { error: memorySizeData.error });
+      }
 
       dispatch(setPageSize({ pageSize, id: worker.id }));
     }),
@@ -125,8 +133,8 @@ export const changePageAllWorkers = createAsyncThunk(
           payload: { pageNumber },
         });
 
-        if ("status" in resp && resp.status === CommandStatus.ERROR && resp.error instanceof Error) {
-          return Promise.reject(resp.error);
+        if (hasCommandStatusError(resp)) {
+          throw resp.error;
         }
 
         dispatch(
@@ -182,78 +190,55 @@ export const changeRangeAllWorkers = createAsyncThunk(
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  const debuggerState = state.debugger;
+  let debuggerState = state.debugger;
 
   const stepAllWorkersAgain = async () => {
     const responses = await Promise.all(
-      state.workers.map((worker) => {
-        return new Promise(
-          (
-            resolve: (value: {
-              isFinished: boolean;
-              state: ExpectedState;
-              isRunMode: boolean;
-              isBreakpoint: boolean;
-            }) => void,
-          ) => {
-            const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-              if ("status" in event.data && event.data.status === CommandStatus.ERROR) {
-                logger.error(`An error occured on command ${event.data.command}`, { error: event.data.error });
-              }
-
-              if (event.data.command === Commands.STEP) {
-                const { state, isRunMode, isFinished } = event.data.payload;
-
-                // START MOVED FROM initAllWorkers
-                dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-                dispatch(
-                  setWorkerCurrentInstruction({
-                    id: worker.id,
-                    instruction: event.data.payload.result,
-                  }),
-                );
-
-                // END MOVED FOM initAllWorkers
-
-                const currentState = getState() as RootState;
-                const debuggerState = currentState.debugger;
-
-                if (isFinished) {
-                  dispatch(setIsDebugFinished(true));
-                }
-
-                if (state.pc === undefined) {
-                  throw new Error("Program counter is undefined");
-                }
-
-                resolve({
-                  isFinished,
-                  state,
-                  isRunMode,
-                  isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
-                });
-
-                logger.info("Response from worker:", {
-                  isFinished,
-                  state,
-                  isRunMode,
-                  debuggerHit: debuggerState.breakpointAddresses.includes(state.pc),
-                });
-
-                worker.worker.removeEventListener("message", messageHandler);
-              }
-            };
-
-            worker.worker.addEventListener("message", messageHandler);
-
-            worker.worker.postMessage({
-              command: Commands.STEP,
-              payload: {
-                program: debuggerState.program,
-              },
-            });
+      state.workers.map(async (worker) => {
+        const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.STEP,
+          payload: {
+            program: new Uint8Array(debuggerState.program),
           },
+        });
+
+        if (hasCommandStatusError(data)) {
+          throw data.error;
+        }
+
+        const { state, isRunMode, isFinished } = data.payload;
+
+        // START MOVED FROM initAllWorkers
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+        dispatch(
+          setWorkerCurrentInstruction({
+            id: worker.id,
+            instruction: data.payload.result,
+          }),
         );
+
+        // END MOVED FOM initAllWorkers
+
+        const currentState = getState() as RootState;
+        debuggerState = currentState.debugger;
+
+        if (state.pc === undefined) {
+          throw new Error("Program counter is undefined");
+        }
+
+        logger.info("Response from worker:", {
+          isFinished,
+          state,
+          isRunMode,
+          debuggerHit: debuggerState.breakpointAddresses.includes(state.pc),
+        });
+
+        return {
+          isFinished,
+          state,
+          isRunMode,
+          isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
+        };
       }),
     );
 
@@ -261,13 +246,17 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
       (response) => JSON.stringify(response.state) === JSON.stringify(responses[0].state),
     );
 
-    const anyFinished = responses.some((response) => response.isFinished);
+    const allFinished = responses.every((response) => response.isFinished);
 
     const allRunning = responses.every((response) => response.isRunMode);
 
     const anyBreakpoint = responses.some((response) => response.isBreakpoint);
 
-    if (allSame && !anyFinished && allRunning && !anyBreakpoint) {
+    if (allFinished) {
+      dispatch(setIsDebugFinished(true));
+    }
+
+    if (allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
     }
   };
@@ -277,18 +266,24 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 
 export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  const debuggerState = state.debugger;
 
-  state.workers.forEach((worker) => {
-    worker.worker.postMessage({
-      command: "run",
-      payload: {
-        program: debuggerState.program,
-      },
-    });
-  });
+  await Promise.all(
+    state.workers.map(async (worker) => {
+      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.RUN,
+      });
 
-  dispatch(continueAllWorkers());
+      if (hasCommandStatusError(data)) {
+        throw data.error;
+      }
+    }),
+  );
+
+  const continueAction = await dispatch(continueAllWorkers());
+
+  if (isRejected(continueAction)) {
+    throw continueAction.error;
+  }
 });
 
 export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (_, { getState, dispatch }) => {
@@ -299,45 +294,46 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
     return;
   }
 
-  state.workers.forEach((worker) => {
-    const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-      if (event.data.command === Commands.STEP) {
-        const { state, isFinished } = event.data.payload;
+  const responses = await Promise.all(
+    state.workers.map(async (worker) => {
+      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.STEP,
+        payload: {
+          program: new Uint8Array(debuggerState.program),
+        },
+      });
 
-        // START MOVED FROM initAllWorkers
-        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-        dispatch(
-          setWorkerCurrentInstruction({
-            id: worker.id,
-            instruction: event.data.payload.result,
-          }),
-        );
-
-        // END MOVED FROM initAllWorkers
-
-        dispatch(setIsStepMode(true));
-
-        if (isFinished) {
-          dispatch(setIsDebugFinished(true));
-        }
-
-        if (state.pc === undefined) {
-          throw new Error("Program counter is undefined");
-        }
-
-        worker.worker.removeEventListener("message", messageHandler);
+      if (hasCommandStatusError(data)) {
+        throw data.error;
       }
-    };
 
-    worker.worker.addEventListener("message", messageHandler);
+      const { state, isFinished } = data.payload;
 
-    worker.worker.postMessage({
-      command: Commands.STEP,
-      payload: {
-        program: debuggerState.program,
-      },
-    });
-  });
+      dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+      dispatch(
+        setWorkerCurrentInstruction({
+          id: worker.id,
+          instruction: data.payload.result,
+        }),
+      );
+
+      dispatch(setIsStepMode(true));
+
+      if (state.pc === undefined) {
+        throw new Error("Program counter is undefined");
+      }
+
+      return {
+        isFinished,
+      };
+    }),
+  );
+
+  const allFinished = responses.every((response) => response.isFinished);
+
+  if (allFinished) {
+    dispatch(setIsDebugFinished(true));
+  }
 });
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
@@ -372,8 +368,18 @@ const workers = createSlice({
     ) {
       const worker = getWorker(state, action.payload.id);
       if (worker) {
-        worker.previousState = worker.currentState;
-        worker.currentState = action.payload.currentState;
+        // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+        if (Number(action.payload.currentState.status) === -1) {
+          worker.previousState = worker.currentState;
+          worker.currentState = {
+            ...action.payload.currentState,
+            status: 255,
+          };
+        } else {
+          // TODO: just these lines should be left as the issue above is resolved
+          worker.previousState = worker.currentState;
+          worker.currentState = action.payload.currentState;
+        }
       }
     },
     setAllWorkersCurrentState(state, action) {
@@ -381,13 +387,29 @@ const workers = createSlice({
         if (typeof action.payload === "function") {
           worker.currentState = action.payload(worker.currentState);
         } else {
-          worker.currentState = action.payload;
+          // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+          if (Number(action.payload.currentState?.status) === -1) {
+            worker.currentState = {
+              ...action.payload,
+              status: 255,
+            };
+          } else {
+            worker.currentState = action.payload;
+          }
         }
       });
     },
     setAllWorkersPreviousState(state, action) {
       state.forEach((worker) => {
-        worker.previousState = action.payload;
+        // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
+        if (Number(action.payload.currentState?.status) === -1) {
+          worker.previousState = {
+            ...action.payload,
+            status: 255,
+          };
+        } else {
+          worker.previousState = action.payload;
+        }
       });
     },
     setWorkerCurrentInstruction(state, action) {

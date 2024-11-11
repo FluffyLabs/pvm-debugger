@@ -4,12 +4,14 @@ import { Assembly } from "./Assembly";
 import { Bytecode } from "./Bytecode";
 import { Examples } from "./Examples";
 import { TextFileUpload } from "./TextFileUpload";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ProgramUploadFileOutput } from "./types";
 import { InitialState } from "@/types/pvm";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
-import { useAppDispatch } from "@/store/hooks.ts";
+import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { setIsProgramEditMode } from "@/store/debugger/debuggerSlice.ts";
+import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
+import { isSerializedError } from "@/store/utils";
 
 export const Loader = ({
   initialState,
@@ -25,23 +27,28 @@ export const Loader = ({
   const [error, setError] = useState<string>();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const debuggerActions = useDebuggerActions();
+  const isLoading = useAppSelector(selectIsAnyWorkerLoading);
 
-  const handleLoad = useCallback(() => {
+  useEffect(() => {
+    setError("");
+  }, [isLoading]);
+
+  const handleLoad = useCallback(async () => {
     setIsSubmitted(true);
     if (!programLoad) return;
 
     dispatch(setIsProgramEditMode(false));
 
     try {
-      debuggerActions.handleProgramLoad(programLoad);
+      await debuggerActions.handleProgramLoad(programLoad);
+      setIsDialogOpen?.(false);
     } catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof Error || isSerializedError(error)) {
         setError(error.message);
       } else {
         setError("Unknown error occured");
       }
     }
-    setIsDialogOpen?.(false);
   }, [dispatch, programLoad, debuggerActions, setIsDialogOpen]);
   return (
     <>

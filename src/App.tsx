@@ -53,6 +53,10 @@ const DebuggerContent = () => {
     previousState: initialState,
   };
 
+  const currentInstructionEnriched = programPreviewResult.find(
+    (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
+  );
+
   const mobileView = useRef<HTMLDivElement | null>(null);
 
   const onInstructionClick = useCallback(
@@ -122,12 +126,12 @@ const DebuggerContent = () => {
       <div className="max-sm:hidden col-span-12 md:col-span-3">{<MemoryPreview />}</div>
 
       <div className="max-sm:hidden md:col-span-3 overflow-hidden">
-        <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstruction} />
+        <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstructionEnriched} />
       </div>
 
       <div className="md:hidden col-span-12 order-last" ref={mobileView}>
         <MobileKnowledgeBase
-          currentInstruction={clickedInstruction ?? currentInstruction}
+          currentInstruction={clickedInstruction ?? currentInstructionEnriched}
           open={clickedInstruction !== null && isMobileViewActive()}
           onClose={() => setClickedInstruction(null)}
         />
@@ -173,7 +177,6 @@ const DebuggerContent = () => {
 };
 
 function App() {
-  const debuggerActions = useDebuggerActions();
   const { pvmInitialized, initialState, program } = useAppSelector((state) => state.debugger);
 
   return (
@@ -190,7 +193,7 @@ function App() {
               })}
             >
               <div className="w-full md:w-[350px]">
-                <PvmSelect onValueChange={(selectedPvms) => debuggerActions.handlePvmTypeChange(selectedPvms)} />
+                <PvmSelect />
               </div>
               <NumeralSystemSwitch className="hidden md:flex ml-3" />
             </div>
