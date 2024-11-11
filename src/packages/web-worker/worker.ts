@@ -1,9 +1,9 @@
-import { getMemoryPage } from "@/packages/web-worker/utils.ts";
 import commandHandlers from "./command-handlers";
 import { logger } from "@/utils/loggerService";
 import { WorkerRequestParams, WorkerResponseParams, PvmApiInterface, Commands, CommandStatus } from "./types";
 
 let pvm: PvmApiInterface | null = null;
+let memorySize: number | null = null;
 let isRunMode = false;
 
 export function postTypedMessage(msg: WorkerResponseParams) {
@@ -14,13 +14,15 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
   if (!e.data?.command) {
     return;
   }
-  logger.info("⚙️ Worker received message", e.data);
+  logger.info("⚙️ PVM worker received message", e.data);
 
   let state;
   let isFinished;
   if (e.data.command === Commands.LOAD) {
     const data = await commandHandlers.runLoad(e.data.payload);
     pvm = data.pvm;
+    memorySize = data.memorySize;
+
     postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error, messageId: e.data.messageId });
   } else if (e.data.command === Commands.INIT) {
     const data = await commandHandlers.runInit({
@@ -72,41 +74,22 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       },
       messageId: e.data.messageId,
     });
-  } else if (e.data.command === Commands.MEMORY_PAGE) {
-    try {
-      const memoryPage = getMemoryPage(e.data.payload.pageNumber, pvm);
-
-      postTypedMessage({
-        command: Commands.MEMORY_PAGE,
-        status: CommandStatus.SUCCESS,
-        messageId: e.data.messageId,
-        payload: {
-          pageNumber: e.data.payload.pageNumber,
-          memoryPage,
-        },
-      });
-    } catch (error) {
-      postTypedMessage({
-        command: Commands.MEMORY_PAGE,
-        status: CommandStatus.ERROR,
-        messageId: e.data.messageId,
-        error,
-        payload: {
-          pageNumber: e.data.payload.pageNumber,
-          memoryPage: new Uint8Array(),
-        },
-      });
-    }
-  } else if (e.data.command === Commands.MEMORY_SIZE) {
-    // Get first page to check the memory size
-    const memoryPage = getMemoryPage(0, pvm);
+  } else if (e.data.command === Commands.MEMORY) {
+    const data = await commandHandlers.runMemory({
+      pvm,
+      memorySize,
+      startAddress: e.data.payload.startAddress,
+      stopAddress: e.data.payload.stopAddress,
+    });
 
     postTypedMessage({
-      command: Commands.MEMORY_SIZE,
-      status: CommandStatus.SUCCESS,
+      command: Commands.MEMORY,
+      status: data.status,
+      error: data.error,
       messageId: e.data.messageId,
-      // TODO fix types
-      payload: { pageNumber: 0, memorySize: (memoryPage as unknown as Array<number>)?.length },
+      payload: {
+        memoryChunk: data.memoryChunk,
+      },
     });
   }
 };
