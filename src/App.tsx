@@ -21,12 +21,7 @@ import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { Assembly } from "./components/ProgramLoader/Assembly";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
-import {
-  setClickedInstruction,
-  setInitialState,
-  setInstructionMode,
-  setIsProgramEditMode,
-} from "@/store/debugger/debuggerSlice.ts";
+import { setClickedInstruction, setInstructionMode, setIsProgramEditMode } from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { DebuggerControlls } from "./components/DebuggerControlls";
 import { useDebuggerActions } from "./hooks/useDebuggerActions";
@@ -46,6 +41,9 @@ const DebuggerContent = () => {
     instructionMode,
     breakpointAddresses,
     pvmInitialized,
+    isDebugFinished,
+    isRunMode,
+    isStepMode,
   } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
 
@@ -110,10 +108,10 @@ const DebuggerContent = () => {
           currentState={isProgramEditMode ? initialState : currentState}
           previousState={isProgramEditMode ? initialState : previousState}
           onCurrentStateChange={(state) => {
-            setInitialState(state);
             debuggerActions.restartProgram(state);
           }}
-          allowEditing={false}
+          allowEditingPc={!isDebugFinished && !isRunMode && !isStepMode}
+          allowEditingRegisters={false}
         />
       </div>
 

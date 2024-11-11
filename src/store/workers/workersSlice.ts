@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
-import { setIsDebugFinished } from "@/store/debugger/debuggerSlice.ts";
+import { setIsDebugFinished, setIsStepMode } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
@@ -316,6 +316,8 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
           instruction: data.payload.result,
         }),
       );
+
+      dispatch(setIsStepMode(true));
 
       if (state.pc === undefined) {
         throw new Error("Program counter is undefined");
