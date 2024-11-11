@@ -42,6 +42,7 @@ const ComputedValue = ({
       <p
         className={classNames({
           "flex-[3]": true,
+          "pl-2": true,
         })}
       >
         {value !== undefined ? valueToNumeralSystem(value, numeralSystem) : ""}
@@ -50,7 +51,7 @@ const ComputedValue = ({
   }
 
   return (
-    <div className="flex-[3]">
+    <div className="flex-[3] pl-2">
       <div
         className={classNames({
           "flex-[3]": true,
@@ -119,7 +120,7 @@ export const Registers = ({
               {allowEditingPc ? (
                 <div className="flex-[3]">
                   <Input
-                    className="w-20 h-6 m-0 p-0 text-md"
+                    className="w-20 h-6 m-0 py-0 px-[4px] text-md border-white hover:border-input"
                     onChange={(e) => {
                       const value = e.target?.value;
                       const valueInDecimal =
@@ -159,7 +160,11 @@ export const Registers = ({
             </div>
             <div className="flex flex-row items-center justify-between w-full">
               <p className="flex-[2]">Status</p>
-              <p className="flex-[3]" style={{ color: getStatusColor(currentState.status) }} test-id="program-status">
+              <p
+                className="flex-[3] pl-2"
+                style={{ color: getStatusColor(currentState.status) }}
+                test-id="program-status"
+              >
                 {currentState.status !== undefined ? Status[currentState.status] : null}
               </p>
             </div>
