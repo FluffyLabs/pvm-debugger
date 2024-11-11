@@ -44,6 +44,7 @@
     "react-number-format": "^5.4.2",
     "react-redux": "^9.1.2",
     "react-toastify": "^10.0.6",
+    "react-virtualized-auto-sizer": "^1.0.24",
     "react-window": "^1.8.10",
     "react-window-infinite-loader": "^1.0.9",
     "tailwind-merge": "^2.4.0",

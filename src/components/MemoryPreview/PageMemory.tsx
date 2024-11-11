@@ -13,6 +13,7 @@ import { isSerializedError } from "@/store/utils";
 import InfiniteLoader from "react-window-infinite-loader";
 import { FixedSizeList } from "react-window";
 import { logger } from "@/utils/loggerService";
+import AutoSizer, { Size } from "react-virtualized-auto-sizer";
 
 const SPLIT_STEP = 8 as const;
 const toMemoryPageTabData = (
@@ -67,30 +68,35 @@ const MemoryTable = ({
   const isItemLoaded = (index: number) => !hasNextPage || index < tableData.length;
 
   return (
-    <InfiniteLoader
-      isItemLoaded={isItemLoaded}
-      itemCount={itemCount}
-      loadMoreItems={() => {
-        logger.debug("next page");
-      }}
-    >
-      {({ onItemsRendered, ref }) => {
-        return (
-          <FixedSizeList
-            className={classNames("mt-4 overflow-y-auto h-full", { "opacity-20": hasError })}
+    <div className={classNames("mt-4 overflow-y-auto h-full w-full", { "opacity-20": hasError })}>
+      <AutoSizer>
+        {({ height, width }: Size) => (
+          <InfiniteLoader
+            isItemLoaded={isItemLoaded}
             itemCount={itemCount}
-            onItemsRendered={onItemsRendered}
-            ref={ref}
-            height={900}
-            itemSize={24}
-            width={300}
-            itemData={"ddd"}
+            loadMoreItems={() => {
+              logger.debug("next page");
+            }}
           >
-            {Item}
-          </FixedSizeList>
-        );
-      }}
-    </InfiniteLoader>
+            {({ onItemsRendered, ref }) => {
+              return (
+                <FixedSizeList
+                  itemCount={itemCount}
+                  onItemsRendered={onItemsRendered}
+                  ref={ref}
+                  height={height}
+                  itemSize={24}
+                  width={width}
+                  itemData={"ddd"}
+                >
+                  {Item}
+                </FixedSizeList>
+              );
+            }}
+          </InfiniteLoader>
+        )}
+      </AutoSizer>
+    </div>
   );
 };
 
@@ -119,7 +125,7 @@ export const PageMemory = () => {
   const tableData = toMemoryPageTabData(memory?.page.data, addressStart, numeralSystem);
 
   return (
-    <div>
+    <>
       <div className="flex w-full">
         <div className="font-semibold flex items-center mr-6">Page</div>
         <div className="flex-grow">
@@ -142,6 +148,6 @@ export const PageMemory = () => {
       </div>
       {error && <div className="text-red-500 mt-3">{error}</div>}
       <MemoryTable tableData={tableData} hasError={!!error} />
-    </div>
+    </>
   );
 };

@@ -109,16 +109,4 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       payload: { pageNumber: 0, memorySize: (memoryPage as unknown as Array<number>)?.length },
     });
   }
-  // TODO uncomment and finish implementation
-  // else if (e.data.command === Commands.MEMORY_RANGE) {
-  //   const memoryRange = Object.values(memory).flat().slice(e.data.payload.start, e.data.payload.end);
-  //   postMessage({
-  //     command: Commands.MEMORY_RANGE,
-  //     payload: {
-  //       start: e.data.payload.start,
-  //       end: e.data.payload.end,
-  //       memoryRange: memoryRange,
-  //     },
-  //   });
-  // }
 };
