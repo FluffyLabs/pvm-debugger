@@ -10,7 +10,7 @@ export type InitialState = {
   pc?: number;
   pageMap?: PageMapItem[];
   memory?: MemoryChunkItem[];
-  gas?: number;
+  gas?: bigint;
 };
 
 export type MemoryChunkItem = {
@@ -39,9 +39,9 @@ export type ExpectedState = InitialState & {
 
 export type Pvm = {
   nextStep: () => Status;
-  getRegisters: () => number[];
+  getRegisters: () => Uint32Array;
   getPC: () => number;
-  getGas: () => number;
+  getGas: () => bigint;
   getStatus: () => Status;
   getMemoryPage: (pageNumber: number) => Uint8Array | null;
 };

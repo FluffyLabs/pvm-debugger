@@ -28,7 +28,7 @@
     "@radix-ui/react-tooltip": "^1.1.2",
     "@reduxjs/toolkit": "^2.2.8",
     "@typeberry/block": "^0.0.1-1a02906",
-    "@typeberry/pvm-debugger-adapter": "0.0.1-42cadc3",
+    "@typeberry/pvm-debugger-adapter": "0.0.1-566ac09",
     "@typeberry/spectool-wasm": "^0.13.0",
     "@uiw/react-codemirror": "^4.23.6",
     "class-variance-authority": "^0.7.0",
