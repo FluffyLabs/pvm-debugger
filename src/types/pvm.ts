@@ -1,4 +1,4 @@
-import { Args } from "@typeberry/pvm-debugger-adapter";
+import { Args, Memory, Registers } from "@typeberry/pvm-debugger-adapter";
 
 type GrowToSize<T, N extends number, A extends T[]> = A["length"] extends N ? A : GrowToSize<T, N, [...A, T]>;
 type FixedArray<T, N extends number> = GrowToSize<T, N, []>;
@@ -44,6 +44,9 @@ export type Pvm = {
   getGas: () => bigint;
   getStatus: () => Status;
   getMemoryPage: (pageNumber: number) => Uint8Array | null;
+  setNextPC(nextPc: number): void;
+  setGasLeft(gas: bigint): void;
+  reset(program: Uint8Array, pc: number, gas: bigint, registers: Registers, memory: Memory): void;
 };
 
 export type CurrentInstruction =

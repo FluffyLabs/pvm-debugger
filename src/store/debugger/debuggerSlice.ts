@@ -25,7 +25,7 @@ const initialState: DebuggerState = {
     pc: 0,
     pageMap: [],
     memory: [],
-    gas: 10000,
+    gas: 10000n,
   },
   isProgramEditMode: false,
   isAsmError: false,

@@ -1,7 +1,6 @@
 import { InitialState } from "@/types/pvm";
 import { initPvm } from "../pvm";
 import { getState, isInternalPvm, regsAsUint8 } from "../utils";
-import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { logger } from "@/utils/loggerService";
 import { CommandStatus, PvmApiInterface } from "../types";
 
@@ -23,7 +22,7 @@ const init = async ({ pvm, program, initialState }: InitParams) => {
   if (isInternalPvm(pvm)) {
     logger.info("PVM init internal", pvm);
     // TODO Fix type guards
-    initPvm(pvm as InternalPvmInstance, program, initialState);
+    initPvm(pvm, program, initialState);
   } else {
     logger.info("PVM init external", pvm);
     const gas = initialState.gas || 10000;

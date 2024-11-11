@@ -28,7 +28,7 @@ export const BinaryFileUpload = ({
           pageMap: [],
           // TODO: map memory properly
           // memory: [...memory],
-          gas: 10000,
+          gas: 10000n,
         },
       });
     } else {
