@@ -23,7 +23,7 @@ export const asyncWorkerPostMessage = <C extends Commands>(
     }, RESPONSE_WAIT_TIMEOUT);
 
     const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-      logger.info("Received message from worker", event.data);
+      logger.info("📥 Received message from worker", event.data);
       if (event.data.messageId === messageId) {
         clearTimeout(timeoutId);
         worker.removeEventListener("message", messageHandler);

@@ -14,7 +14,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
   if (!e.data?.command) {
     return;
   }
-  logger.info("Worker received message", e.data);
+  logger.info("⚙️ Worker received message", e.data);
 
   let state;
   let isFinished;
