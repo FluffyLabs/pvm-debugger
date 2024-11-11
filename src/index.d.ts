@@ -178,13 +178,15 @@ declare module "@typeberry/pvm-debugger-adapter" {
   }
 
   export class Pvm {
-    reset(program: Uint8Array, pc: number, gas: number, registers: Registers, memory: Memory);
+    reset(program: Uint8Array, pc: number, gas: bigint, registers: Registers, memory: Memory);
     nextStep(): Status;
-    getRegisters(): number[];
+    getRegisters(): Uint32Array;
     getPC(): number;
-    getGas(): number;
+    getGas(): bigint;
     getStatus(): Status;
     getMemoryPage(pageNumber: number): null | Uint8Array;
+    setNextPC(nextPc: number);
+    setGasLeft(gas: bigint);
   }
 
   export class MemoryBuilder {

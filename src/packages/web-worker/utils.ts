@@ -1,4 +1,4 @@
-import { ExpectedState, Pvm as InternalPvm, RegistersArray, Status } from "@/types/pvm.ts";
+import { ExpectedState, Pvm as InternalPvm, RegistersArray } from "@/types/pvm.ts";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmPvmShell.ts";
 import "./goWasmExec.js";
@@ -25,8 +25,8 @@ export function getState(pvm: PvmApiInterface): ExpectedState {
     newState = {
       pc: pvm.getProgramCounter(),
       regs: uint8asRegs(pvm.getRegisters()),
-      gas: Number(pvm.getGasLeft()),
-      status: pvm.getStatus() as Status,
+      gas: pvm.getGasLeft(),
+      status: pvm.getStatus(),
     };
   }
   return newState;

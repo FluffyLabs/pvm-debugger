@@ -22,9 +22,9 @@ const ComputedValue = ({
 }: {
   propName: keyof ExpectedState;
   propNameIndex?: number;
-  value?: number | string;
-  previousValue?: number | string;
-  formatter?: (value: number | string) => ReactNode | string;
+  value?: number | string | bigint;
+  previousValue?: number | string | bigint;
+  formatter?: (value: number | string | bigint) => ReactNode | string;
   workers: WorkerState[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
@@ -40,7 +40,7 @@ const ComputedValue = ({
   const isEqualAcrossWorkers = valuesInAllWorkers("currentState").every((val) => val === value);
   const wasEqualAcrossWorkers = valuesInAllWorkers("previousState").every((val) => val === previousValue);
 
-  const formatValueToDisplay = (value?: number | string, isEqualAcrossWorkers = true) => {
+  const formatValueToDisplay = (value?: number | string | bigint, isEqualAcrossWorkers = true) => {
     if (value === undefined) {
       return "";
     }
@@ -49,7 +49,7 @@ const ComputedValue = ({
       return "?";
     }
 
-    if (isNumber(value)) {
+    if (isNumber(value) || typeof value === "bigint") {
       const numeralValue = valueToNumeralSystem(value, numeralSystem);
       return formatter ? formatter(numeralValue) : numeralValue;
     }

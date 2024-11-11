@@ -31,7 +31,7 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
 
   const registers = new Registers();
   registers.copyFrom(new Uint32Array(initialState.regs!));
-  pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 0, registers, memory);
+  pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 0n, registers, memory);
 };
 
 export const runAllInstructions = (pvm: InternalPvm, program: Uint8Array) => {

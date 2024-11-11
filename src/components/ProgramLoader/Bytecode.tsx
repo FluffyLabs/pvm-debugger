@@ -22,7 +22,7 @@ const initial = {
   pc: 0,
   pageMap: [],
   memory: [],
-  gas: 10000,
+  gas: 10000n,
 };
 
 export const Bytecode = ({
