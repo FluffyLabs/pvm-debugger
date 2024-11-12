@@ -1,8 +1,8 @@
-import { chunk, debounce } from "lodash";
+import { chunk, debounce, isNumber } from "lodash";
 import { useSelector } from "react-redux";
 import { loadMemoryChunkAllWorkers, selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { useAppDispatch } from "@/store/hooks";
 import classNames from "classnames";
@@ -12,6 +12,7 @@ import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE } from "@/store/utils";
 import InfiniteLoader from "react-window-infinite-loader";
 import { FixedSizeList } from "react-window";
 import AutoSizer, { Size } from "react-virtualized-auto-sizer";
+import { logger } from "@/utils/loggerService";
 
 const SPLIT_STEP = 8;
 const MAX_ADDRESS = Math.pow(2, 32);
@@ -49,7 +50,11 @@ const MemoryRow = ({
         {bytes.map((byte, index) => (
           <span key={index} className={`mr-[1px] ${(index + 1) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
             {/* TODO KF Scroll into view */}
-            <span className={classNames({ "bg-orange-400": selectedAddress && selectedAddress === address + index })}>
+            <span
+              className={classNames({
+                "bg-orange-400": isNumber(selectedAddress) && selectedAddress === address + index,
+              })}
+            >
               {valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3, false)}
             </span>
           </span>
@@ -60,30 +65,62 @@ const MemoryRow = ({
 };
 
 const MemoryTable = ({
-  tableData,
   hasError,
   loadMoreItems,
   selectedAddress,
 }: {
-  tableData: { address: number; bytes: number[] }[];
   hasError: boolean;
   loadMoreItems: (startIndex: number, stopIndex: number) => void;
   selectedAddress: number | null;
 }) => {
-  const itemCount = tableData.length + 1;
+  const memory = useSelector(selectMemoryForFirstWorker);
+  const listRef = useRef<FixedSizeList | null>(null);
 
-  const Item = ({ index, style }: { index: number; style: React.CSSProperties }) => {
-    if (index + 1 >= itemCount) {
-      return <div style={style}>Loading...</div>;
+  const startAddress = memory?.startAddress || 0;
+  const tableData = toMemoryPageTabData(memory?.data, startAddress);
+  const hasPrevPage = (memory?.startAddress || 0) > 0;
+  const hasNextPage = (memory?.stopAddress || 0) < MAX_ADDRESS;
+  // We want to add next and prev loaders if necessary
+  const itemCount = tableData.length + (hasPrevPage ? 1 : 0) + (hasNextPage ? 1 : 0);
+  const isItemLoaded = (index: number) => {
+    if (hasPrevPage && index === 0) {
+      return false;
     }
 
-    const { address, bytes } = tableData[index];
+    if (hasNextPage && index === tableData.length - 1) {
+      return false;
+    }
+
+    return true;
+  };
+
+  // useEffect(() => {
+  //   console.log(tableData);
+  // }, [tableData]);
+
+  useEffect(() => {
+    if (isNumber(selectedAddress)) {
+      const rowAddress = Math.floor((selectedAddress - (memory?.startAddress || 0)) / 8);
+      listRef.current?.scrollToItem(rowAddress, "center");
+    }
+  }, [memory?.startAddress, selectedAddress, tableData]);
+
+  const Item = ({ index, style }: { index: number; style: React.CSSProperties }) => {
+    if (!isItemLoaded(index)) {
+      return (
+        <div className="text-center text-gray-400" style={style}>
+          Loading memory chunk...
+        </div>
+      );
+    }
+
+    // We added one more item to the start as a loader
+    const memoryIndex = index - (hasPrevPage ? 1 : 0);
+    const { address, bytes } = tableData[memoryIndex];
+
     // TODO KF support hex selected address
     return <MemoryRow style={style} address={address} bytes={bytes} selectedAddress={selectedAddress} />;
   };
-
-  const hasNextPage = true;
-  const isItemLoaded = (index: number) => !hasNextPage || index < tableData.length;
 
   return (
     <div className={classNames("mt-4 grow", { "opacity-20": hasError })}>
@@ -102,7 +139,10 @@ const MemoryTable = ({
                   <FixedSizeList
                     itemCount={itemCount}
                     onItemsRendered={onItemsRendered}
-                    ref={ref}
+                    ref={(elem) => {
+                      ref(elem);
+                      listRef.current = elem;
+                    }}
                     height={height}
                     itemSize={24}
                     width={width}
@@ -121,17 +161,19 @@ const MemoryTable = ({
 
 export const MemoryPreview = () => {
   const memory = useSelector(selectMemoryForFirstWorker);
-  const [selectedAddress, setSelectedAddress] = useState<number | null>(0);
+  const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const dispatch = useAppDispatch();
   const [error, setError] = useState<string | null>(null);
 
   const jumpToAddress = debounce(async (address: number) => {
     try {
+      // Place requested address in the middle
+
       const halfChunkSize = LOAD_MEMORY_CHUNK_SIZE / 2;
       const startAddress = address - halfChunkSize < 0 ? 0 : address - halfChunkSize;
-      const stopAddress = address + halfChunkSize > MAX_ADDRESS ? MAX_ADDRESS : address + halfChunkSize;
-
+      const stopAddress = Math.min(MAX_ADDRESS, address + halfChunkSize);
       await dispatch(loadMemoryChunkAllWorkers({ startAddress, stopAddress, loadType: "replace" })).unwrap();
+      setSelectedAddress(address);
     } catch (error) {
       if (error instanceof Error || isSerializedError(error)) {
         setError(error.message || "Unknown error");
@@ -141,19 +183,33 @@ export const MemoryPreview = () => {
     }
   }, 1500);
 
-  // TODO KF handle reverse scrolling
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const loadMoreItems = async (_startAddress: number, _stopAddress: number) => {
+  const loadMoreItems = async (startIndex: number) => {
+    logger.info("Load more memory items", startIndex);
     try {
-      // We want one more than current stop address
-      const startAddress = memory?.stopAddress || 0 + 1;
-      await dispatch(
-        loadMemoryChunkAllWorkers({
-          startAddress: startAddress,
-          stopAddress: startAddress + LOAD_MEMORY_CHUNK_SIZE,
-          loadType: "end",
-        }),
-      ).unwrap();
+      if (startIndex === 0 && memory?.startAddress) {
+        // We want one less than current start address
+        const stopAddress = (memory?.startAddress || 0) - 1;
+        const startAddress = Math.max(stopAddress - LOAD_MEMORY_CHUNK_SIZE, 0);
+        await dispatch(
+          loadMemoryChunkAllWorkers({
+            startAddress,
+            stopAddress,
+            loadType: "start",
+          }),
+        ).unwrap();
+        return;
+      } else {
+        // We want one more than current stop address
+        const startAddress = (memory?.stopAddress || 0) + 1;
+        const stopAddress = Math.min(startAddress + LOAD_MEMORY_CHUNK_SIZE, MAX_ADDRESS);
+        await dispatch(
+          loadMemoryChunkAllWorkers({
+            startAddress,
+            stopAddress,
+            loadType: "end",
+          }),
+        ).unwrap();
+      }
     } catch (error) {
       if (error instanceof Error || isSerializedError(error)) {
         setError(error.message || "Unknown error");
@@ -162,9 +218,6 @@ export const MemoryPreview = () => {
       }
     }
   };
-
-  const startAddress = memory?.startAddress || 0;
-  const tableData = toMemoryPageTabData(memory?.data, startAddress);
 
   return (
     <div className="border-2 rounded-md overflow-auto h-[70vh] p-5 flex flex-col">
@@ -180,24 +233,17 @@ export const MemoryPreview = () => {
             required
             onChange={(ev) => {
               if (ev.target.value === "") {
-                setError("Address is required");
                 setSelectedAddress(null);
                 return;
               }
               setError(null);
-              setSelectedAddress(parseInt(ev.target.value));
               jumpToAddress(parseInt(ev.target.value));
             }}
           />
         </div>
       </div>
       {error && <div className="text-red-500 mt-3">{error}</div>}
-      <MemoryTable
-        tableData={tableData}
-        selectedAddress={selectedAddress}
-        hasError={!!error}
-        loadMoreItems={loadMoreItems}
-      />
+      <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
     </div>
   );
 };
