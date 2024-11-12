@@ -50,4 +50,4 @@ export const isSerializedError = (error: unknown): error is SerializedError => {
   );
 };
 
-export const LOAD_MEMORY_CHUNK_SIZE = 2000;
+export const LOAD_MEMORY_CHUNK_SIZE = 200;

@@ -8,13 +8,26 @@ import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE } from "../utils";
-import { inRange, isNumber } from "lodash";
+import { chunk, inRange, isNumber } from "lodash";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 BigInt.prototype["toJSON"] = function () {
   return this.toString();
+};
+
+const SPLIT_STEP = 8;
+
+const toMemoryPageTabData = (memoryPage: number[] | undefined, startAddress: number) => {
+  const data = chunk(memoryPage || [], SPLIT_STEP).map((chunk, index) => {
+    return {
+      address: index * SPLIT_STEP + startAddress,
+      bytes: chunk,
+    };
+  });
+
+  return data;
 };
 
 export interface WorkerState {
@@ -26,8 +39,11 @@ export interface WorkerState {
   isRunMode?: boolean;
   isDebugFinished?: boolean;
   isLoading?: boolean;
-  memory?: {
-    data?: Uint8Array;
+  memory: {
+    data?: {
+      address: number;
+      bytes: number[];
+    }[];
     isLoading: boolean;
     startAddress?: number;
     stopAddress?: number;
@@ -430,14 +446,16 @@ const workers = createSlice({
         return;
       }
 
+      const paggedData = toMemoryPageTabData(Array.from(action.payload.chunk), action.payload.startAddress);
+
       if (action.payload.loadType === "end") {
-        memory.data = new Uint8Array([...(memory.data || []), ...action.payload.chunk]);
+        memory.data = [...(memory.data || []), ...paggedData];
         memory.stopAddress = action.payload.stopAddress;
       } else if (action.payload.loadType === "start") {
-        memory.data = new Uint8Array([...action.payload.chunk, ...(memory.data || [])]);
+        memory.data = [...paggedData, ...(memory.data || [])];
         memory.startAddress = action.payload.startAddress;
       } else if (action.payload.loadType === "replace") {
-        memory.data = action.payload.chunk;
+        memory.data = paggedData;
         memory.startAddress = action.payload.startAddress;
         memory.stopAddress = action.payload.stopAddress;
       }
@@ -454,7 +472,7 @@ const workers = createSlice({
         currentState: {},
         previousState: {},
         memory: {
-          data: new Uint8Array(),
+          data: [],
           isLoading: false,
           startAddress: 0,
           stopAddress: 0,

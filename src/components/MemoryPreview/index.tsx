@@ -1,31 +1,20 @@
-import { chunk, debounce, isNumber } from "lodash";
+import { debounce, isNumber } from "lodash";
 import { useSelector } from "react-redux";
 import { loadMemoryChunkAllWorkers, selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { useAppDispatch } from "@/store/hooks";
 import classNames from "classnames";
 import { NumericFormat } from "react-number-format";
 import { INPUT_STYLES } from "../ui/input";
 import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE } from "@/store/utils";
-import InfiniteLoader from "react-window-infinite-loader";
-import { FixedSizeList } from "react-window";
-import AutoSizer, { Size } from "react-virtualized-auto-sizer";
 import { logger } from "@/utils/loggerService";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+// import { useInView } from "react-intersection-observer";
 
-const SPLIT_STEP = 8;
 const MAX_ADDRESS = Math.pow(2, 32);
-
-const toMemoryPageTabData = (memoryPage: Uint8Array | undefined, startAddress: number) => {
-  return chunk(memoryPage || [], SPLIT_STEP).map((chunk, index) => {
-    return {
-      address: index * SPLIT_STEP + startAddress,
-      bytes: chunk,
-    };
-  });
-};
-
+const SPLIT_STEP = 8;
 const MemoryRow = ({
   address,
   bytes,
@@ -49,7 +38,6 @@ const MemoryRow = ({
       <div className="font-mono font-medium grow flex justify-around">
         {bytes.map((byte, index) => (
           <span key={index} className={`mr-[1px] ${(index + 1) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
-            {/* TODO KF Scroll into view */}
             <span
               className={classNames({
                 "bg-orange-400": isNumber(selectedAddress) && selectedAddress === address + index,
@@ -73,93 +61,114 @@ const MemoryTable = ({
   loadMoreItems: (startIndex: number, stopIndex: number) => void;
   selectedAddress: number | null;
 }) => {
+  // const beforeInView = useInView();
+  // const afterInView = useInView();
   const memory = useSelector(selectMemoryForFirstWorker);
-  const listRef = useRef<FixedSizeList | null>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
 
-  const startAddress = memory?.startAddress || 0;
-  const tableData = toMemoryPageTabData(memory?.data, startAddress);
+  // const startAddress = memory?.startAddress || 0;
   const hasPrevPage = (memory?.startAddress || 0) > 0;
   const hasNextPage = (memory?.stopAddress || 0) < MAX_ADDRESS;
-  // We want to add next and prev loaders if necessary
-  const itemCount = tableData.length + (hasPrevPage ? 1 : 0) + (hasNextPage ? 1 : 0);
+
+  // Total number of items including potential loading placeholders
+  const itemCount = (memory.data?.length || 0) + (hasPrevPage ? 1 : 0) + (hasNextPage ? 1 : 0);
+
+  // Virtualizer setup
+  const rowVirtualizer = useWindowVirtualizer({
+    count: itemCount,
+    scrollMargin: 100, // FIXME
+    estimateSize: () => 24, // Height of each row
+    overscan: 5,
+    getItemKey: useCallback(
+      (index: number) => {
+        return memory.data?.[index]?.address || index;
+      },
+      [memory.data],
+    ),
+  });
+
+  // Function to determine if an item is loaded
   const isItemLoaded = (index: number) => {
     if (hasPrevPage && index === 0) {
       return false;
     }
 
-    if (hasNextPage && index === tableData.length - 1) {
+    if (hasNextPage && index === itemCount - 1) {
       return false;
     }
 
     return true;
   };
 
-  // useEffect(() => {
-  //   console.log(tableData);
-  // }, [tableData]);
+  // Load more items when reaching the start or end
+  useEffect(() => {
+    const [startIndex, endIndex] = rowVirtualizer
+      .getVirtualItems()
+      .reduce(
+        ([min, max], item) => [Math.min(min, item.index), Math.max(max, item.index)],
+        [Number.MAX_VALUE, Number.MIN_VALUE],
+      );
 
+    if (hasPrevPage && startIndex <= 5 && !isItemLoaded(startIndex)) {
+      loadMoreItems(startIndex, startIndex + 20);
+    } else if (hasNextPage && endIndex >= itemCount - 6 && !isItemLoaded(endIndex)) {
+      loadMoreItems(endIndex - 20, endIndex);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowVirtualizer.getVirtualItems()]);
+
+  // Scroll to selected address
   useEffect(() => {
     if (isNumber(selectedAddress)) {
-      const rowAddress = Math.floor((selectedAddress - (memory?.startAddress || 0)) / 8);
-      listRef.current?.scrollToItem(rowAddress, "center");
+      const rowAddress = Math.floor((selectedAddress - (memory?.startAddress || 0)) / SPLIT_STEP);
+      const index = rowAddress + (hasPrevPage ? 1 : 0);
+      rowVirtualizer.scrollToIndex(index, { align: "center" });
     }
-  }, [memory?.startAddress, selectedAddress, tableData]);
-
-  const Item = ({ index, style }: { index: number; style: React.CSSProperties }) => {
-    if (!isItemLoaded(index)) {
-      return (
-        <div className="text-center text-gray-400" style={style}>
-          Loading memory chunk...
-        </div>
-      );
-    }
-
-    // We added one more item to the start as a loader
-    const memoryIndex = index - (hasPrevPage ? 1 : 0);
-
-    try {
-      const { address, bytes } = tableData[memoryIndex];
-
-      // TODO KF support hex selected address
-      return <MemoryRow style={style} address={address} bytes={bytes} selectedAddress={selectedAddress} />;
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAddress]);
 
   return (
-    <div className={classNames("mt-4 grow", { "opacity-20": hasError })}>
-      <AutoSizer>
-        {({ height, width }: Size) => {
-          return (
-            <InfiniteLoader
-              isItemLoaded={isItemLoaded}
-              itemCount={itemCount}
-              loadMoreItems={(startIndex, stopIndex) => {
-                loadMoreItems(startIndex, stopIndex);
-              }}
-            >
-              {({ onItemsRendered, ref }) => {
-                return (
-                  <FixedSizeList
-                    itemCount={itemCount}
-                    onItemsRendered={onItemsRendered}
-                    ref={(elem) => {
-                      ref(elem);
-                      listRef.current = elem;
-                    }}
-                    height={height}
-                    itemSize={24}
-                    width={width}
-                  >
-                    {Item}
-                  </FixedSizeList>
-                );
-              }}
-            </InfiniteLoader>
-          );
+    <div className={classNames("mt-4 grow", { "opacity-20": hasError })} ref={parentRef} style={{ overflow: "auto" }}>
+      <div
+        style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+          position: "relative",
         }}
-      </AutoSizer>
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          const index = virtualRow.index;
+          const style: React.CSSProperties = {
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: `${virtualRow.size}px`,
+            transform: `translateY(${virtualRow.start}px)`,
+          };
+
+          if (!isItemLoaded(index)) {
+            return (
+              <div key={virtualRow.key} className="text-center text-gray-400" style={style}>
+                Loading memory chunk...
+              </div>
+            );
+          }
+
+          // Adjust index to account for loaders
+          const memoryIndex = index - (hasPrevPage ? 1 : 0);
+          const { address, bytes } = (memory.data || [])[memoryIndex];
+
+          return (
+            <MemoryRow
+              key={virtualRow.key}
+              style={style}
+              address={address}
+              bytes={bytes}
+              selectedAddress={selectedAddress}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };
