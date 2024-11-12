@@ -7,7 +7,7 @@ import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
-import { asyncWorkerPostMessage, hasCommandStatusError } from "../utils";
+import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE } from "../utils";
 import { inRange, isNumber } from "lodash";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -99,14 +99,25 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
         throw new Error(`Failed to initialize "${worker.id}": ${initData.error.message}`);
       }
 
-      await dispatch(loadMemoryChunkAllWorkers({ startAddress: 0, stopAddress: 255 })).unwrap();
+      // Initialize memory with the first chunk
+      await dispatch(
+        loadMemoryChunkAllWorkers({ startAddress: 0, stopAddress: LOAD_MEMORY_CHUNK_SIZE, loadType: "replace" }),
+      ).unwrap();
     }),
   );
 });
 
 export const loadMemoryChunkAllWorkers = createAsyncThunk(
   "workers/loadMemoryChunkAllWorkers",
-  async ({ startAddress, stopAddress }: { startAddress: number; stopAddress: number }, { getState, dispatch }) => {
+  async (
+    {
+      startAddress,
+      stopAddress,
+      // Load type determines if new chunk should be added to the existing memory (and where) or replace it
+      loadType,
+    }: { startAddress: number; stopAddress: number; loadType: "start" | "end" | "replace" },
+    { getState, dispatch },
+  ) => {
     const state = getState() as RootState;
 
     return Promise.all(
@@ -126,6 +137,7 @@ export const loadMemoryChunkAllWorkers = createAsyncThunk(
             startAddress,
             stopAddress,
             chunk: resp.payload.memoryChunk,
+            loadType,
             isLoading: false,
           }),
         );
@@ -399,6 +411,7 @@ const workers = createSlice({
           startAddress: number;
           stopAddress: number;
           chunk: Uint8Array;
+          loadType: "start" | "end" | "replace";
           isLoading: boolean;
         };
       },
@@ -417,9 +430,18 @@ const workers = createSlice({
         return;
       }
 
-      memory.data = new Uint8Array([...(memory.data || []), ...action.payload.chunk]);
-      memory.startAddress = action.payload.startAddress;
-      memory.stopAddress = action.payload.stopAddress;
+      if (action.payload.loadType === "end") {
+        memory.data = new Uint8Array([...(memory.data || []), ...action.payload.chunk]);
+        memory.stopAddress = action.payload.stopAddress;
+      } else if (action.payload.loadType === "start") {
+        memory.data = new Uint8Array([...action.payload.chunk, ...(memory.data || [])]);
+        memory.startAddress = action.payload.startAddress;
+      } else if (action.payload.loadType === "replace") {
+        memory.data = action.payload.chunk;
+        memory.startAddress = action.payload.startAddress;
+        memory.stopAddress = action.payload.stopAddress;
+      }
+
       memory.isLoading = action.payload.isLoading;
     },
   },

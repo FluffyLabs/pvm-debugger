@@ -49,3 +49,5 @@ export const isSerializedError = (error: unknown): error is SerializedError => {
     Object.prototype.hasOwnProperty.call(error, "code")
   );
 };
+
+export const LOAD_MEMORY_CHUNK_SIZE = 2000;
