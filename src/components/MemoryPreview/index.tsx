@@ -116,10 +116,15 @@ const MemoryTable = ({
 
     // We added one more item to the start as a loader
     const memoryIndex = index - (hasPrevPage ? 1 : 0);
-    const { address, bytes } = tableData[memoryIndex];
 
-    // TODO KF support hex selected address
-    return <MemoryRow style={style} address={address} bytes={bytes} selectedAddress={selectedAddress} />;
+    try {
+      const { address, bytes } = tableData[memoryIndex];
+
+      // TODO KF support hex selected address
+      return <MemoryRow style={style} address={address} bytes={bytes} selectedAddress={selectedAddress} />;
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -167,11 +172,11 @@ export const MemoryPreview = () => {
 
   const jumpToAddress = debounce(async (address: number) => {
     try {
-      // Place requested address in the middle
-
+      // Place requested address in the middle and index first address in the row
+      const steppedAddress = address - (address % SPLIT_STEP);
       const halfChunkSize = LOAD_MEMORY_CHUNK_SIZE / 2;
-      const startAddress = address - halfChunkSize < 0 ? 0 : address - halfChunkSize;
-      const stopAddress = Math.min(MAX_ADDRESS, address + halfChunkSize);
+      const startAddress = steppedAddress - halfChunkSize < 0 ? 0 : steppedAddress - halfChunkSize;
+      const stopAddress = Math.min(MAX_ADDRESS, steppedAddress + halfChunkSize);
       await dispatch(loadMemoryChunkAllWorkers({ startAddress, stopAddress, loadType: "replace" })).unwrap();
       setSelectedAddress(address);
     } catch (error) {
