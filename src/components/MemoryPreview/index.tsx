@@ -19,6 +19,9 @@ import { useInView } from "react-intersection-observer";
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
 
+// Some info about react-virtual and bi-directional scrolling:
+// https://medium.com/@rmoghariya7/reverse-infinite-scroll-in-react-using-tanstack-virtual-11a1fea24042
+// https://stackblitz.com/edit/tanstack-query-xrw3fp
 const MemoryRow = ({
   address,
   bytes,
@@ -71,11 +74,10 @@ const MemoryTable = ({
 
   const hasPrevPage = (memory?.startAddress || 0) > 0;
   const hasNextPage = (memory?.stopAddress || 0) < MAX_ADDRESS;
-  const itemCount = memory?.data?.length || 0;
 
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
-    count: itemCount,
+    count: memory?.data?.length || 0,
     getScrollElement: () => parentRef.current,
     scrollMargin: 100,
     estimateSize: () => ITEM_SIZE,

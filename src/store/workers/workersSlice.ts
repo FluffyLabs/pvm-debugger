@@ -162,13 +162,41 @@ export const loadMemoryChunkAllWorkers = createAsyncThunk(
 
 export const refreshPageAllWorkers = createAsyncThunk(
   "workers/refreshPageAllWorkers",
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async (_) => {
-    // const state = getState() as RootState;
-    // const pageNumber = selectMemoryForFirstWorker(state)?.page.pageNumber;
-    // if (pageNumber !== undefined && pageNumber !== -1) {
-    //   dispatch(changePageAllWorkers(state.workers[0].memory?.page.pageNumber || 0));
-    // }
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+
+    return Promise.all(
+      state.workers.map(async (worker) => {
+        // No memory, nothing to refresh
+        if (
+          !worker.memory?.data ||
+          worker.memory?.startAddress === undefined ||
+          worker.memory?.stopAddress === undefined
+        ) {
+          return;
+        }
+
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.MEMORY,
+          payload: { startAddress: worker.memory?.startAddress, stopAddress: worker.memory?.stopAddress },
+        });
+
+        if (hasCommandStatusError(resp)) {
+          throw resp.error;
+        }
+
+        dispatch(
+          appendMemory({
+            id: worker.id,
+            startAddress: worker.memory?.startAddress,
+            stopAddress: worker.memory?.stopAddress,
+            chunk: resp.payload.memoryChunk,
+            loadType: "replace",
+            isLoading: false,
+          }),
+        );
+      }),
+    );
   },
 );
 
@@ -436,6 +464,7 @@ const workers = createSlice({
       }
 
       if (
+        action.payload.loadType !== "replace" &&
         isNumber(memory.startAddress) &&
         isNumber(memory.stopAddress) &&
         inRange(action.payload.startAddress, memory.startAddress, memory.stopAddress)
