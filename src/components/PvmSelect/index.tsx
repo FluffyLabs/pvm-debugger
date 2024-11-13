@@ -214,7 +214,7 @@ export const PvmSelect = () => {
           <DialogDescription>
             <div className="flex justify-between">
               <div>
-                <Select onValueChange={(value: SupportedLangs) => setSelectedLang(value)} value={SupportedLangs.Rust}>
+                <Select onValueChange={(value: SupportedLangs) => setSelectedLang(value)} value={selectedLang}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Language" />
                   </SelectTrigger>
