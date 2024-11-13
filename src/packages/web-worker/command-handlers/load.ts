@@ -1,10 +1,15 @@
 import { logger } from "@/utils/loggerService";
-import { loadArrayBufferAsWasm, SupportedLangs } from "../utils";
+import { getMemorySize, loadArrayBufferAsWasm, SupportedLangs } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 
 export type LoadParams = { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
-export type LoadResponse = { pvm: PvmApiInterface | null; status: CommandStatus; error?: unknown };
+export type LoadResponse = {
+  pvm: PvmApiInterface | null;
+  memorySize: number | null;
+  status: CommandStatus;
+  error?: unknown;
+};
 
 const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
   if (args.type === PvmTypes.BUILT_IN) {
@@ -39,12 +44,13 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
 export const runLoad = async (args: LoadParams): Promise<LoadResponse> => {
   try {
     const pvm = await load(args);
+    const memorySize = getMemorySize(pvm);
     if (pvm) {
-      return { pvm, status: CommandStatus.SUCCESS };
+      return { pvm, memorySize, status: CommandStatus.SUCCESS };
     }
   } catch (error) {
-    return { pvm: null, status: CommandStatus.ERROR, error };
+    return { pvm: null, memorySize: null, status: CommandStatus.ERROR, error };
   }
 
-  return { pvm: null, status: CommandStatus.ERROR, error: new Error("Unknown PVM type") };
+  return { pvm: null, memorySize: null, status: CommandStatus.ERROR, error: new Error("Unknown PVM type") };
 };

@@ -89,15 +89,25 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
   }
 }
 
-export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
+export function getMemorySize(pvm: PvmApiInterface | null) {
   if (!pvm) {
-    return new Uint8Array();
+    logger.warn("Accesing memory of not initialized PVM");
+    return null;
   }
 
-  if (isInternalPvm(pvm)) {
-    return pvm.getMemoryPage(pageNumber) || new Uint8Array();
+  const page = isInternalPvm(pvm) ? pvm.getMemoryPage(0) : pvm.getPageDump(0);
+
+  if (!page) {
+    logger.warn("PVM memory page is null");
+    return null;
   }
-  return pvm.getPageDump(pageNumber) || new Uint8Array();
+
+  // PVM shouldn't return empty memory. If such scenario ever happens, change this code
+  if (page.length === 0) {
+    throw new Error("Memory page is empty");
+  }
+
+  return page.length;
 }
 
 export function chunksAsUint8(memory?: MemoryChunkItem[]): Uint8Array {

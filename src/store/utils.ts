@@ -23,7 +23,7 @@ export const asyncWorkerPostMessage = <C extends Commands>(
     }, RESPONSE_WAIT_TIMEOUT);
 
     const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-      logger.info("Received message from worker", event.data);
+      logger.info("📥 Debugger received message", event.data);
       if (event.data.messageId === messageId) {
         clearTimeout(timeoutId);
         worker.removeEventListener("message", messageHandler);
@@ -49,3 +49,7 @@ export const isSerializedError = (error: unknown): error is SerializedError => {
     Object.prototype.hasOwnProperty.call(error, "code")
   );
 };
+
+export const MEMORY_SPLIT_STEP = 8;
+// Keep multiplication of step to make chunking easier
+export const LOAD_MEMORY_CHUNK_SIZE = MEMORY_SPLIT_STEP * 200;

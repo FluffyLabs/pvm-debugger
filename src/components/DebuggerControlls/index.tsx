@@ -79,7 +79,7 @@ export const DebuggerControlls = () => {
       }
     }
 
-    dispatch(refreshPageAllWorkers());
+    await dispatch(refreshPageAllWorkers()).unwrap();
   };
 
   return (

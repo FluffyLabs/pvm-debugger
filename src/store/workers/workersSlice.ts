@@ -7,13 +7,25 @@ import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
-import { asyncWorkerPostMessage, hasCommandStatusError } from "../utils";
+import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
+import { chunk, inRange, isNumber } from "lodash";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 BigInt.prototype["toJSON"] = function () {
   return this.toString();
+};
+
+const toMemoryPageTabData = (memoryPage: number[] | undefined, startAddress: number) => {
+  const data = chunk(memoryPage || [], MEMORY_SPLIT_STEP).map((chunk, index) => {
+    return {
+      address: index * MEMORY_SPLIT_STEP + startAddress,
+      bytes: chunk,
+    };
+  });
+
+  return data;
 };
 
 export interface WorkerState {
@@ -26,19 +38,13 @@ export interface WorkerState {
   isDebugFinished?: boolean;
   isLoading?: boolean;
   memory?: {
-    meta: {
-      pageSize: number | undefined;
-      isPageSizeLoading: boolean;
-    };
-    page: {
-      data?: Uint8Array;
-      isLoading: boolean;
-      pageNumber: number | undefined;
-    };
-    range: {
-      data: { start: number; end: number; data: Uint8Array | undefined }[];
-      isLoading: boolean;
-    };
+    data?: {
+      address: number;
+      bytes: number[];
+    }[];
+    isLoading: boolean;
+    startAddress?: number;
+    stopAddress?: number;
   };
 }
 
@@ -107,30 +113,32 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
         throw new Error(`Failed to initialize "${worker.id}": ${initData.error.message}`);
       }
 
-      const memorySizeData = await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.MEMORY_SIZE,
-      });
-      const pageSize = memorySizeData.payload.memorySize;
-
-      if (hasCommandStatusError(memorySizeData)) {
-        logger.error("Failed to initialize memory", { error: memorySizeData.error });
-      }
-
-      dispatch(setPageSize({ pageSize, id: worker.id }));
+      // Initialize memory with the first chunk
+      await dispatch(
+        loadMemoryChunkAllWorkers({ startAddress: 0, stopAddress: LOAD_MEMORY_CHUNK_SIZE, loadType: "replace" }),
+      ).unwrap();
     }),
   );
 });
 
-export const changePageAllWorkers = createAsyncThunk(
-  "workers/changePageAllWorkers",
-  async (pageNumber: number, { getState, dispatch }) => {
+export const loadMemoryChunkAllWorkers = createAsyncThunk(
+  "workers/loadMemoryChunkAllWorkers",
+  async (
+    {
+      startAddress,
+      stopAddress,
+      // Load type determines if new chunk should be added to the existing memory (and where) or replace it
+      loadType,
+    }: { startAddress: number; stopAddress: number; loadType: "start" | "end" | "replace" },
+    { getState, dispatch },
+  ) => {
     const state = getState() as RootState;
 
     return Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-          command: Commands.MEMORY_PAGE,
-          payload: { pageNumber },
+          command: Commands.MEMORY,
+          payload: { startAddress, stopAddress },
         });
 
         if (hasCommandStatusError(resp)) {
@@ -138,10 +146,12 @@ export const changePageAllWorkers = createAsyncThunk(
         }
 
         dispatch(
-          changePage({
+          appendMemory({
             id: worker.id,
-            pageNumber: resp.payload.pageNumber,
-            data: resp.payload.memoryPage,
+            startAddress,
+            stopAddress,
+            chunk: resp.payload.memoryChunk,
+            loadType,
             isLoading: false,
           }),
         );
@@ -154,35 +164,37 @@ export const refreshPageAllWorkers = createAsyncThunk(
   "workers/refreshPageAllWorkers",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
-    const pageNumber = selectMemoryForFirstWorker(state)?.page.pageNumber;
-    if (pageNumber !== undefined && pageNumber !== -1) {
-      dispatch(changePageAllWorkers(state.workers[0].memory?.page.pageNumber || 0));
-    }
-  },
-);
-
-export const changeRangeAllWorkers = createAsyncThunk(
-  "workers/changeRangeAllWorkers",
-  async (
-    {
-      start,
-      end,
-    }: {
-      start: number;
-      end: number;
-    },
-    { getState, dispatch },
-  ) => {
-    const state = getState() as RootState;
 
     return Promise.all(
       state.workers.map(async (worker) => {
+        // No memory, nothing to refresh
+        if (
+          !worker.memory?.data ||
+          worker.memory?.startAddress === undefined ||
+          worker.memory?.stopAddress === undefined
+        ) {
+          return;
+        }
+
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-          command: Commands.MEMORY_RANGE,
-          payload: { start, end },
+          command: Commands.MEMORY,
+          payload: { startAddress: worker.memory?.startAddress, stopAddress: worker.memory?.stopAddress },
         });
 
-        dispatch(changeRange({ id: worker.id, ...resp.payload, isLoading: false }));
+        if (hasCommandStatusError(resp)) {
+          throw resp.error;
+        }
+
+        dispatch(
+          appendMemory({
+            id: worker.id,
+            startAddress: worker.memory?.startAddress,
+            stopAddress: worker.memory?.stopAddress,
+            chunk: resp.payload.memoryChunk,
+            loadType: "replace",
+            isLoading: false,
+          }),
+        );
       }),
     );
   },
@@ -433,44 +445,15 @@ const workers = createSlice({
         worker.isLoading = action.payload.isLoading;
       }
     },
-
-    initSetPageSize: (
+    appendMemory: (
       state,
       action: {
         payload: {
           id: string;
-        };
-      },
-    ) => {
-      const memory = getWorker(state, action.payload.id)?.memory;
-      if (!memory) {
-        return;
-      }
-      memory.meta.isPageSizeLoading = true;
-    },
-    setPageSize: (
-      state,
-      action: {
-        payload: {
-          id: string;
-          pageSize: number;
-        };
-      },
-    ) => {
-      const memory = getWorker(state, action.payload.id)?.memory;
-      if (!memory) {
-        return;
-      }
-      memory.meta.isPageSizeLoading = false;
-      memory.meta.pageSize = action.payload.pageSize;
-    },
-    changePage: (
-      state,
-      action: {
-        payload: {
-          id: string;
-          pageNumber: number;
-          data: Uint8Array;
+          startAddress: number;
+          stopAddress: number;
+          chunk: Uint8Array;
+          loadType: "start" | "end" | "replace";
           isLoading: boolean;
         };
       },
@@ -480,61 +463,31 @@ const workers = createSlice({
         return;
       }
 
-      if (action.payload.pageNumber === -1) {
-        memory.page.pageNumber = undefined;
-        memory.page.data = undefined;
+      if (
+        action.payload.loadType !== "replace" &&
+        isNumber(memory.startAddress) &&
+        isNumber(memory.stopAddress) &&
+        inRange(action.payload.startAddress, memory.startAddress, memory.stopAddress)
+      ) {
+        logger.info("Memory chunk is already loaded");
         return;
       }
 
-      memory.page.data = action.payload.data;
-      memory.page.pageNumber = action.payload.pageNumber;
-      memory.page.isLoading = action.payload.isLoading;
-    },
-    changeRange: (
-      state,
-      action: {
-        payload: {
-          id: string;
-          start: number;
-          end: number;
-          memoryRange: Uint8Array | undefined;
-          isLoading: boolean;
-        };
-      },
-    ) => {
-      const memory = getWorker(state, action.payload.id)?.memory;
-      if (!memory) {
-        return;
+      const paggedData = toMemoryPageTabData(Array.from(action.payload.chunk), action.payload.startAddress);
+
+      if (action.payload.loadType === "end") {
+        memory.data = [...(memory.data || []), ...paggedData];
+        memory.stopAddress = action.payload.stopAddress;
+      } else if (action.payload.loadType === "start") {
+        memory.data = [...paggedData, ...(memory.data || [])];
+        memory.startAddress = action.payload.startAddress;
+      } else if (action.payload.loadType === "replace") {
+        memory.data = paggedData;
+        memory.startAddress = action.payload.startAddress;
+        memory.stopAddress = action.payload.stopAddress;
       }
 
-      memory.range.data.push({
-        start: action.payload.start,
-        end: action.payload.end,
-        data: action.payload.memoryRange,
-      });
-      memory.range.isLoading = action.payload.isLoading;
-    },
-    removeRange: (
-      state,
-      action: {
-        payload: {
-          id: string;
-          index: number;
-        };
-      },
-    ) => {
-      const memory = getWorker(state, action.payload.id)?.memory;
-      if (!memory) {
-        return;
-      }
-
-      memory.range.data = memory.range.data.filter((_, i) => i !== action.payload.index);
-      memory.range.isLoading = true;
-    },
-    removeRangeForAllWorkers: (state, action) => {
-      state.forEach((worker) => {
-        worker.memory?.range.data.splice(action.payload.index, 1);
-      });
+      memory.isLoading = action.payload.isLoading;
     },
   },
   extraReducers: (builder) => {
@@ -546,19 +499,10 @@ const workers = createSlice({
         currentState: {},
         previousState: {},
         memory: {
-          meta: {
-            pageSize: undefined,
-            isPageSizeLoading: false,
-          },
-          page: {
-            data: undefined,
-            isLoading: false,
-            pageNumber: 0,
-          },
-          range: {
-            data: [],
-            isLoading: false,
-          },
+          data: [],
+          isLoading: false,
+          startAddress: 0,
+          stopAddress: 0,
         },
       });
     });
@@ -575,12 +519,7 @@ export const {
   setAllWorkersPreviousState,
   setAllWorkersCurrentInstruction,
   setWorkerIsLoading,
-  initSetPageSize,
-  setPageSize,
-  changePage,
-  changeRange,
-  removeRange,
-  removeRangeForAllWorkers,
+  appendMemory,
 } = workers.actions;
 
 export const selectWorkers = (state: RootState) => state.workers;

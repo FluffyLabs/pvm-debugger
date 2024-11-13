@@ -123,7 +123,9 @@ const DebuggerContent = () => {
         />
       </div>
 
-      <div className="max-sm:hidden col-span-12 md:col-span-3">{<MemoryPreview />}</div>
+      <div className="max-sm:hidden col-span-12 md:col-span-3">
+        <MemoryPreview />
+      </div>
 
       <div className="max-sm:hidden md:col-span-3 overflow-hidden">
         <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstructionEnriched} />
