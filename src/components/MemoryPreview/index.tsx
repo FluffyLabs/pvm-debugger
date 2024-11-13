@@ -67,16 +67,14 @@ const MemoryTable = ({
 
   const hasPrevPage = (memory?.startAddress || 0) > 0;
   const hasNextPage = (memory?.stopAddress || 0) < MAX_ADDRESS;
-
-  // Total number of items including potential loading placeholders
   const itemCount = memory.data?.length || 0;
 
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
     count: itemCount,
     getScrollElement: () => parentRef.current,
-    scrollMargin: 100, // FIXME
-    estimateSize: () => ITEM_SIZE, // Height of each row
+    scrollMargin: 100,
+    estimateSize: () => ITEM_SIZE,
     overscan: 5,
     getItemKey: useCallback(
       (index: number) => {
@@ -114,7 +112,9 @@ const MemoryTable = ({
   // Scroll to selected address
   useEffect(() => {
     if (isNumber(selectedAddress)) {
-      const rowAddress = Math.floor((selectedAddress - (memory?.startAddress || 0)) / MEMORY_SPLIT_STEP);
+      const steppedAddress = selectedAddress - (selectedAddress % MEMORY_SPLIT_STEP);
+
+      const rowAddress = Math.floor((steppedAddress - (memory?.startAddress || 0)) / MEMORY_SPLIT_STEP);
       const index = rowAddress;
       rowVirtualizer.scrollToIndex(index, { align: "center" });
     }
@@ -182,7 +182,7 @@ export const MemoryPreview = () => {
   const jumpToAddress = debounce(async (address: number) => {
     try {
       // Place requested address in the middle and index first address in the row
-      const steppedAddress = address - (address % MEMORY_SPLIT_STEP) - MEMORY_SPLIT_STEP * 100;
+      const steppedAddress = address - (address % MEMORY_SPLIT_STEP);
       const halfChunkSize = LOAD_MEMORY_CHUNK_SIZE / 2;
       const startAddress = steppedAddress - halfChunkSize < 0 ? 0 : steppedAddress - halfChunkSize;
       const stopAddress = Math.min(MAX_ADDRESS, steppedAddress + halfChunkSize);
