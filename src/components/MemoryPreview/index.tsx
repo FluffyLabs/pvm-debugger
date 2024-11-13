@@ -1,6 +1,10 @@
 import { debounce, isNumber } from "lodash";
 import { useSelector } from "react-redux";
-import { loadMemoryChunkAllWorkers, selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
+import {
+  loadMemoryChunkAllWorkers,
+  selectIsAnyWorkerLoading,
+  selectMemoryForFirstWorker,
+} from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
@@ -67,7 +71,7 @@ const MemoryTable = ({
 
   const hasPrevPage = (memory?.startAddress || 0) > 0;
   const hasNextPage = (memory?.stopAddress || 0) < MAX_ADDRESS;
-  const itemCount = memory.data?.length || 0;
+  const itemCount = memory?.data?.length || 0;
 
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
@@ -78,9 +82,9 @@ const MemoryTable = ({
     overscan: 5,
     getItemKey: useCallback(
       (index: number) => {
-        return memory.data ? memory.data[index].address : 0;
+        return memory?.data ? memory.data[index].address : 0;
       },
-      [memory.data],
+      [memory?.data],
     ),
   });
 
@@ -121,6 +125,9 @@ const MemoryTable = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAddress]);
 
+  if (!memory?.data) {
+    return <div className="text-center m-6">Memory not initialized.</div>;
+  }
   return (
     <div
       className={classNames("mt-4 grow h-full", { "opacity-20": hasError })}
@@ -152,7 +159,7 @@ const MemoryTable = ({
           };
 
           // Not a real case, but required for TS
-          if (!memory.data) {
+          if (!memory?.data) {
             return;
           }
 
@@ -175,6 +182,7 @@ const MemoryTable = ({
 
 export const MemoryPreview = () => {
   const memory = useSelector(selectMemoryForFirstWorker);
+  const isAnyWorkerLoading = useSelector(selectIsAnyWorkerLoading);
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   const dispatch = useAppDispatch();
   const [error, setError] = useState<string | null>(null);
@@ -188,6 +196,7 @@ export const MemoryPreview = () => {
       const stopAddress = Math.min(MAX_ADDRESS, steppedAddress + halfChunkSize);
       await dispatch(loadMemoryChunkAllWorkers({ startAddress, stopAddress, loadType: "replace" })).unwrap();
       setSelectedAddress(address);
+      setError(null);
     } catch (error) {
       if (error instanceof Error || isSerializedError(error)) {
         setError(error.message || "Unknown error");
@@ -199,6 +208,9 @@ export const MemoryPreview = () => {
 
   const loadMoreItems = async (side: "prev" | "next") => {
     try {
+      if (isAnyWorkerLoading) {
+        return;
+      }
       if (side === "prev" && memory?.startAddress) {
         // We want one less than current start address
         const stopAddress = (memory?.startAddress || 0) - 1;
@@ -223,6 +235,8 @@ export const MemoryPreview = () => {
           }),
         ).unwrap();
       }
+
+      setError(null);
     } catch (error) {
       if (error instanceof Error || isSerializedError(error)) {
         setError(error.message || "Unknown error");

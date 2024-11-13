@@ -37,7 +37,7 @@ export interface WorkerState {
   isRunMode?: boolean;
   isDebugFinished?: boolean;
   isLoading?: boolean;
-  memory: {
+  memory?: {
     data?: {
       address: number;
       bytes: number[];

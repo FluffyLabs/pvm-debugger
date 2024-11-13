@@ -84,19 +84,19 @@ export const runMemory = async (params: MemoryParams): Promise<MemoryResponse> =
     };
   }
 
-  if (params.startAddress > params.stopAddress) {
-    return {
-      memoryChunk: new Uint8Array(),
-      status: CommandStatus.ERROR,
-      error: new Error("Invalid memory range"),
-    };
-  }
-
   if (params.stopAddress > MAX_ADDRESS) {
     return {
       memoryChunk: new Uint8Array(),
       status: CommandStatus.ERROR,
       error: new Error("Memory range is out of bounds"),
+    };
+  }
+
+  if (params.startAddress > params.stopAddress) {
+    return {
+      memoryChunk: new Uint8Array(),
+      status: CommandStatus.ERROR,
+      error: new Error("Invalid memory range"),
     };
   }
 
