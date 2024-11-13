@@ -1,6 +1,6 @@
 import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
 import { SupportedLangs } from "./utils";
-import { WasmPvmShellInterface } from "./wasmPvmShell";
+import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };

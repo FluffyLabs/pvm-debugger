@@ -1,11 +1,18 @@
 import { Status } from "@/types/pvm.ts";
-import * as wasm from "./wasmInit";
+import * as wasm from "./wasmBindgenInit";
 
 export interface WasmPvmShellInterface {
   __wbg_set_wasm(val: unknown): void;
-  setNextProgramCounter(pc: number): void;
-  setGasLeft(gas: bigint): void;
+  setNextProgramCounter?(pc: number): void;
+  setGasLeft?(gas: bigint): void;
   resetGeneric(program: Uint8Array, registers: Uint8Array, gas: bigint): void;
+  resetGenericWithMemory?(
+    program: Uint8Array,
+    registers: Uint8Array,
+    pageMap: Uint8Array,
+    chunks: Uint8Array,
+    gas: bigint,
+  ): void;
   nextStep(): boolean;
   getProgramCounter(): number;
   getStatus(): Status;
@@ -18,6 +25,7 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
   const {
     __wbg_set_wasm,
     resetGeneric,
+    resetGenericWithMemory,
     nextStep,
     getProgramCounter,
     setNextProgramCounter,
@@ -30,6 +38,7 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
   return {
     __wbg_set_wasm,
     resetGeneric,
+    resetGenericWithMemory,
     nextStep,
     getProgramCounter,
     setNextProgramCounter,

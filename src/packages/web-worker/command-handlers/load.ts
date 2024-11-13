@@ -22,7 +22,7 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
 
     logger.info("Load WASM from file", file);
     const bytes = await file.arrayBuffer();
-    return await loadArrayBufferAsWasm(bytes);
+    return await loadArrayBufferAsWasm(bytes, args.params.lang);
   } else if (args.type === PvmTypes.WASM_URL) {
     const url = args.params.url ?? "";
     const isValidUrl = Boolean(new URL(url));

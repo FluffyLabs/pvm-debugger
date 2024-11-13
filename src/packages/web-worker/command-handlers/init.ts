@@ -1,6 +1,6 @@
 import { InitialState } from "@/types/pvm";
 import { initPvm } from "../pvm";
-import { getState, isInternalPvm, regsAsUint8 } from "../utils";
+import { chunksAsUint8, getState, isInternalPvm, pageMapAsUint8, regsAsUint8 } from "../utils";
 import { logger } from "@/utils/loggerService";
 import { CommandStatus, PvmApiInterface } from "../types";
 
@@ -26,9 +26,19 @@ const init = async ({ pvm, program, initialState }: InitParams) => {
   } else {
     logger.info("PVM init external", pvm);
     const gas = initialState.gas || 10000;
-    pvm.resetGeneric(program, regsAsUint8(initialState.regs), BigInt(gas));
-    pvm.setNextProgramCounter(initialState.pc ?? 0);
-    pvm.setGasLeft(BigInt(gas));
+    if (pvm.resetGenericWithMemory) {
+      pvm.resetGenericWithMemory(
+        program,
+        regsAsUint8(initialState.regs),
+        pageMapAsUint8(initialState.pageMap),
+        chunksAsUint8(initialState.memory),
+        BigInt(gas),
+      );
+    } else if (pvm.resetGeneric) {
+      pvm.resetGeneric(program, regsAsUint8(initialState.regs), BigInt(gas));
+    }
+    pvm.setNextProgramCounter && pvm.setNextProgramCounter(initialState.pc ?? 0);
+    pvm.setGasLeft && pvm.setGasLeft(BigInt(gas));
     pvm.nextStep();
   }
 };
