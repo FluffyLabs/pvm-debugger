@@ -211,8 +211,7 @@ export const MemoryPreview = () => {
         return;
       }
       if (side === "prev" && memory?.startAddress) {
-        // We want one less than current start address
-        const stopAddress = (memory?.startAddress || 0) - 1;
+        const stopAddress = memory?.startAddress || 0;
         const startAddress = Math.max(stopAddress - LOAD_MEMORY_CHUNK_SIZE, 0);
         await dispatch(
           loadMemoryChunkAllWorkers({
@@ -223,8 +222,7 @@ export const MemoryPreview = () => {
         ).unwrap();
         return;
       } else if (side === "next") {
-        // We want one more than current stop address
-        const startAddress = (memory?.stopAddress || 0) + 1;
+        const startAddress = memory?.stopAddress || 0;
         const stopAddress = Math.min(startAddress + LOAD_MEMORY_CHUNK_SIZE, MAX_ADDRESS);
         await dispatch(
           loadMemoryChunkAllWorkers({
