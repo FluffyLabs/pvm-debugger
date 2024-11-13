@@ -131,11 +131,7 @@ const MemoryTable = ({
     return <div className="text-center m-6">Memory not initialized.</div>;
   }
   return (
-    <div
-      className={classNames("mt-4 grow h-full", { "opacity-20": hasError })}
-      ref={parentRef}
-      style={{ overflow: "auto" }}
-    >
+    <div className={classNames("mt-4 grow h-full overflow-auto", { "opacity-20": hasError })} ref={parentRef}>
       {hasPrevPage && (
         <div className="text-center w-full" ref={beforeInView.ref}>
           Loading prev page...
@@ -143,31 +139,32 @@ const MemoryTable = ({
       )}
 
       <div
+        className="w-full relative"
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
-          width: "100%",
-          position: "relative",
         }}
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const index = virtualRow.index;
           const style: React.CSSProperties = {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
             height: `${virtualRow.size}px`,
             transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
           };
 
           // Not a real case, but required for TS
           if (!memory?.data) {
-            return;
+            return <div>loading</div>;
           }
 
           const { address, bytes } = memory.data[index];
           return (
-            <div style={style} data-index={index} ref={rowVirtualizer.measureElement} key={virtualRow.key}>
+            <div
+              style={style}
+              className="absolute w-full top-0 left-0"
+              data-index={index}
+              ref={rowVirtualizer.measureElement}
+              key={virtualRow.key}
+            >
               <MemoryRow key={virtualRow.key} address={address} bytes={bytes} selectedAddress={selectedAddress} />
             </div>
           );
