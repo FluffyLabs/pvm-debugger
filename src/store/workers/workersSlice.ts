@@ -7,7 +7,7 @@ import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
-import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE } from "../utils";
+import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -17,12 +17,10 @@ BigInt.prototype["toJSON"] = function () {
   return this.toString();
 };
 
-const SPLIT_STEP = 8;
-
 const toMemoryPageTabData = (memoryPage: number[] | undefined, startAddress: number) => {
-  const data = chunk(memoryPage || [], SPLIT_STEP).map((chunk, index) => {
+  const data = chunk(memoryPage || [], MEMORY_SPLIT_STEP).map((chunk, index) => {
     return {
-      address: index * SPLIT_STEP + startAddress,
+      address: index * MEMORY_SPLIT_STEP + startAddress,
       bytes: chunk,
     };
   });

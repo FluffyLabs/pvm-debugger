@@ -50,4 +50,6 @@ export const isSerializedError = (error: unknown): error is SerializedError => {
   );
 };
 
-export const LOAD_MEMORY_CHUNK_SIZE = 200;
+export const MEMORY_SPLIT_STEP = 8;
+// Keep multiplication of step to make chunking easier
+export const LOAD_MEMORY_CHUNK_SIZE = MEMORY_SPLIT_STEP * 200;

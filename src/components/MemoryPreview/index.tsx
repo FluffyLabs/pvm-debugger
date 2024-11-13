@@ -8,28 +8,26 @@ import { useAppDispatch } from "@/store/hooks";
 import classNames from "classnames";
 import { NumericFormat } from "react-number-format";
 import { INPUT_STYLES } from "../ui/input";
-import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE } from "@/store/utils";
-import { logger } from "@/utils/loggerService";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
-// import { useInView } from "react-intersection-observer";
+import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "@/store/utils";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useInView } from "react-intersection-observer";
 
 const MAX_ADDRESS = Math.pow(2, 32);
-const SPLIT_STEP = 8;
+const ITEM_SIZE = 24;
+
 const MemoryRow = ({
   address,
   bytes,
-  style,
   selectedAddress,
 }: {
   address: number;
   bytes: number[];
   selectedAddress: number | null;
-  style: React.CSSProperties;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
   return (
-    <div className="flex" style={style}>
+    <div className="flex">
       <div className="opacity-40 mr-4 min-w-[60px]" style={{ fontVariantNumeric: "tabular-nums" }}>
         {valueToNumeralSystem(address, numeralSystem, numeralSystem ? 2 : 3)
           .toString()
@@ -58,80 +56,87 @@ const MemoryTable = ({
   selectedAddress,
 }: {
   hasError: boolean;
-  loadMoreItems: (startIndex: number, stopIndex: number) => void;
+  loadMoreItems: (side: "prev" | "next") => Promise<void>;
   selectedAddress: number | null;
 }) => {
-  // const beforeInView = useInView();
-  // const afterInView = useInView();
+  const beforeInView = useInView();
+  const afterInView = useInView();
+  const [isLoading, setIsLoading] = useState(false);
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
 
-  // const startAddress = memory?.startAddress || 0;
   const hasPrevPage = (memory?.startAddress || 0) > 0;
   const hasNextPage = (memory?.stopAddress || 0) < MAX_ADDRESS;
 
   // Total number of items including potential loading placeholders
-  const itemCount = (memory.data?.length || 0) + (hasPrevPage ? 1 : 0) + (hasNextPage ? 1 : 0);
+  const itemCount = memory.data?.length || 0;
 
   // Virtualizer setup
-  const rowVirtualizer = useWindowVirtualizer({
+  const rowVirtualizer = useVirtualizer({
     count: itemCount,
+    getScrollElement: () => parentRef.current,
     scrollMargin: 100, // FIXME
-    estimateSize: () => 24, // Height of each row
+    estimateSize: () => ITEM_SIZE, // Height of each row
     overscan: 5,
     getItemKey: useCallback(
       (index: number) => {
-        return memory.data?.[index]?.address || index;
+        return memory.data ? memory.data[index].address : 0;
       },
       [memory.data],
     ),
   });
 
-  // Function to determine if an item is loaded
-  const isItemLoaded = (index: number) => {
-    if (hasPrevPage && index === 0) {
-      return false;
-    }
-
-    if (hasNextPage && index === itemCount - 1) {
-      return false;
-    }
-
-    return true;
-  };
-
-  // Load more items when reaching the start or end
   useEffect(() => {
-    const [startIndex, endIndex] = rowVirtualizer
-      .getVirtualItems()
-      .reduce(
-        ([min, max], item) => [Math.min(min, item.index), Math.max(max, item.index)],
-        [Number.MAX_VALUE, Number.MIN_VALUE],
-      );
-
-    if (hasPrevPage && startIndex <= 5 && !isItemLoaded(startIndex)) {
-      loadMoreItems(startIndex, startIndex + 20);
-    } else if (hasNextPage && endIndex >= itemCount - 6 && !isItemLoaded(endIndex)) {
-      loadMoreItems(endIndex - 20, endIndex);
+    if (beforeInView.inView && !isLoading) {
+      setIsLoading(true);
+      loadMoreItems("prev").then(() => {
+        // Force scroll for backwards scrolling. This is a workaround for a virtualizer.
+        const offset = (rowVirtualizer.scrollOffset || 0) + (LOAD_MEMORY_CHUNK_SIZE / MEMORY_SPLIT_STEP) * ITEM_SIZE;
+        rowVirtualizer.scrollOffset = offset;
+        rowVirtualizer.calculateRange();
+        rowVirtualizer.scrollToOffset(offset, { align: "start" });
+        setIsLoading(false);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowVirtualizer.getVirtualItems()]);
+  }, [beforeInView.inView]);
+
+  useEffect(() => {
+    if (afterInView.inView && !isLoading) {
+      setIsLoading(true);
+      loadMoreItems("next").then(() => {
+        setIsLoading(false);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [afterInView.inView]);
 
   // Scroll to selected address
   useEffect(() => {
     if (isNumber(selectedAddress)) {
-      const rowAddress = Math.floor((selectedAddress - (memory?.startAddress || 0)) / SPLIT_STEP);
-      const index = rowAddress + (hasPrevPage ? 1 : 0);
+      const rowAddress = Math.floor((selectedAddress - (memory?.startAddress || 0)) / MEMORY_SPLIT_STEP);
+      const index = rowAddress;
       rowVirtualizer.scrollToIndex(index, { align: "center" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAddress]);
 
   return (
-    <div className={classNames("mt-4 grow", { "opacity-20": hasError })} ref={parentRef} style={{ overflow: "auto" }}>
+    <div
+      className={classNames("mt-4 grow h-full", { "opacity-20": hasError })}
+      ref={parentRef}
+      style={{ overflow: "auto" }}
+    >
+      {hasPrevPage && (
+        <div className="text-center w-full" ref={beforeInView.ref}>
+          Loading prev page...
+        </div>
+      )}
+
       <div
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
+          width: "100%",
           position: "relative",
         }}
       >
@@ -143,32 +148,27 @@ const MemoryTable = ({
             left: 0,
             width: "100%",
             height: `${virtualRow.size}px`,
-            transform: `translateY(${virtualRow.start}px)`,
+            transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
           };
 
-          if (!isItemLoaded(index)) {
-            return (
-              <div key={virtualRow.key} className="text-center text-gray-400" style={style}>
-                Loading memory chunk...
-              </div>
-            );
+          // Not a real case, but required for TS
+          if (!memory.data) {
+            return;
           }
 
-          // Adjust index to account for loaders
-          const memoryIndex = index - (hasPrevPage ? 1 : 0);
-          const { address, bytes } = (memory.data || [])[memoryIndex];
-
+          const { address, bytes } = memory.data[index];
           return (
-            <MemoryRow
-              key={virtualRow.key}
-              style={style}
-              address={address}
-              bytes={bytes}
-              selectedAddress={selectedAddress}
-            />
+            <div style={style} data-index={index} ref={rowVirtualizer.measureElement} key={virtualRow.key}>
+              <MemoryRow key={virtualRow.key} address={address} bytes={bytes} selectedAddress={selectedAddress} />
+            </div>
           );
         })}
       </div>
+      {hasNextPage && (
+        <div className="text-center w-full" ref={afterInView.ref}>
+          Loading next page...
+        </div>
+      )}
     </div>
   );
 };
@@ -182,7 +182,7 @@ export const MemoryPreview = () => {
   const jumpToAddress = debounce(async (address: number) => {
     try {
       // Place requested address in the middle and index first address in the row
-      const steppedAddress = address - (address % SPLIT_STEP);
+      const steppedAddress = address - (address % MEMORY_SPLIT_STEP) - MEMORY_SPLIT_STEP * 100;
       const halfChunkSize = LOAD_MEMORY_CHUNK_SIZE / 2;
       const startAddress = steppedAddress - halfChunkSize < 0 ? 0 : steppedAddress - halfChunkSize;
       const stopAddress = Math.min(MAX_ADDRESS, steppedAddress + halfChunkSize);
@@ -197,10 +197,9 @@ export const MemoryPreview = () => {
     }
   }, 1500);
 
-  const loadMoreItems = async (startIndex: number) => {
-    logger.info("Load more memory items", startIndex);
+  const loadMoreItems = async (side: "prev" | "next") => {
     try {
-      if (startIndex === 0 && memory?.startAddress) {
+      if (side === "prev" && memory?.startAddress) {
         // We want one less than current start address
         const stopAddress = (memory?.startAddress || 0) - 1;
         const startAddress = Math.max(stopAddress - LOAD_MEMORY_CHUNK_SIZE, 0);
@@ -212,7 +211,7 @@ export const MemoryPreview = () => {
           }),
         ).unwrap();
         return;
-      } else {
+      } else if (side === "next") {
         // We want one more than current stop address
         const startAddress = (memory?.stopAddress || 0) + 1;
         const stopAddress = Math.min(startAddress + LOAD_MEMORY_CHUNK_SIZE, MAX_ADDRESS);
