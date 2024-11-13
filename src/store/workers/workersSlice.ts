@@ -37,14 +37,14 @@ export interface WorkerState {
   isRunMode?: boolean;
   isDebugFinished?: boolean;
   isLoading?: boolean;
-  memory?: {
+  memory: {
     data?: {
       address: number;
       bytes: number[];
     }[];
     isLoading: boolean;
-    startAddress?: number;
-    stopAddress?: number;
+    startAddress: number;
+    stopAddress: number;
   };
 }
 
@@ -113,9 +113,13 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
         throw new Error(`Failed to initialize "${worker.id}": ${initData.error.message}`);
       }
 
-      // Initialize memory with the first chunk
+      // Initialize memory with default range
       await dispatch(
-        loadMemoryChunkAllWorkers({ startAddress: 0, stopAddress: LOAD_MEMORY_CHUNK_SIZE, loadType: "replace" }),
+        loadMemoryChunkAllWorkers({
+          startAddress: worker.memory.startAddress,
+          stopAddress: worker.memory.stopAddress,
+          loadType: "replace",
+        }),
       ).unwrap();
     }),
   );
@@ -170,15 +174,15 @@ export const refreshPageAllWorkers = createAsyncThunk(
         // No memory, nothing to refresh
         if (
           !worker.memory?.data ||
-          worker.memory?.startAddress === undefined ||
-          worker.memory?.stopAddress === undefined
+          worker.memory.startAddress === undefined ||
+          worker.memory.stopAddress === undefined
         ) {
           return;
         }
 
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
           command: Commands.MEMORY,
-          payload: { startAddress: worker.memory?.startAddress, stopAddress: worker.memory?.stopAddress },
+          payload: { startAddress: worker.memory.startAddress, stopAddress: worker.memory.stopAddress },
         });
 
         if (hasCommandStatusError(resp)) {
@@ -188,8 +192,8 @@ export const refreshPageAllWorkers = createAsyncThunk(
         dispatch(
           appendMemory({
             id: worker.id,
-            startAddress: worker.memory?.startAddress,
-            stopAddress: worker.memory?.stopAddress,
+            startAddress: worker.memory.startAddress,
+            stopAddress: worker.memory.stopAddress,
             chunk: resp.payload.memoryChunk,
             loadType: "replace",
             isLoading: false,
@@ -506,7 +510,7 @@ const workers = createSlice({
           data: [],
           isLoading: false,
           startAddress: 0,
-          stopAddress: 0,
+          stopAddress: LOAD_MEMORY_CHUNK_SIZE,
         },
       });
     });
