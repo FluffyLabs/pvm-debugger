@@ -1,4 +1,4 @@
-import { RefreshCcw, Play, StepForward } from "lucide-react";
+import { RefreshCcw, Play, StepForward, Pause } from "lucide-react";
 import { LoadingSpinner } from "../LoadingSpinner";
 import { ProgramLoader } from "../ProgramLoader";
 import { Button } from "../ui/button";
@@ -82,6 +82,10 @@ export const DebuggerControlls = () => {
     await dispatch(refreshPageAllWorkers()).unwrap();
   };
 
+  const handlePauseProgram = async () => {
+    dispatch(setIsRunMode(false));
+  };
+
   return (
     <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
       <div className="md:mr-3">
@@ -104,18 +108,32 @@ export const DebuggerControlls = () => {
         <RefreshCcw className="w-3.5 md:mr-1.5" />
         <span className="hidden md:block">Reset</span>
       </Button>
-      <Button
-        className="md:mr-3"
-        onClick={handleRunProgram}
-        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
-      >
-        {isLoading ? <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} /> : <Play className="w-3.5 md:mr-1.5" />}
-        <span className="hidden md:block">Run</span>
-      </Button>
+      {!isDebugFinished && isRunMode ? (
+        <Button className="md:mr-3" onClick={handlePauseProgram}>
+          <Pause className="w-3.5 md:mr-1.5" />
+          <span className="hidden md:block">Stop</span>
+        </Button>
+      ) : (
+        <Button
+          className="md:mr-3"
+          onClick={handleRunProgram}
+          disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
+        >
+          {isLoading ? <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} /> : <Play className="w-3.5 md:mr-1.5" />}
+          <span className="hidden md:block">Run</span>
+        </Button>
+      )}
       <Button
         className="md:mr-3"
         onClick={onNext}
-        disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
+        disabled={
+          (!isDebugFinished && isRunMode) ||
+          isDebugFinished ||
+          !pvmInitialized ||
+          isProgramEditMode ||
+          isLoading ||
+          !!error
+        }
       >
         {isLoading ? (
           <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} />

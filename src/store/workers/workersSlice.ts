@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
-import { setIsDebugFinished, setIsStepMode } from "@/store/debugger/debuggerSlice.ts";
+import { setIsDebugFinished, setIsRunMode, setIsStepMode } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
@@ -268,7 +268,11 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
       dispatch(setIsDebugFinished(true));
     }
 
-    if (allSame && !allFinished && allRunning && !anyBreakpoint) {
+    if (!allSame) {
+      dispatch(setIsRunMode(false));
+    }
+
+    if (debuggerState.isRunMode && allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
     }
   };
