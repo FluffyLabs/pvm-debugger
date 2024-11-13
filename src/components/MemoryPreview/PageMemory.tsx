@@ -2,7 +2,7 @@ import { chunk, debounce } from "lodash";
 import { useSelector } from "react-redux";
 import { changePageAllWorkers, selectMemoryForFirstWorker } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { useContext, useState } from "react";
+import { ChangeEvent, useContext, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { useAppDispatch } from "@/store/hooks";
@@ -92,7 +92,7 @@ export const PageMemory = () => {
             min={0}
             defaultValue={0}
             required
-            onChange={(ev) => {
+            onChange={(ev: ChangeEvent<HTMLInputElement>) => {
               if (ev.target.value === "") {
                 setError("Page number is required");
                 return;

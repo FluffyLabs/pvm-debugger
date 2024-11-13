@@ -1,9 +1,9 @@
-import { ExpectedState, Pvm as InternalPvm, RegistersArray } from "@/types/pvm.ts";
+import { ExpectedState, Pvm as InternalPvm, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
-import { createWasmPvmShell } from "@/packages/web-worker/wasmPvmShell.ts";
+import { createWasmPvmShell } from "@/packages/web-worker/wasmBindgenShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
-import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoPvmShell.ts";
+import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoShell.ts";
 import { logger } from "@/utils/loggerService.tsx";
 import { PvmApiInterface } from "./types.ts";
 
@@ -40,13 +40,22 @@ export function regsAsUint8(regs?: RegistersArray): Uint8Array {
 
   let i = 0;
   for (const reg of regs) {
-    arr[i] = reg & 0xff;
-    arr[i + 1] = (reg >> 8) & 0xff;
-    arr[i + 2] = (reg >> 16) & 0xff;
-    arr[i + 3] = (reg >> 24) & 0xff;
-    i += 4;
+    const bytes = u32_le_bytes(reg);
+    for (let a = 0; a < bytes.length; a += 1) {
+      arr[i] = bytes[a];
+      i += 1;
+    }
   }
   return arr;
+}
+
+export function u32_le_bytes(val: number) {
+  const out = new Uint8Array(4);
+  out[0] = val & 0xff;
+  out[1] = (val >> 8) & 0xff;
+  out[2] = (val >> 16) & 0xff;
+  out[3] = (val >> 24) & 0xff;
+  return out;
 }
 
 export function uint8asRegs(arr: Uint8Array): RegistersArray {
@@ -89,4 +98,40 @@ export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
     return pvm.getMemoryPage(pageNumber) || new Uint8Array();
   }
   return pvm.getPageDump(pageNumber) || new Uint8Array();
+}
+
+export function chunksAsUint8(memory?: MemoryChunkItem[]): Uint8Array {
+  if (!memory) {
+    return new Uint8Array();
+  }
+
+  const result = [];
+  for (const chunk of memory) {
+    const address = u32_le_bytes(chunk.address);
+    const length = u32_le_bytes(chunk.contents.length);
+    // chunk: (u32, u32, Vec<u8>)
+    result.push(...address);
+    result.push(...length);
+    result.push(...chunk.contents);
+  }
+
+  return new Uint8Array(result);
+}
+export function pageMapAsUint8(pageMap?: PageMapItem[]): Uint8Array {
+  if (!pageMap) {
+    return new Uint8Array();
+  }
+
+  const result = [];
+  for (const page of pageMap) {
+    const address = u32_le_bytes(page.address);
+    const length = u32_le_bytes(page.length);
+    const isWriteable = page["is-writable"] ? 1 : 0;
+    // page: (u32, u32, bool)
+    result.push(...address);
+    result.push(...length);
+    result.push(isWriteable);
+  }
+
+  return new Uint8Array(result);
 }
