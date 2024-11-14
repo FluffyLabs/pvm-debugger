@@ -340,7 +340,7 @@ export function JumpInput({ value, onChange }: JumpInputProps) {
       const num = Number(val);
       const isEmpty = val === "" || val.match(/^\s+$/) !== null;
       const isValid = !Number.isNaN(num) && !isEmpty && num > -1 && (num & 0xffff_ffff) === num;
-      setIsValid(isValid);
+      setIsValid(isValid || isEmpty);
       if (isValid) {
         onChange(num);
       }
@@ -355,6 +355,7 @@ export function JumpInput({ value, onChange }: JumpInputProps) {
     <>
       <input
         className={classNames(INPUT_STYLES, {
+          "ring-2 ring-red-500": !isValid,
           "focus-visible:ring-red-500": !isValid,
         })}
         placeholder="Jump to address"
