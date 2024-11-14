@@ -533,7 +533,15 @@ export const {
 export const selectWorkers = (state: RootState) => state.workers;
 export const selectMemory = (id: string) => (state: RootState) =>
   state.workers.find((worker) => worker.id === id)?.memory;
-export const selectMemoryForFirstWorker = (state: RootState) => state.workers[0]?.memory;
+export const selectMemoryForFirstWorker = (state: RootState) => {
+  const worker = state.workers?.[0];
+
+  if (!worker) {
+    return null;
+  }
+
+  return worker.memory;
+};
 export const selectIsAnyWorkerLoading = (state: RootState) => state.workers.some((worker) => worker.isLoading);
 
 export default workers.reducer;
