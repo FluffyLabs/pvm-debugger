@@ -1,4 +1,4 @@
-import { debounce, isNumber } from "lodash";
+import { isNumber } from "lodash";
 import { useSelector } from "react-redux";
 import {
   loadMemoryChunkAllWorkers,
@@ -6,11 +6,10 @@ import {
   selectMemoryForFirstWorker,
 } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
 import { useAppDispatch } from "@/store/hooks";
 import classNames from "classnames";
-import { NumericFormat } from "react-number-format";
 import { INPUT_STYLES } from "../ui/input";
 import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "@/store/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -18,6 +17,8 @@ import { useInView } from "react-intersection-observer";
 
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
+
+const BG_COLOR = "#22cccc";
 
 // Some info about react-virtual and bi-directional scrolling:
 // https://medium.com/@rmoghariya7/reverse-infinite-scroll-in-react-using-tanstack-virtual-11a1fea24042
@@ -34,19 +35,22 @@ const MemoryRow = ({
   const { numeralSystem } = useContext(NumeralSystemContext);
 
   return (
-    <div className="flex">
-      <div className="opacity-40 mr-4 min-w-[60px]" style={{ fontVariantNumeric: "tabular-nums" }}>
+    <div className="grid grid-cols-3">
+      <div className="opacity-40 overflow-hidden" style={{ fontVariantNumeric: "tabular-nums" }}>
+        {numeralSystem ? "0x" : ""}
         {valueToNumeralSystem(address, numeralSystem, numeralSystem ? 2 : 3)
           .toString()
-          .padStart(numeralSystem ? 0 : 6, "0")}
+          .substring(numeralSystem ? 2 : 0)
+          .padStart(6, "0")}
       </div>
-      <div className="font-mono font-medium grow flex justify-around">
+      <div className="font-mono font-medium col-span-2">
         {bytes.map((byte, index) => (
           <span key={index} className={`mr-[1px] ${(index + 1) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
             <span
-              className={classNames({
-                "bg-orange-400": isNumber(selectedAddress) && selectedAddress === address + index,
-              })}
+              style={{
+                backgroundColor:
+                  isNumber(selectedAddress) && selectedAddress === address + index ? BG_COLOR : "initial",
+              }}
             >
               {valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3, false)}
             </span>
@@ -71,9 +75,6 @@ const MemoryTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
-
-  const hasPrevPage = !!memory && (memory.startAddress || 0) > 0;
-  const hasNextPage = !!memory && (memory.stopAddress || 0) < MAX_ADDRESS;
 
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
@@ -125,19 +126,13 @@ const MemoryTable = ({
       rowVirtualizer.scrollToIndex(index, { align: "center" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAddress]);
+  }, [selectedAddress, isLoading]);
 
   if (!memory?.data) {
     return <div className="text-center m-6">Memory not initialized.</div>;
   }
   return (
     <div className={classNames("mt-4 grow h-full overflow-auto", { "opacity-20": hasError })} ref={parentRef}>
-      {hasPrevPage && (
-        <div className="text-center w-full" ref={beforeInView.ref}>
-          Loading prev page...
-        </div>
-      )}
-
       <div
         className="w-full relative"
         style={{
@@ -170,11 +165,6 @@ const MemoryTable = ({
           );
         })}
       </div>
-      {hasNextPage && (
-        <div className="text-center w-full" ref={afterInView.ref}>
-          Loading next page...
-        </div>
-      )}
     </div>
   );
 };
@@ -192,7 +182,7 @@ export const MemoryPreview = () => {
     }
   }, [isAnyWorkerLoading]);
 
-  const jumpToAddress = debounce(async (address: number) => {
+  const jumpToAddress = async (address: number) => {
     try {
       // Place requested address in the middle and index first address in the row
       const steppedAddress = address - (address % MEMORY_SPLIT_STEP);
@@ -209,7 +199,7 @@ export const MemoryPreview = () => {
         setError("Unknown error");
       }
     }
-  }, 1500);
+  };
 
   const loadMoreItems = async (side: "prev" | "next") => {
     try {
@@ -251,29 +241,61 @@ export const MemoryPreview = () => {
 
   return (
     <div className="border-2 rounded-md overflow-auto h-[70vh] p-5 flex flex-col">
-      <div className="flex w-full">
-        <div className="font-semibold flex items-center mr-6">Jump to address (DEC)</div>
-        <div className="flex-grow">
-          <NumericFormat
-            className={INPUT_STYLES}
-            allowNegative={false}
-            decimalScale={0}
-            min={0}
-            value={selectedAddress !== null ? selectedAddress.toString() : ""}
-            required
-            onValueChange={async (values) => {
-              if (values.floatValue === undefined) {
-                setSelectedAddress(null);
-                return;
-              }
-              setError(null);
-              await jumpToAddress(values.floatValue);
-            }}
-          />
-        </div>
+      <div className="w-full">
+        <JumpInput
+          value={selectedAddress !== null ? selectedAddress.toString() : ""}
+          onChange={async (address: number | null) => {
+            setSelectedAddress(address);
+            if (address) {
+              await jumpToAddress(address);
+            }
+          }}
+        />
       </div>
-      {error && <div className="text-red-500 mt-3">{error}</div>}
       <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
+      {error && <div className="text-red-500 mt-3">{error}</div>}
     </div>
   );
 };
+
+type JumpInputProps = {
+  value: string;
+  onChange: (v: number | null) => void;
+};
+export function JumpInput({ value, onChange }: JumpInputProps) {
+  const [input, setInput] = useState(value);
+  const [isValid, setIsValid] = useState(true);
+
+  const changeValue = useCallback(
+    (ev: ChangeEvent<HTMLInputElement>) => {
+      const val = ev.currentTarget.value;
+      setInput(val);
+      const num = Number(val);
+      const isEmpty = val === "" || val.match(/^\s+$/) !== null;
+      const isValid = !Number.isNaN(num) && !isEmpty && num > -1 && (num & 0xffff_ffff) === num;
+      setIsValid(isValid);
+      if (isValid) {
+        onChange(num);
+      }
+      if (isEmpty) {
+        onChange(null);
+      }
+    },
+    [onChange],
+  );
+
+  return (
+    <>
+      <input
+        className={classNames(INPUT_STYLES, {
+          "focus-visible:ring-red-500": !isValid,
+        })}
+        placeholder="Jump to address"
+        min={0}
+        value={input}
+        required
+        onChange={changeValue}
+      />
+    </>
+  );
+}

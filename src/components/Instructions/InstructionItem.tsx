@@ -10,7 +10,6 @@ import { ProgramRow } from ".";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
-import { logger } from "@/utils/loggerService.tsx";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 const getWorkerValueFromState = (
@@ -64,7 +63,6 @@ export const InstructionItem = forwardRef(
     {
       status,
       isLast,
-      currentPc,
       instructionMode,
       programRow,
       onClick,
@@ -99,11 +97,6 @@ export const InstructionItem = forwardRef(
 
     const isHighlighted = isActive(programRow);
     const bgColor = getBackgroundColor(status, isHighlighted).toUpperCase();
-
-    logger.debug({
-      currentPc,
-      bgColor,
-    });
 
     const bgOpacity =
       pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
