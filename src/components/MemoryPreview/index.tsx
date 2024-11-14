@@ -72,8 +72,8 @@ const MemoryTable = ({
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const hasPrevPage = memory.startAddress > 0;
-  const hasNextPage = memory.stopAddress < MAX_ADDRESS;
+  const hasPrevPage = !!memory && (memory.startAddress || 0) > 0;
+  const hasNextPage = !!memory && (memory.stopAddress || 0) < MAX_ADDRESS;
 
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
@@ -120,7 +120,7 @@ const MemoryTable = ({
     if (isNumber(selectedAddress)) {
       const steppedAddress = selectedAddress - (selectedAddress % MEMORY_SPLIT_STEP);
 
-      const rowAddress = Math.floor((steppedAddress - memory.startAddress) / MEMORY_SPLIT_STEP);
+      const rowAddress = Math.floor((steppedAddress - (memory?.startAddress || 0)) / MEMORY_SPLIT_STEP);
       const index = rowAddress;
       rowVirtualizer.scrollToIndex(index, { align: "center" });
     }
@@ -186,6 +186,12 @@ export const MemoryPreview = () => {
   const dispatch = useAppDispatch();
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isAnyWorkerLoading) {
+      setSelectedAddress(null);
+    }
+  }, [isAnyWorkerLoading]);
+
   const jumpToAddress = debounce(async (address: number) => {
     try {
       // Place requested address in the middle and index first address in the row
@@ -210,7 +216,7 @@ export const MemoryPreview = () => {
       if (isAnyWorkerLoading) {
         return;
       }
-      if (side === "prev" && memory.startAddress) {
+      if (side === "prev" && memory) {
         const stopAddress = memory.startAddress;
         const startAddress = Math.max(stopAddress - LOAD_MEMORY_CHUNK_SIZE, 0);
         await dispatch(
@@ -221,7 +227,7 @@ export const MemoryPreview = () => {
           }),
         ).unwrap();
         return;
-      } else if (side === "next") {
+      } else if (side === "next" && memory) {
         const startAddress = memory.stopAddress;
         const stopAddress = Math.min(startAddress + LOAD_MEMORY_CHUNK_SIZE, MAX_ADDRESS);
         await dispatch(
@@ -253,15 +259,15 @@ export const MemoryPreview = () => {
             allowNegative={false}
             decimalScale={0}
             min={0}
-            value={selectedAddress}
+            value={selectedAddress ? selectedAddress.toString() : ""}
             required
-            onChange={(ev) => {
-              if (ev.target.value === "") {
+            onValueChange={(values) => {
+              if (values.floatValue === undefined) {
                 setSelectedAddress(null);
                 return;
               }
               setError(null);
-              jumpToAddress(parseInt(ev.target.value));
+              jumpToAddress(values.floatValue);
             }}
           />
         </div>
