@@ -4,20 +4,93 @@ import {
   loadMemoryChunkAllWorkers,
   selectIsAnyWorkerLoading,
   selectMemoryForFirstWorker,
+  selectWorkers,
+  WorkerState,
 } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import classNames from "classnames";
 import { NumericFormat } from "react-number-format";
 import { INPUT_STYLES } from "../ui/input";
 import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "@/store/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useInView } from "react-intersection-observer";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from "@/components/ui/tooltip.tsx";
 
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
+
+const MemoryCell = ({
+  value,
+  address,
+  selectedAddress,
+  index,
+}: {
+  value: number;
+  address: number;
+  selectedAddress: number | null;
+  index: number;
+}) => {
+  const workers = useAppSelector(selectWorkers);
+  const findMemoryForWorker = (worker: WorkerState) => worker.memory?.data?.find((mem) => mem.address === address);
+
+  const addressInAllWorkers = workers.map((worker) => {
+    const addressRow = findMemoryForWorker(worker);
+    return addressRow?.bytes[index];
+  });
+  const { numeralSystem } = useContext(NumeralSystemContext);
+
+  const isEqualAcrossWorkers = addressInAllWorkers.every((val) => val === value);
+
+  return (
+    <span key={index} className={`relative mr-[1px] ${(index + 1) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
+      <span
+        className={classNames({
+          "bg-orange-400": isEqualAcrossWorkers && isNumber(selectedAddress) && selectedAddress === address + index,
+          "text-red-500": !isEqualAcrossWorkers,
+        })}
+      >
+        {isEqualAcrossWorkers ? (
+          valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)
+        ) : (
+          <TooltipProvider>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <span>{numeralSystem ? "??" : "??? "}</span>
+              </TooltipTrigger>
+
+              <TooltipPortal>
+                <TooltipContent>
+                  <div className="font-mono grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                    {workers.map((worker) => (
+                      <React.Fragment key={worker.id}>
+                        <div>
+                          <span>{worker.id}</span>
+                        </div>
+                        <div className="pl-3">
+                          <span>
+                            {valueToNumeralSystem(
+                              findMemoryForWorker(worker)?.bytes[index],
+                              numeralSystem,
+                              numeralSystem ? 2 : 3,
+                              false,
+                            )}
+                          </span>
+                        </div>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </TooltipPortal>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </span>
+    </span>
+  );
+};
 
 // Some info about react-virtual and bi-directional scrolling:
 // https://medium.com/@rmoghariya7/reverse-infinite-scroll-in-react-using-tanstack-virtual-11a1fea24042
@@ -42,15 +115,7 @@ const MemoryRow = ({
       </div>
       <div className="font-mono font-medium grow flex justify-around">
         {bytes.map((byte, index) => (
-          <span key={index} className={`mr-[1px] ${(index + 1) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
-            <span
-              className={classNames({
-                "bg-orange-400": isNumber(selectedAddress) && selectedAddress === address + index,
-              })}
-            >
-              {valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3, false)}
-            </span>
-          </span>
+          <MemoryCell value={byte} address={address} selectedAddress={selectedAddress} index={index} key={index} />
         ))}
       </div>
     </div>
