@@ -145,6 +145,9 @@ export function getPageDump(index) {
       retptr = wasm.malloc(16);
     }
 
+    if (!("getPageDump" in wasm)) {
+      return new Uint8Array(4096);
+    }
     wasm.getPageDump(retptr, index);
     var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
     var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
