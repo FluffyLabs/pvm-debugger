@@ -259,15 +259,15 @@ export const MemoryPreview = () => {
             allowNegative={false}
             decimalScale={0}
             min={0}
-            value={selectedAddress ? selectedAddress.toString() : ""}
+            value={selectedAddress !== null ? selectedAddress.toString() : ""}
             required
-            onValueChange={(values) => {
+            onValueChange={async (values) => {
               if (values.floatValue === undefined) {
                 setSelectedAddress(null);
                 return;
               }
               setError(null);
-              jumpToAddress(values.floatValue);
+              await jumpToAddress(values.floatValue);
             }}
           />
         </div>
