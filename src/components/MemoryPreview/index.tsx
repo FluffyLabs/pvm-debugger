@@ -119,7 +119,7 @@ const MemoryRow = ({
           .substring(numeralSystem ? 2 : 0)
           .padStart(6, "0")}
       </div>
-      <div className="font-mono font-medium col-span-2">
+      <div className="font-mono font-medium col-span-2 pl-1">
         {bytes.map((byte, index) => (
           <MemoryCell value={byte} address={address} selectedAddress={selectedAddress} index={index} key={index} />
         ))}
