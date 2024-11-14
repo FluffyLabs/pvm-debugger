@@ -72,8 +72,8 @@ const MemoryTable = ({
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const hasPrevPage = (memory?.startAddress || 0) > 0;
-  const hasNextPage = (memory?.stopAddress || 0) < MAX_ADDRESS;
+  const hasPrevPage = memory.startAddress > 0;
+  const hasNextPage = memory.stopAddress < MAX_ADDRESS;
 
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
@@ -120,7 +120,7 @@ const MemoryTable = ({
     if (isNumber(selectedAddress)) {
       const steppedAddress = selectedAddress - (selectedAddress % MEMORY_SPLIT_STEP);
 
-      const rowAddress = Math.floor((steppedAddress - (memory?.startAddress || 0)) / MEMORY_SPLIT_STEP);
+      const rowAddress = Math.floor((steppedAddress - memory.startAddress) / MEMORY_SPLIT_STEP);
       const index = rowAddress;
       rowVirtualizer.scrollToIndex(index, { align: "center" });
     }
@@ -210,8 +210,8 @@ export const MemoryPreview = () => {
       if (isAnyWorkerLoading) {
         return;
       }
-      if (side === "prev" && memory?.startAddress) {
-        const stopAddress = memory?.startAddress || 0;
+      if (side === "prev" && memory.startAddress) {
+        const stopAddress = memory.startAddress;
         const startAddress = Math.max(stopAddress - LOAD_MEMORY_CHUNK_SIZE, 0);
         await dispatch(
           loadMemoryChunkAllWorkers({
@@ -222,7 +222,7 @@ export const MemoryPreview = () => {
         ).unwrap();
         return;
       } else if (side === "next") {
-        const startAddress = memory?.stopAddress || 0;
+        const startAddress = memory.stopAddress;
         const stopAddress = Math.min(startAddress + LOAD_MEMORY_CHUNK_SIZE, MAX_ADDRESS);
         await dispatch(
           loadMemoryChunkAllWorkers({
@@ -253,7 +253,7 @@ export const MemoryPreview = () => {
             allowNegative={false}
             decimalScale={0}
             min={0}
-            defaultValue={selectedAddress}
+            value={selectedAddress}
             required
             onChange={(ev) => {
               if (ev.target.value === "") {
