@@ -47,7 +47,14 @@ const MemoryCell = ({
   const isEqualAcrossWorkers = addressInAllWorkers.every((val) => val === value);
 
   return (
-    <span key={index} className={`relative mr-[1px] ${(index + 1) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}>
+    <span
+      key={index}
+      className={classNames("relative mr-[1px]", {
+        "text-gray-700": (index + 1) % 2 === 0,
+        "text-gray-950": (index + 1) % 2 === 1,
+        "opacity-50": isEqualAcrossWorkers && value === 0,
+      })}
+    >
       <span
         style={{
           backgroundColor: isNumber(selectedAddress) && selectedAddress === address + index ? BG_COLOR : "initial",
@@ -110,21 +117,29 @@ const MemoryRow = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
+  const addressDisplay = valueToNumeralSystem(address, numeralSystem, numeralSystem ? 2 : 3)
+    .toString()
+    .substring(numeralSystem ? 2 : 0)
+    .padStart(6, "0");
+  const addressWithPrefix = numeralSystem ? `0x${addressDisplay}` : addressDisplay;
+  const width = addressWithPrefix.length;
   return (
-    <div className="grid grid-cols-3">
-      <div className="opacity-40 overflow-hidden" style={{ fontVariantNumeric: "tabular-nums" }}>
-        {numeralSystem ? "0x" : ""}
-        {valueToNumeralSystem(address, numeralSystem, numeralSystem ? 2 : 3)
-          .toString()
-          .substring(numeralSystem ? 2 : 0)
-          .padStart(6, "0")}
+    <>
+      <div
+        className="opacity-40"
+        style={{
+          fontVariantNumeric: "tabular-nums",
+          width: `${width}ch`,
+        }}
+      >
+        {addressWithPrefix}
       </div>
-      <div className="font-mono font-medium col-span-2 pl-1">
+      <div className="font-mono font-medium pl-1">
         {bytes.map((byte, index) => (
           <MemoryCell value={byte} address={address} selectedAddress={selectedAddress} index={index} key={index} />
         ))}
       </div>
-    </div>
+    </>
   );
 };
 
@@ -142,6 +157,9 @@ const MemoryTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
+
+  const hasPrevPage = !!memory && (memory.startAddress || 0) > 0;
+  const hasNextPage = !!memory && (memory.stopAddress || 0) < MAX_ADDRESS;
 
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
@@ -193,13 +211,19 @@ const MemoryTable = ({
       rowVirtualizer.scrollToIndex(index, { align: "center" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAddress, isLoading]);
+  }, [selectedAddress]);
 
   if (!memory?.data) {
     return <div className="text-center m-6">Memory not initialized.</div>;
   }
+
   return (
     <div className={classNames("mt-4 grow h-full overflow-auto", { "opacity-20": hasError })} ref={parentRef}>
+      {hasPrevPage && (
+        <div className="text-center w-full" ref={beforeInView.ref}>
+          ...
+        </div>
+      )}
       <div
         className="w-full relative"
         style={{
@@ -215,23 +239,32 @@ const MemoryTable = ({
 
           // Not a real case, but required for TS
           if (!memory?.data) {
-            return <div>loading</div>;
+            return (
+              <tr>
+                <td>loading...</td>
+              </tr>
+            );
           }
 
           const { address, bytes } = memory.data[index];
           return (
             <div
               style={style}
-              className="absolute w-full top-0 left-0"
+              className="top-0 left-0 flex absolute"
               data-index={index}
               ref={rowVirtualizer.measureElement}
               key={virtualRow.key}
             >
-              <MemoryRow key={virtualRow.key} address={address} bytes={bytes} selectedAddress={selectedAddress} />
+              <MemoryRow address={address} bytes={bytes} selectedAddress={selectedAddress} />
             </div>
           );
         })}
       </div>
+      {hasNextPage && (
+        <div className="text-center w-full" ref={afterInView.ref}>
+          ...
+        </div>
+      )}
     </div>
   );
 };
@@ -308,18 +341,18 @@ export const MemoryPreview = () => {
 
   return (
     <div className="border-2 rounded-md overflow-auto h-[70vh] p-5 flex flex-col">
-      <div className="w-full">
-        <JumpInput
-          value={selectedAddress !== null ? selectedAddress.toString() : ""}
-          onChange={async (address: number | null) => {
-            if (address === null) {
-              return;
-            }
-            await jumpToAddress(address);
+      <JumpInput
+        value={selectedAddress !== null ? selectedAddress.toString() : ""}
+        onChange={async (address: number | null) => {
+          if (address === null) {
             setSelectedAddress(address);
-          }}
-        />
-      </div>
+            return;
+          }
+
+          await jumpToAddress(address);
+          setSelectedAddress(address);
+        }}
+      />
       <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
       {error && <div className="text-red-500 mt-3">{error}</div>}
     </div>
@@ -340,7 +373,7 @@ export function JumpInput({ value, onChange }: JumpInputProps) {
       setInput(val);
       const num = Number(val);
       const isEmpty = val === "" || val.match(/^\s+$/) !== null;
-      const isValid = !Number.isNaN(num) && !isEmpty && num > -1 && (num & 0xffff_ffff) === num;
+      const isValid = !Number.isNaN(num) && !isEmpty && num > -1 && (num & 0xffff_ffff) >>> 0 === num;
       setIsValid(isValid || isEmpty);
       if (isValid) {
         onChange(num);
@@ -355,14 +388,13 @@ export function JumpInput({ value, onChange }: JumpInputProps) {
   return (
     <>
       <input
-        className={classNames(INPUT_STYLES, {
+        className={classNames(INPUT_STYLES.replace("focus-visible:ring-ring", ""), "w-full", {
           "ring-2 ring-red-500": !isValid,
+          "focus-visible:ring-ring": isValid,
           "focus-visible:ring-red-500": !isValid,
         })}
         placeholder="Jump to address"
-        min={0}
         value={input}
-        required
         onChange={changeValue}
       />
     </>
