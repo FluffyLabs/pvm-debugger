@@ -312,10 +312,11 @@ export const MemoryPreview = () => {
         <JumpInput
           value={selectedAddress !== null ? selectedAddress.toString() : ""}
           onChange={async (address: number | null) => {
-            setSelectedAddress(address);
-            if (address) {
-              await jumpToAddress(address);
+            if (address === null) {
+              return;
             }
+            await jumpToAddress(address);
+            setSelectedAddress(address);
           }}
         />
       </div>
