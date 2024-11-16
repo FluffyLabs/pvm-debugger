@@ -18,6 +18,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useInView } from "react-intersection-observer";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from "@/components/ui/tooltip.tsx";
 import React from "react";
+import { NumeralSystem } from "@/context/NumeralSystem";
 
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
@@ -103,6 +104,14 @@ const MemoryCell = ({
   );
 };
 
+const addressFormatter = (address: number, numeralSystem: NumeralSystem) => {
+  const addressDisplay = valueToNumeralSystem(address, numeralSystem, numeralSystem ? 2 : 3, false)
+    .toString()
+    .padStart(6, "0");
+
+  return numeralSystem ? `0x${addressDisplay}` : addressDisplay;
+};
+
 // Some info about react-virtual and bi-directional scrolling:
 // https://medium.com/@rmoghariya7/reverse-infinite-scroll-in-react-using-tanstack-virtual-11a1fea24042
 // https://stackblitz.com/edit/tanstack-query-xrw3fp
@@ -110,29 +119,26 @@ const MemoryRow = ({
   address,
   bytes,
   selectedAddress,
+  addressLength,
 }: {
   address: number;
   bytes: number[];
   selectedAddress: number | null;
+  addressLength: number;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
+  const displayAddress = addressFormatter(address, numeralSystem);
 
-  const addressDisplay = valueToNumeralSystem(address, numeralSystem, numeralSystem ? 2 : 3)
-    .toString()
-    .substring(numeralSystem ? 2 : 0)
-    .padStart(6, "0");
-  const addressWithPrefix = numeralSystem ? `0x${addressDisplay}` : addressDisplay;
-  const width = addressWithPrefix.length;
   return (
     <>
       <div
         className="opacity-40"
         style={{
           fontVariantNumeric: "tabular-nums",
-          width: `${width}ch`,
+          width: `${addressLength}ch`,
         }}
       >
-        {addressWithPrefix}
+        {displayAddress}
       </div>
       <div className="font-mono font-medium pl-1">
         {bytes.map((byte, index) => (
@@ -157,6 +163,7 @@ const MemoryTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
+  const { numeralSystem } = useContext(NumeralSystemContext);
 
   const hasPrevPage = !!memory && (memory.startAddress || 0) > 0;
   const hasNextPage = !!memory && (memory.stopAddress || 0) < MAX_ADDRESS;
@@ -230,7 +237,7 @@ const MemoryTable = ({
           height: `${rowVirtualizer.getTotalSize()}px`,
         }}
       >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        {rowVirtualizer.getVirtualItems().map((virtualRow, _, virtualRows) => {
           const index = virtualRow.index;
           const style: React.CSSProperties = {
             height: `${virtualRow.size}px`,
@@ -247,6 +254,11 @@ const MemoryTable = ({
           }
 
           const { address, bytes } = memory.data[index];
+          const lastAddressLength = addressFormatter(
+            memory.data[virtualRows[virtualRows.length - 1].index].address,
+            numeralSystem,
+          ).length;
+
           return (
             <div
               style={style}
@@ -255,7 +267,12 @@ const MemoryTable = ({
               ref={rowVirtualizer.measureElement}
               key={virtualRow.key}
             >
-              <MemoryRow address={address} bytes={bytes} selectedAddress={selectedAddress} />
+              <MemoryRow
+                address={address}
+                bytes={bytes}
+                selectedAddress={selectedAddress}
+                addressLength={lastAddressLength}
+              />
             </div>
           );
         })}
