@@ -18,6 +18,7 @@ const ComputedValue = ({
   value,
   previousValue,
   formatter,
+  padStartVal = 0,
   workers,
 }: {
   propName: keyof ExpectedState;
@@ -25,6 +26,7 @@ const ComputedValue = ({
   value?: number | string | bigint;
   previousValue?: number | string | bigint;
   formatter?: (value: number | string | bigint) => ReactNode | string;
+  padStartVal?: number;
   workers: WorkerState[];
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
@@ -50,7 +52,7 @@ const ComputedValue = ({
     }
 
     if (isNumber(value) || typeof value === "bigint") {
-      const numeralValue = valueToNumeralSystem(value, numeralSystem);
+      const numeralValue = valueToNumeralSystem(value, numeralSystem, padStartVal);
       return formatter ? formatter(numeralValue) : numeralValue;
     }
 
@@ -63,6 +65,7 @@ const ComputedValue = ({
         className={classNames({
           "flex-[3]": true,
           "pl-2": true,
+          "opacity-60": value === 0 || value === 0n || value === "0",
         })}
       >
         {formatValueToDisplay(value)}
@@ -228,6 +231,7 @@ export const Registers = ({
                     propName="regs"
                     propNameIndex={regNo}
                     workers={workers}
+                    padStartVal={numeralSystem ? 8 : 0}
                   />
                 )}
               </div>
