@@ -160,6 +160,8 @@ const MemoryTable = ({
 }) => {
   const beforeInView = useInView();
   const afterInView = useInView();
+  const memoryInView = useInView();
+
   const [isLoading, setIsLoading] = useState(false);
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -167,10 +169,10 @@ const MemoryTable = ({
 
   const hasPrevPage = !!memory && (memory.startAddress || 0) > 0;
   const hasNextPage = !!memory && (memory.stopAddress || 0) < MAX_ADDRESS;
-
   // Virtualizer setup
   const rowVirtualizer = useVirtualizer({
     count: memory?.data?.length || 0,
+    enabled: memoryInView.inView,
     getScrollElement: () => parentRef.current,
     scrollMargin: 100,
     estimateSize: () => ITEM_SIZE,
@@ -232,6 +234,7 @@ const MemoryTable = ({
         </div>
       )}
       <div
+        ref={memoryInView.ref}
         className="w-full relative"
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
