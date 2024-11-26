@@ -24,10 +24,14 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
     memoryBuilder.setData(memoryChunk.address, memoryChunk.contents);
   }
 
-  const HEAP_START_PAGE = 4 * 2 ** 16;
+  //const HEAP_START_PAGE = 4 * 2 ** 16;
   const HEAP_END_PAGE = 2 ** 32 - 2 * 2 ** 16 - 2 ** 24;
 
-  const memory = memoryBuilder.finalize(HEAP_START_PAGE, HEAP_END_PAGE);
+  // TODO [ToDr] [#216] Since we don't have examples yet of the
+  // PVM program allocating more memory, we disallow expanding
+  // the memory completely by setting `sbrkIndex` to the same value
+  // as the end page.
+  const memory = memoryBuilder.finalize(HEAP_END_PAGE, HEAP_END_PAGE);
 
   const registers = new Registers();
   registers.copyFrom(new Uint32Array(initialState.regs!));
