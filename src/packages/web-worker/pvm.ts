@@ -27,7 +27,7 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
   //const HEAP_START_PAGE = 4 * 2 ** 16;
   const HEAP_END_PAGE = 2 ** 32 - 2 * 2 ** 16 - 2 ** 24;
 
-  // TODO [ToDr] Since we don't have examples yet of the
+  // TODO [ToDr] [#216] Since we don't have examples yet of the
   // PVM program allocating more memory, we disallow expanding
   // the memory completely by setting `sbrkIndex` to the same value
   // as the end page.
