@@ -9,7 +9,7 @@ import {
 } from "@/store/workers/workersSlice.ts";
 import { valueToNumeralSystem } from "../Instructions/utils";
 import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
+import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import classNames from "classnames";
 import { INPUT_STYLES } from "../ui/input";

@@ -1,7 +1,7 @@
 import { ExpectedState, InitialState, RegistersArray, Status } from "@/types/pvm";
 import { ReactNode, useContext } from "react";
 import { NumeralSystem } from "@/context/NumeralSystem";
-import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
+import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
 import classNames from "classnames";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

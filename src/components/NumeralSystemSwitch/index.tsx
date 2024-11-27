@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
 import { useContext } from "react";
-import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
+import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { NumeralSystem } from "@/context/NumeralSystem";
 
 export const NumeralSystemSwitch = ({ className }: { className: string }) => {

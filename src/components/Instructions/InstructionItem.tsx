@@ -4,7 +4,7 @@ import { getStatusColor } from "../Registers/utils";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
 import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
-import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
+import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from ".";
 import { useAppSelector } from "@/store/hooks.ts";
