@@ -23,7 +23,7 @@ export const ProgramTextLoader = ({
     if (!newInput.startsWith("[")) {
       try {
         const parsedBlob = bytes.BytesBlob.parseBlob(newInput);
-        setProgram(Array.prototype.slice.call(parsedBlob.buffer));
+        setProgram(Array.prototype.slice.call(parsedBlob.raw));
       } catch (error) {
         logger.error("Wrong binary file", { error, hideToast: true });
         setProgram(undefined, "Wrong binary file");
