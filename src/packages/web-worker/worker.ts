@@ -23,7 +23,13 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
     pvm = data.pvm;
     memorySize = data.memorySize;
 
-    postTypedMessage({ command: Commands.LOAD, status: data.status, error: data.error, messageId: e.data.messageId });
+    postTypedMessage({
+      command: Commands.LOAD,
+      status: data.status,
+      error: data.error,
+      messageId: e.data.messageId,
+      payload: { memorySize: data.memorySize || 0 },
+    });
   } else if (e.data.command === Commands.INIT) {
     const data = await commandHandlers.runInit({
       pvm,

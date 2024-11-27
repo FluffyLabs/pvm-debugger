@@ -1,4 +1,4 @@
-import { isNumber } from "lodash";
+import { capitalize, isNumber } from "lodash";
 import { useSelector } from "react-redux";
 import {
   loadMemoryChunkAllWorkers,
@@ -128,6 +128,11 @@ const MemoryRow = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const displayAddress = addressFormatter(address, numeralSystem);
+  const workers = useAppSelector(selectWorkers);
+  const displayCurrentPage = workers.map(
+    ({ memory, id }, i, arr) =>
+      `${capitalize(id)}: Page: ${Math.floor(address / memory.memorySize)}${i < arr.length - 1 ? ", " : ""}`,
+  );
 
   return (
     <>
@@ -145,6 +150,8 @@ const MemoryRow = ({
           <MemoryCell value={byte} address={address} selectedAddress={selectedAddress} index={index} key={index} />
         ))}
       </div>
+      <span className="ml-8 mr-3 text-sm">|</span>
+      <div className="whitespace-nowrap text-sm">{displayCurrentPage}</div>
     </>
   );
 };

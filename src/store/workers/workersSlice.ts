@@ -42,6 +42,7 @@ export interface WorkerState {
       address: number;
       bytes: number[];
     }[];
+    memorySize: number;
     isLoading: boolean;
     startAddress: number;
     stopAddress: number;
@@ -88,6 +89,7 @@ export const loadWorker = createAsyncThunk(
     });
 
     dispatch(setWorkerIsLoading({ id, isLoading: false }));
+    dispatch(setWorkerMemorySize({ memorySize: data.payload.memorySize, id }));
 
     if ("status" in data && data.status === "error") {
       logger.error(`An error occured on command ${data.command}`, { error: data.error });
@@ -453,6 +455,20 @@ const workers = createSlice({
         worker.isLoading = action.payload.isLoading;
       }
     },
+    setWorkerMemorySize(
+      state,
+      action: {
+        payload: {
+          id: string;
+          memorySize: number;
+        };
+      },
+    ) {
+      const worker = getWorker(state, action.payload.id);
+      if (worker) {
+        worker.memory.memorySize = action.payload.memorySize;
+      }
+    },
     appendMemory: (
       state,
       action: {
@@ -511,6 +527,7 @@ const workers = createSlice({
           isLoading: false,
           startAddress: 0,
           stopAddress: LOAD_MEMORY_CHUNK_SIZE,
+          memorySize: 0,
         },
       });
     });
@@ -528,6 +545,7 @@ export const {
   setAllWorkersCurrentInstruction,
   setWorkerIsLoading,
   appendMemory,
+  setWorkerMemorySize,
 } = workers.actions;
 
 export const selectWorkers = (state: RootState) => state.workers;
