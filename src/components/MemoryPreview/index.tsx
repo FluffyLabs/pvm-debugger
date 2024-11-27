@@ -164,7 +164,6 @@ const MemoryTable = ({
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
   const { numeralSystem } = useContext(NumeralSystemContext);
-
   const hasPrevPage = !!memory && (memory.startAddress || 0) > 0;
   const hasNextPage = !!memory && (memory.stopAddress || 0) < MAX_ADDRESS;
 
