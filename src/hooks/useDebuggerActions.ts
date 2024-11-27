@@ -64,8 +64,8 @@ export const useDebuggerActions = () => {
       };
       dispatch(setAllWorkersCurrentState(currentState));
       dispatch(setAllWorkersPreviousState(currentState));
-
       dispatch(setIsDebugFinished(false));
+      dispatch(setIsRunMode(false));
       await dispatch(initAllWorkers()).unwrap();
 
       const result = disassemblify(new Uint8Array(newProgram));
