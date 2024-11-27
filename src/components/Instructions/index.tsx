@@ -2,7 +2,7 @@ import { Table, TableBody } from "@/components/ui/table.tsx";
 
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
-import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
+import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { ReactNode, useContext, useEffect, useMemo, useRef } from "react";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { InstructionItem } from "./InstructionItem";
