@@ -221,6 +221,7 @@ export const PvmSelect = () => {
                   <SelectContent>
                     <SelectItem value={SupportedLangs.Go}>Go</SelectItem>
                     <SelectItem value={SupportedLangs.Rust}>Rust</SelectItem>
+                    <SelectItem value={SupportedLangs.AssemblyScript}>AssemblyScript</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

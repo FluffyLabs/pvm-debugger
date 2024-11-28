@@ -6,10 +6,12 @@ import "./goWasmExec.d.ts";
 import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoShell.ts";
 import { logger } from "@/utils/loggerService.tsx";
 import { PvmApiInterface } from "./types.ts";
+import { createAsWasmPvmShell } from "./wasmAsShell.ts";
 
 export enum SupportedLangs {
   Go = "Go",
   Rust = "Rust",
+  AssemblyScript = "AssemblyScript",
 }
 
 export function getState(pvm: PvmApiInterface): ExpectedState {
@@ -80,13 +82,25 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
     const wasmPvmShell = createGoWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;
-  } else {
+  }
+
+  if (lang === SupportedLangs.Rust) {
     const wasmModule = await WebAssembly.instantiate(bytes, {});
     logger.info("Rust WASM module loaded", wasmModule.instance.exports);
     const wasmPvmShell = createWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;
   }
+
+  if (lang === SupportedLangs.AssemblyScript) {
+    const compiled = await WebAssembly.compile(bytes);
+    logger.info("AssemblyScript WASM module compiled", compiled);
+    const wasmPvmShell = await createAsWasmPvmShell(compiled);
+    logger.info("AssemblyScript WASM module loaded", wasmPvmShell);
+    return wasmPvmShell;
+  }
+
+  throw new Error(`Unsupported lang: ${lang}`);
 }
 
 export function getMemorySize(pvm: PvmApiInterface | null) {
