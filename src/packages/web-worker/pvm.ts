@@ -21,7 +21,7 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
   }
 
   for (const memoryChunk of initialMemory) {
-    memoryBuilder.setData(memoryChunk.address, memoryChunk.contents);
+    memoryBuilder.setData(memoryChunk.address, new Uint8Array(memoryChunk.contents));
   }
 
   //const HEAP_START_PAGE = 4 * 2 ** 16;

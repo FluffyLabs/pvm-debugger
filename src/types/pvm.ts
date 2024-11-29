@@ -15,7 +15,7 @@ export type InitialState = {
 
 export type MemoryChunkItem = {
   address: number;
-  contents: Uint8Array;
+  contents: number[];
 };
 
 export type PageMapItem = {
