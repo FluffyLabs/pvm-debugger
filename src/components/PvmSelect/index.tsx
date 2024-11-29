@@ -13,7 +13,18 @@ import classNames from "classnames";
 import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
 import { isSerializedError } from "@/store/utils";
 
-const POLKAVM_URL = "https://todr.me/polkavm/pvm-metadata.json";
+const PVMS_TO_LOAD_ON_START = [
+  {
+    value: AvailablePvms.POLKAVM,
+    url: "https://todr.me/polkavm/pvm-metadata.json",
+    lang: SupportedLangs.Rust,
+  },
+  {
+    value: AvailablePvms.ANANAS,
+    url: "https://todr.me/anan-as/pvm-metadata.json",
+    lang: SupportedLangs.AssemblyScript,
+  },
+];
 
 interface WasmMetadata {
   name: string;
@@ -144,24 +155,27 @@ export const PvmSelect = () => {
   };
 
   useEffect(() => {
-    fetchWasmMetadata(POLKAVM_URL).then((metadata) => {
-      if (!metadata) {
-        throw new Error("Invalid metadata");
-      }
-      setMultiSelectOptions((prevState) => [
-        ...prevState,
-        { value: AvailablePvms.POLKAVM, label: `${metadata.name} v${metadata.version}` as string },
-      ]);
-      setPvmsWithPayload((prevState) => [
-        ...prevState,
-        {
-          id: AvailablePvms.POLKAVM,
-          type: PvmTypes.WASM_URL,
-          params: {
-            url: path.join(POLKAVM_URL, "../", metadata.wasmBlobUrl),
+    PVMS_TO_LOAD_ON_START.forEach(({ url, value, lang }) => {
+      fetchWasmMetadata(url).then((metadata) => {
+        if (!metadata) {
+          throw new Error("Invalid metadata");
+        }
+        setMultiSelectOptions((prevState) => [
+          ...prevState,
+          { value, label: `${metadata.name} v${metadata.version}` as string },
+        ]);
+        setPvmsWithPayload((prevState) => [
+          ...prevState,
+          {
+            id: value,
+            type: PvmTypes.WASM_URL,
+            params: {
+              url: path.join(url, "../", metadata.wasmBlobUrl),
+              lang,
+            },
           },
-        },
-      ]);
+        ]);
+      });
     });
   }, []);
 
