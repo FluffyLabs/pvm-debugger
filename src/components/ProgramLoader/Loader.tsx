@@ -56,9 +56,7 @@ export const Loader = ({
         <TabsList>
           <TabsTrigger value="upload">JSON tests</TabsTrigger>
           <TabsTrigger value="examples">Examples</TabsTrigger>
-          <TabsTrigger className="hidden lg:inline-flex" value="bytecode">
-            RAW bytecode
-          </TabsTrigger>
+          <TabsTrigger value="bytecode">RAW bytecode</TabsTrigger>
           <TabsTrigger value="assembly">Assembly</TabsTrigger>
         </TabsList>
         <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
