@@ -2,7 +2,7 @@ import { WasmPvmShellInterface } from "@/packages/web-worker/wasmBindgenShell.ts
 
 import { instantiate } from "./wasmAsInit";
 
-export async function createAsWasmPvmShell(module: WebAssembly.Module): Promise<WasmPvmShellInterface> {
+export async function createAssemblyScriptWasmPvmShell(module: WebAssembly.Module): Promise<WasmPvmShellInterface> {
   const imports = {};
   const instance = await instantiate(module, imports);
   const {

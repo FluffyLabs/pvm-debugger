@@ -6,7 +6,7 @@ import "./goWasmExec.d.ts";
 import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoShell.ts";
 import { logger } from "@/utils/loggerService.tsx";
 import { PvmApiInterface } from "./types.ts";
-import { createAsWasmPvmShell } from "./wasmAsShell.ts";
+import { createAssemblyScriptWasmPvmShell } from "./wasmAsShell.ts";
 
 export enum SupportedLangs {
   Go = "Go",
@@ -95,7 +95,7 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
   if (lang === SupportedLangs.AssemblyScript) {
     const compiled = await WebAssembly.compile(bytes);
     logger.info("AssemblyScript WASM module compiled", compiled);
-    const wasmPvmShell = await createAsWasmPvmShell(compiled);
+    const wasmPvmShell = await createAssemblyScriptWasmPvmShell(compiled);
     logger.info("AssemblyScript WASM module loaded", wasmPvmShell);
     return wasmPvmShell;
   }
