@@ -48,7 +48,6 @@ export const DebuggerControlls = () => {
       }
 
       dispatch(setIsProgramEditMode(false));
-      await dispatch(refreshPageAllWorkers()).unwrap();
     } catch (error) {
       if (error instanceof Error || isSerializedError(error)) {
         setError(error.message);
