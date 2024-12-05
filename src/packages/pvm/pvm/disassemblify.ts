@@ -5,6 +5,7 @@ import {
   ArgsDecoder,
   instructionArgumentTypeMap,
   createResults,
+  ArgumentType,
 } from "@typeberry/pvm-debugger-adapter";
 import { Instruction } from "./instruction";
 
@@ -20,7 +21,10 @@ export function disassemblify(rawProgram: Uint8Array) {
 
   while (i < code.length) {
     const currentInstruction = code[i];
-    const argumentType = instructionArgumentTypeMap[currentInstruction];
+    const isValidInstruction = Instruction[currentInstruction] !== undefined;
+    const argumentType = isValidInstruction
+      ? instructionArgumentTypeMap[currentInstruction]
+      : ArgumentType.NO_ARGUMENTS;
     const args = createResults()[argumentType];
 
     try {
@@ -41,7 +45,7 @@ export function disassemblify(rawProgram: Uint8Array) {
     const currentInstructionDebug = {
       instructionCode: currentInstruction,
       ...byteToOpCodeMap[currentInstruction],
-      name: Instruction[currentInstruction],
+      name: isValidInstruction ? Instruction[currentInstruction] : `INVALID(${currentInstruction})`,
       instructionBytes: code.slice(i - (args.noOfBytesToSkip ?? 0), i),
       address,
       args,
