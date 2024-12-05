@@ -264,14 +264,13 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
       }),
     );
 
-    const allSame = responses.every(
-      (response) => JSON.stringify(response.state) === JSON.stringify(responses[0].state),
+    const { workers } = getState() as RootState;
+    const allSame = workers.every(
+      ({ currentState }) => JSON.stringify(currentState) === JSON.stringify(workers[0].currentState),
     );
 
     const allFinished = responses.every((response) => response.isFinished);
-
     const allRunning = responses.every((response) => response.isRunMode);
-
     const anyBreakpoint = responses.some((response) => response.isBreakpoint);
 
     if (allFinished) {
