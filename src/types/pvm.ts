@@ -69,6 +69,7 @@ export type CurrentInstruction =
 export enum AvailablePvms {
   TYPEBERRY = "typeberry",
   POLKAVM = "polkavm",
+  ANANAS = "ananas",
   WASM_URL = "wasm-url",
   WASM_FILE = "wasm-file",
 }
