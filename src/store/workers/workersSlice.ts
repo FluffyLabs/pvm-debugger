@@ -276,6 +276,8 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
       dispatch(setIsRunMode(false));
     }
 
+    await dispatch(refreshPageAllWorkers());
+
     if (debuggerState.isRunMode && allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
     }
@@ -350,6 +352,8 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   );
 
   const allFinished = responses.every((response) => response.isFinished);
+
+  await dispatch(refreshPageAllWorkers());
 
   if (allFinished) {
     dispatch(setIsDebugFinished(true));
