@@ -242,18 +242,24 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
           throw new Error("Program counter is undefined");
         }
 
+        const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
+
         logger.info("Response from worker:", {
           isFinished,
           state,
           isRunMode,
-          debuggerHit: debuggerState.breakpointAddresses.includes(state.pc),
+          debuggerHit: isBreakpoint,
         });
+
+        if (isBreakpoint) {
+          dispatch(setIsRunMode(false));
+        }
 
         return {
           isFinished,
           state,
           isRunMode,
-          isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
+          isBreakpoint,
         };
       }),
     );
