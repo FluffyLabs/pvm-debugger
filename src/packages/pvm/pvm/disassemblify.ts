@@ -21,7 +21,7 @@ export function disassemblify(rawProgram: Uint8Array) {
 
   while (i < code.length) {
     const currentInstruction = code[i];
-    const isValidInstruction = currentInstruction < instructionArgumentTypeMap.length;
+    const isValidInstruction = Instruction[currentInstruction] !== undefined;
     const argumentType = isValidInstruction
       ? instructionArgumentTypeMap[currentInstruction]
       : ArgumentType.NO_ARGUMENTS;
