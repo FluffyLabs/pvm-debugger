@@ -215,6 +215,7 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
           command: Commands.STEP,
           payload: {
             program: new Uint8Array(debuggerState.program),
+            stepsToPerform: debuggerState.stepsToPerform,
           },
         });
 
@@ -327,6 +328,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
         command: Commands.STEP,
         payload: {
           program: new Uint8Array(debuggerState.program),
+          stepsToPerform: debuggerState.stepsToPerform,
         },
       });
 

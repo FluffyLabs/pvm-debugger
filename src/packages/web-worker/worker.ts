@@ -44,6 +44,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
     const { result, state, isFinished, status, error } = commandHandlers.runStep({
       pvm,
       program: e.data.payload.program,
+      stepsToPerform: e.data.payload.stepsToPerform,
     });
     isRunMode = !isFinished;
 
