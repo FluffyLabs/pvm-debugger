@@ -19,7 +19,9 @@ export const DebuggerSettings = () => {
   return (
     <Dialog>
       <DialogTrigger>
-        <Settings />
+        <div className="opacity-60 mt-2">
+          <Settings />
+        </div>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -28,12 +30,17 @@ export const DebuggerSettings = () => {
           </DialogTitle>
           <DialogDescription asChild>
             <p className="py-4 ">
-              <span className="block text-lg text-black font-bold mb-2">Number of instructions per step</span>
-              <span className="mb-3 block">Choose how many instructions you want to run per each debugger step</span>
+              <span className="block text-lg text-black font-bold mb-2">Number of batched steps</span>
+              <span className="mb-3 block">
+                To speed up execution PVMs can run multiple steps internally after clicking "Run". This may lead to
+                inaccurate stops in case the execution diverges between them.
+              </span>
               <Input
                 type="number"
                 step={1}
-                placeholder="Number of steps"
+                min={1}
+                max={1000}
+                placeholder="Batched steps"
                 onChange={(ev) => {
                   dispatch(setStepsToPerform(parseInt(ev.target.value)));
                 }}

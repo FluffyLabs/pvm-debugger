@@ -19,13 +19,11 @@ const step = ({ pvm, program, stepsToPerform }: StepParams) => {
 
   let isFinished: boolean;
   if (isInternalPvm(pvm)) {
-    // eslint-disable-next-line no-console
-    console.log("REMOVE ME and change steps plssss", stepsToPerform);
     // TODO: remove the -1 check as soon as OK status is not -1 in PVM and PolkaVM anymore
     const nextStep = pvm.nextStep();
     isFinished = nextStep !== Status.OK && Number(nextStep) !== -1;
   } else {
-    isFinished = !pvm.nextStep();
+    isFinished = stepsToPerform > 1 ? !pvm.run(stepsToPerform) : !pvm.nextStep();
   }
 
   const state = getState(pvm);
