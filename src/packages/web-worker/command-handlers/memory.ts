@@ -1,5 +1,4 @@
 import { CommandStatus, PvmApiInterface } from "../types";
-import { isInternalPvm } from "../utils";
 
 // Max memory size defined by the Gray paper (4GB)
 const MAX_ADDRESS = Math.pow(2, 32);
@@ -22,9 +21,6 @@ const getMemoryPage = (pageNumber: number, pvm: PvmApiInterface | null) => {
     return new Uint8Array();
   }
 
-  if (isInternalPvm(pvm)) {
-    return pvm.getMemoryPage(pageNumber) || new Uint8Array();
-  }
   return pvm.getPageDump(pageNumber) || new Uint8Array();
 };
 

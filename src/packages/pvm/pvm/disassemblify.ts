@@ -6,18 +6,23 @@ import {
   instructionArgumentTypeMap,
   createResults,
   ArgumentType,
+  BasicBlocks,
 } from "@typeberry/pvm-debugger-adapter";
 import { Instruction } from "./instruction";
+import { CurrentInstruction } from "@/types/pvm";
 
-export function disassemblify(rawProgram: Uint8Array) {
+export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
   const programDecoder = new ProgramDecoder(rawProgram);
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();
+  const blocks = new BasicBlocks();
+  blocks.reset(code, mask);
   const argsDecoder = new ArgsDecoder();
   argsDecoder.reset(code, mask);
   let i = 0;
   const printableProgram = [];
   let address = 0;
+  let currentBlockNumber = -1;
 
   while (i < code.length) {
     const currentInstruction = code[i];
@@ -26,6 +31,8 @@ export function disassemblify(rawProgram: Uint8Array) {
       ? instructionArgumentTypeMap[currentInstruction]
       : ArgumentType.NO_ARGUMENTS;
     const args = createResults()[argumentType];
+    const isBlockStart = blocks.isBeginningOfBasicBlock(i);
+    const isBlockEnd = blocks.isBeginningOfBasicBlock(i + 1);
 
     try {
       argsDecoder.fillArgs(i, args);
@@ -38,8 +45,18 @@ export function disassemblify(rawProgram: Uint8Array) {
         address,
         ...byteToOpCodeMap[currentInstruction],
         error: "Cannot get arguments from args decoder",
+        block: {
+          isStart: isBlockStart,
+          isEnd: isBlockEnd,
+          name: "block",
+          number: currentBlockNumber,
+        },
       });
       return printableProgram;
+    }
+
+    if (isBlockStart) {
+      currentBlockNumber++;
     }
 
     const currentInstructionDebug = {
@@ -49,6 +66,12 @@ export function disassemblify(rawProgram: Uint8Array) {
       instructionBytes: code.slice(i - (args.noOfBytesToSkip ?? 0), i),
       address,
       args,
+      block: {
+        isStart: isBlockStart,
+        isEnd: isBlockEnd,
+        name: `block${currentBlockNumber}`,
+        number: currentBlockNumber,
+      },
     };
 
     printableProgram.push(currentInstructionDebug);

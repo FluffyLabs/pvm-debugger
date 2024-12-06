@@ -368,7 +368,7 @@ export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id
   return id;
 });
 
-const getWorker = (state: WorkerState[], id: string) => state.find((worker) => worker.id === id);
+const getWorker = <T extends { id: string }>(state: T[], id: string) => state.find((worker) => worker.id === id);
 
 const workers = createSlice({
   name: "workers",

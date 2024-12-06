@@ -7,4 +7,10 @@ export const virtualTrapInstruction: CurrentInstruction = {
   gas: 0,
   instructionCode: 0,
   instructionBytes: new Uint8Array(0),
+  block: {
+    isStart: true,
+    isEnd: true,
+    name: "end of program",
+    number: -1,
+  },
 };
