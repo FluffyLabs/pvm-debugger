@@ -1,5 +1,5 @@
-import { ExpectedState, Pvm as InternalPvm, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
-import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
+import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
+import { Pvm as InternalPvm } from "@typeberry/pvm-debugger-adapter";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmBindgenShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
@@ -15,23 +15,16 @@ export enum SupportedLangs {
 }
 
 export function getState(pvm: PvmApiInterface): ExpectedState {
-  let newState: ExpectedState;
-  if (isInternalPvm(pvm)) {
-    newState = {
-      pc: pvm.getPC(),
-      regs: Array.from(pvm.getRegisters()) as RegistersArray,
-      gas: pvm.getGas(),
-      status: pvm.getStatus(),
-    };
-  } else {
-    newState = {
-      pc: pvm.getProgramCounter(),
-      regs: uint8asRegs(pvm.getRegisters()),
-      gas: pvm.getGasLeft(),
-      status: pvm.getStatus(),
-    };
-  }
-  return newState;
+  const regs = isInternalPvm(pvm)
+    ? (Array.from(pvm.getRegisters()) as RegistersArray)
+    : uint8asRegs(pvm.getRegisters());
+
+  return {
+    pc: pvm.getProgramCounter(),
+    regs,
+    gas: pvm.getGasLeft(),
+    status: pvm.getStatus(),
+  };
 }
 
 export function regsAsUint8(regs?: RegistersArray): Uint8Array {
@@ -70,7 +63,7 @@ export function uint8asRegs(arr: Uint8Array): RegistersArray {
 }
 
 export function isInternalPvm(pvm: PvmApiInterface): pvm is InternalPvm {
-  return pvm instanceof InternalPvmInstance;
+  return pvm instanceof InternalPvm;
 }
 
 export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: SupportedLangs): Promise<PvmApiInterface> {
@@ -109,7 +102,7 @@ export function getMemorySize(pvm: PvmApiInterface | null) {
     return null;
   }
 
-  const page = isInternalPvm(pvm) ? pvm.getMemoryPage(0) : pvm.getPageDump(0);
+  const page = pvm.getPageDump(0);
 
   if (!page) {
     logger.warn("PVM memory page is null");
