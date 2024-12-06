@@ -51,7 +51,7 @@ export const runAllInstructions = (pvm: InternalPvm, program: Uint8Array) => {
     const pc = pvm.getProgramCounter();
     const result = nextInstruction(pc, program);
     programPreviewResult.push(result);
-  } while (pvm.nextStep() === Status.OK);
+  } while (pvm.nextStep());
 
   return {
     programRunResult: {

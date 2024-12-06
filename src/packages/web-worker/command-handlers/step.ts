@@ -1,6 +1,6 @@
-import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
+import { CurrentInstruction, ExpectedState } from "@/types/pvm";
 import { nextInstruction } from "../pvm";
-import { isInternalPvm, getState } from "../utils";
+import { getState } from "../utils";
 import { CommandStatus, PvmApiInterface } from "../types";
 
 export type StepParams = { program: Uint8Array; pvm: PvmApiInterface | null; stepsToPerform: number };
@@ -17,15 +17,7 @@ const step = ({ pvm, program, stepsToPerform }: StepParams) => {
     throw new Error("PVM is uninitialized.");
   }
 
-  let isFinished: boolean;
-  if (isInternalPvm(pvm)) {
-    // TODO: remove the -1 check as soon as OK status is not -1 in PVM and PolkaVM anymore
-    const nextStep = pvm.nextStep();
-    isFinished = nextStep !== Status.OK && Number(nextStep) !== -1;
-  } else {
-    isFinished = stepsToPerform > 1 ? !pvm.run(stepsToPerform) : !pvm.nextStep();
-  }
-
+  const isFinished = stepsToPerform > 1 ? !pvm.run(stepsToPerform) : !pvm.nextStep();
   const state = getState(pvm);
   const result = nextInstruction(state.pc ?? 0, program) as unknown as CurrentInstruction;
 
