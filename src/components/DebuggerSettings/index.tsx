@@ -26,9 +26,9 @@ export const DebuggerSettings = () => {
           <DialogTitle>
             <span className="text-xl">Debugger Settings</span>
           </DialogTitle>
-          <DialogDescription>
-            <div className="my-5 text-black">
-              <span className="block text-lg font-bold mb-2">Number of instructions per step</span>
+          <DialogDescription asChild>
+            <p className="py-4 ">
+              <span className="block text-lg text-black font-bold mb-2">Number of instructions per step</span>
               <span className="mb-3 block">Choose how many instructions you want to run per each debugger step</span>
               <Input
                 type="number"
@@ -39,7 +39,7 @@ export const DebuggerSettings = () => {
                 }}
                 value={debuggerState.stepsToPerform}
               />
-            </div>
+            </p>
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
