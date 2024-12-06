@@ -242,30 +242,35 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
           throw new Error("Program counter is undefined");
         }
 
+        const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
+
         logger.info("Response from worker:", {
           isFinished,
           state,
           isRunMode,
-          debuggerHit: debuggerState.breakpointAddresses.includes(state.pc),
+          debuggerHit: isBreakpoint,
         });
+
+        if (isBreakpoint) {
+          dispatch(setIsRunMode(false));
+        }
 
         return {
           isFinished,
           state,
           isRunMode,
-          isBreakpoint: debuggerState.breakpointAddresses.includes(state.pc),
+          isBreakpoint,
         };
       }),
     );
 
-    const allSame = responses.every(
-      (response) => JSON.stringify(response.state) === JSON.stringify(responses[0].state),
+    const { workers } = getState() as RootState;
+    const allSame = workers.every(
+      ({ currentState }) => JSON.stringify(currentState) === JSON.stringify(workers[0].currentState),
     );
 
     const allFinished = responses.every((response) => response.isFinished);
-
     const allRunning = responses.every((response) => response.isRunMode);
-
     const anyBreakpoint = responses.some((response) => response.isBreakpoint);
 
     if (allFinished) {
@@ -275,6 +280,8 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
     if (!allSame) {
       dispatch(setIsRunMode(false));
     }
+
+    await dispatch(refreshPageAllWorkers());
 
     if (debuggerState.isRunMode && allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
@@ -350,6 +357,8 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   );
 
   const allFinished = responses.every((response) => response.isFinished);
+
+  await dispatch(refreshPageAllWorkers());
 
   if (allFinished) {
     dispatch(setIsDebugFinished(true));
