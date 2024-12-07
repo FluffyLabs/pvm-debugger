@@ -205,84 +205,30 @@ export const refreshPageAllWorkers = createAsyncThunk(
 );
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
-  const state = getState() as RootState;
-  let debuggerState = state.debugger;
-
   const stepAllWorkersAgain = async () => {
-    const responses = await Promise.all(
-      state.workers.map(async (worker) => {
-        const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
-          command: Commands.STEP,
-          payload: {
-            program: new Uint8Array(debuggerState.program),
-            stepsToPerform: debuggerState.stepsToPerform,
-          },
-        });
+    const responses = await dispatch(stepAllWorkers()).unwrap();
 
-        if (hasCommandStatusError(data)) {
-          throw data.error;
-        }
-
-        const { state, isRunMode, isFinished } = data.payload;
-
-        // START MOVED FROM initAllWorkers
-        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-        dispatch(
-          setWorkerCurrentInstruction({
-            id: worker.id,
-            instruction: data.payload.result,
-          }),
-        );
-
-        // END MOVED FOM initAllWorkers
-
-        const currentState = getState() as RootState;
-        debuggerState = currentState.debugger;
-
-        if (state.pc === undefined) {
-          throw new Error("Program counter is undefined");
-        }
-
-        const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
-
-        logger.info("Response from worker:", {
-          isFinished,
-          state,
-          isRunMode,
-          debuggerHit: isBreakpoint,
-        });
-
-        if (isBreakpoint) {
-          dispatch(setIsRunMode(false));
-        }
-
-        return {
-          isFinished,
-          state,
-          isRunMode,
-          isBreakpoint,
-        };
-      }),
-    );
+    if (!responses) {
+      return;
+    }
 
     const { workers } = getState() as RootState;
     const allSame = workers.every(
       ({ currentState }) => JSON.stringify(currentState) === JSON.stringify(workers[0].currentState),
     );
 
-    const allFinished = responses.every((response) => response.isFinished);
     const allRunning = responses.every((response) => response.isRunMode);
     const anyBreakpoint = responses.some((response) => response.isBreakpoint);
-
-    if (allFinished) {
-      dispatch(setIsDebugFinished(true));
-    }
+    const allFinished = responses.every((response) => response.isFinished);
 
     if (!allSame) {
       dispatch(setIsRunMode(false));
     }
 
     await dispatch(refreshPageAllWorkers());
+
+    const state = getState() as RootState;
+    const debuggerState = state.debugger;
 
     if (debuggerState.isRunMode && allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();
@@ -336,7 +282,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
         throw data.error;
       }
 
-      const { state, isFinished } = data.payload;
+      const { state, isFinished, isRunMode } = data.payload;
 
       dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
       dispatch(
@@ -352,8 +298,17 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
         throw new Error("Program counter is undefined");
       }
 
+      const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
+
+      if (isBreakpoint) {
+        dispatch(setIsRunMode(false));
+      }
+
       return {
         isFinished,
+        state,
+        isRunMode,
+        isBreakpoint,
       };
     }),
   );
@@ -365,6 +320,8 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   if (allFinished) {
     dispatch(setIsDebugFinished(true));
   }
+
+  return responses;
 });
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
