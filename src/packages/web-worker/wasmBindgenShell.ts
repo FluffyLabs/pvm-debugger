@@ -3,7 +3,9 @@ import * as wasm from "./wasmBindgenInit";
 
 export interface WasmPvmShellInterface {
   __wbg_set_wasm(val: unknown): void;
+  getProgramCounter(): number;
   setNextProgramCounter?(pc: number): void;
+  getGasLeft(): bigint;
   setGasLeft?(gas: bigint): void;
   resetGeneric(program: Uint8Array, registers: Uint8Array, gas: bigint): void;
   resetGenericWithMemory?(
@@ -14,11 +16,13 @@ export interface WasmPvmShellInterface {
     gas: bigint,
   ): void;
   nextStep(): boolean;
-  getProgramCounter(): number;
+  run(steps: number): boolean;
+  getExitArg(): number;
   getStatus(): Status;
-  getGasLeft(): bigint;
   getRegisters(): Uint8Array;
+  setRegisters(registers: Uint8Array): void;
   getPageDump(index: number): Uint8Array;
+  setMemory(address: number, data: Uint8Array): void;
 }
 
 export function createWasmPvmShell(): WasmPvmShellInterface {
@@ -27,25 +31,33 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
+    run,
     getProgramCounter,
     setNextProgramCounter,
+    getExitArg,
     getStatus,
     getGasLeft,
     setGasLeft,
     getRegisters,
+    setRegisters,
     getPageDump,
+    setMemory,
   } = wasm;
   return {
     __wbg_set_wasm,
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
+    run,
     getProgramCounter,
     setNextProgramCounter,
     getStatus,
+    getExitArg,
     getGasLeft,
     setGasLeft,
     getRegisters,
+    setRegisters,
     getPageDump,
+    setMemory,
   };
 }

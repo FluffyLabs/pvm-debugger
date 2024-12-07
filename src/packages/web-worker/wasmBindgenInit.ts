@@ -69,11 +69,6 @@ export function resetGeneric(program, registers, gas) {
  * @param {bigint} gas
  */
 export function resetGenericWithMemory(program, registers, page_map, chunks, gas) {
-  // TODO [ToDr] Temporary support for older versions.
-  if (!wasm.resetGenericWithMemory) {
-    return resetGeneric(program, registers, gas);
-  }
-
   const ptr0 = passArray8ToWasm0(program, wasm.__wbindgen_malloc);
   const len0 = WASM_VECTOR_LEN;
   const ptr1 = passArray8ToWasm0(registers, wasm.__wbindgen_malloc);
@@ -90,6 +85,15 @@ export function resetGenericWithMemory(program, registers, page_map, chunks, gas
  */
 export function nextStep() {
   const ret = wasm.nextStep();
+  return ret !== 0;
+}
+
+/**
+ * @param {number} steps
+ * @returns {boolean}
+ */
+export function run(steps) {
+  const ret = wasm.run(steps);
   return ret !== 0;
 }
 
@@ -174,6 +178,15 @@ export function getRegisters() {
 }
 
 /**
+ * @param {Uint8Array} registers
+ */
+export function setRegisters(registers) {
+  const ptr0 = passArray8ToWasm0(registers, wasm.__wbindgen_malloc);
+  const len0 = WASM_VECTOR_LEN;
+  wasm.setRegisters(ptr0, len0);
+}
+
+/**
  * @param {number} index
  * @returns {Uint8Array}
  */
@@ -189,6 +202,16 @@ export function getPageDump(index) {
   } finally {
     wasm.__wbindgen_add_to_stack_pointer(16);
   }
+}
+
+/**
+ * @param {number} address
+ * @param {Uint8Array} data
+ */
+export function setMemory(address, data) {
+  const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+  const len0 = WASM_VECTOR_LEN;
+  wasm.setMemory(address, ptr0, len0);
 }
 
 /**

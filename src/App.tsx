@@ -27,6 +27,7 @@ import { DebuggerControlls } from "./components/DebuggerControlls";
 import { useDebuggerActions } from "./hooks/useDebuggerActions";
 import { Loader } from "./components/ProgramLoader/Loader";
 import classNames from "classnames";
+import { DebuggerSettings } from "./components/DebuggerSettings";
 
 const DebuggerContent = () => {
   const dispatch = useAppDispatch();
@@ -194,6 +195,10 @@ function App() {
                 "md:col-span-6": pvmInitialized,
               })}
             >
+              <div className="mx-3">
+                <DebuggerSettings />
+              </div>
+
               <div className="w-full md:w-[350px]">
                 <PvmSelect />
               </div>

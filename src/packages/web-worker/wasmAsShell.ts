@@ -7,18 +7,24 @@ export async function createAssemblyScriptWasmPvmShell(module: WebAssembly.Modul
   const instance = await instantiate(module, imports);
   const {
     // memory,
-    // example,
+    // InputKind,
+    // disassemble,
+    // runProgram,
+    // runVm,
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
+    run,
     getProgramCounter,
     setNextProgramCounter,
     getStatus,
-    // getExitArg,
+    getExitArg,
     getGasLeft,
     setGasLeft,
     getRegisters,
+    setRegisters,
     getPageDump,
+    setMemory,
   } = instance;
 
   return {
@@ -26,12 +32,16 @@ export async function createAssemblyScriptWasmPvmShell(module: WebAssembly.Modul
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
+    run,
     getProgramCounter,
     setNextProgramCounter,
     setGasLeft,
     getStatus,
+    getExitArg,
     getGasLeft,
     getRegisters,
+    setRegisters,
     getPageDump,
+    setMemory,
   };
 }

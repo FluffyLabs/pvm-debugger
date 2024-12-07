@@ -16,6 +16,7 @@ export interface DebuggerState {
   instructionMode: InstructionMode;
   isDebugFinished: boolean;
   pvmInitialized: boolean;
+  stepsToPerform: number;
 }
 
 const initialState: DebuggerState = {
@@ -37,6 +38,7 @@ const initialState: DebuggerState = {
   instructionMode: InstructionMode.ASM,
   isDebugFinished: false,
   pvmInitialized: false,
+  stepsToPerform: 1,
 };
 
 const debuggerSlice = createSlice({
@@ -79,6 +81,9 @@ const debuggerSlice = createSlice({
     setPvmInitialized(state, action) {
       state.pvmInitialized = action.payload;
     },
+    setStepsToPerform(state, action) {
+      state.stepsToPerform = action.payload;
+    },
   },
 });
 
@@ -95,6 +100,7 @@ export const {
   setInstructionMode,
   setIsDebugFinished,
   setPvmInitialized,
+  setStepsToPerform,
 } = debuggerSlice.actions;
 
 export const selectProgram = (state: RootState) => state.debugger.program;
