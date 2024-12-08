@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
+import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
 import { setIsDebugFinished, setIsRunMode, setIsStepMode } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
@@ -204,6 +204,12 @@ export const refreshPageAllWorkers = createAsyncThunk(
   },
 );
 
+export const handleHostCall = createAsyncThunk("workers/handleHostCall", async () => {
+  // console.log("Handling host call");
+  // const state = getState() as RootState;
+  // const debuggerState = state.debugger;
+});
+
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const stepAllWorkersAgain = async () => {
     const responses = await dispatch(stepAllWorkers()).unwrap();
@@ -229,6 +235,10 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 
     const state = getState() as RootState;
     const debuggerState = state.debugger;
+
+    if (responses[0].state.status === Status.HOST) {
+      await dispatch(handleHostCall());
+    }
 
     if (debuggerState.isRunMode && allSame && !allFinished && allRunning && !anyBreakpoint) {
       await stepAllWorkersAgain();

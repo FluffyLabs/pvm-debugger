@@ -65,6 +65,14 @@ const programs: {
     memory: [],
     gas: 10000n,
   },
+  readAndWrite: {
+    program: [0, 0, 6, 8, 135, 9, 17, 78, 2, 25],
+    regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    pc: 0,
+    pageMap: [],
+    memory: [],
+    gas: 10000n,
+  },
   storeU16: {
     program: [0, 0, 5, 69, 7, 0, 0, 2, 1],
     regs: [0, 0, 0, 0, 0, 0, 0, 305419896, 0, 0, 0, 0, 0],
@@ -129,6 +137,12 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
           <RadioGroupItem value="storeU16" id="option-storeU16" />
           <Label htmlFor="option-storeU16" className="cursor-pointer">
             Store U16 instruction
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="readAndWrite" id="option-readAndWrite" />
+          <Label htmlFor="option-readAndWrite" className="cursor-pointer">
+            Read and write
           </Label>
         </div>
       </RadioGroup>
