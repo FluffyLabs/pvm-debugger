@@ -2,6 +2,7 @@ import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
 import { SupportedLangs } from "./utils";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
+import { bytes, hash } from "@typeberry/jam-host-calls";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 
@@ -22,6 +23,7 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
       }
     | { command: Commands.STOP; payload: { isRunMode: boolean } }
     | { command: Commands.MEMORY; payload: { memoryChunk: Uint8Array } }
+    | { command: Commands.SET_STORAGE }
   );
 
 type CommonWorkerRequestParams = { messageId: string };
@@ -34,7 +36,8 @@ export type CommandWorkerRequestParams =
   | { command: Commands.STEP; payload: { program: Uint8Array; stepsToPerform: number } }
   | { command: Commands.RUN }
   | { command: Commands.STOP }
-  | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } };
+  | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
+  | { command: Commands.SET_STORAGE; payload: { storage: Storage } };
 
 export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
 
@@ -45,6 +48,7 @@ export enum Commands {
   RUN = "run",
   STOP = "stop",
   MEMORY = "memory",
+  SET_STORAGE = "set_storage",
 }
 
 export enum PvmTypes {
@@ -60,3 +64,5 @@ export enum CommandStatus {
 
 // TODO: unify the api
 export type PvmApiInterface = WasmPvmShellInterface | InternalPvm;
+
+export type Storage = Map<hash.Blake2bHash, bytes.BytesBlob>;

@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
+import { Storage } from "@/packages/web-worker/types";
 
 export interface DebuggerState {
   breakpointAddresses: number[];
@@ -18,7 +19,7 @@ export interface DebuggerState {
   programPreviewResult: CurrentInstruction[];
   pvmInitialized: boolean;
   stepsToPerform: number;
-  storage: { [key: string]: number };
+  storage: Storage | null;
 }
 
 const initialState: DebuggerState = {
@@ -42,7 +43,7 @@ const initialState: DebuggerState = {
   isDebugFinished: false,
   pvmInitialized: false,
   stepsToPerform: 1,
-  storage: {},
+  storage: null,
 };
 
 const debuggerSlice = createSlice({
@@ -91,6 +92,9 @@ const debuggerSlice = createSlice({
     setHasHostCallOpen(state, action) {
       state.hasHostCallOpen = action.payload;
     },
+    setStorage(state, action) {
+      state.storage = action.payload;
+    },
   },
 });
 
@@ -109,6 +113,7 @@ export const {
   setProgramPreviewResult,
   setPvmInitialized,
   setStepsToPerform,
+  setStorage,
 } = debuggerSlice.actions;
 
 export const selectProgram = (state: RootState) => state.debugger.program;

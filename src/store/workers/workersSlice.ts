@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
+import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
   setIsDebugFinished,
@@ -101,6 +101,27 @@ export const loadWorker = createAsyncThunk(
     }
   },
 );
+
+export const setAllWorkersStorage = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
+  const state = getState() as RootState;
+  const debuggerState = state.debugger;
+  const storage = debuggerState.storage;
+
+  if (storage === null) {
+    throw new Error("Storage is not set");
+  }
+
+  return Promise.all(
+    await state.workers.map(async (worker) => {
+      await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.SET_STORAGE,
+        payload: {
+          storage,
+        },
+      });
+    }),
+  );
+});
 
 export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
@@ -230,10 +251,10 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
     throw new Error("Invalid host call instruction");
   }
 
-  const hostCallIndex = currentInstructionEnriched.args.immediateDecoder.getUnsigned();
+  // const hostCallIndex = currentInstructionEnriched.args.immediateDecoder.getUnsigned();
 
-  if (hostCallIndex === HostCallIdentifiers.READ || hostCallIndex === HostCallIdentifiers.WRITE) {
-  }
+  // if (hostCallIndex === HostCallIdentifiers.READ || hostCallIndex === HostCallIdentifiers.WRITE) {
+  // }
 
   if (selectShouldContinueRunning(state)) {
     dispatch(continueAllWorkers());
@@ -424,7 +445,7 @@ const workers = createSlice({
     },
     setWorkerCurrentInstruction(state, action) {
       const worker = getWorker(state, action.payload.id);
-      console.log(action.payload.instruction);
+
       if (worker) {
         if (action.payload.instruction === null) {
           worker.currentInstruction = virtualTrapInstruction;

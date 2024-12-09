@@ -1,10 +1,11 @@
 import commandHandlers from "./command-handlers";
 import { logger } from "@/utils/loggerService";
-import { WorkerRequestParams, WorkerResponseParams, PvmApiInterface, Commands, CommandStatus } from "./types";
+import { WorkerRequestParams, WorkerResponseParams, PvmApiInterface, Commands, CommandStatus, Storage } from "./types";
 
 let pvm: PvmApiInterface | null = null;
 let memorySize: number | null = null;
 let isRunMode = false;
+let storage: Storage | null = null;
 
 export function postTypedMessage(msg: WorkerResponseParams) {
   postMessage(msg);
@@ -41,10 +42,11 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.STEP) {
-    const { result, state, isFinished, status, error } = commandHandlers.runStep({
+    const { result, state, isFinished, status, error } = await commandHandlers.runStep({
       pvm,
       program: e.data.payload.program,
       stepsToPerform: e.data.payload.stepsToPerform,
+      storage,
     });
     isRunMode = !isFinished;
 
@@ -91,6 +93,15 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       payload: {
         memoryChunk: data.memoryChunk,
       },
+    });
+  } else if (e.data.command === Commands.SET_STORAGE) {
+    storage = e.data.payload.storage;
+
+    postTypedMessage({
+      command: Commands.SET_STORAGE,
+      status: CommandStatus.SUCCESS,
+      error: null,
+      messageId: e.data.messageId,
     });
   }
 };
