@@ -1,7 +1,13 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
-import { setIsDebugFinished, setIsRunMode, setIsStepMode } from "@/store/debugger/debuggerSlice.ts";
+import {
+  selectIsDebugFinished,
+  setIsDebugFinished,
+  setIsRunMode,
+  setIsStepMode,
+  setHasHostCallOpen,
+} from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
@@ -35,6 +41,7 @@ export interface WorkerState {
   previousState: ExpectedState;
   currentInstruction?: CurrentInstruction;
   isRunMode?: boolean;
+  isBreakpoint?: boolean;
   isDebugFinished?: boolean;
   isLoading?: boolean;
   memory: {
@@ -204,43 +211,31 @@ export const refreshPageAllWorkers = createAsyncThunk(
   },
 );
 
-export const handleHostCall = createAsyncThunk("workers/handleHostCall", async () => {
-  // console.log("Handling host call");
-  // const state = getState() as RootState;
-  // const debuggerState = state.debugger;
+export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (_, { getState, dispatch }) => {
+  dispatch(setHasHostCallOpen(true));
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const state = getState() as RootState;
+
+  // if (selectShouldContinueRunning(state)) {
+  //   dispatch(continueAllWorkers());
+  // }
 });
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const stepAllWorkersAgain = async () => {
-    const responses = await dispatch(stepAllWorkers()).unwrap();
-
-    if (!responses) {
-      return;
-    }
-
-    const { workers } = getState() as RootState;
-    const allSame = workers.every(
-      ({ currentState }) => JSON.stringify(currentState) === JSON.stringify(workers[0].currentState),
-    );
-
-    const allRunning = responses.every((response) => response.isRunMode);
-    const anyBreakpoint = responses.some((response) => response.isBreakpoint);
-    const allFinished = responses.every((response) => response.isFinished);
+    await dispatch(stepAllWorkers()).unwrap();
+    const allSame = selectHasAllSameState(getState() as RootState);
 
     if (!allSame) {
       dispatch(setIsRunMode(false));
     }
 
-    await dispatch(refreshPageAllWorkers());
-
     const state = getState() as RootState;
-    const debuggerState = state.debugger;
 
-    if (responses[0].state.status === Status.HOST) {
+    if (state.workers[0].currentState.status === Status.HOST) {
       await dispatch(handleHostCall());
-    }
-
-    if (debuggerState.isRunMode && allSame && !allFinished && allRunning && !anyBreakpoint) {
+    } else if (selectShouldContinueRunning(state)) {
       await stepAllWorkersAgain();
     }
   };
@@ -301,7 +296,6 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
           instruction: data.payload.result,
         }),
       );
-
       dispatch(setIsStepMode(true));
 
       if (state.pc === undefined) {
@@ -312,6 +306,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
 
       if (isBreakpoint) {
         dispatch(setIsRunMode(false));
+        dispatch(setIsBreakpoint({ id: worker.id, isBreakpoint: true }));
       }
 
       return {
@@ -330,8 +325,6 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
   if (allFinished) {
     dispatch(setIsDebugFinished(true));
   }
-
-  return responses;
 });
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
@@ -431,6 +424,12 @@ const workers = createSlice({
         worker.isLoading = action.payload.isLoading;
       }
     },
+    setIsBreakpoint(state, action) {
+      const worker = getWorker(state, action.payload.id);
+      if (worker) {
+        worker.isBreakpoint = action.payload.isBreakpoint;
+      }
+    },
     appendMemory: (
       state,
       action: {
@@ -505,6 +504,7 @@ export const {
   setAllWorkersPreviousState,
   setAllWorkersCurrentInstruction,
   setWorkerIsLoading,
+  setIsBreakpoint,
   appendMemory,
 } = workers.actions;
 
@@ -520,6 +520,23 @@ export const selectMemoryForFirstWorker = (state: RootState) => {
 
   return worker.memory;
 };
+
+export const selectHasAllSameState = (state: RootState) => {
+  const allSame = state.workers.every(
+    ({ currentState }) => JSON.stringify(currentState) === JSON.stringify(state.workers[0].currentState),
+  );
+
+  return allSame;
+};
+
+export const selectShouldContinueRunning = (state: RootState) => {
+  const allSame = selectHasAllSameState(state);
+  const allFinished = selectIsDebugFinished(state);
+  const anyBreakpoint = state.workers.some((response) => response.isBreakpoint);
+
+  return state.debugger.isRunMode && allSame && !allFinished && !anyBreakpoint;
+};
+
 export const selectIsAnyWorkerLoading = (state: RootState) => state.workers.some((worker) => worker.isLoading);
 
 export default workers.reducer;

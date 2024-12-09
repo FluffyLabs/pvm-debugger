@@ -4,17 +4,18 @@ import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 
 export interface DebuggerState {
-  program: number[];
-  initialState: ExpectedState;
-  isProgramEditMode: boolean;
-  isAsmError: boolean;
-  isRunMode: boolean;
-  isStepMode: boolean;
-  programPreviewResult: CurrentInstruction[];
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
+  hasHostCallOpen: boolean;
+  initialState: ExpectedState;
   instructionMode: InstructionMode;
+  isAsmError: boolean;
   isDebugFinished: boolean;
+  isProgramEditMode: boolean;
+  isRunMode: boolean;
+  isStepMode: boolean;
+  program: number[];
+  programPreviewResult: CurrentInstruction[];
   pvmInitialized: boolean;
   stepsToPerform: number;
 }
@@ -32,6 +33,7 @@ const initialState: DebuggerState = {
   isAsmError: false,
   isRunMode: false,
   isStepMode: false,
+  hasHostCallOpen: false,
   programPreviewResult: [],
   breakpointAddresses: [],
   clickedInstruction: null,
@@ -84,21 +86,25 @@ const debuggerSlice = createSlice({
     setStepsToPerform(state, action) {
       state.stepsToPerform = action.payload;
     },
+    setHasHostCallOpen(state, action) {
+      state.hasHostCallOpen = action.payload;
+    },
   },
 });
 
 export const {
-  setProgram,
-  setInitialState,
-  setIsProgramEditMode,
-  setIsAsmError,
-  setIsRunMode,
-  setIsStepMode,
-  setProgramPreviewResult,
   setBreakpointAddresses,
   setClickedInstruction,
+  setHasHostCallOpen,
+  setInitialState,
   setInstructionMode,
+  setIsAsmError,
   setIsDebugFinished,
+  setIsProgramEditMode,
+  setIsRunMode,
+  setIsStepMode,
+  setProgram,
+  setProgramPreviewResult,
   setPvmInitialized,
   setStepsToPerform,
 } = debuggerSlice.actions;
