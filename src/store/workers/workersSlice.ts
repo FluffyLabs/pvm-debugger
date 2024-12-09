@@ -238,10 +238,7 @@ export const refreshPageAllWorkers = createAsyncThunk(
 export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
 
-  console.log("gimme storage motherfucer ", state.debugger.storage);
-
   if (state.debugger.storage === null) {
-    console.log("------ no storage");
     return dispatch(setHasHostCallOpen(true));
   } else {
     const previousInstruction = nextInstruction(
@@ -268,6 +265,12 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
           payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
         });
 
+        // if (resp) {
+          if (getState().debugger.isRunMode) {
+            dispatch(continueAllWorkers());
+          }
+        // }
+
         // if (hasCommandStatusError(resp)) {
         //   throw resp.error;
         // }
@@ -284,7 +287,7 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
       dispatch(continueAllWorkers());
     }
 
-    return
+    return;
   }
 });
 
@@ -381,8 +384,10 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
       }
 
       if (state.status === Status.HOST) {
-        console.log("+++======== HOST CALL ========+++");
-        dispatch(setIsRunMode(false));
+        if (debuggerState.storage === null) {
+          dispatch(setIsRunMode(false));
+        }
+
         await dispatch(handleHostCall());
       }
 

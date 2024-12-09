@@ -104,8 +104,6 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.HOST_CALL) {
-    console.log('---- go go go host call! ')
-
     const data = await commandHandlers.runHostCall({
       pvm,
       hostCallIdentifier: e.data.payload.hostCallIdentifier,
@@ -114,7 +112,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
 
     postTypedMessage({
       command: Commands.HOST_CALL,
-      // hostCallIdentifier: data.,
+      messageId: e.data.messageId,
     });
   }
 };

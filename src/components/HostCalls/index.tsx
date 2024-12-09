@@ -21,8 +21,6 @@ export const HostCalls = ({
   const { storage, hasHostCallOpen } = useAppSelector((state) => state.debugger);
   const dispatch = useAppDispatch();
 
-  console.log("------ hasHostCallOpen", hasHostCallOpen);
-
   // if (
   //   !currentInstructionEnriched ||
   //   isInstructionError(currentInstructionEnriched) ||
