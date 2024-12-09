@@ -30,7 +30,7 @@
     "@tanstack/react-virtual": "^3.10.9",
     "@typeberry/block": "0.0.1-7bc620b",
     "@typeberry/jam-host-calls": "0.0.1-f33d167",
-    "@typeberry/pvm-debugger-adapter": "0.0.1-c34714f",
+    "@typeberry/pvm-debugger-adapter": "0.0.1-577929a",
     "@typeberry/spectool-wasm": "^0.13.0",
     "@uiw/react-codemirror": "^4.23.6",
     "blake2b": "^2.1.4",

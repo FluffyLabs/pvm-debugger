@@ -13,7 +13,6 @@ const parseJSONToStorage = (value: { [key: string]: string }) => {
   const parsedValue: Storage = new Map();
 
   Object.entries(value).forEach(([key, value]) => {
-    debugger;
     parsedValue.set(
       hash.hashBytes(bytes.BytesBlob.blobFromString(key)).toString(),
       bytes.BytesBlob.blobFromString(value),

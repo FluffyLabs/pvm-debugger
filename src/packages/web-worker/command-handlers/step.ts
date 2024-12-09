@@ -23,14 +23,21 @@ const step = async ({ pvm, program, stepsToPerform, storage }: StepParams) => {
     throw new Error("PVM is uninitialized.");
   }
 
-  const isFinished = stepsToPerform > 1 ? !pvm.run(stepsToPerform) : !pvm.nextStep();
+  let isFinished = stepsToPerform > 1 ? !pvm.run(stepsToPerform) : !pvm.nextStep();
   let state = getState(pvm);
 
   if (state.status === Status.HOST && storage !== null) {
     const hostCallIdentifier = pvm.getExitArg();
     await runHostCall({ pvm, hostCallIdentifier, storage });
+    // pvm.nextStep();
     state = getState(pvm);
   }
+
+  // It's not really finished if we're in host status
+  if (isFinished && state.status === Status.HOST) {
+    isFinished = false;
+  }
+
   const result = nextInstruction(state.pc ?? 0, program) as unknown as CurrentInstruction;
 
   return { result, state, isFinished };
