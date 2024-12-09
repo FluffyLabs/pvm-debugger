@@ -48,7 +48,7 @@ export const MemoryTable = ({
             {bytes.map((byte, index) => (
               <span
                 key={index + rowIndex}
-                className={`mr-[1px] ${(index + rowIndex) % 2 === 0 ? "text-gray-700" : "text-gray-950"}`}
+                className={`mr-[1px] ${(index + rowIndex) % 2 === 0 ? "text-gray-700" : "text-gray-950 dark:text-gray-500"}`}
               >
                 {byte}
               </span>

@@ -69,3 +69,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+::file-selector-button {
+  @apply bg-background text-foreground;
+}
