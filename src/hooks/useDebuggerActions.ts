@@ -6,7 +6,7 @@ import {
   setBreakpointAddresses,
   setClickedInstruction,
   setInitialState,
-  setIsAsmError,
+  setIsProgramInvalid,
   setIsDebugFinished,
   setIsRunMode,
   setProgram,
@@ -82,9 +82,9 @@ export const useDebuggerActions = () => {
       if (data) {
         await startProgram({ ...data.initial, status: Status.OK }, data.program);
 
-        dispatch(setIsAsmError(false));
+        dispatch(setIsProgramInvalid(false));
       } else {
-        dispatch(setIsAsmError(true));
+        dispatch(setIsProgramInvalid(true));
       }
     },
     [startProgram, dispatch],

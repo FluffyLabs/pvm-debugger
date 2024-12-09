@@ -7,7 +7,7 @@ export interface DebuggerState {
   program: number[];
   initialState: ExpectedState;
   isProgramEditMode: boolean;
-  isAsmError: boolean;
+  isProgramInvalid: boolean;
   isRunMode: boolean;
   isStepMode: boolean;
   programPreviewResult: CurrentInstruction[];
@@ -29,7 +29,7 @@ const initialState: DebuggerState = {
     gas: 10000n,
   },
   isProgramEditMode: false,
-  isAsmError: false,
+  isProgramInvalid: false,
   isRunMode: false,
   isStepMode: false,
   programPreviewResult: [],
@@ -54,8 +54,8 @@ const debuggerSlice = createSlice({
     setIsProgramEditMode(state, action) {
       state.isProgramEditMode = action.payload;
     },
-    setIsAsmError(state, action) {
-      state.isAsmError = action.payload;
+    setIsProgramInvalid(state, action) {
+      state.isProgramInvalid = action.payload;
     },
     setIsRunMode(state, action) {
       state.isRunMode = action.payload;
@@ -91,7 +91,7 @@ export const {
   setProgram,
   setInitialState,
   setIsProgramEditMode,
-  setIsAsmError,
+  setIsProgramInvalid,
   setIsRunMode,
   setIsStepMode,
   setProgramPreviewResult,
@@ -106,7 +106,7 @@ export const {
 export const selectProgram = (state: RootState) => state.debugger.program;
 export const selectInitialState = (state: RootState) => state.debugger.initialState;
 export const selectIsProgramEditMode = (state: RootState) => state.debugger.isProgramEditMode;
-export const selectIsAsmError = (state: RootState) => state.debugger.isAsmError;
+export const selectIsProgramInvalid = (state: RootState) => state.debugger.isProgramInvalid;
 export const selectIsRunMode = (state: RootState) => state.debugger.isRunMode;
 export const selectProgramPreviewResult = (state: RootState) => state.debugger.programPreviewResult;
 export const selectBreakpointAddresses = (state: RootState) => state.debugger.breakpointAddresses;
