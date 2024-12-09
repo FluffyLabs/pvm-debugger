@@ -1,12 +1,11 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
+import { CurrentInstruction, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
-  setHasHostCallOpen,
 } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
@@ -15,6 +14,7 @@ import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
+import { isInstructionError, isOneImmediateArgs } from "@/types/type-guards";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -212,14 +212,32 @@ export const refreshPageAllWorkers = createAsyncThunk(
 );
 
 export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (_, { getState, dispatch }) => {
-  dispatch(setHasHostCallOpen(true));
+  // dispatch(setHasHostCallOpen(true));
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const state = getState() as RootState;
 
-  // if (selectShouldContinueRunning(state)) {
-  //   dispatch(continueAllWorkers());
-  // }
+  const currentInstruction = state.workers[0].currentInstruction;
+  const currentInstructionEnriched = state.debugger.programPreviewResult.find(
+    (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
+  );
+
+  if (
+    !currentInstructionEnriched ||
+    isInstructionError(currentInstructionEnriched) ||
+    !isOneImmediateArgs(currentInstructionEnriched.args)
+  ) {
+    throw new Error("Invalid host call instruction");
+  }
+
+  const hostCallIndex = currentInstructionEnriched.args.immediateDecoder.getUnsigned();
+
+  if (hostCallIndex === HostCallIdentifiers.READ || hostCallIndex === HostCallIdentifiers.WRITE) {
+  }
+
+  if (selectShouldContinueRunning(state)) {
+    dispatch(continueAllWorkers());
+  }
 });
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
@@ -290,6 +308,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
       const { state, isFinished, isRunMode } = data.payload;
 
       dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+      console.log("step", data.payload.result);
       dispatch(
         setWorkerCurrentInstruction({
           id: worker.id,
@@ -405,6 +424,7 @@ const workers = createSlice({
     },
     setWorkerCurrentInstruction(state, action) {
       const worker = getWorker(state, action.payload.id);
+      console.log(action.payload.instruction);
       if (worker) {
         if (action.payload.instruction === null) {
           worker.currentInstruction = virtualTrapInstruction;

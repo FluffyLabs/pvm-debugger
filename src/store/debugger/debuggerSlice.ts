@@ -18,6 +18,7 @@ export interface DebuggerState {
   programPreviewResult: CurrentInstruction[];
   pvmInitialized: boolean;
   stepsToPerform: number;
+  storage: { [key: string]: number };
 }
 
 const initialState: DebuggerState = {
@@ -41,6 +42,7 @@ const initialState: DebuggerState = {
   isDebugFinished: false,
   pvmInitialized: false,
   stepsToPerform: 1,
+  storage: {},
 };
 
 const debuggerSlice = createSlice({
