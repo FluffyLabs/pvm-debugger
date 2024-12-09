@@ -1,4 +1,4 @@
-import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
+import { CurrentInstruction, ExpectedState, HostCallIdentifiers, InitialState } from "@/types/pvm";
 import { SupportedLangs } from "./utils";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
@@ -15,7 +15,13 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
       }
     | {
         command: Commands.STEP;
-        payload: { state: ExpectedState; result: CurrentInstruction | object; isFinished: boolean; isRunMode: boolean };
+        payload: {
+          state: ExpectedState;
+          result: CurrentInstruction | object;
+          isFinished: boolean;
+          isRunMode: boolean;
+          exitArg: number;
+        };
       }
     | {
         command: Commands.RUN;
@@ -24,6 +30,7 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
     | { command: Commands.STOP; payload: { isRunMode: boolean } }
     | { command: Commands.MEMORY; payload: { memoryChunk: Uint8Array } }
     | { command: Commands.SET_STORAGE }
+    | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers; storage: Storage } }
   );
 
 type CommonWorkerRequestParams = { messageId: string };
@@ -37,7 +44,8 @@ export type CommandWorkerRequestParams =
   | { command: Commands.RUN }
   | { command: Commands.STOP }
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
-  | { command: Commands.SET_STORAGE; payload: { storage: Storage } };
+  | { command: Commands.SET_STORAGE; payload: { storage: Storage } }
+  | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers } };
 
 export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
 
@@ -49,6 +57,7 @@ export enum Commands {
   STOP = "stop",
   MEMORY = "memory",
   SET_STORAGE = "set_storage",
+  HOST_CALL = "host_call",
 }
 
 export enum PvmTypes {

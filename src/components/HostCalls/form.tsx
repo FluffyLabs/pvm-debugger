@@ -5,8 +5,8 @@ import { hash, bytes } from "@typeberry/jam-host-calls";
 import { Storage } from "@/packages/web-worker/types";
 import { useEffect, useState } from "react";
 import { logger } from "@/utils/loggerService";
-import { setIsDebugFinished, setStorage } from "@/store/debugger/debuggerSlice";
-import { setAllWorkersStorage, stepAllWorkers } from "@/store/workers/workersSlice";
+import { setHasHostCallOpen, setIsDebugFinished, setStorage } from "@/store/debugger/debuggerSlice";
+import { handleHostCall, setAllWorkersStorage, stepAllWorkers } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 const parseJSONToStorage = (value: { [key: string]: string }) => {
@@ -37,8 +37,11 @@ export const HostCallsForm = () => {
       const parsedValue = parseJSONToStorage(jsonValue);
       dispatch(setStorage(parsedValue));
       await dispatch(setAllWorkersStorage()).unwrap();
-      dispatch(setIsDebugFinished(false));
-      await dispatch(stepAllWorkers()).unwrap();
+      dispatch(setHasHostCallOpen(false));
+      await dispatch(handleHostCall()).unwrap();
+
+      // dispatch(setIsDebugFinished(false));
+      // await dispatch(stepAllWorkers()).unwrap();
     } catch (error) {
       logger.error("Wrong JSON", { error });
     }

@@ -9,7 +9,7 @@ import { tryAsServiceId } from "@typeberry/block";
 type HostCallParams = {
   pvm: PvmApiInterface | null;
   hostCallIdentifier: HostCallIdentifiers;
-  storage: Storage;
+  storage?: Storage;
 };
 type ExecuteParams = Parameters<write.Write["execute"]>;
 type RegistersType = ExecuteParams[1];
@@ -55,5 +55,9 @@ export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCall
     throw new Error("PVM is uninitialized.");
   }
 
-  await hostCall({ pvm, hostCallIdentifier, storage });
+  if (!storage) {
+    throw new Error("Storage is uninitialized.");
+  }
+
+  return await hostCall({ pvm, hostCallIdentifier, storage });
 };

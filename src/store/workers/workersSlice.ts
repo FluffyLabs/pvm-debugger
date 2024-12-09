@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
+import { CurrentInstruction, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
+  setHasHostCallOpen,
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
@@ -15,6 +16,7 @@ import { Commands, PvmTypes } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
 import { isInstructionError, isOneImmediateArgs } from "@/types/type-guards";
+import { nextInstruction } from "@/packages/web-worker/pvm.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -40,6 +42,7 @@ export interface WorkerState {
   currentState: ExpectedState;
   previousState: ExpectedState;
   currentInstruction?: CurrentInstruction;
+  exitArg?: number;
   isRunMode?: boolean;
   isBreakpoint?: boolean;
   isDebugFinished?: boolean;
@@ -233,31 +236,55 @@ export const refreshPageAllWorkers = createAsyncThunk(
 );
 
 export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (_, { getState, dispatch }) => {
-  // dispatch(setHasHostCallOpen(true));
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const state = getState() as RootState;
 
-  const currentInstruction = state.workers[0].currentInstruction;
-  const currentInstructionEnriched = state.debugger.programPreviewResult.find(
-    (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
-  );
+  console.log("gimme storage motherfucer ", state.debugger.storage);
 
-  if (
-    !currentInstructionEnriched ||
-    isInstructionError(currentInstructionEnriched) ||
-    !isOneImmediateArgs(currentInstructionEnriched.args)
-  ) {
-    throw new Error("Invalid host call instruction");
-  }
+  if (state.debugger.storage === null) {
+    console.log("------ no storage");
+    return dispatch(setHasHostCallOpen(true));
+  } else {
+    const previousInstruction = nextInstruction(
+      state.workers[0].previousState.pc ?? 0,
+      new Uint8Array(state.debugger.program),
+    );
 
-  // const hostCallIndex = currentInstructionEnriched.args.immediateDecoder.getUnsigned();
+    const instructionEnriched = state.debugger.programPreviewResult.find(
+      (instruction) => instruction.instructionCode === previousInstruction?.instructionCode,
+    );
 
-  // if (hostCallIndex === HostCallIdentifiers.READ || hostCallIndex === HostCallIdentifiers.WRITE) {
-  // }
+    if (
+      !instructionEnriched ||
+      isInstructionError(instructionEnriched) ||
+      !isOneImmediateArgs(instructionEnriched.args)
+    ) {
+      throw new Error("Invalid host call instruction");
+    }
 
-  if (selectShouldContinueRunning(state)) {
-    dispatch(continueAllWorkers());
+    await Promise.all(
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.HOST_CALL,
+          payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
+        });
+
+        // if (hasCommandStatusError(resp)) {
+        //   throw resp.error;
+        // }
+      }),
+    );
+
+    // await dispatch(continueAllWorkers());
+    // const hostCallIndex = currentInstructionEnriched.args.immediateDecoder.getUnsigned();
+
+    // if (hostCallIndex === HostCallIdentifiers.READ || hostCallIndex === HostCallIdentifiers.WRITE) {
+    // }
+
+    if (selectShouldContinueRunning(state)) {
+      dispatch(continueAllWorkers());
+    }
+
+    return
   }
 });
 
@@ -272,9 +299,12 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 
     const state = getState() as RootState;
 
-    if (state.workers[0].currentState.status === Status.HOST) {
-      await dispatch(handleHostCall());
-    } else if (selectShouldContinueRunning(state)) {
+    // console.log("+======== HOST CALL trying trying ========+", state.workers[0]);
+    //
+    // if (state.workers[0].currentState.status === Status.HOST) {
+    //   console.log("+======== HOST CALL ========+");
+    //   await dispatch(handleHostCall());
+    if (selectShouldContinueRunning(state)) {
       await stepAllWorkersAgain();
     }
   };
@@ -326,10 +356,11 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
         throw data.error;
       }
 
-      const { state, isFinished, isRunMode } = data.payload;
+      const { state, isFinished, isRunMode, exitArg } = data.payload;
 
       dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-      console.log("step", data.payload.result);
+      dispatch(setWorkerExitArg({ id: worker.id, exitArg }));
+
       dispatch(
         setWorkerCurrentInstruction({
           id: worker.id,
@@ -347,6 +378,12 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
       if (isBreakpoint) {
         dispatch(setIsRunMode(false));
         dispatch(setIsBreakpoint({ id: worker.id, isBreakpoint: true }));
+      }
+
+      if (state.status === Status.HOST) {
+        console.log("+++======== HOST CALL ========+++");
+        dispatch(setIsRunMode(false));
+        await dispatch(handleHostCall());
       }
 
       return {
@@ -515,6 +552,12 @@ const workers = createSlice({
 
       memory.isLoading = action.payload.isLoading;
     },
+    setWorkerExitArg(state, action) {
+      const worker = getWorker(state, action.payload.id);
+      if (worker) {
+        worker.exitArg = action.payload.exitArg;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(createWorker.fulfilled, (state, action) => {
@@ -547,6 +590,7 @@ export const {
   setWorkerIsLoading,
   setIsBreakpoint,
   appendMemory,
+  setWorkerExitArg,
 } = workers.actions;
 
 export const selectWorkers = (state: RootState) => state.workers;

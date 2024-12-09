@@ -42,7 +42,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.STEP) {
-    const { result, state, isFinished, status, error } = await commandHandlers.runStep({
+    const { result, state, isFinished, status, exitArg, error } = await commandHandlers.runStep({
       pvm,
       program: e.data.payload.program,
       stepsToPerform: e.data.payload.stepsToPerform,
@@ -54,7 +54,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       command: Commands.STEP,
       status,
       error,
-      payload: { result, state, isFinished, isRunMode },
+      payload: { result, state, isFinished, isRunMode, exitArg },
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.RUN) {
@@ -102,6 +102,19 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       status: CommandStatus.SUCCESS,
       error: null,
       messageId: e.data.messageId,
+    });
+  } else if (e.data.command === Commands.HOST_CALL) {
+    console.log('---- go go go host call! ')
+
+    const data = await commandHandlers.runHostCall({
+      pvm,
+      hostCallIdentifier: e.data.payload.hostCallIdentifier,
+      storage,
+    });
+
+    postTypedMessage({
+      command: Commands.HOST_CALL,
+      // hostCallIdentifier: data.,
     });
   }
 };
