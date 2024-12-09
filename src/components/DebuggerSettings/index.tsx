@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useAppSelector } from "@/store/hooks";
 import { useDispatch } from "react-redux";
 import { setStepsToPerform } from "@/store/debugger/debuggerSlice";
+import { HostCallsForm } from "../HostCalls/form";
 
 export const DebuggerSettings = () => {
   const debuggerState = useAppSelector((state) => state.debugger);
@@ -46,6 +47,7 @@ export const DebuggerSettings = () => {
                 }}
                 value={debuggerState.stepsToPerform}
               />
+              <HostCallsForm />
             </p>
           </DialogDescription>
         </DialogHeader>

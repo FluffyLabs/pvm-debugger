@@ -16,9 +16,9 @@ export class WriteAccounts implements write.Accounts {
 
   write(_serviceId: block.ServiceId, hash: hash.Blake2bHash, data: bytes.BytesBlob | null): Promise<void> {
     if (data === null) {
-      this.data.delete(hash);
+      this.data.delete(hash.toString());
     } else {
-      this.data.set(hash, data);
+      this.data.set(hash.toString(), data);
     }
 
     return Promise.resolve();

@@ -9,7 +9,9 @@ export class ReadAccounts implements read.Accounts {
   public readonly data: Storage = new Map();
 
   read(_serviceId: block.ServiceId, hash: hash.Blake2bHash): Promise<bytes.BytesBlob | null> {
-    const d = this.data.get(hash);
+    console.log(this.data);
+
+    const d = this.data.get(hash.toString());
     if (d === undefined) {
       throw new Error(`Unexpected call to read with ${hash}`);
     }

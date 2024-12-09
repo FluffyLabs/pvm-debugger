@@ -4,6 +4,7 @@ import { read, write } from "@typeberry/jam-host-calls";
 import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
+import { tryAsServiceId } from "@typeberry/block";
 
 type HostCallParams = {
   pvm: PvmApiInterface | null;
@@ -30,6 +31,7 @@ const hostCall = async ({
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
     const readAccounts = new ReadAccounts(storage);
     const jamHostCall = new read.Read(readAccounts);
+    jamHostCall.currentServiceId = tryAsServiceId(0x48484848) as any;
 
     await jamHostCall.execute(
       pvm.getInterpreter().getGasCounter(),
