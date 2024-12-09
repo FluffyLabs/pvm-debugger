@@ -79,6 +79,28 @@ const programs: {
     memory: [],
     gas: 10000n,
   },
+  empty: {
+    program: [0, 0, 0],
+    regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+    ],
+    pc: 0,
+    pageMap: [],
+    memory: [],
+    gas: 10000n,
+  },
 };
 
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
@@ -129,6 +151,12 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
           <RadioGroupItem value="storeU16" id="option-storeU16" />
           <Label htmlFor="option-storeU16" className="cursor-pointer">
             Store U16 instruction
+          </Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <RadioGroupItem value="empty" id="option-empty" />
+          <Label htmlFor="option-empty" className="cursor-pointer">
+            Empty
           </Label>
         </div>
       </RadioGroup>
