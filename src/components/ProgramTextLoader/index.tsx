@@ -6,6 +6,25 @@ import { logger } from "@/utils/loggerService";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
 
+const parseArrayLikeString = (input: string): (number | string)[] => {
+  // Remove the brackets and split the string by commas
+  const items = input
+    .replace(/^\[|\]$/g, "")
+    .split(",")
+    .map((item) => item.trim());
+
+  // Process each item
+  return items.map((item) => {
+    if (/^(?:0x)?[0-9a-fA-F]+$/i.test(item)) {
+      return parseInt(item, 16);
+    } else if (!isNaN(Number(item))) {
+      return Number(item);
+    } else {
+      return item;
+    }
+  });
+};
+
 export const ProgramTextLoader = ({
   program,
   setProgram,
@@ -37,9 +56,9 @@ export const ProgramTextLoader = ({
 
         setProgramError("");
       } catch (error: unknown) {
-        logger.error("Wrong binary file", { error, hideToast: true });
+        logger.error("Wrong binary program", { error, hideToast: true });
 
-        setProgram(undefined, "Wrong binary file");
+        setProgram(undefined, "Wrong binary program");
 
         if (error instanceof Error) {
           if (error?.message) {
@@ -49,8 +68,17 @@ export const ProgramTextLoader = ({
       }
     } else {
       try {
-        JSON.parse(newInput);
-        setProgram(JSON.parse(newInput));
+        // Make sure that hex strings are parsed as strings for JSON.parse validation
+        const parseTest = newInput.replace(/0x([a-fA-F0-9]+)/g, '"0x$1"');
+        // Parse it just to check if it's a valid JSON
+        JSON.parse(parseTest);
+
+        const parsedJson = parseArrayLikeString(newInput);
+        const programArray = parsedJson.filter((item) => typeof item === "number") as number[];
+
+        if (programArray.length) {
+          setProgram(programArray);
+        }
         setProgramError("");
       } catch (error) {
         logger.error("Wrong JSON", { error, hideToast: true });
