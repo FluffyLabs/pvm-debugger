@@ -71,7 +71,7 @@ const MemoryCell = ({
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <span>{numeralSystem ? "??" : "??? "}</span>
+                <span>{numeralSystem ? "??" : "???"}</span>
               </TooltipTrigger>
 
               <TooltipPortal>
