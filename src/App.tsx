@@ -84,7 +84,7 @@ const DebuggerContent = () => {
         {!!program.length && (
           <>
             {isProgramEditMode && (
-              <div className="border-2 rounded-md h-full p-2 pt-8">
+              <div className="border-2 rounded-md h-full p-2">
                 {instructionMode === InstructionMode.ASM ? (
                   <Assembly
                     program={program}
@@ -106,13 +106,6 @@ const DebuggerContent = () => {
                           name: "custom",
                         });
                       }
-                      // onProgramLoad({ initial: initialState, program, name: "custom" }, error);
-                      // if (program) {
-                      //   setTempProgram(program);
-                      //   onProgramLoad({ initial, program, name: "custom" }, error);
-                      // } else {
-                      //   onProgramLoad(undefined, error);
-                      // }
                     }}
                   />
                 )}

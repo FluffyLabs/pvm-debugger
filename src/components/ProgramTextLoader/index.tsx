@@ -18,6 +18,7 @@ export const ProgramTextLoader = ({
   }, [program]);
 
   const [programInput, setProgramInput] = useState(defaultProgram?.length ? JSON.stringify(defaultProgram) : "");
+  const [programError, setProgramError] = useState("");
   const isProgramInvalid = useAppSelector(selectIsProgramInvalid);
 
   const handleOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -27,18 +28,38 @@ export const ProgramTextLoader = ({
     if (!newInput.startsWith("[")) {
       try {
         const parsedBlob = bytes.BytesBlob.parseBlob(newInput);
-        setProgram(Array.prototype.slice.call(parsedBlob.raw));
-      } catch (error) {
+
+        const parsedBlobArray = Array.prototype.slice.call(parsedBlob.raw);
+
+        if (parsedBlobArray.length) {
+          setProgram(parsedBlobArray);
+        }
+
+        setProgramError("");
+      } catch (error: unknown) {
         logger.error("Wrong binary file", { error, hideToast: true });
+
         setProgram(undefined, "Wrong binary file");
+
+        if (error instanceof Error) {
+          if (error?.message) {
+            setProgramError(error.message);
+          }
+        }
       }
     } else {
       try {
         JSON.parse(newInput);
         setProgram(JSON.parse(newInput));
+        setProgramError("");
       } catch (error) {
         logger.error("Wrong JSON", { error, hideToast: true });
+
         setProgram(undefined, "Wrong JSON");
+
+        if (error) {
+          setProgramError(error.toString());
+        }
       }
     }
   };
@@ -59,7 +80,7 @@ export const ProgramTextLoader = ({
           value={programInput}
           onChange={handleOnChange}
         />
-        {isProgramInvalid && <span className="text-red-500">Program is not valid</span>}
+        {isProgramInvalid && <span className="text-red-500">{programError || "Program is not valid"}</span>}
       </div>
     </div>
   );
