@@ -31,7 +31,7 @@ const hostCall = async ({
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
     const readAccounts = new ReadAccounts(storage);
     const jamHostCall = new read.Read(readAccounts);
-    jamHostCall.currentServiceId = tryAsServiceId(0x48484848) as any;
+    jamHostCall.currentServiceId = tryAsServiceId(0x30303030) as any;
 
     await jamHostCall.execute(
       pvm.getInterpreter().getGasCounter(),
