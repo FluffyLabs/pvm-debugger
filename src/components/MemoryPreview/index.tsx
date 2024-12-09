@@ -51,8 +51,8 @@ const MemoryCell = ({
     <span
       key={index}
       className={classNames("relative mr-[1px]", {
-        "text-gray-700": (index + 1) % 2 === 0,
-        "text-gray-950 dark:text-gray-500": (index + 1) % 2 === 1,
+        "text-gray-700 dark:text-gray-300": (index + 1) % 2 === 0,
+        "text-gray-950 dark:text-gray-400": (index + 1) % 2 === 1,
         "font-bold": value !== 0,
         "opacity-50": isEqualAcrossWorkers && value === 0,
       })}
