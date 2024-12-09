@@ -6,7 +6,7 @@ import {
   setBreakpointAddresses,
   setClickedInstruction,
   setInitialState,
-  setIsAsmError,
+  setIsProgramInvalid,
   setIsDebugFinished,
   setIsRunMode,
   setProgram,
@@ -64,8 +64,8 @@ export const useDebuggerActions = () => {
       };
       dispatch(setAllWorkersCurrentState(currentState));
       dispatch(setAllWorkersPreviousState(currentState));
-
       dispatch(setIsDebugFinished(false));
+      dispatch(setIsRunMode(false));
       await dispatch(initAllWorkers()).unwrap();
 
       const result = disassemblify(new Uint8Array(newProgram));
@@ -80,11 +80,20 @@ export const useDebuggerActions = () => {
   const handleProgramLoad = useCallback(
     async (data?: ProgramUploadFileOutput) => {
       if (data) {
-        await startProgram({ ...data.initial, status: Status.OK }, data.program);
-
-        dispatch(setIsAsmError(false));
+        const response = await startProgram({ ...data.initial, status: Status.OK }, data.program);
+        if (
+          (
+            response as unknown as {
+              error: string;
+            }
+          )?.error
+        ) {
+          dispatch(setIsProgramInvalid(true));
+        } else {
+          dispatch(setIsProgramInvalid(false));
+        }
       } else {
-        dispatch(setIsAsmError(true));
+        dispatch(setIsProgramInvalid(true));
       }
     },
     [startProgram, dispatch],

@@ -1,35 +1,30 @@
-import { ExpectedState, Pvm as InternalPvm, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
-import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
+import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
+import { Pvm as InternalPvm } from "@typeberry/pvm-debugger-adapter";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmBindgenShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
 import { createGoWasmPvmShell } from "@/packages/web-worker/wasmGoShell.ts";
 import { logger } from "@/utils/loggerService.tsx";
 import { PvmApiInterface } from "./types.ts";
+import { createAssemblyScriptWasmPvmShell } from "./wasmAsShell.ts";
 
 export enum SupportedLangs {
   Go = "Go",
   Rust = "Rust",
+  AssemblyScript = "AssemblyScript",
 }
 
 export function getState(pvm: PvmApiInterface): ExpectedState {
-  let newState: ExpectedState;
-  if (isInternalPvm(pvm)) {
-    newState = {
-      pc: pvm.getPC(),
-      regs: Array.from(pvm.getRegisters()) as RegistersArray,
-      gas: pvm.getGas(),
-      status: pvm.getStatus(),
-    };
-  } else {
-    newState = {
-      pc: pvm.getProgramCounter(),
-      regs: uint8asRegs(pvm.getRegisters()),
-      gas: pvm.getGasLeft(),
-      status: pvm.getStatus(),
-    };
-  }
-  return newState;
+  const regs = isInternalPvm(pvm)
+    ? (Array.from(pvm.getRegisters()) as RegistersArray)
+    : uint8asRegs(pvm.getRegisters());
+
+  return {
+    pc: pvm.getProgramCounter(),
+    regs,
+    gas: pvm.getGasLeft(),
+    status: pvm.getStatus(),
+  };
 }
 
 export function regsAsUint8(regs?: RegistersArray): Uint8Array {
@@ -68,7 +63,7 @@ export function uint8asRegs(arr: Uint8Array): RegistersArray {
 }
 
 export function isInternalPvm(pvm: PvmApiInterface): pvm is InternalPvm {
-  return pvm instanceof InternalPvmInstance;
+  return pvm instanceof InternalPvm;
 }
 
 export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: SupportedLangs): Promise<PvmApiInterface> {
@@ -80,24 +75,46 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
     const wasmPvmShell = createGoWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;
-  } else {
+  }
+
+  if (lang === SupportedLangs.Rust) {
     const wasmModule = await WebAssembly.instantiate(bytes, {});
     logger.info("Rust WASM module loaded", wasmModule.instance.exports);
     const wasmPvmShell = createWasmPvmShell();
     wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
     return wasmPvmShell;
   }
+
+  if (lang === SupportedLangs.AssemblyScript) {
+    const compiled = await WebAssembly.compile(bytes);
+    logger.info("AssemblyScript WASM module compiled", compiled);
+    const wasmPvmShell = await createAssemblyScriptWasmPvmShell(compiled);
+    logger.info("AssemblyScript WASM module loaded", wasmPvmShell);
+    return wasmPvmShell;
+  }
+
+  throw new Error(`Unsupported lang: ${lang}`);
 }
 
-export function getMemoryPage(pageNumber: number, pvm: PvmApiInterface | null) {
+export function getMemorySize(pvm: PvmApiInterface | null) {
   if (!pvm) {
-    return new Uint8Array();
+    logger.warn("Accesing memory of not initialized PVM");
+    return null;
   }
 
-  if (isInternalPvm(pvm)) {
-    return pvm.getMemoryPage(pageNumber) || new Uint8Array();
+  const page = pvm.getPageDump(0);
+
+  if (!page) {
+    logger.warn("PVM memory page is null");
+    return null;
   }
-  return pvm.getPageDump(pageNumber) || new Uint8Array();
+
+  // PVM shouldn't return empty memory. If such scenario ever happens, change this code
+  if (page.length === 0) {
+    throw new Error("Memory page is empty");
+  }
+
+  return page.length;
 }
 
 export function chunksAsUint8(memory?: MemoryChunkItem[]): Uint8Array {

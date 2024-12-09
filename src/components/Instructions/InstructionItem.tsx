@@ -4,13 +4,12 @@ import { getStatusColor } from "../Registers/utils";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
 import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
-import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
+import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from ".";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
-import { logger } from "@/utils/loggerService.tsx";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 
 const getWorkerValueFromState = (
@@ -22,14 +21,6 @@ const getWorkerValueFromState = (
   propNameIndex !== undefined
     ? (worker[state][propName] as RegistersArray)[propNameIndex]
     : (worker[state][propName] as number);
-
-function getBackgroundColor(status: Status | undefined, isHighlighted: boolean) {
-  if (status === Status.OK && isHighlighted) {
-    return getStatusColor();
-  }
-
-  return getStatusColor(status);
-}
 
 const AddressCell = ({
   breakpointAddresses,
@@ -64,7 +55,6 @@ export const InstructionItem = forwardRef(
     {
       status,
       isLast,
-      currentPc,
       instructionMode,
       programRow,
       onClick,
@@ -85,29 +75,13 @@ export const InstructionItem = forwardRef(
     const { numeralSystem } = useContext(NumeralSystemContext);
 
     const workers = useAppSelector(selectWorkers);
-    const pcInAllWorkers = (state: "currentState" | "previousState") =>
-      workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
     const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
-
-    const isActive = (programRow: ProgramRow) => {
-      return pcInAllWorkers("currentState").includes(programRow.address);
-    };
 
     const fillSearch = useCallback(() => {
       onClick(programRow);
     }, [programRow, onClick]);
 
-    const isHighlighted = isActive(programRow);
-    const bgColor = getBackgroundColor(status, isHighlighted).toUpperCase();
-
-    logger.debug({
-      currentPc,
-      bgColor,
-    });
-
-    const bgOpacity =
-      pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
-      pcInAllWorkers("currentState").length;
+    const { backgroundColor, hasTooltip } = getHighlightStatus(workers, programRow, status);
 
     const renderContent = () => {
       return (
@@ -115,7 +89,11 @@ export const InstructionItem = forwardRef(
           ref={ref}
           className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
           test-id="instruction-item"
-          style={{ backgroundColor: isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : "initial" }}
+          style={{
+            backgroundColor,
+            borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined,
+          }}
+          title={programRow.block.name}
         >
           {instructionMode === InstructionMode.BYTECODE && (
             <>
@@ -159,7 +137,7 @@ export const InstructionItem = forwardRef(
       );
     };
 
-    return bgOpacity > 0 && bgOpacity < 1 ? (
+    return hasTooltip ? (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
@@ -182,3 +160,35 @@ export const InstructionItem = forwardRef(
     );
   },
 );
+
+function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status) {
+  const pcInAllWorkers = (state: "currentState" | "previousState") =>
+    workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
+
+  const isActive = (programRow: ProgramRow) => {
+    return pcInAllWorkers("currentState").includes(programRow.address);
+  };
+
+  const isHighlighted = isActive(programRow);
+  const bgColor = getBackgroundForStatus(status, isHighlighted).toUpperCase();
+
+  const bgOpacity =
+    pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
+    pcInAllWorkers("currentState").length;
+
+  const blockBackground = programRow.block.number % 2 === 0 ? "#fff" : "#efefef";
+  const backgroundColor = isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : blockBackground;
+
+  return {
+    backgroundColor,
+    hasTooltip: bgOpacity > 0 && bgOpacity < 1,
+  };
+}
+
+function getBackgroundForStatus(status: Status | undefined, isHighlighted: boolean) {
+  if (status === Status.OK && isHighlighted) {
+    return getStatusColor();
+  }
+
+  return getStatusColor(status);
+}

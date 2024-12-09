@@ -1,20 +1,31 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BlockMath } from "react-katex";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { InstructionKnowledgeBaseEntry, instructionsKnowledgeBase } from "@/utils/instructionsKnowledgeBase.ts";
 import { CurrentInstruction } from "@/types/pvm";
+import { debounce } from "lodash";
 
 export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: CurrentInstruction | undefined }) => {
   const [filteredInstructions, setFilteredInstructions] = useState<InstructionKnowledgeBaseEntry[]>([]);
   const [searchText, setSearchText] = useState<string>("");
 
+  const setSearchLater = useMemo(() => {
+    return debounce(
+      (currentInstruction) => {
+        if (currentInstruction) {
+          setSearchText(currentInstruction.name || "");
+        }
+      },
+      10,
+      { leading: true, trailing: true },
+    );
+  }, [setSearchText]);
+
   useEffect(() => {
-    if (currentInstruction) {
-      setSearchText(currentInstruction.name || "");
-    }
-  }, [currentInstruction]);
+    setSearchLater(currentInstruction);
+  }, [currentInstruction, setSearchLater]);
 
   useEffect(() => {
     setFilteredInstructions(

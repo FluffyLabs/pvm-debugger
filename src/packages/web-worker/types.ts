@@ -21,13 +21,7 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
         payload: { state: ExpectedState; isFinished: boolean; isRunMode: boolean };
       }
     | { command: Commands.STOP; payload: { isRunMode: boolean } }
-    | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number; memoryPage: Uint8Array } }
-    | {
-        command: Commands.MEMORY_RANGE;
-        payload: { start: number; end: number; memoryRange: Uint8Array };
-        messageId: string;
-      }
-    | { command: Commands.MEMORY_SIZE; payload: { pageNumber: number; memorySize: number } }
+    | { command: Commands.MEMORY; payload: { memoryChunk: Uint8Array } }
   );
 
 type CommonWorkerRequestParams = { messageId: string };
@@ -37,12 +31,10 @@ export type CommandWorkerRequestParams =
       payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
     }
   | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
-  | { command: Commands.STEP; payload: { program: Uint8Array } }
+  | { command: Commands.STEP; payload: { program: Uint8Array; stepsToPerform: number } }
   | { command: Commands.RUN }
   | { command: Commands.STOP }
-  | { command: Commands.MEMORY_PAGE; payload: { pageNumber: number } }
-  | { command: Commands.MEMORY_RANGE; payload: { start: number; end: number } }
-  | { command: Commands.MEMORY_SIZE };
+  | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } };
 
 export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
 
@@ -52,9 +44,7 @@ export enum Commands {
   STEP = "step",
   RUN = "run",
   STOP = "stop",
-  MEMORY_PAGE = "memory_page",
-  MEMORY_RANGE = "memory_range",
-  MEMORY_SIZE = "memory_size",
+  MEMORY = "memory",
 }
 
 export enum PvmTypes {

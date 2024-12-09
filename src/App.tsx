@@ -21,12 +21,19 @@ import { MobileRegisters } from "./components/MobileRegisters";
 import { MobileKnowledgeBase } from "./components/KnowledgeBase/Mobile";
 import { Assembly } from "./components/ProgramLoader/Assembly";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
-import { setClickedInstruction, setInstructionMode, setIsProgramEditMode } from "@/store/debugger/debuggerSlice.ts";
+import {
+  setClickedInstruction,
+  setInstructionMode,
+  setIsProgramEditMode,
+  setIsProgramInvalid,
+} from "@/store/debugger/debuggerSlice.ts";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { DebuggerControlls } from "./components/DebuggerControlls";
 import { useDebuggerActions } from "./hooks/useDebuggerActions";
 import { Loader } from "./components/ProgramLoader/Loader";
 import classNames from "classnames";
+import { DebuggerSettings } from "./components/DebuggerSettings";
+import { ProgramTextLoader } from "@/components/ProgramTextLoader";
 
 const DebuggerContent = () => {
   const dispatch = useAppDispatch();
@@ -35,7 +42,7 @@ const DebuggerContent = () => {
     program,
     initialState,
     isProgramEditMode,
-    isAsmError,
+    isProgramInvalid,
     programPreviewResult,
     clickedInstruction,
     instructionMode,
@@ -77,12 +84,31 @@ const DebuggerContent = () => {
         {!!program.length && (
           <>
             {isProgramEditMode && (
-              <div className="border-2 rounded-md h-full p-2 pt-8">
-                <Assembly
-                  program={program}
-                  onProgramLoad={debuggerActions.handleProgramLoad}
-                  initialState={initialState}
-                />
+              <div className="border-2 rounded-md h-full p-2">
+                {instructionMode === InstructionMode.ASM ? (
+                  <Assembly
+                    program={program}
+                    onProgramLoad={debuggerActions.handleProgramLoad}
+                    initialState={initialState}
+                  />
+                ) : (
+                  <ProgramTextLoader
+                    program={program}
+                    setProgram={(program, error) => {
+                      if (error) {
+                        dispatch(setIsProgramInvalid(true));
+                      }
+
+                      if (!error && program) {
+                        debuggerActions.handleProgramLoad({
+                          initial: initialState,
+                          program: program || [],
+                          name: "custom",
+                        });
+                      }
+                    }}
+                  />
+                )}
               </div>
             )}
 
@@ -123,7 +149,9 @@ const DebuggerContent = () => {
         />
       </div>
 
-      <div className="max-sm:hidden col-span-12 md:col-span-3">{<MemoryPreview />}</div>
+      <div className="max-sm:hidden col-span-12 md:col-span-3">
+        <MemoryPreview />
+      </div>
 
       <div className="max-sm:hidden md:col-span-3 overflow-hidden">
         <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstructionEnriched} />
@@ -141,7 +169,6 @@ const DebuggerContent = () => {
         <div className={`flex items-center space-x-2 ${!program.length ? "invisible" : "visible"}`}>
           <Label htmlFor="instruction-mode">ASM</Label>
           <Switch
-            disabled={isProgramEditMode}
             id="instruction-mode"
             checked={instructionMode === InstructionMode.BYTECODE}
             onCheckedChange={(checked) =>
@@ -155,7 +182,7 @@ const DebuggerContent = () => {
             variant="link"
             size="icon"
             className={!program.length ? "invisible" : "visible"}
-            disabled={!program.length || isAsmError}
+            disabled={!program.length || isProgramInvalid}
             title="Edit the code"
             onClick={() => {
               if (isProgramEditMode) {
@@ -177,7 +204,7 @@ const DebuggerContent = () => {
 };
 
 function App() {
-  const { pvmInitialized, initialState, program } = useAppSelector((state) => state.debugger);
+  const { pvmInitialized } = useAppSelector((state) => state.debugger);
 
   return (
     <>
@@ -192,6 +219,10 @@ function App() {
                 "md:col-span-6": pvmInitialized,
               })}
             >
+              <div className="mx-3">
+                <DebuggerSettings />
+              </div>
+
               <div className="w-full md:w-[350px]">
                 <PvmSelect />
               </div>
@@ -203,7 +234,7 @@ function App() {
             ) : (
               <div className="col-span-12 flex justify-center h-[50vh] align-middle">
                 <div className="min-w-[50vw] max-md:w-[100%] min-h-[500px] h-[75vh] flex flex-col">
-                  <Loader initialState={initialState} program={program} />
+                  <Loader />
                 </div>
               </div>
             )}

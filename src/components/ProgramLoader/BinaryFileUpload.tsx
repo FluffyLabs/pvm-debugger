@@ -44,12 +44,12 @@ export const BinaryFileUpload = ({
 
   return (
     <div className="block">
-      <p className="mt-10 mb-3">or upload program as a binary file</p>
+      <p className="mb-3">Upload program as a binary file</p>
       <Input
         className="my-6 mr-3"
         id="test-file"
         type="file"
-        accept="application/octet-stream"
+        accept=".bin,.pvm"
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => {
           if (e.target.files?.length) {

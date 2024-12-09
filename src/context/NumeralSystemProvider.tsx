@@ -1,11 +1,6 @@
-import { createContext, ReactNode, useState } from "react";
+import { ReactNode, useState } from "react";
 import { NumeralSystem } from "./NumeralSystem";
-
-export const NumeralSystemContext = createContext({
-  numeralSystem: NumeralSystem.DECIMAL,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setNumeralSystem: (_: NumeralSystem) => {},
-});
+import { NumeralSystemContext } from "./NumeralSystemContext";
 
 export const NumeralSystemProvider = ({ children }: { children: ReactNode }) => {
   const [numeralSystem, setNumeralSystem] = useState(NumeralSystem.DECIMAL);

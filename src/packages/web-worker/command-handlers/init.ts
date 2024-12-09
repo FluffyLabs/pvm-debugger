@@ -21,7 +21,6 @@ const init = async ({ pvm, program, initialState }: InitParams) => {
   }
   if (isInternalPvm(pvm)) {
     logger.info("PVM init internal", pvm);
-    // TODO Fix type guards
     initPvm(pvm, program, initialState);
   } else {
     logger.info("PVM init external", pvm);

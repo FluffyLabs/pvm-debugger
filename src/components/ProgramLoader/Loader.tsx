@@ -1,27 +1,17 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "../ui/button";
-import { Assembly } from "./Assembly";
 import { Bytecode } from "./Bytecode";
 import { Examples } from "./Examples";
 import { TextFileUpload } from "./TextFileUpload";
 import { useState, useCallback, useEffect } from "react";
 import { ProgramUploadFileOutput } from "./types";
-import { InitialState } from "@/types/pvm";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { setIsProgramEditMode } from "@/store/debugger/debuggerSlice.ts";
 import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 
-export const Loader = ({
-  initialState,
-  program,
-  setIsDialogOpen,
-}: {
-  initialState: InitialState;
-  program: number[];
-  setIsDialogOpen?: (val: boolean) => void;
-}) => {
+export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
   const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
   const [error, setError] = useState<string>();
@@ -56,10 +46,7 @@ export const Loader = ({
         <TabsList>
           <TabsTrigger value="upload">JSON tests</TabsTrigger>
           <TabsTrigger value="examples">Examples</TabsTrigger>
-          <TabsTrigger className="hidden lg:inline-flex" value="bytecode">
-            RAW bytecode
-          </TabsTrigger>
-          <TabsTrigger value="assembly">Assembly</TabsTrigger>
+          <TabsTrigger value="bytecode">RAW bytecode</TabsTrigger>
         </TabsList>
         <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
           <TabsContent value="upload">
@@ -85,17 +72,6 @@ export const Loader = ({
                 setIsSubmitted(false);
                 setError(error);
               }}
-              program={program}
-            />
-          </TabsContent>
-          <TabsContent value="assembly">
-            <Assembly
-              onProgramLoad={(val) => {
-                setProgramLoad(val);
-                setIsSubmitted(false);
-              }}
-              program={program}
-              initialState={initialState}
             />
           </TabsContent>
           {error && isSubmitted && <p className="text-red-500">{error}</p>}

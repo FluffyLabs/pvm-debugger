@@ -2,12 +2,13 @@ import { Table, TableBody } from "@/components/ui/table.tsx";
 
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
-import { NumeralSystemContext } from "@/context/NumeralSystemProvider";
+import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { ReactNode, useContext, useEffect, useMemo, useRef } from "react";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { InstructionItem } from "./InstructionItem";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers } from "@/store/workers/workersSlice.ts";
+import { debounce } from "lodash";
 
 export type ProgramRow = CurrentInstruction & { addressEl: ReactNode; counter: number };
 
@@ -63,14 +64,24 @@ export const Instructions = ({
     return programRows as ProgramRow[];
   }, [numeralSystem, programPreviewResult]);
 
+  const scrollTo = useMemo(() => {
+    return debounce(
+      (scrollToRef) => {
+        if (scrollToRef.current) {
+          scrollToRef.current.scrollIntoView({
+            behavior: "smooth", // Enables smooth scrolling
+            block: "nearest", // Aligns element to nearest scroll position
+          });
+        }
+      },
+      100,
+      { leading: true, trailing: true },
+    );
+  }, []);
+
   useEffect(() => {
-    if (scrollToRef.current) {
-      scrollToRef.current.scrollIntoView({
-        behavior: "smooth", // Enables smooth scrolling
-        block: "nearest", // Aligns element to nearest scroll position
-      });
-    }
-  }, [scrollToRef, maxPc]);
+    scrollTo(scrollToRef);
+  }, [scrollToRef, scrollTo, maxPc]);
 
   return (
     <div className="font-mono overflow-auto scroll-auto border-2 rounded-md h-[70vh]">

@@ -63,6 +63,8 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
       l = l.replace(/^(.*)\/\/.*/, "$1");
       // fix unary minus
       l = l.replace(/= -/, "= 0 -");
+      // replace `invalid` instructions with a comment
+      l = l.replace("invalid", "// invalid");
       return l;
     });
 
