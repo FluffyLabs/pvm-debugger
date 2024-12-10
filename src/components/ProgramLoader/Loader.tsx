@@ -44,8 +44,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
     <>
       <Tabs className="flex-1 flex flex-col items-start overflow-auto" defaultValue="upload">
         <TabsList>
-          <TabsTrigger value="upload">JSON tests</TabsTrigger>
-          <TabsTrigger value="examples">Examples</TabsTrigger>
+          <TabsTrigger value="upload">Upload file</TabsTrigger>
+          <TabsTrigger value="examples">Start with examples</TabsTrigger>
           <TabsTrigger value="bytecode">RAW bytecode</TabsTrigger>
         </TabsList>
         <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">

@@ -17,20 +17,36 @@ export const BinaryFileUpload = ({
 
     if (arrayBuffer instanceof ArrayBuffer) {
       const uint8Array = new Uint8Array(arrayBuffer);
-      const { code, /*memory,*/ registers } = decodeStandardProgram(uint8Array, new Uint8Array());
 
-      onFileUpload({
-        program: Array.from(code),
-        name: "custom",
-        initial: {
-          regs: Array.from(registers) as RegistersArray,
-          pc: 0,
-          pageMap: [],
-          // TODO: map memory properly
-          // memory: [...memory],
-          gas: 10000n,
-        },
-      });
+      // try to decode the program as an SPI
+      try {
+        const { code, /*memory,*/ registers } = decodeStandardProgram(uint8Array, new Uint8Array());
+
+        onFileUpload({
+          program: Array.from(code),
+          name: "custom",
+          initial: {
+            regs: Array.from(registers) as RegistersArray,
+            pc: 0,
+            pageMap: [],
+            // TODO: map memory properly
+            // memory: [...memory],
+            gas: 10000n,
+          },
+        });
+      } catch (e) {
+        // try to load program as a Generic
+        onFileUpload({
+          program: Array.from(uint8Array),
+          name: "custom",
+          initial: {
+            regs: Array.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) as RegistersArray,
+            pc: 0,
+            pageMap: [],
+            gas: 10000n,
+          },
+        });
+      }
     } else {
       console.error("Unexpected result type:", arrayBuffer);
     }
