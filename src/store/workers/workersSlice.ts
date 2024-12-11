@@ -265,15 +265,13 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
           payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
         });
 
-        // if (resp) {
-          if (getState().debugger.isRunMode) {
-            dispatch(continueAllWorkers());
-          }
-        // }
+        if ((getState() as RootState).debugger.isRunMode) {
+          dispatch(continueAllWorkers());
+        }
 
-        // if (hasCommandStatusError(resp)) {
-        //   throw resp.error;
-        // }
+        if (hasCommandStatusError(resp)) {
+          throw resp.error;
+        }
       }),
     );
 

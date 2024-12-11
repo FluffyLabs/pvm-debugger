@@ -5,8 +5,8 @@ import { hash, bytes } from "@typeberry/jam-host-calls";
 import { Storage } from "@/packages/web-worker/types";
 import { useEffect, useState } from "react";
 import { logger } from "@/utils/loggerService";
-import { setHasHostCallOpen, setIsDebugFinished, setStorage } from "@/store/debugger/debuggerSlice";
-import { handleHostCall, setAllWorkersStorage, stepAllWorkers } from "@/store/workers/workersSlice";
+import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
+import { handleHostCall, setAllWorkersStorage } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 const parseJSONToStorage = (value: { [key: string]: string }) => {
