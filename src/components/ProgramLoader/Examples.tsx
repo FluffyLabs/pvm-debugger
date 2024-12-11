@@ -106,7 +106,7 @@ const programs: {
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
   return (
     <div>
-      <p className="mb-2">Load example test file</p>
+      <h2 className="text-lg mb-4">Load an example test file</h2>
       <RadioGroup
         defaultValue="option-fibonacci"
         onValueChange={(val) =>
