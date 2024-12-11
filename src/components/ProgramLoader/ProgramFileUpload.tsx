@@ -4,19 +4,64 @@ import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
 import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { RegistersArray } from "@/types/pvm.ts";
+import { SafeParseReturnType, z } from "zod";
+
+const validateJsonTestCaseSchema = (json: unknown) => {
+  const pageMapSchema = z.object({
+    address: z.number(),
+    length: z.number(),
+    "is-writable": z.boolean(),
+  });
+
+  const memorySchema = z.object({
+    address: z.number(),
+    contents: z.array(z.number()),
+  });
+
+  const schema = z.object({
+    name: z.string(),
+    "initial-regs": z.array(z.number()).length(13),
+    "initial-pc": z.number(),
+    "initial-page-map": z.array(pageMapSchema),
+    "initial-memory": z.array(memorySchema),
+    "initial-gas": z.number(),
+    program: z.array(z.number()),
+    "expected-status": z.string(),
+    "expected-regs": z.array(z.number()),
+    "expected-pc": z.number(),
+    "expected-memory": z.array(memorySchema),
+    "expected-gas": z.number(),
+  });
+
+  return schema.safeParse(json);
+};
+
+const generateErrorMessageFromZodValidation = (result: SafeParseReturnType<unknown, unknown>) => {
+  if (!result.error) {
+    return false;
+  }
+
+  const formattedErrors = result.error.errors.map((err) => {
+    const path = err.path.join(" > ") || "root";
+    return `Field: "${path}" - ${err.message}`;
+  });
+
+  return `File validation failed with the following errors:\n\n${formattedErrors.join("\n")}`;
+};
 
 export const ProgramFileUpload = ({
   onFileUpload,
+  onParseError,
   close,
 }: {
   onFileUpload: (val: ProgramUploadFileOutput) => void;
+  onParseError: (error: string) => void;
   close?: () => void;
 }) => {
   let fileReader: FileReader;
 
   const handleFileRead = (e: ProgressEvent<FileReader>) => {
     const arrayBuffer = e.target?.result;
-    // const fileContent = fileReader?.result;
 
     if (arrayBuffer instanceof ArrayBuffer) {
       // Try to parse file as a JSON first
@@ -24,7 +69,15 @@ export const ProgramFileUpload = ({
         const stringContent = new TextDecoder("utf-8").decode(arrayBuffer);
 
         const jsonFile = JSON.parse(stringContent);
-        onFileUpload(mapUploadFileInputToOutput(jsonFile));
+
+        const result = validateJsonTestCaseSchema(jsonFile);
+
+        if (!result.success) {
+          const errorMessage = generateErrorMessageFromZodValidation(result);
+          onParseError(errorMessage || "");
+        } else {
+          onFileUpload(mapUploadFileInputToOutput(jsonFile));
+        }
       } catch (e) {
         const uint8Array = new Uint8Array(arrayBuffer);
 

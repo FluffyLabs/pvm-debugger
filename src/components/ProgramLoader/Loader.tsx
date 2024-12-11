@@ -53,6 +53,9 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
                 setProgramLoad(val);
                 setIsSubmitted(false);
               }}
+              onParseError={(error) => {
+                setError(error);
+              }}
             />
           </TabsContent>
           <TabsContent value="examples">
@@ -63,7 +66,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
               }}
             />
           </TabsContent>
-          {error && isSubmitted && <p className="text-red-500">{error}</p>}
+          {error && isSubmitted && <p className="text-red-500 whitespace-pre-line">{error}</p>}
         </div>
       </Tabs>
       <Button className="mt-3" id="load-button" type="button" onClick={handleLoad}>
