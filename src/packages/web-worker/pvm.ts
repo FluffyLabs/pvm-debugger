@@ -19,9 +19,9 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
     const isWriteable = page["is-writable"];
 
     if (isWriteable) {
-      memoryBuilder.setWriteable(startPageIndex, endPageIndex, new Uint8Array(page.length));
+      memoryBuilder.setWriteablePages(startPageIndex, endPageIndex, new Uint8Array(page.length));
     } else {
-      memoryBuilder.setReadable(startPageIndex, endPageIndex, new Uint8Array(page.length));
+      memoryBuilder.setReadablePages(startPageIndex, endPageIndex, new Uint8Array(page.length));
     }
   }
 
@@ -40,7 +40,7 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
   const memory = memoryBuilder.finalize(HEAP_END_PAGE, HEAP_END_PAGE);
 
   const registers = new Registers();
-  registers.copyFrom(new Uint32Array(initialState.regs!));
+  registers.copyFrom(new BigUint64Array(initialState.regs!.map((x) => BigInt(x))));
   pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 0n, registers, memory);
 };
 
