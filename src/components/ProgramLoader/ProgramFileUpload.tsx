@@ -5,6 +5,8 @@ import { mapUploadFileInputToOutput } from "./utils";
 import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { RegistersArray } from "@/types/pvm.ts";
 import { SafeParseReturnType, z } from "zod";
+import { useAppSelector } from "@/store/hooks";
+import { selectInitialState } from "@/store/debugger/debuggerSlice";
 
 const validateJsonTestCaseSchema = (json: unknown) => {
   const pageMapSchema = z.object({
@@ -58,6 +60,8 @@ export const ProgramFileUpload = ({
   onParseError: (error: string) => void;
   close?: () => void;
 }) => {
+  const initialState = useAppSelector(selectInitialState);
+
   let fileReader: FileReader;
 
   const handleFileRead = (e: ProgressEvent<FileReader>) => {
@@ -102,12 +106,7 @@ export const ProgramFileUpload = ({
           onFileUpload({
             program: Array.from(uint8Array),
             name: "custom",
-            initial: {
-              regs: Array.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) as RegistersArray,
-              pc: 0,
-              pageMap: [],
-              gas: 10000n,
-            },
+            initial: initialState,
           });
         }
       }
