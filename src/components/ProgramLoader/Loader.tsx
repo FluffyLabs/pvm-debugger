@@ -54,37 +54,44 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
     if (searchParams.get("program")) {
       const program = searchParams.get("program");
-      const parsedBlob = bytes.BytesBlob.parseBlob(program ?? "");
-      const parsedBlobArray = Array.prototype.slice.call(parsedBlob.raw);
 
-      if (searchParams.get("flavour") === "jam") {
-        try {
-          const { code, /*memory,*/ registers } = decodeStandardProgram(parsedBlob.raw, new Uint8Array());
+      try {
+        // Add 0x prefix if it's not there - we're assuming it's the hex program either way
+        const hexProgram = program?.startsWith("0x") ? program : `0x${program}`;
+        const parsedBlob = bytes.BytesBlob.parseBlob(hexProgram ?? "");
+        const parsedBlobArray = Array.prototype.slice.call(parsedBlob.raw);
 
-          handleLoad({
-            program: Array.from(code),
+        if (searchParams.get("flavour") === "jam") {
+          try {
+            const { code, /*memory,*/ registers } = decodeStandardProgram(parsedBlob.raw, new Uint8Array());
+
+            handleLoad({
+              program: Array.from(code),
+              name: "custom",
+              initial: {
+                regs: Array.from(registers) as RegistersArray,
+                pc: 0,
+                pageMap: [],
+                // TODO: map memory properly
+                // memory: [...memory],
+                gas: 10000n,
+              },
+            });
+          } catch (e) {
+            console.warn("Could not load the program from URL", e);
+          }
+        } else {
+          handleLoad(undefined, {
+            program: parsedBlobArray,
             name: "custom",
-            initial: {
-              regs: Array.from(registers) as RegistersArray,
-              pc: 0,
-              pageMap: [],
-              // TODO: map memory properly
-              // memory: [...memory],
-              gas: 10000n,
-            },
+            initial: initialState,
           });
-        } catch (e) {
-          console.warn("Could not load the program from URL");
         }
-      } else {
-        handleLoad(undefined, {
-          program: parsedBlobArray,
-          name: "custom",
-          initial: initialState,
-        });
-      }
 
-      window.history.replaceState({}, document.title, "/");
+        window.history.replaceState({}, document.title, "/");
+      } catch (e) {
+        console.warn("Could not parse the program from URL", e);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
