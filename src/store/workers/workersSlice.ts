@@ -349,7 +349,9 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
         command: Commands.STEP,
         payload: {
           program: new Uint8Array(debuggerState.program),
-          stepsToPerform: debuggerState.stepsToPerform,
+          // NOTE [ToDr] Despite settings "batched steps", when
+          // the user clicks "Step" we want just single step to happen.
+          stepsToPerform: 1,
         },
       });
 
