@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useAppSelector } from "@/store/hooks.ts";
+import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { HostCallsForm } from "./form";
+import { handleHostCall } from "@/store/workers/workersSlice";
 
 export const HostCalls = () => {
   const { hasHostCallOpen } = useAppSelector((state) => state.debugger);
+  const dispatch = useAppDispatch();
 
   // if (
   //   !currentInstructionEnriched ||
@@ -18,17 +20,15 @@ export const HostCalls = () => {
   return (
     <Dialog open={hasHostCallOpen}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Storage</DialogTitle>
-          <DialogDescription>
-            Debugger encountered ecalli. No storage detected. Please provide JSON storage or confirm empty
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <span>Type</span>
-          {/*<span>Ecalli&nbsp;{ecalliIndex}</span>*/}
+        <div>
+          <DialogHeader>
+            <DialogTitle>Storage</DialogTitle>
+            <DialogDescription>
+              Debugger encountered ecalli. No storage detected. Please provide JSON storage or confirm empty
+            </DialogDescription>
+          </DialogHeader>
+          <HostCallsForm onAfterSubmit={() => dispatch(handleHostCall())} />
         </div>
-        <HostCallsForm />
       </DialogContent>
       {/*<DialogClose*/}
       {/*  onClick={() => {*/}
