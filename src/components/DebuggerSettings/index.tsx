@@ -30,7 +30,7 @@ export const DebuggerSettings = () => {
             <span className="text-xl">Debugger Settings</span>
           </DialogTitle>
           <DialogDescription asChild>
-            <p className="py-4 ">
+            <div className="py-4">
               <span className="block text-lg text-black font-bold mb-2">Number of batched steps</span>
               <span className="mb-3 block">
                 To speed up execution PVMs can run multiple steps internally after clicking "Run". This may lead to
@@ -48,7 +48,7 @@ export const DebuggerSettings = () => {
                 value={debuggerState.stepsToPerform}
               />
               <HostCallsForm />
-            </p>
+            </div>
           </DialogDescription>
         </DialogHeader>
       </DialogContent>

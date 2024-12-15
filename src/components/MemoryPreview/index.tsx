@@ -71,7 +71,15 @@ const MemoryCell = ({
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
-                <span>{numeralSystem ? "??" : "??? "}</span>
+                <span
+                  className="font-mono"
+                  dangerouslySetInnerHTML={{
+                    __html: numeralSystem
+                      ? "&quest;&#8288;&quest;&#8288;"
+                      : "&quest;&#8288;&quest;&#8288;&quest;&#8288;",
+                    // This is a fix for ?? : ??? because ? adds a break after which causes the whole line to break into two lines
+                  }}
+                />
               </TooltipTrigger>
 
               <TooltipPortal>

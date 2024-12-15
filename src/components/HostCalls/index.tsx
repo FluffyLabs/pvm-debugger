@@ -1,24 +1,10 @@
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription, DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
-import { CurrentInstruction } from "@/types/pvm";
-import { isInstructionError, isOneImmediateArgs } from "@/types/type-guards";
 import { HostCallsForm } from "./form";
-import { setHasHostCallOpen } from "@/store/debugger/debuggerSlice.ts";
-import { Button } from "../ui/button";
+import { handleHostCall } from "@/store/workers/workersSlice";
 
-export const HostCalls = ({
-  currentInstructionEnriched,
-}: {
-  currentInstructionEnriched: CurrentInstruction | undefined;
-}) => {
-  const { storage, hasHostCallOpen } = useAppSelector((state) => state.debugger);
+export const HostCalls = () => {
+  const { hasHostCallOpen } = useAppSelector((state) => state.debugger);
   const dispatch = useAppDispatch();
 
   // if (
@@ -34,17 +20,15 @@ export const HostCalls = ({
   return (
     <Dialog open={hasHostCallOpen}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Storage</DialogTitle>
-          <DialogDescription>
-            Debugger encountered ecalli. No storage detected. Please provide JSON storage or confirm empty
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-4 items-center gap-4">
-          <span>Type</span>
-          {/*<span>Ecalli&nbsp;{ecalliIndex}</span>*/}
+        <div>
+          <DialogHeader>
+            <DialogTitle>Storage</DialogTitle>
+            <DialogDescription>
+              Debugger encountered ecalli. No storage detected. Please provide JSON storage or confirm empty
+            </DialogDescription>
+          </DialogHeader>
+          <HostCallsForm onAfterSubmit={() => dispatch(handleHostCall())} />
         </div>
-        <HostCallsForm />
       </DialogContent>
       {/*<DialogClose*/}
       {/*  onClick={() => {*/}

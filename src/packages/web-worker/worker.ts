@@ -104,13 +104,14 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.HOST_CALL) {
-    const data = await commandHandlers.runHostCall({
+    await commandHandlers.runHostCall({
       pvm,
       hostCallIdentifier: e.data.payload.hostCallIdentifier,
       storage,
     });
 
     postTypedMessage({
+      status: CommandStatus.SUCCESS,
       command: Commands.HOST_CALL,
       messageId: e.data.messageId,
     });
