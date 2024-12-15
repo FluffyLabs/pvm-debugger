@@ -5,12 +5,12 @@ import { RootState } from "@/store";
 import { Storage } from "@/packages/web-worker/types";
 
 export interface DebuggerState {
-  isProgramInvalid: boolean;
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
   hasHostCallOpen: boolean;
   initialState: ExpectedState;
   instructionMode: InstructionMode;
+  isAsmError: boolean;
   isDebugFinished: boolean;
   isProgramEditMode: boolean;
   isRunMode: boolean;
@@ -32,7 +32,7 @@ const initialState: DebuggerState = {
     gas: 10000n,
   },
   isProgramEditMode: false,
-  isProgramInvalid: false,
+  isAsmError: false,
   isRunMode: false,
   isStepMode: false,
   hasHostCallOpen: false,
@@ -59,8 +59,8 @@ const debuggerSlice = createSlice({
     setIsProgramEditMode(state, action) {
       state.isProgramEditMode = action.payload;
     },
-    setIsProgramInvalid(state, action) {
-      state.isProgramInvalid = action.payload;
+    setIsAsmError(state, action) {
+      state.isAsmError = action.payload;
     },
     setIsRunMode(state, action) {
       state.isRunMode = action.payload;
@@ -99,12 +99,12 @@ const debuggerSlice = createSlice({
 });
 
 export const {
-  setIsProgramInvalid,
   setBreakpointAddresses,
   setClickedInstruction,
   setHasHostCallOpen,
   setInitialState,
   setInstructionMode,
+  setIsAsmError,
   setIsDebugFinished,
   setIsProgramEditMode,
   setIsRunMode,
@@ -119,7 +119,7 @@ export const {
 export const selectProgram = (state: RootState) => state.debugger.program;
 export const selectInitialState = (state: RootState) => state.debugger.initialState;
 export const selectIsProgramEditMode = (state: RootState) => state.debugger.isProgramEditMode;
-export const selectIsProgramInvalid = (state: RootState) => state.debugger.isProgramInvalid;
+export const selectIsAsmError = (state: RootState) => state.debugger.isAsmError;
 export const selectIsRunMode = (state: RootState) => state.debugger.isRunMode;
 export const selectProgramPreviewResult = (state: RootState) => state.debugger.programPreviewResult;
 export const selectBreakpointAddresses = (state: RootState) => state.debugger.breakpointAddresses;

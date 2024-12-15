@@ -15,7 +15,7 @@ export type StepResponse = {
   error?: unknown;
   result: CurrentInstruction | object;
   state: ExpectedState;
-  exitArg: number;
+  exitArg?: number;
   isFinished: boolean;
 };
 
@@ -49,6 +49,6 @@ export const runStep = async ({ pvm, program, stepsToPerform, storage }: StepPar
     const data = await step({ pvm, program, stepsToPerform, storage });
     return { status: CommandStatus.SUCCESS, ...data };
   } catch (error) {
-    return { status: CommandStatus.ERROR, error, isFinished: true, result: {}, state: {}, exitArg: 0 };
+    return { status: CommandStatus.ERROR, error, isFinished: true, result: {}, state: {}, exitArg: null };
   }
 };
