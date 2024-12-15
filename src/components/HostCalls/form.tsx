@@ -5,8 +5,8 @@ import { hash, bytes } from "@typeberry/jam-host-calls";
 import { Storage } from "@/packages/web-worker/types";
 import { useEffect, useState } from "react";
 import { logger } from "@/utils/loggerService";
-import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
-import { setAllWorkersStorage } from "@/store/workers/workersSlice";
+import { setHasHostCallOpen, setIsDebugFinished, setStorage } from "@/store/debugger/debuggerSlice";
+import { handleHostCall, setAllWorkersStorage, stepAllWorkers } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 const parseJSONToStorage = (value: { [key: string]: string }) => {
@@ -22,13 +22,13 @@ const parseJSONToStorage = (value: { [key: string]: string }) => {
   return parsedValue;
 };
 
-export const HostCallsForm = (props: { onAfterSubmit?: () => void }) => {
+export const HostCallsForm = () => {
   const { storage } = useAppSelector((state) => state.debugger);
   const dispatch = useAppDispatch();
   const [inputValue, setInputValue] = useState<string>();
 
   useEffect(() => {
-    setInputValue(storage ? JSON.stringify(Object.fromEntries(storage.entries())) : "");
+    setInputValue(storage ? JSON.stringify(Object.fromEntries(storage)) : "");
   }, [storage]);
 
   const onSubmit = async () => {
@@ -38,7 +38,7 @@ export const HostCallsForm = (props: { onAfterSubmit?: () => void }) => {
       dispatch(setStorage(parsedValue));
       await dispatch(setAllWorkersStorage()).unwrap();
       dispatch(setHasHostCallOpen(false));
-      props.onAfterSubmit?.();
+      await dispatch(handleHostCall()).unwrap();
 
       // dispatch(setIsDebugFinished(false));
       // await dispatch(stepAllWorkers()).unwrap();
@@ -50,10 +50,7 @@ export const HostCallsForm = (props: { onAfterSubmit?: () => void }) => {
   return (
     <div className="py-4 ">
       <span className="block text-lg text-black font-bold mb-2">Storage Value</span>
-      <span className="mb-3 block">
-        Set storage for read & write host calls. Confirm empty, if you want to process. Storage can be modified by
-        running program.
-      </span>
+      <span className="mb-3 block">Lorem ipsum</span>
       <Textarea
         id="storage"
         autoFocus
@@ -61,16 +58,14 @@ export const HostCallsForm = (props: { onAfterSubmit?: () => void }) => {
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
       />
-      <div className="flex mt-2">
-        <Button type="submit" onClick={onSubmit}>
-          Confirm
-        </Button>
-        {storage !== null && (
-          <span className="flex items-center ml-3">
-            <CheckCircle color="green" className="mr-2" /> Storage provided
-          </span>
-        )}
-      </div>
+      {storage !== null && (
+        <span>
+          <CheckCircle color="green" /> Storage provided
+        </span>
+      )}
+      <Button type="submit" onClick={onSubmit}>
+        Save changes
+      </Button>
     </div>
   );
 };

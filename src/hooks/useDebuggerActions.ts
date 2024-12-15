@@ -6,7 +6,7 @@ import {
   setBreakpointAddresses,
   setClickedInstruction,
   setInitialState,
-  setIsProgramInvalid,
+  setIsAsmError,
   setIsDebugFinished,
   setIsRunMode,
   setProgram,
@@ -80,20 +80,11 @@ export const useDebuggerActions = () => {
   const handleProgramLoad = useCallback(
     async (data?: ProgramUploadFileOutput) => {
       if (data) {
-        const response = await startProgram({ ...data.initial, status: Status.OK }, data.program);
-        if (
-          (
-            response as unknown as {
-              error: string;
-            }
-          )?.error
-        ) {
-          dispatch(setIsProgramInvalid(true));
-        } else {
-          dispatch(setIsProgramInvalid(false));
-        }
+        await startProgram({ ...data.initial, status: Status.OK }, data.program);
+
+        dispatch(setIsAsmError(false));
       } else {
-        dispatch(setIsProgramInvalid(true));
+        dispatch(setIsAsmError(true));
       }
     },
     [startProgram, dispatch],

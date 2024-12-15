@@ -9,7 +9,7 @@ import { tryAsServiceId } from "@typeberry/block";
 type HostCallParams = {
   pvm: PvmApiInterface | null;
   hostCallIdentifier: HostCallIdentifiers;
-  storage: Storage | null;
+  storage?: Storage;
 };
 type ExecuteParams = Parameters<write.Write["execute"]>;
 type RegistersType = ExecuteParams[1];
@@ -31,8 +31,7 @@ const hostCall = async ({
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
     const readAccounts = new ReadAccounts(storage);
     const jamHostCall = new read.Read(readAccounts);
-    // TODO the types are the same, but exported from different packages and lost track of the type
-    jamHostCall.currentServiceId = tryAsServiceId(0x30303030) as unknown as typeof jamHostCall.currentServiceId;
+    jamHostCall.currentServiceId = tryAsServiceId(0x30303030) as any;
 
     await jamHostCall.execute(
       pvm.getInterpreter().getGasCounter(),
@@ -56,7 +55,7 @@ export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCall
     throw new Error("PVM is uninitialized.");
   }
 
-  if (storage === null) {
+  if (!storage) {
     throw new Error("Storage is uninitialized.");
   }
 

@@ -265,13 +265,15 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
           payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
         });
 
-        if ((getState() as RootState).debugger.isRunMode) {
-          dispatch(continueAllWorkers());
-        }
+        // if (resp) {
+          if (getState().debugger.isRunMode) {
+            dispatch(continueAllWorkers());
+          }
+        // }
 
-        if (hasCommandStatusError(resp)) {
-          throw resp.error;
-        }
+        // if (hasCommandStatusError(resp)) {
+        //   throw resp.error;
+        // }
       }),
     );
 
@@ -349,9 +351,7 @@ export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (
         command: Commands.STEP,
         payload: {
           program: new Uint8Array(debuggerState.program),
-          // NOTE [ToDr] Despite settings "batched steps", when
-          // the user clicks "Step" we want just single step to happen.
-          stepsToPerform: 1,
+          stepsToPerform: debuggerState.stepsToPerform,
         },
       });
 

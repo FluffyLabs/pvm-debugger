@@ -1,29 +1,8 @@
 import { Textarea } from "@/components/ui/textarea.tsx";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import classNames from "classnames";
 import { bytes } from "@typeberry/block";
 import { logger } from "@/utils/loggerService";
-import { useAppSelector } from "@/store/hooks.ts";
-import { selectIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
-
-const parseArrayLikeString = (input: string): (number | string)[] => {
-  // Remove the brackets and split the string by commas
-  const items = input
-    .replace(/^\[|\]$/g, "")
-    .split(",")
-    .map((item) => item.trim());
-
-  // Process each item
-  return items.map((item) => {
-    if (/^(?:0x)?[0-9a-fA-F]+$/i.test(item)) {
-      return parseInt(item, 16);
-    } else if (!isNaN(Number(item))) {
-      return Number(item);
-    } else {
-      return item;
-    }
-  });
-};
 
 export const ProgramTextLoader = ({
   program,
@@ -32,13 +11,10 @@ export const ProgramTextLoader = ({
   program?: number[];
   setProgram: (val?: number[], error?: string) => void;
 }) => {
-  const defaultProgram = useMemo(() => {
-    return program;
+  const [programInput, setProgramInput] = useState(program?.length ? JSON.stringify(program) : "");
+  useEffect(() => {
+    setProgramInput(program?.length ? JSON.stringify(program) : "");
   }, [program]);
-
-  const [programInput, setProgramInput] = useState(defaultProgram?.length ? JSON.stringify(defaultProgram) : "");
-  const [programError, setProgramError] = useState("");
-  const isProgramInvalid = useAppSelector(selectIsProgramInvalid);
 
   const handleOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newInput = e.target.value.trim();
@@ -47,68 +23,33 @@ export const ProgramTextLoader = ({
     if (!newInput.startsWith("[")) {
       try {
         const parsedBlob = bytes.BytesBlob.parseBlob(newInput);
-
-        const parsedBlobArray = Array.prototype.slice.call(parsedBlob.raw);
-
-        if (parsedBlobArray.length) {
-          setProgram(parsedBlobArray);
-        }
-
-        setProgramError("");
-      } catch (error: unknown) {
-        logger.error("Wrong binary program", { error, hideToast: true });
-
-        setProgram(undefined, "Wrong binary program");
-
-        if (error instanceof Error) {
-          if (error?.message) {
-            setProgramError(error.message);
-          }
-        }
+        setProgram(Array.prototype.slice.call(parsedBlob.raw));
+      } catch (error) {
+        logger.error("Wrong binary file", { error, hideToast: true });
+        setProgram(undefined, "Wrong binary file");
       }
     } else {
       try {
-        // Make sure that hex strings are parsed as strings for JSON.parse validation
-        const parseTest = newInput.replace(/0x([a-fA-F0-9]+)/g, '"0x$1"');
-        // Parse it just to check if it's a valid JSON
-        JSON.parse(parseTest);
-
-        const parsedJson = parseArrayLikeString(newInput);
-        const programArray = parsedJson.filter((item) => typeof item === "number") as number[];
-
-        if (programArray.length) {
-          setProgram(programArray);
-        }
-        setProgramError("");
+        JSON.parse(newInput);
+        setProgram(JSON.parse(newInput));
       } catch (error) {
         logger.error("Wrong JSON", { error, hideToast: true });
-
         setProgram(undefined, "Wrong JSON");
-
-        if (error) {
-          setProgramError(error.toString());
-        }
       }
     }
   };
 
   return (
     <div className="h-full">
-      <div className={classNames("h-full flex-auto flex gap-1 flex-col")}>
-        <p className="pb-2 mb-1">
-          <small>Edit program code bytes</small>
-        </p>
+      <div className={classNames("h-full flex-auto flex gap-1 flex-col border-2 rounded-md ")}>
         <Textarea
           autoFocus
-          className={classNames("w-full flex-auto font-mono text-base border-2 rounded-md", {
-            "focus-visible:ring-3 focus-visible:outline-none active:outline-none border-red-500": isProgramInvalid,
-          })}
+          className={classNames("w-full flex-auto font-mono border-0 text-base")}
           id="program"
           placeholder="Paste the program as an array of numbers or hex string"
           value={programInput}
           onChange={handleOnChange}
         />
-        {isProgramInvalid && <span className="text-red-500">{programError || "Program is not valid"}</span>}
       </div>
     </div>
   );
