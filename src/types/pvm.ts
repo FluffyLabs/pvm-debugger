@@ -73,3 +73,10 @@ export enum AvailablePvms {
 }
 
 export type decodeStandardProgram = (program: number[]) => CurrentInstruction;
+
+export enum HostCallIdentifiers {
+  GAS = 0,
+  LOOKUP = 1,
+  READ = 2,
+  WRITE = 3,
+}

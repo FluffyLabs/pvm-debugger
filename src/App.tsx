@@ -33,6 +33,7 @@ import { useDebuggerActions } from "./hooks/useDebuggerActions";
 import { Loader } from "./components/ProgramLoader/Loader";
 import classNames from "classnames";
 import { DebuggerSettings } from "./components/DebuggerSettings";
+import { HostCalls } from "./components/HostCalls";
 import { ProgramTextLoader } from "@/components/ProgramTextLoader";
 
 const DebuggerContent = () => {
@@ -79,6 +80,7 @@ const DebuggerContent = () => {
 
   return (
     <>
+      <HostCalls />
       <div className="col-span-12 md:col-span-4 max-h-[70vh] max-sm:min-h-[330px]">
         {!program.length && <InitialLoadProgramCTA />}
         {!!program.length && (

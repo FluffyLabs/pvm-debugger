@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useAppSelector } from "@/store/hooks";
 import { useDispatch } from "react-redux";
 import { setStepsToPerform } from "@/store/debugger/debuggerSlice";
+import { HostCallsForm } from "../HostCalls/form";
 
 export const DebuggerSettings = () => {
   const debuggerState = useAppSelector((state) => state.debugger);
@@ -29,7 +30,7 @@ export const DebuggerSettings = () => {
             <span className="text-xl">Debugger Settings</span>
           </DialogTitle>
           <DialogDescription asChild>
-            <p className="py-4 ">
+            <div className="py-4">
               <span className="block text-lg text-black font-bold mb-2">Number of batched steps</span>
               <span className="mb-3 block">
                 To speed up execution PVMs can run multiple steps internally after clicking "Run". This may lead to
@@ -46,7 +47,8 @@ export const DebuggerSettings = () => {
                 }}
                 value={debuggerState.stepsToPerform}
               />
-            </p>
+              <HostCallsForm />
+            </div>
           </DialogDescription>
         </DialogHeader>
       </DialogContent>
