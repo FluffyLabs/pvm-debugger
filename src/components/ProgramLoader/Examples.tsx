@@ -117,6 +117,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
       {Object.keys(programs).map((key) => {
         return (
           <Button
+            id={key}
             variant={"secondary"}
             size={"sm"}
             className={"mb-2 mr-2"}
