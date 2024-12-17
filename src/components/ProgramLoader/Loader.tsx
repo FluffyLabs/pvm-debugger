@@ -1,4 +1,3 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "../ui/button";
 import { Examples } from "./Examples";
 import { useState, useCallback, useEffect } from "react";
@@ -98,34 +97,25 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
   return (
     <>
-      <Tabs className="flex-1 flex flex-col items-start overflow-auto" defaultValue="upload">
-        <TabsList>
-          <TabsTrigger value="upload">Upload file</TabsTrigger>
-          <TabsTrigger value="examples">Start with examples</TabsTrigger>
-        </TabsList>
-        <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
-          <TabsContent value="upload">
-            <ProgramFileUpload
-              onFileUpload={(val) => {
-                setProgramLoad(val);
-                setIsSubmitted(false);
-              }}
-              onParseError={(error) => {
-                setError(error);
-              }}
-            />
-          </TabsContent>
-          <TabsContent value="examples">
-            <Examples
-              onProgramLoad={(val) => {
-                setProgramLoad(val);
-                setIsSubmitted(false);
-              }}
-            />
-          </TabsContent>
-          {error && isSubmitted && <p className="text-red-500 whitespace-pre-line">{error}</p>}
-        </div>
-      </Tabs>
+      <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
+        <Examples
+          onProgramLoad={(val) => {
+            setProgramLoad(val);
+            setIsSubmitted(false);
+            handleLoad(undefined, val);
+          }}
+        />
+        <ProgramFileUpload
+          onFileUpload={(val) => {
+            setProgramLoad(val);
+            setIsSubmitted(false);
+          }}
+          onParseError={(error) => {
+            setError(error);
+          }}
+        />
+        {error && isSubmitted && <p className="text-red-500 whitespace-pre-line">{error}</p>}
+      </div>
       <Button className="mt-3" id="load-button" type="button" onClick={handleLoad}>
         Load
       </Button>

@@ -120,8 +120,8 @@ export const ProgramFileUpload = ({
   };
 
   return (
-    <div className="block pb-[100px]">
-      <h2 className="text-lg">Load a file in one of the following formats:</h2>
+    <div className="block pb-5">
+      <h2 className="text-lg">Or load a file in one of the following formats:</h2>
       <ul className="list-disc p-4">
         <li>
           <p>JSON test file compatible with JAM TestVectors JSON</p>
