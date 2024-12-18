@@ -97,7 +97,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
   return (
     <>
-      <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
+      <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full md:px-5">
         <Examples
           onProgramLoad={(val) => {
             setProgramLoad(val);
