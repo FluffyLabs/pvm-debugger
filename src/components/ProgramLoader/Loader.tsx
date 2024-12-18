@@ -1,4 +1,3 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "../ui/button";
 import { Examples } from "./Examples";
 import { useState, useCallback, useEffect } from "react";
@@ -13,6 +12,7 @@ import { bytes } from "@typeberry/block";
 import { selectInitialState } from "@/store/debugger/debuggerSlice.ts";
 import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { RegistersArray } from "@/types/pvm.ts";
+import { useNavigate, useSearchParams } from "react-router";
 
 export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
@@ -22,6 +22,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   const [isSubmitted, setIsSubmitted] = useState(false);
   const debuggerActions = useDebuggerActions();
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     setError("");
@@ -38,6 +40,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       try {
         await debuggerActions.handleProgramLoad(program || programLoad);
         setIsDialogOpen?.(false);
+        navigate("/");
       } catch (error) {
         if (error instanceof Error || isSerializedError(error)) {
           setError(error.message);
@@ -46,12 +49,10 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         }
       }
     },
-    [dispatch, programLoad, debuggerActions, setIsDialogOpen],
+    [dispatch, programLoad, debuggerActions, setIsDialogOpen, navigate],
   );
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-
     if (searchParams.get("program")) {
       const program = searchParams.get("program");
 
@@ -87,8 +88,6 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
             initial: initialState,
           });
         }
-
-        window.history.replaceState({}, document.title, "/");
       } catch (e) {
         console.warn("Could not parse the program from URL", e);
       }
@@ -98,34 +97,25 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
   return (
     <>
-      <Tabs className="flex-1 flex flex-col items-start overflow-auto" defaultValue="upload">
-        <TabsList>
-          <TabsTrigger value="upload">Upload file</TabsTrigger>
-          <TabsTrigger value="examples">Start with examples</TabsTrigger>
-        </TabsList>
-        <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full overflow-auto md:px-5">
-          <TabsContent value="upload">
-            <ProgramFileUpload
-              onFileUpload={(val) => {
-                setProgramLoad(val);
-                setIsSubmitted(false);
-              }}
-              onParseError={(error) => {
-                setError(error);
-              }}
-            />
-          </TabsContent>
-          <TabsContent value="examples">
-            <Examples
-              onProgramLoad={(val) => {
-                setProgramLoad(val);
-                setIsSubmitted(false);
-              }}
-            />
-          </TabsContent>
-          {error && isSubmitted && <p className="text-red-500 whitespace-pre-line">{error}</p>}
-        </div>
-      </Tabs>
+      <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full md:px-5">
+        <Examples
+          onProgramLoad={(val) => {
+            setProgramLoad(val);
+            setIsSubmitted(false);
+            handleLoad(undefined, val);
+          }}
+        />
+        <ProgramFileUpload
+          onFileUpload={(val) => {
+            setProgramLoad(val);
+            setIsSubmitted(false);
+          }}
+          onParseError={(error) => {
+            setError(error);
+          }}
+        />
+        {error && isSubmitted && <p className="text-red-500 whitespace-pre-line">{error}</p>}
+      </div>
       <Button className="mt-3" id="load-button" type="button" onClick={handleLoad}>
         Load
       </Button>
