@@ -5,7 +5,7 @@ import "./globals.css";
 import { NumeralSystemProvider } from "@/context/NumeralSystemProvider";
 import { Provider } from "react-redux";
 import { store } from "./store";
-import { BrowserRouter } from "react-router";
+import { HashRouter } from "react-router";
 
 document.documentElement.classList.toggle("dark", window.matchMedia("(prefers-color-scheme: dark)").matches);
 
@@ -14,9 +14,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   // <React.StrictMode>
   <Provider store={store}>
     <NumeralSystemProvider>
-      <BrowserRouter>
+      <HashRouter>
         <App />
-      </BrowserRouter>
+      </HashRouter>
     </NumeralSystemProvider>
   </Provider>,
   // </React.StrictMode>,
