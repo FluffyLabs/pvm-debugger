@@ -12,6 +12,7 @@ import { bytes } from "@typeberry/block";
 import { selectInitialState } from "@/store/debugger/debuggerSlice.ts";
 import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { RegistersArray } from "@/types/pvm.ts";
+import { useNavigate, useSearchParams } from "react-router";
 
 export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
@@ -21,6 +22,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   const [isSubmitted, setIsSubmitted] = useState(false);
   const debuggerActions = useDebuggerActions();
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     setError("");
@@ -37,6 +40,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       try {
         await debuggerActions.handleProgramLoad(program || programLoad);
         setIsDialogOpen?.(false);
+        navigate("/");
       } catch (error) {
         if (error instanceof Error || isSerializedError(error)) {
           setError(error.message);
@@ -45,12 +49,10 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         }
       }
     },
-    [dispatch, programLoad, debuggerActions, setIsDialogOpen],
+    [dispatch, programLoad, debuggerActions, setIsDialogOpen, navigate],
   );
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-
     if (searchParams.get("program")) {
       const program = searchParams.get("program");
 
@@ -86,8 +88,6 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
             initial: initialState,
           });
         }
-
-        window.history.replaceState({}, document.title, "/");
       } catch (e) {
         console.warn("Could not parse the program from URL", e);
       }
