@@ -222,13 +222,13 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                     selectedValues.slice(0, maxCount).map((value) => {
                       const option = options.find((o) => o.value === value);
                       return (
-                        <span key={value} className="text-primary px-2">
+                        <span key={value} className="text-black px-2">
                           {option?.label}
                         </span>
                       );
                     })}
                   {!showOptionsAsTags && selectedValues.length > maxCount && (
-                    <span className="text-prmiary px-2">{selectedValues.length} PVMs in parallel</span>
+                    <span className="text-black px-2">{selectedValues.length} PVMs in parallel</span>
                   )}
                   {showOptionsAsTags &&
                     selectedValues.slice(0, maxCount).map((value) => {

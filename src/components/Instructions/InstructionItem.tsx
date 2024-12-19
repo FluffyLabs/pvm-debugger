@@ -9,9 +9,8 @@ import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from ".";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
-import { hexToRgb, invertHexColor } from "@/lib/utils.ts";
+import { hexToRgb } from "@/lib/utils.ts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
-import useDarkMode from "@/hooks/useDarkMode.ts";
 
 const getWorkerValueFromState = (
   worker: WorkerState,
@@ -74,7 +73,6 @@ export const InstructionItem = forwardRef(
     ref: ForwardedRef<HTMLTableRowElement>,
   ) => {
     const { numeralSystem } = useContext(NumeralSystemContext);
-    const isDarkMode = useDarkMode();
 
     const workers = useAppSelector(selectWorkers);
     const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
@@ -83,7 +81,7 @@ export const InstructionItem = forwardRef(
       onClick(programRow);
     }, [programRow, onClick]);
 
-    const { backgroundColor, hasTooltip } = getHighlightStatus(workers, programRow, status, isDarkMode);
+    const { backgroundColor, hasTooltip } = getHighlightStatus(workers, programRow, status);
 
     const renderContent = () => {
       return (
@@ -163,7 +161,7 @@ export const InstructionItem = forwardRef(
   },
 );
 
-function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status, isDarkMode?: boolean) {
+function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status) {
   const pcInAllWorkers = (state: "currentState" | "previousState") =>
     workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
 
@@ -179,11 +177,7 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
     pcInAllWorkers("currentState").length;
 
   const blockBackground = programRow.block.number % 2 === 0 ? "#fff" : "#efefef";
-  const backgroundColor = isHighlighted
-    ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})`
-    : isDarkMode
-      ? invertHexColor(blockBackground)
-      : blockBackground;
+  const backgroundColor = isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : blockBackground;
 
   return {
     backgroundColor,
