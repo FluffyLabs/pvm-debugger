@@ -63,14 +63,16 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
               </div>
               <p className="my-3">{currentInstructionFromKnowledgeBase?.description}</p>
               <div className="flex mb-3 mr-3 justify-end">
-                <Button
-                  size={"sm"}
-                  onClick={() => {
-                    window.open(currentInstructionFromKnowledgeBase?.linkInGrayPaperReader, "_blank");
-                  }}
-                >
-                  Open in GP
-                </Button>
+                {currentInstructionFromKnowledgeBase?.linkInGrayPaperReader && (
+                  <Button
+                    size={"sm"}
+                    onClick={() => {
+                      window.open(currentInstructionFromKnowledgeBase?.linkInGrayPaperReader, "_blank");
+                    }}
+                  >
+                    Open in GP
+                  </Button>
+                )}
               </div>
             </div>
           );
