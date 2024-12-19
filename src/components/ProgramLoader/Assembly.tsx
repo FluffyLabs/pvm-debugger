@@ -5,7 +5,6 @@ import classNames from "classnames";
 import { compile_assembly, disassemble } from "@typeberry/spectool-wasm";
 import { mapUploadFileInputToOutput } from "./utils";
 import CodeMirror from "@uiw/react-codemirror";
-import useDarkMode from "@/hooks/useDarkMode.ts";
 
 const DEFAULT_ASSEMBLY = `pre: a0 = 9
 pre: ra = 0xffff0000
@@ -157,7 +156,6 @@ export const Assembly = ({
   const [error, setError] = useState<string>();
   const [assembly, setAssembly] = useState(defaultAssembly);
   const [isFirstCompilation, setFirstCompilation] = useState(true);
-  const isDarkMode = useDarkMode();
 
   // compile the assembly for the first time
   useEffect(() => {
@@ -196,7 +194,6 @@ export const Assembly = ({
           height="100%"
           placeholder="Try writing some PolkaVM assembly code."
           value={assembly}
-          theme={isDarkMode ? "dark" : "light"}
           onChange={(value) => compile(value)}
         />
       </div>
