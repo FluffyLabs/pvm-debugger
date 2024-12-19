@@ -27,9 +27,9 @@ export const ProgramLoader = (props: { initialState: InitialState; program: numb
       <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
         <Button>Load</Button>
       </DialogTrigger>
-      <DialogContent className="min-h-[500px] h-[75vh] flex flex-col">
+      <DialogContent className="min-h-[500px] max-h-[85vh] flex flex-col overflow-auto">
         <DialogHeader>
-          <DialogTitle>Load program</DialogTitle>
+          <DialogTitle></DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
         <Loader {...props} setIsDialogOpen={setIsDialogOpen} />
