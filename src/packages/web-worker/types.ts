@@ -2,7 +2,7 @@ import { CurrentInstruction, ExpectedState, HostCallIdentifiers, InitialState } 
 import { SupportedLangs } from "./utils";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
-import { bytes } from "@typeberry/jam-host-calls";
+import { StorageRow } from "@/components/HostCalls/trie-input";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 
@@ -74,4 +74,4 @@ export enum CommandStatus {
 // TODO: unify the api
 export type PvmApiInterface = WasmPvmShellInterface | InternalPvm;
 
-export type Storage = Map<string, bytes.BytesBlob>;
+export type Storage = StorageRow[];
