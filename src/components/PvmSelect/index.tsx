@@ -35,6 +35,7 @@ interface WasmMetadata {
     resetPolkaVM: boolean;
   };
   wasmBlobUrl: string;
+  wasmBlobUrl32?: string;
 }
 
 export interface SelectedPvmWithPayload {
@@ -170,7 +171,7 @@ export const PvmSelect = () => {
             id: value,
             type: PvmTypes.WASM_URL,
             params: {
-              url: path.join(url, "../", metadata.wasmBlobUrl),
+              url: path.join(url, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl),
               lang,
             },
           },
