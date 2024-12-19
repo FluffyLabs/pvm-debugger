@@ -59,11 +59,6 @@ const ProgramLoader = () => {
             pathname: "/",
             search: searchParams.toString(),
           });
-          // handleLoad(undefined, {
-          //   program: parsedBlobArray,
-          //   name: "custom",
-          //   initial: initialState,
-          // });
         }
       } catch (e) {
         console.warn("Could not parse the program from URL", e);
