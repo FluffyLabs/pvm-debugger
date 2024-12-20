@@ -1,8 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
+import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
-import { Storage } from "@/packages/web-worker/types";
 
 export interface DebuggerState {
   isProgramInvalid: boolean;
@@ -19,7 +18,7 @@ export interface DebuggerState {
   programPreviewResult: CurrentInstruction[];
   pvmInitialized: boolean;
   stepsToPerform: number;
-  storage: Storage | null;
+  storage: DebuggerEcalliStorage | null;
 }
 
 const initialState: DebuggerState = {

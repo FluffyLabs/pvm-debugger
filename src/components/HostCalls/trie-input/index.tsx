@@ -24,6 +24,18 @@ import classNames from "classnames";
 const truncateString = (str: string, maxLength: number = 20) =>
   str.length >= maxLength ? str.substring(0, 4) + "..." + str.substring(str.length - 4) : str;
 
+const is32BytesHex = (h: string) => {
+  return h.length === 66 && h.startsWith("0x");
+};
+
+const unescapeString = (str: string) => {
+  return str.replace(/\\n/g, String.fromCharCode(10)).replace(/\\t/g, String.fromCharCode(9));
+};
+
+const escapeString = (str: string) => {
+  return str.replace(/\n/g, "\\n").replace(/\t/g, "\\t");
+};
+
 // Define the type for a row
 export interface StorageRow {
   id: string;
@@ -37,7 +49,7 @@ export interface StorageRow {
 }
 
 type TrieInputProps = {
-  initialRows?: StorageRow[];
+  initialRows: StorageRow[] | null;
   onChange: (value: StorageRow[]) => void;
 };
 
@@ -96,14 +108,20 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
   const handleKeyChange = (index: number, value: string): void => {
     const newRows = [...rows];
     newRows[index].key = value;
-    newRows[index].keyHash = hash.hashBytes(bytes.BytesBlob.blobFromString(value)).toString();
+
+    newRows[index].keyHash = is32BytesHex(value)
+      ? value
+      : hash.hashBytes(bytes.BytesBlob.blobFromString(value)).toString();
     modifyRows(newRows);
   };
 
   // Handle changes in the Value input
-  const handleValueChange = (index: number, value: string): void => {
+  const handleValueChange = (index: number, rawValue: string): void => {
     // Allow user to finish hex value before validation
     const newRows = [...rows];
+
+    const value = unescapeString(rawValue);
+
     try {
       if (value === "0x") {
         throw new Error("Incomplete value. Treat as string.");
@@ -284,7 +302,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
               <div className="flex flex-col w-full">
                 <Input placeholder="Key" value={row.key} onChange={(e) => handleKeyChange(index, e.target.value)} />
                 <span className="text-xs py-1 ml-2">
-                  Key Hash: {row.key === row.keyHash ? "--- key is hash ---" : row.keyHash}
+                  Key Hash: {row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
                 </span>
               </div>
               {/* Checkmark Icon */}
@@ -318,7 +336,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
             <Textarea
               placeholder="Value"
               disabled={row.action === "remove"}
-              value={row.value.asText()}
+              value={escapeString(row.value.asText())}
               onChange={(e) => handleValueChange(index, e.target.value)}
               className="flex-1 mt-1"
             />
@@ -329,7 +347,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
           </div>
         ) : (
           <div className="flex items-center">
-            <p className="flex-1">{truncateString(row.value.asText())}</p>
+            <p className="flex-1">{truncateString(escapeString(row.value.asText()))}</p>
             {/* Eye Icon */}
             <Button variant="ghost" onClick={() => handleEyeIconClick(index)}>
               <EyeIcon className={`w-4 h-4 ${row.isHidden ? "text-gray-500" : ""}`} />
@@ -375,7 +393,7 @@ const InputRow = (props: InputRowProps) => {
           <div className="flex flex-col w-full">
             <Input placeholder="Key" value={row.key} onChange={(e) => handleKeyChange(index, e.target.value)} />
             <span className="text-xs py-1 ml-2">
-              Key Hash: {row.key === row.keyHash ? "--- key is hash ---" : row.keyHash}
+              Key Hash: {row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
             </span>
           </div>
 
@@ -392,7 +410,7 @@ const InputRow = (props: InputRowProps) => {
           <Textarea
             placeholder="Raw value or hex array"
             disabled={row.action === "remove"}
-            value={row.value.asText()}
+            value={escapeString(row.value.asText())}
             onChange={(e) => handleValueChange(index, e.target.value)}
             className="flex-1 mt-1"
           />

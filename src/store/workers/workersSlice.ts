@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
+import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
   setHasHostCallOpen,
@@ -12,7 +12,7 @@ import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
-import { Commands, PvmTypes } from "@/packages/web-worker/types";
+import { Commands, PvmTypes, Storage } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
 import { isInstructionError, isOneImmediateArgs } from "@/types/type-guards";
@@ -105,6 +105,15 @@ export const loadWorker = createAsyncThunk(
   },
 );
 
+const toPvmStorage = (storage: DebuggerEcalliStorage): Storage => {
+  const pvmStorage = new Map();
+  storage.forEach((item) => {
+    pvmStorage.set(item.keyHash, item.value);
+  });
+
+  return pvmStorage;
+};
+
 export const setAllWorkersStorage = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
   const state = getState() as RootState;
   const debuggerState = state.debugger;
@@ -119,7 +128,7 @@ export const setAllWorkersStorage = createAsyncThunk("workers/setAllStorage", as
       await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.SET_STORAGE,
         payload: {
-          storage,
+          storage: toPvmStorage(storage),
         },
       });
     }),

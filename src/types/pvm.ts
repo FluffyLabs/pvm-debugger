@@ -1,3 +1,4 @@
+import { StorageRow } from "@/components/HostCalls/trie-input";
 import { Args } from "@typeberry/pvm-debugger-adapter";
 export { Pvm } from "@typeberry/pvm-debugger-adapter";
 
@@ -80,3 +81,5 @@ export enum HostCallIdentifiers {
   READ = 2,
   WRITE = 3,
 }
+
+export type DebuggerEcalliStorage = StorageRow[];
