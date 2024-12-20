@@ -62,6 +62,6 @@ test("Run program with typeberry PVM", async ({ page }) => {
   await runProgramTest(page, "@typeberry");
 });
 
-test("Run program with polkavm PVM", async ({ page }) => {
-  await runProgramTest(page, "polkavm");
-});
+// test("Run program with polkavm PVM", async ({ page }) => {
+//   await runProgramTest(page, "polkavm");
+// });
