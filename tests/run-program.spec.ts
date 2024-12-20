@@ -36,9 +36,7 @@ async function runProgramTest(page: Page, pvmType: string) {
   // Wait for the program to load
   await page.waitForTimeout(1000);
 
-  await page.click('button:has-text("Examples")');
-  await page.click('button[id="option-fibonacci"]');
-  await page.click('button[id="load-button"]');
+  await page.click('button[id="fibonacci"]');
 
   await page.waitForTimeout(1000);
 

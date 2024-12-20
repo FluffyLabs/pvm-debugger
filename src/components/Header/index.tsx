@@ -8,6 +8,9 @@ export const Header = () => {
       <div className="flex items-center gap-5">
         <img src={Logo} alt="FluffyLabs logo" className="w-[90px] ml-3" />
         <pre className="text-brand">PVM debugger</pre>
+        <pre className="text-white text-xs">
+          <a href="https://pvm-debugger.netlify.app/">64-bit beta</a>
+        </pre>
       </div>
       <div className="mr-3 text-white flex flex-row items-center justify-center gap-5">
         <TooltipProvider>
