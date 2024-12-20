@@ -16,7 +16,7 @@ export enum SupportedLangs {
 
 export function getState(pvm: PvmApiInterface): ExpectedState {
   const regs = isInternalPvm(pvm)
-    ? (Array.from(pvm.getRegisters()) as RegistersArray)
+    ? (Array.from(pvm.getRegisters()).map((x) => Number(x)) as RegistersArray)
     : uint8asRegs(pvm.getRegisters());
 
   return {
