@@ -32,17 +32,14 @@ const unescapeString = (str: string) => {
   return str.replace(/\\n/g, String.fromCharCode(10)).replace(/\\t/g, String.fromCharCode(9));
 };
 
-const escapeString = (str: string) => {
-  return str.replace(/\n/g, "\\n").replace(/\t/g, "\\t");
-};
-
 // Define the type for a row
 export interface StorageRow {
   id: string;
   action: "insert" | "remove" | "";
   key: string;
   keyHash: string;
-  value: bytes.BytesBlob;
+  value: string;
+  valueBlob: bytes.BytesBlob;
   isSubmitted: boolean;
   isHidden: boolean; // Property to track temporary removal
   isEditing: boolean; // Property to track edit mode
@@ -58,10 +55,11 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
   const [rows, setRows] = useState<StorageRow[]>([
     {
       id: "1",
-      action: "",
+      action: "insert",
       key: "",
       keyHash: "",
-      value: bytes.BytesBlob.blobFromString(""),
+      value: "",
+      valueBlob: bytes.BytesBlob.blobFromString(""),
       isSubmitted: false,
       isHidden: false,
       isEditing: false,
@@ -79,10 +77,11 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
         })), // Ensure properties are set
         {
           id: (lastId + 1).toString(),
-          action: "",
+          action: "insert",
           key: "",
           keyHash: "",
-          value: bytes.BytesBlob.blobFromString(""),
+          value: "",
+          valueBlob: bytes.BytesBlob.blobFromString(""),
           isSubmitted: false,
           isHidden: false,
           isEditing: false,
@@ -109,26 +108,26 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
     const newRows = [...rows];
     newRows[index].key = value;
 
-    newRows[index].keyHash = is32BytesHex(value)
-      ? value
-      : hash.hashBytes(bytes.BytesBlob.blobFromString(value)).toString();
+    newRows[index].keyHash =
+      !value || is32BytesHex(value) ? value : hash.hashBytes(bytes.BytesBlob.blobFromString(value)).toString();
     modifyRows(newRows);
   };
 
   // Handle changes in the Value input
-  const handleValueChange = (index: number, rawValue: string): void => {
+  const handleValueChange = (index: number, value: string): void => {
     // Allow user to finish hex value before validation
     const newRows = [...rows];
 
-    const value = unescapeString(rawValue);
+    newRows[index].value = value;
 
     try {
       if (value === "0x") {
         throw new Error("Incomplete value. Treat as string.");
       }
-      newRows[index].value = bytes.BytesBlob.parseBlob(value);
+
+      newRows[index].valueBlob = bytes.BytesBlob.parseBlob(unescapeString(value));
     } catch (error) {
-      newRows[index].value = bytes.BytesBlob.blobFromString(value);
+      newRows[index].valueBlob = bytes.BytesBlob.blobFromString(unescapeString(value));
     }
     modifyRows(newRows);
   };
@@ -141,10 +140,11 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
     // Create a new unsubmitted row
     newRows.push({
       id: (parseInt(newRows[newRows.length - 1].id) + 1).toString(),
-      action: "",
+      action: "insert",
       key: "",
       keyHash: "",
-      value: bytes.BytesBlob.blobFromString(""),
+      value: "",
+      valueBlob: bytes.BytesBlob.blobFromString(""),
       isSubmitted: false,
       isHidden: false,
       isEditing: false,
@@ -289,7 +289,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
           {row.isEditing ? (
             <>
               <div className="w-[150px]">
-                <Select onValueChange={(value) => handleSelectChange(index, value)} value={row.action}>
+                <Select disabled onValueChange={(value) => handleSelectChange(index, value)} value={row.action}>
                   <SelectTrigger className="w-24">
                     <SelectValue placeholder="Action" />
                   </SelectTrigger>
@@ -302,7 +302,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
               <div className="flex flex-col w-full">
                 <Input placeholder="Key" value={row.key} onChange={(e) => handleKeyChange(index, e.target.value)} />
                 <span className="text-xs py-1 ml-2">
-                  Key Hash: {row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
+                  Key Hash: {row.key && row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
                 </span>
               </div>
               {/* Checkmark Icon */}
@@ -336,7 +336,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
             <Textarea
               placeholder="Value"
               disabled={row.action === "remove"}
-              value={escapeString(row.value.asText())}
+              value={row.value}
               onChange={(e) => handleValueChange(index, e.target.value)}
               className="flex-1 mt-1"
             />
@@ -347,7 +347,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
           </div>
         ) : (
           <div className="flex items-center">
-            <p className="flex-1">{truncateString(escapeString(row.value.asText()))}</p>
+            <p className="flex-1">{truncateString(row.value)}</p>
             {/* Eye Icon */}
             <Button variant="ghost" onClick={() => handleEyeIconClick(index)}>
               <EyeIcon className={`w-4 h-4 ${row.isHidden ? "text-gray-500" : ""}`} />
@@ -380,7 +380,7 @@ const InputRow = (props: InputRowProps) => {
       <div className="flex-col w-full items-start">
         <div className="flex items-start">
           <div className="w-[150px]">
-            <Select onValueChange={(value) => handleSelectChange(index, value)} value={row.action}>
+            <Select disabled onValueChange={(value) => handleSelectChange(index, value)} value={row.action}>
               <SelectTrigger className="w-24">
                 <SelectValue placeholder="Action" />
               </SelectTrigger>
@@ -393,7 +393,7 @@ const InputRow = (props: InputRowProps) => {
           <div className="flex flex-col w-full">
             <Input placeholder="Key" value={row.key} onChange={(e) => handleKeyChange(index, e.target.value)} />
             <span className="text-xs py-1 ml-2">
-              Key Hash: {row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
+              Key Hash: {row.key && row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
             </span>
           </div>
 
@@ -410,7 +410,7 @@ const InputRow = (props: InputRowProps) => {
           <Textarea
             placeholder="Raw value or hex array"
             disabled={row.action === "remove"}
-            value={escapeString(row.value.asText())}
+            value={row.value}
             onChange={(e) => handleValueChange(index, e.target.value)}
             className="flex-1 mt-1"
           />

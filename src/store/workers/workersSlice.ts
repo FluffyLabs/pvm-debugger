@@ -108,7 +108,7 @@ export const loadWorker = createAsyncThunk(
 const toPvmStorage = (storage: DebuggerEcalliStorage): Storage => {
   const pvmStorage = new Map();
   storage.forEach((item) => {
-    pvmStorage.set(item.keyHash, item.value);
+    pvmStorage.set(item.keyHash, item.valueBlob);
   });
 
   return pvmStorage;
