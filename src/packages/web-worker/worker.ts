@@ -104,7 +104,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.HOST_CALL) {
-    await commandHandlers.runHostCall({
+    const data = await commandHandlers.runHostCall({
       pvm,
       hostCallIdentifier: e.data.payload.hostCallIdentifier,
       storage,
@@ -114,6 +114,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       status: CommandStatus.SUCCESS,
       command: Commands.HOST_CALL,
       messageId: e.data.messageId,
+      payload: data,
     });
   }
 };

@@ -1,19 +1,27 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
+import { CurrentInstruction, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
   setHasHostCallOpen,
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
+  setStorage,
 } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
-import { Commands, PvmTypes, Storage } from "@/packages/web-worker/types";
-import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
+import { Commands, PvmTypes } from "@/packages/web-worker/types";
+import {
+  asyncWorkerPostMessage,
+  hasCommandStatusError,
+  LOAD_MEMORY_CHUNK_SIZE,
+  MEMORY_SPLIT_STEP,
+  mergePVMAndDebuggerEcalliStorage,
+  toPvmStorage,
+} from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
 import { isInstructionError, isOneImmediateArgs } from "@/types/type-guards";
 import { nextInstruction } from "@/packages/web-worker/pvm.ts";
@@ -104,15 +112,6 @@ export const loadWorker = createAsyncThunk(
     }
   },
 );
-
-const toPvmStorage = (storage: DebuggerEcalliStorage): Storage => {
-  const pvmStorage = new Map();
-  storage.forEach((item) => {
-    pvmStorage.set(item.keyHash, item.valueBlob);
-  });
-
-  return pvmStorage;
-};
 
 export const setAllWorkersStorage = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
   const state = getState() as RootState;
@@ -273,6 +272,16 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
           command: Commands.HOST_CALL,
           payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
         });
+
+        if (
+          resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
+          resp.payload.storage &&
+          // Remove if we decide to make storage initialization optional
+          state.debugger.storage
+        ) {
+          const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
+          dispatch(setStorage(newStorage));
+        }
 
         if ((getState() as RootState).debugger.isRunMode) {
           dispatch(continueAllWorkers());

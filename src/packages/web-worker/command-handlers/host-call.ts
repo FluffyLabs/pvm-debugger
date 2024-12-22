@@ -11,6 +11,16 @@ type HostCallParams = {
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage | null;
 };
+
+type HostCallResponse =
+  | {
+      hostCallIdentifier: Exclude<HostCallIdentifiers, HostCallIdentifiers.WRITE>;
+    }
+  | {
+      hostCallIdentifier: HostCallIdentifiers.WRITE;
+      storage?: Storage;
+    };
+
 type ExecuteParams = Parameters<write.Write["execute"]>;
 type RegistersType = ExecuteParams[1];
 type MemoryType = ExecuteParams[2];
@@ -23,9 +33,9 @@ const hostCall = async ({
   pvm: PvmApiInterface;
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage;
-}) => {
+}): Promise<HostCallResponse> => {
   if (!isInternalPvm(pvm)) {
-    return;
+    return { hostCallIdentifier };
   }
 
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
@@ -39,6 +49,8 @@ const hostCall = async ({
       pvm.getInterpreter().getRegisters() as unknown as RegistersType,
       pvm.getInterpreter().getMemory() as unknown as MemoryType,
     );
+
+    return { hostCallIdentifier };
   } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
     const writeAccounts = new WriteAccounts(storage);
     const jamHostCall = new write.Write(writeAccounts);
@@ -48,10 +60,13 @@ const hostCall = async ({
       pvm.getInterpreter().getRegisters() as unknown as RegistersType,
       pvm.getInterpreter().getMemory() as unknown as MemoryType,
     );
+    return { hostCallIdentifier, storage };
   }
+
+  return { hostCallIdentifier };
 };
 
-export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCallParams): Promise<void> => {
+export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCallParams): Promise<HostCallResponse> => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
   }

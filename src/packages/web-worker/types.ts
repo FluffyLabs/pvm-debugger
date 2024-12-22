@@ -30,7 +30,17 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
     | { command: Commands.STOP; payload: { isRunMode: boolean } }
     | { command: Commands.MEMORY; payload: { memoryChunk: Uint8Array } }
     | { command: Commands.SET_STORAGE }
-    | { command: Commands.HOST_CALL }
+    | {
+        command: Commands.HOST_CALL;
+        payload:
+          | {
+              hostCallIdentifier: Exclude<HostCallIdentifiers, HostCallIdentifiers.WRITE>;
+            }
+          | {
+              hostCallIdentifier: HostCallIdentifiers.WRITE;
+              storage?: Storage;
+            };
+      }
   );
 
 type CommonWorkerRequestParams = { messageId: string };
