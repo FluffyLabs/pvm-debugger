@@ -315,7 +315,10 @@ function SortableItem(props: SortableItemProps): JSX.Element {
               <div className="w-[150px]">
                 <span className="w-24 capitalize">{row.action}</span>
               </div>
-              <span className="w-full">{truncateString(row.key)}</span>
+              <span className="w-full">
+                {truncateString(row.key) || "Empty (PVM generated)"} <br />
+                Key Hash: {row.key && row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
+              </span>
               {/* More Icon with Dropdown Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
