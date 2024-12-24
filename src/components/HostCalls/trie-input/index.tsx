@@ -316,7 +316,7 @@ function SortableItem(props: SortableItemProps): JSX.Element {
                 <span className="w-24 capitalize">{row.action}</span>
               </div>
               <span className="w-full">
-                {truncateString(row.key) || "Empty (PVM generated)"} <br />
+                {truncateString(row.key) || "Empty (PVM generated hash)"} <br />
                 Key Hash: {row.key && row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
               </span>
               {/* More Icon with Dropdown Menu */}

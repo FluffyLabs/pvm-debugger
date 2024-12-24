@@ -67,9 +67,10 @@ export const toPvmStorage = (storage: DebuggerEcalliStorage): Storage => {
 };
 
 const valueBlobToString = (valueBlob: bytes.BytesBlob) =>
+  "0x" +
   Array.from(valueBlob.raw)
-    .map((byte) => byte.toString(16).padStart(3, "0")) // Convert to hex and pad with leading zero if necessary
-    .join(" ");
+    .map((byte) => byte.toString(16).padStart(2, "0")) // Convert to hex and pad with leading zero if necessary
+    .join("");
 
 export const mergePVMAndDebuggerEcalliStorage = (
   pvmStorage: Storage,
@@ -100,13 +101,3 @@ export const mergePVMAndDebuggerEcalliStorage = (
 
   return result;
 };
-
-// id: string;
-// action: "insert" | "remove" | "";
-// key: string;
-// keyHash: string;
-// value: string;
-// valueBlob: bytes.BytesBlob;
-// isSubmitted: boolean;
-// isHidden: boolean; // Property to track temporary removal
-// isEditing: boolean;
