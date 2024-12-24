@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Pencil, PencilOff } from "lucide-react";
 import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
+import { HostCalls } from "@/components/HostCalls";
 
 const DebuggerContent = () => {
   const dispatch = useAppDispatch();
@@ -69,6 +70,8 @@ const DebuggerContent = () => {
   return (
     <>
       <div className="col-span-12 md:col-span-4 max-h-[70vh] max-sm:min-h-[330px]">
+        <HostCalls />
+
         {!program.length && <InitialLoadProgramCTA />}
         {!!program.length && (
           <>
