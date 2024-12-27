@@ -147,30 +147,31 @@ export const PvmSelect = () => {
   };
 
   useEffect(() => {
-    pvmsWithPayload.forEach((pvm) => {
-      if (pvm.type === PvmTypes.WASM_URL) {
-        if (pvm.params?.url) {
-          fetchWasmMetadata(pvm.params.url).then((metadata) => {
+    Promise.all(
+      pvmsWithPayload.map(async (pvm) => {
+        if (pvm.type === PvmTypes.WASM_URL) {
+          if (pvm.params?.url) {
+            const metadata = await fetchWasmMetadata(pvm.params.url);
             if (!metadata) {
               throw new Error("Invalid metadata");
             }
-            const newValues = [
-              ...pvmsWithPayload.filter((p) => p.id !== pvm.id),
-              {
-                id: pvm.id,
-                type: PvmTypes.WASM_URL,
-                params: {
-                  ...pvmsWithPayload.find((p) => p.id === pvm.id)?.params,
-                  url: path.join(pvm.params!.url!, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl),
-                },
-                label: `${metadata.name} v${metadata.version}` as string,
+            return {
+              id: pvm.id,
+              type: PvmTypes.WASM_URL,
+              params: {
+                ...pvmsWithPayload.find((p) => p.id === pvm.id)?.params,
+                url: path.join(pvm.params.url, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl),
               },
-            ];
-            dispatch(setPvmOptions(newValues));
-          });
+              label: `${metadata.name} v${metadata.version}` as string,
+            };
+          }
         }
-      }
+        return pvm;
+      }),
+    ).then((values) => {
+      dispatch(setPvmOptions(values));
     });
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
