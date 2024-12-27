@@ -2,8 +2,13 @@ import { createSlice } from "@reduxjs/toolkit";
 import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
+import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 
 export interface DebuggerState {
+  pvmOptions: {
+    allAvailablePvms: SelectedPvmWithPayload[];
+    selectedPvm: string[];
+  };
   program: number[];
   initialState: ExpectedState;
   isProgramEditMode: boolean;

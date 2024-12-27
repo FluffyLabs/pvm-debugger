@@ -41,6 +41,7 @@ interface WasmMetadata {
 export interface SelectedPvmWithPayload {
   id: string;
   type: string;
+  label: string;
   params?: {
     file?: Blob;
     lang?: SupportedLangs;
@@ -76,11 +77,12 @@ export const PvmSelect = () => {
     {
       id: "typeberry",
       type: "built-in",
+      label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}`,
     },
   ]);
-  const [multiSelectOptions, setMultiSelectOptions] = useState<{ value: string; label: string }[]>([
-    { value: AvailablePvms.TYPEBERRY, label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}` },
-  ]);
+  // const [multiSelectOptions, setMultiSelectOptions] = useState<{ value: string; label: string }[]>([
+  //   { value: AvailablePvms.TYPEBERRY, label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}` },
+  // ]);
   const [selectedLang, setSelectedLang] = useState<SupportedLangs>(SupportedLangs.Rust);
 
   const mapValuesToPvmWithPayload = useCallback(
@@ -112,10 +114,11 @@ export const PvmSelect = () => {
           lang: selectedLang,
           file,
         },
+        label: `${id} v${file.lastModified}`,
       },
     ];
     setPvmsWithPayload(newValues);
-    setMultiSelectOptions((prevState) => [...prevState, { value: id, label: id }]);
+    // setMultiSelectOptions((prevState) => [...prevState, { value: id, label: id }]);
     setSelectedPvms([...selectedPvms, id]);
   };
 
@@ -145,10 +148,11 @@ export const PvmSelect = () => {
           params: {
             url: path.join(url, "../", wasmMetadata.wasmBlobUrl),
           },
+          label: `${id} v${wasmMetadata.version}` as string,
         },
       ];
       setPvmsWithPayload(newValues);
-      setMultiSelectOptions((prevState) => [...prevState, { value: id, label: `${id} v${wasmMetadata.version}` }]);
+      // setMultiSelectOptions((prevState) => [...prevState, { value: id, label: `${id} v${wasmMetadata.version}` }]);
       setSelectedPvms([...selectedPvms, id]);
     } else {
       alert("No URL provided");
@@ -161,10 +165,10 @@ export const PvmSelect = () => {
         if (!metadata) {
           throw new Error("Invalid metadata");
         }
-        setMultiSelectOptions((prevState) => [
-          ...prevState,
-          { value, label: `${metadata.name} v${metadata.version}` as string },
-        ]);
+        // setMultiSelectOptions((prevState) => [
+        //   ...prevState,
+        //   { value, label: `${metadata.name} v${metadata.version}` as string },
+        // ]);
         setPvmsWithPayload((prevState) => [
           ...prevState,
           {
@@ -174,6 +178,7 @@ export const PvmSelect = () => {
               url: path.join(url, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl),
               lang,
             },
+            label: `${metadata.name} v${metadata.version}` as string,
           },
         ]);
       });
@@ -203,7 +208,7 @@ export const PvmSelect = () => {
         maxCount={1}
         required
         className={classNames({ "border-red-500": !!error })}
-        options={multiSelectOptions}
+        options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label }))}
         selectedValues={selectedPvms}
         defaultValue={[AvailablePvms.TYPEBERRY]}
         onValueChange={async (values) => {
