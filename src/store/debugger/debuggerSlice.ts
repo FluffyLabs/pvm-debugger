@@ -1,8 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
+import { AvailablePvms, CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
+import { SupportedLangs } from "@/packages/web-worker/utils.ts";
+import { PvmTypes } from "@/packages/web-worker/types.ts";
 
 export interface DebuggerState {
   pvmOptions: {
@@ -25,6 +27,31 @@ export interface DebuggerState {
 }
 
 const initialState: DebuggerState = {
+  pvmOptions: {
+    allAvailablePvms: [
+      {
+        id: AvailablePvms.TYPEBERRY,
+        type: PvmTypes.BUILT_IN,
+        label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}`,
+      },
+      {
+        id: AvailablePvms.POLKAVM,
+        type: PvmTypes.WASM_URL,
+        params: { url: "https://todr.me/polkavm/pvm-metadata.json", lang: SupportedLangs.Rust },
+        label: "PolkaVM",
+      },
+      {
+        id: AvailablePvms.ANANAS,
+        type: PvmTypes.WASM_URL,
+        params: {
+          url: "https://todr.me/anan-as/pvm-metadata.json",
+          lang: SupportedLangs.AssemblyScript,
+        },
+        label: "Anan-AS",
+      },
+    ],
+    selectedPvm: [AvailablePvms.TYPEBERRY],
+  },
   program: [],
   initialState: {
     regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -89,6 +116,12 @@ const debuggerSlice = createSlice({
     setStepsToPerform(state, action) {
       state.stepsToPerform = action.payload;
     },
+    setPvmOptions(state, action) {
+      state.pvmOptions.allAvailablePvms = action.payload;
+    },
+    setSelectedPvms(state, action) {
+      state.pvmOptions.selectedPvm = action.payload;
+    },
   },
 });
 
@@ -106,6 +139,8 @@ export const {
   setIsDebugFinished,
   setPvmInitialized,
   setStepsToPerform,
+  setPvmOptions,
+  setSelectedPvms,
 } = debuggerSlice.actions;
 
 export const selectProgram = (state: RootState) => state.debugger.program;
@@ -119,5 +154,7 @@ export const selectClickedInstruction = (state: RootState) => state.debugger.cli
 export const selectInstructionMode = (state: RootState) => state.debugger.instructionMode;
 export const selectIsDebugFinished = (state: RootState) => state.debugger.isDebugFinished;
 export const selectPvmInitialized = (state: RootState) => state.debugger.pvmInitialized;
+export const selectAllAvailablePvms = (state: RootState) => state.debugger.pvmOptions.allAvailablePvms;
+export const selectSelectedPvms = (state: RootState) => state.debugger.pvmOptions.selectedPvm;
 
 export default debuggerSlice.reducer;

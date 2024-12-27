@@ -12,19 +12,13 @@ import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import classNames from "classnames";
 import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
 import { isSerializedError } from "@/store/utils";
-
-const PVMS_TO_LOAD_ON_START = [
-  {
-    value: AvailablePvms.POLKAVM,
-    url: "https://todr.me/polkavm/pvm-metadata.json",
-    lang: SupportedLangs.Rust,
-  },
-  {
-    value: AvailablePvms.ANANAS,
-    url: "https://todr.me/anan-as/pvm-metadata.json",
-    lang: SupportedLangs.AssemblyScript,
-  },
-];
+import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
+import {
+  selectAllAvailablePvms,
+  selectSelectedPvms,
+  setPvmOptions,
+  setSelectedPvms,
+} from "@/store/debugger/debuggerSlice.ts";
 
 interface WasmMetadata {
   name: string;
@@ -40,7 +34,7 @@ interface WasmMetadata {
 
 export interface SelectedPvmWithPayload {
   id: string;
-  type: string;
+  type: PvmTypes;
   label: string;
   params?: {
     file?: Blob;
@@ -72,17 +66,10 @@ export const PvmSelect = () => {
   const { handlePvmTypeChange } = useDebuggerActions();
   const [error, setError] = useState<string>();
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
-  const [selectedPvms, setSelectedPvms] = useState<string[]>([AvailablePvms.TYPEBERRY]);
-  const [pvmsWithPayload, setPvmsWithPayload] = useState<SelectedPvmWithPayload[]>([
-    {
-      id: "typeberry",
-      type: "built-in",
-      label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}`,
-    },
-  ]);
-  // const [multiSelectOptions, setMultiSelectOptions] = useState<{ value: string; label: string }[]>([
-  //   { value: AvailablePvms.TYPEBERRY, label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}` },
-  // ]);
+
+  const selectedPvms = useAppSelector(selectSelectedPvms);
+  const pvmsWithPayload = useAppSelector(selectAllAvailablePvms);
+  const dispatch = useAppDispatch();
   const [selectedLang, setSelectedLang] = useState<SupportedLangs>(SupportedLangs.Rust);
 
   const mapValuesToPvmWithPayload = useCallback(
@@ -117,9 +104,9 @@ export const PvmSelect = () => {
         label: `${id} v${file.lastModified}`,
       },
     ];
-    setPvmsWithPayload(newValues);
-    // setMultiSelectOptions((prevState) => [...prevState, { value: id, label: id }]);
-    setSelectedPvms([...selectedPvms, id]);
+
+    dispatch(setPvmOptions(newValues));
+    dispatch(setSelectedPvms([...selectedPvms, id]));
   };
 
   const handlePvmFileOption = () => {
@@ -151,38 +138,39 @@ export const PvmSelect = () => {
           label: `${id} v${wasmMetadata.version}` as string,
         },
       ];
-      setPvmsWithPayload(newValues);
-      // setMultiSelectOptions((prevState) => [...prevState, { value: id, label: `${id} v${wasmMetadata.version}` }]);
-      setSelectedPvms([...selectedPvms, id]);
+      dispatch(setPvmOptions(newValues));
+      dispatch(setSelectedPvms([...selectedPvms, id]));
     } else {
       alert("No URL provided");
     }
   };
 
   useEffect(() => {
-    PVMS_TO_LOAD_ON_START.forEach(({ url, value, lang }) => {
-      fetchWasmMetadata(url).then((metadata) => {
-        if (!metadata) {
-          throw new Error("Invalid metadata");
+    pvmsWithPayload.forEach((pvm) => {
+      if (pvm.type === PvmTypes.WASM_URL) {
+        if (pvm.params?.url) {
+          fetchWasmMetadata(pvm.params.url).then((metadata) => {
+            if (!metadata) {
+              throw new Error("Invalid metadata");
+            }
+            const newValues = [
+              ...pvmsWithPayload.filter((p) => p.id !== pvm.id),
+              {
+                id: pvm.id,
+                type: PvmTypes.WASM_URL,
+                params: {
+                  ...pvmsWithPayload.find((p) => p.id === pvm.id)?.params,
+                  url: path.join(pvm.params!.url!, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl),
+                },
+                label: `${metadata.name} v${metadata.version}` as string,
+              },
+            ];
+            dispatch(setPvmOptions(newValues));
+          });
         }
-        // setMultiSelectOptions((prevState) => [
-        //   ...prevState,
-        //   { value, label: `${metadata.name} v${metadata.version}` as string },
-        // ]);
-        setPvmsWithPayload((prevState) => [
-          ...prevState,
-          {
-            id: value,
-            type: PvmTypes.WASM_URL,
-            params: {
-              url: path.join(url, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl),
-              lang,
-            },
-            label: `${metadata.name} v${metadata.version}` as string,
-          },
-        ]);
-      });
+      }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -212,7 +200,7 @@ export const PvmSelect = () => {
         selectedValues={selectedPvms}
         defaultValue={[AvailablePvms.TYPEBERRY]}
         onValueChange={async (values) => {
-          setSelectedPvms(values);
+          dispatch(setSelectedPvms(values));
         }}
       >
         <span className="cursor-pointer" onClick={handlePvmUrlOption}>
