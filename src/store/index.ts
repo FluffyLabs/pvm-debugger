@@ -3,7 +3,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import workersReducer from "./workers/workersSlice";
-import debuggerReducer from "./debugger/debuggerSlice";
+import debuggerReducer, { DebuggerState } from "./debugger/debuggerSlice";
 
 const persistConfig = {
   key: "debugger",
@@ -13,7 +13,7 @@ const persistConfig = {
 
 export const store = configureStore({
   reducer: {
-    debugger: persistReducer(persistConfig, debuggerReducer),
+    debugger: persistReducer<DebuggerState>(persistConfig, debuggerReducer),
     workers: workersReducer,
   },
   middleware: (getDefaultMiddleware) =>

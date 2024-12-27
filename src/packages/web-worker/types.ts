@@ -2,6 +2,7 @@ import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
 import { SupportedLangs } from "./utils";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
+import { SerializedFile } from "@/lib/utils.ts";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 
@@ -28,7 +29,7 @@ type CommonWorkerRequestParams = { messageId: string };
 export type CommandWorkerRequestParams =
   | {
       command: Commands.LOAD;
-      payload: { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
+      payload: { type: PvmTypes; params: { url?: string; file?: SerializedFile; lang?: SupportedLangs } };
     }
   | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
   | { command: Commands.STEP; payload: { program: Uint8Array; stepsToPerform: number } }

@@ -19,6 +19,7 @@ import {
   setPvmOptions,
   setSelectedPvms,
 } from "@/store/debugger/debuggerSlice.ts";
+import { SerializedFile, serializeFile } from "@/lib/utils.ts";
 
 interface WasmMetadata {
   name: string;
@@ -34,10 +35,10 @@ interface WasmMetadata {
 
 export interface SelectedPvmWithPayload {
   id: string;
-  type: PvmTypes;
+  type: PvmTypes | AvailablePvms;
   label: string;
   params?: {
-    file?: Blob;
+    file?: SerializedFile;
     lang?: SupportedLangs;
     url?: string;
   };
@@ -89,7 +90,7 @@ export const PvmSelect = () => {
       : name;
   };
 
-  const handlePvmFileUpload = (file: File) => {
+  const handlePvmFileUpload = async (file: File) => {
     const id = generatePvmId(file.name);
 
     const newValues = [
@@ -99,7 +100,7 @@ export const PvmSelect = () => {
         type: PvmTypes.WASM_FILE,
         params: {
           lang: selectedLang,
-          file,
+          file: await serializeFile(file),
         },
         label: `${id} v${file.lastModified}`,
       },
