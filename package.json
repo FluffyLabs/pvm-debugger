@@ -30,7 +30,7 @@
     "@tanstack/react-virtual": "^3.10.9",
     "@typeberry/block": "^0.0.1-1a02906",
     "@typeberry/pvm-debugger-adapter": "0.1.0-2632da8",
-    "@typeberry/spectool-wasm": "^0.13.0",
+    "@typeberry/spectool-wasm": "0.18.0",
     "@uiw/react-codemirror": "^4.23.6",
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.5.1",
