@@ -42,6 +42,7 @@ export interface SelectedPvmWithPayload {
     lang?: SupportedLangs;
     url?: string;
   };
+  removable?: boolean;
 }
 
 const fetchWasmMetadata = async (url: string): Promise<WasmMetadata | undefined> => {
@@ -102,7 +103,8 @@ export const PvmSelect = () => {
           lang: selectedLang,
           file: await serializeFile(file),
         },
-        label: `${id} v${file.lastModified}`,
+        label: `${id} - last modified: ${new Date(file.lastModified).toUTCString()}`,
+        removable: true,
       },
     ];
 
@@ -137,6 +139,7 @@ export const PvmSelect = () => {
             url: path.join(url, "../", wasmMetadata.wasmBlobUrl),
           },
           label: `${id} v${wasmMetadata.version}` as string,
+          removable: true,
         },
       ];
       dispatch(setPvmOptions(newValues));
@@ -198,11 +201,14 @@ export const PvmSelect = () => {
         maxCount={1}
         required
         className={classNames({ "border-red-500": !!error })}
-        options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label }))}
+        options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label, removable: pvm.removable }))}
         selectedValues={selectedPvms}
         defaultValue={[AvailablePvms.TYPEBERRY]}
         onValueChange={async (values) => {
           dispatch(setSelectedPvms(values));
+        }}
+        removeOption={(value) => {
+          dispatch(setPvmOptions(pvmsWithPayload.filter((pvm) => pvm.id !== value)));
         }}
       >
         <span className="cursor-pointer" onClick={handlePvmUrlOption}>
