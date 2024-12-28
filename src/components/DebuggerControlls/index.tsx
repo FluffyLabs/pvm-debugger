@@ -43,9 +43,9 @@ export const DebuggerControlls = () => {
     try {
       if (!currentInstruction) {
         await dispatch(setAllWorkersCurrentState(initialState));
-      } else {
-        await dispatch(stepAllWorkers()).unwrap();
       }
+
+      await dispatch(stepAllWorkers()).unwrap();
 
       dispatch(setIsProgramEditMode(false));
     } catch (error) {
