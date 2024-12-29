@@ -2,8 +2,9 @@ import { logger } from "@/utils/loggerService";
 import { getMemorySize, loadArrayBufferAsWasm, SupportedLangs } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
+import { deserializeFile, SerializedFile } from "@/lib/utils.ts";
 
-export type LoadParams = { type: PvmTypes; params: { url?: string; file?: Blob; lang?: SupportedLangs } };
+export type LoadParams = { type: PvmTypes; params: { url?: string; file?: SerializedFile; lang?: SupportedLangs } };
 export type LoadResponse = {
   pvm: PvmApiInterface | null;
   memorySize: number | null;
@@ -15,10 +16,11 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
   if (args.type === PvmTypes.BUILT_IN) {
     return new InternalPvmInstance();
   } else if (args.type === PvmTypes.WASM_FILE) {
-    const file = args.params.file;
-    if (!file) {
+    if (!args.params.file) {
       throw new Error("No PVM file");
     }
+
+    const file = deserializeFile(args.params.file);
 
     logger.info("Load WASM from file", file);
     const bytes = await file.arrayBuffer();

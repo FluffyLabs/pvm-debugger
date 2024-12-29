@@ -56,6 +56,8 @@ interface MultiSelectProps
     value: string;
     /** Optional icon component to display alongside the option. */
     icon?: React.ComponentType<{ className?: string }>;
+    /** Optional removable flag. */
+    removable?: boolean;
   }[];
 
   /**
@@ -133,6 +135,11 @@ interface MultiSelectProps
    * (Custom)
    */
   children?: React.ReactNode;
+
+  /**
+   * (Custom)
+   */
+  removeOption?: (value: string) => void;
 }
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
@@ -155,6 +162,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
       showOptionsAsTags,
       required,
       children,
+      removeOption,
       ...props
     },
     ref,
@@ -332,7 +340,17 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                         <CheckIcon className="h-4 w-4" />
                       </div>
                       {option.icon && <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
-                      <span>{option.label}</span>
+                      <span className="flex-1">{option.label}</span>
+                      {option.removable && (
+                        <XCircle
+                          className="ml-2 h-4 w-4 cursor-pointer"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            toggleOption(option.value);
+                            removeOption?.(option.value);
+                          }}
+                        />
+                      )}
                     </CommandItem>
                   );
                 })}
