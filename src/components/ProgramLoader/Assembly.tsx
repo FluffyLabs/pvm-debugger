@@ -71,7 +71,7 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
     // now append initial registers
     const registers: string[] = [];
     for (const [idx, reg] of (initialState.regs ?? []).entries()) {
-      if (reg !== 0) {
+      if (reg !== 0n) {
         registers.push(`pre: r${idx} = ${reg}`);
       }
     }

@@ -211,7 +211,7 @@ export const Registers = ({
                           valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : "";
                         onCurrentStateChange({
                           ...currentState,
-                          regs: currentState.regs?.map((val: number, index: number) =>
+                          regs: currentState.regs?.map((val: bigint, index: number) =>
                             index === regNo ? regValue : val,
                           ) as InitialState["regs"],
                         });

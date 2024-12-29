@@ -16,7 +16,7 @@ export enum SupportedLangs {
 
 export function getState(pvm: PvmApiInterface): ExpectedState {
   const regs = isInternalPvm(pvm)
-    ? (Array.from(pvm.getRegisters()).map((x) => Number(x)) as RegistersArray)
+    ? (Array.from(pvm.getRegisters()) as RegistersArray)
     : uint8asRegs(pvm.getRegisters());
 
   return {
@@ -28,14 +28,14 @@ export function getState(pvm: PvmApiInterface): ExpectedState {
 }
 
 export function regsAsUint8(regs?: RegistersArray): Uint8Array {
-  const arr = new Uint8Array(13 * 4);
+  const arr = new Uint8Array(13 * 8);
   if (!regs) {
     return arr;
   }
 
   let i = 0;
   for (const reg of regs) {
-    const bytes = u32_le_bytes(reg);
+    const bytes = u64_le_bytes(reg);
     for (let a = 0; a < bytes.length; a += 1) {
       arr[i] = bytes[a];
       i += 1;
@@ -44,7 +44,7 @@ export function regsAsUint8(regs?: RegistersArray): Uint8Array {
   return arr;
 }
 
-export function u32_le_bytes(val: number) {
+function u32_le_bytes(val: number) {
   const out = new Uint8Array(4);
   out[0] = val & 0xff;
   out[1] = (val >> 8) & 0xff;
@@ -53,11 +53,25 @@ export function u32_le_bytes(val: number) {
   return out;
 }
 
+export function u64_le_bytes(val: bigint) {
+  const out = new Uint8Array(8);
+  out[0] = Number(val & 0xffn);
+  out[1] = Number((val >> 8n) & 0xffn);
+  out[2] = Number((val >> 16n) & 0xffn);
+  out[3] = Number((val >> 24n) & 0xffn);
+  out[4] = Number((val >> 32n) & 0xffn);
+  out[5] = Number((val >> 40n) & 0xffn);
+  out[6] = Number((val >> 48n) & 0xffn);
+  out[7] = Number((val >> 56n) & 0xffn);
+  return out;
+}
+
 export function uint8asRegs(arr: Uint8Array): RegistersArray {
-  const regs: RegistersArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  const u32Regs = new Uint32Array(arr.buffer);
+  const regs: RegistersArray = [0n, 1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n, 11n, 12n];
+  const u64Regs = new BigUint64Array(arr.buffer);
   for (const regIdx of regs) {
-    regs[regIdx] = u32Regs[regIdx];
+    const idx = Number(regIdx);
+    regs[idx] = u64Regs[idx];
   }
   return regs;
 }
