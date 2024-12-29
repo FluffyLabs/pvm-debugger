@@ -1,4 +1,4 @@
-import { StorageRow } from "@/components/HostCalls/trie-input";
+import { StorageRow } from "@/components/HostCalls/trie-input/copy";
 import { Args } from "@typeberry/pvm-debugger-adapter";
 export { Pvm } from "@typeberry/pvm-debugger-adapter";
 

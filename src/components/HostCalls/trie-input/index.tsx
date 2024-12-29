@@ -253,20 +253,18 @@ interface SortableItemProps {
   rowNumber: number; // New prop for alternating background
 }
 
-function SortableItem(props: SortableItemProps): JSX.Element {
-  const {
-    id,
-    index,
-    row,
-    handleSelectChange,
-    handleKeyChange,
-    handleValueChange,
-    handleRemoveRow,
-    handleToggleEditMode,
-    handleEyeIconClick,
-    rowNumber,
-  } = props;
-
+function SortableItem({
+  id,
+  index,
+  row,
+  handleSelectChange,
+  handleKeyChange,
+  handleValueChange,
+  handleRemoveRow,
+  handleToggleEditMode,
+  handleEyeIconClick,
+  rowNumber,
+}: SortableItemProps): JSX.Element {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
   const style: React.CSSProperties = {

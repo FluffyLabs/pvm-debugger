@@ -266,7 +266,7 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
       throw new Error("Invalid host call instruction");
     }
 
-    await Promise.all(
+    return Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
           command: Commands.HOST_CALL,

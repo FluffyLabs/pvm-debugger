@@ -1,5 +1,5 @@
 import { HostCallIdentifiers } from "@/types/pvm";
-import { PvmApiInterface, Storage } from "../types";
+import { CommandStatus, PvmApiInterface, Storage } from "../types";
 import { read, write } from "@typeberry/jam-host-calls";
 import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
@@ -15,10 +15,14 @@ type HostCallParams = {
 type HostCallResponse =
   | {
       hostCallIdentifier: Exclude<HostCallIdentifiers, HostCallIdentifiers.WRITE>;
+      status: CommandStatus;
+      error?: unknown;
     }
   | {
       hostCallIdentifier: HostCallIdentifiers.WRITE;
       storage?: Storage;
+      status: CommandStatus;
+      error?: unknown;
     };
 
 type ExecuteParams = Parameters<write.Write["execute"]>;
@@ -35,7 +39,7 @@ const hostCall = async ({
   storage: Storage;
 }): Promise<HostCallResponse> => {
   if (!isInternalPvm(pvm)) {
-    return { hostCallIdentifier };
+    return { hostCallIdentifier, status: CommandStatus.ERROR, error: new Error("External PVM not supported") };
   }
 
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
@@ -50,7 +54,7 @@ const hostCall = async ({
       pvm.getInterpreter().getMemory() as unknown as MemoryType,
     );
 
-    return { hostCallIdentifier };
+    return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
     const writeAccounts = new WriteAccounts(storage);
     const jamHostCall = new write.Write(writeAccounts);
@@ -60,10 +64,10 @@ const hostCall = async ({
       pvm.getInterpreter().getRegisters() as unknown as RegistersType,
       pvm.getInterpreter().getMemory() as unknown as MemoryType,
     );
-    return { hostCallIdentifier, storage };
+    return { hostCallIdentifier, storage, status: CommandStatus.SUCCESS };
   }
 
-  return { hostCallIdentifier };
+  return { hostCallIdentifier, status: CommandStatus.ERROR, error: new Error("Unknown host call identifier") };
 };
 
 export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCallParams): Promise<HostCallResponse> => {
@@ -75,5 +79,9 @@ export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCall
     throw new Error("Storage is uninitialized.");
   }
 
-  return await hostCall({ pvm, hostCallIdentifier, storage });
+  try {
+    return await hostCall({ pvm, hostCallIdentifier, storage });
+  } catch (error) {
+    return { hostCallIdentifier, status: CommandStatus.ERROR, error };
+  }
 };

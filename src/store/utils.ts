@@ -86,15 +86,10 @@ export const mergePVMAndDebuggerEcalliStorage = (
       }
     } else {
       result.push({
-        id: (result.length + 1).toString(),
-        action: "insert",
         key: "",
         keyHash,
         value: valueBlobToString(valueBlob),
         valueBlob,
-        isSubmitted: true,
-        isHidden: false,
-        isEditing: false,
       });
     }
   });

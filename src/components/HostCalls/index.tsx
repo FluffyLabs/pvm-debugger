@@ -1,11 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { handleHostCall, setAllWorkersStorage } from "@/store/workers/workersSlice";
-import { TrieInput } from "./trie-input";
+import { TrieInput } from "./trie-input/copy";
 import { Button } from "../ui/button";
 import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
 import { useEffect, useState } from "react";
-import { logger } from "@/utils/loggerService";
 import { CurrentInstruction, DebuggerEcalliStorage } from "@/types/pvm";
 import { ArgumentType } from "@typeberry/pvm-debugger-adapter";
 
@@ -24,7 +23,7 @@ export const HostCalls = () => {
 
   const dispatch = useAppDispatch();
   const [newStorage, setNewStorage] = useState<DebuggerEcalliStorage | null>();
-
+  const [error, setError] = useState<string>();
   const previousInstruction =
     programPreviewResult[
       programPreviewResult.findIndex(
@@ -42,13 +41,22 @@ export const HostCalls = () => {
     try {
       dispatch(setStorage(newStorage || []));
       await dispatch(setAllWorkersStorage()).unwrap();
-      dispatch(setHasHostCallOpen(false));
 
-      if (isOnEcalli) {
-        dispatch(handleHostCall());
+      try {
+        if (isOnEcalli) {
+          await dispatch(handleHostCall()).unwrap();
+        }
+
+        dispatch(setHasHostCallOpen(false));
+      } catch (e) {
+        if (e instanceof Error) {
+          setError(e.message);
+        }
       }
-    } catch (error) {
-      logger.error("Wrong JSON", { error });
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message);
+      }
     }
   };
 
@@ -70,6 +78,7 @@ export const HostCalls = () => {
           <div className="border-gray-500 border-2 rounded-lg h-full pt-1">
             <TrieInput onChange={(v) => setNewStorage(v)} initialRows={storage} />
           </div>
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           <div className="flex mt-2 ml-auto">
             <Button type="submit" onClick={onSubmit}>
               Confirm
