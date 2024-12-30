@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { handleHostCall, setAllWorkersStorage } from "@/store/workers/workersSlice";
-import { TrieInput } from "./trie-input/copy";
+import { TrieInput } from "./trie-input";
 import { Button } from "../ui/button";
 import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
 import { useEffect, useState } from "react";
