@@ -4,6 +4,7 @@ import {
   instructionArgumentTypeMap,
   ProgramDecoder,
   tryAsMemoryIndex,
+  tryAsSbrkIndex,
 } from "@typeberry/pvm-debugger-adapter";
 import { ArgsDecoder, Registers } from "@typeberry/pvm-debugger-adapter";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
@@ -31,7 +32,7 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
   }
 
   //const HEAP_START_PAGE = 4 * 2 ** 16;
-  const HEAP_END_PAGE = tryAsMemoryIndex(2 ** 32 - 2 * 2 ** 16 - 2 ** 24);
+  const HEAP_END_PAGE = tryAsSbrkIndex(2 ** 32 - 2 * 2 ** 16 - 2 ** 24);
 
   // TODO [ToDr] [#216] Since we don't have examples yet of the
   // PVM program allocating more memory, we disallow expanding
