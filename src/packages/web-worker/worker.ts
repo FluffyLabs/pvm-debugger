@@ -111,7 +111,8 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
     });
 
     postTypedMessage({
-      status: CommandStatus.SUCCESS,
+      status: data.status,
+      error: data.error,
       command: Commands.HOST_CALL,
       messageId: e.data.messageId,
       payload: data,

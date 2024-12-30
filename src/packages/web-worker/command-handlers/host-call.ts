@@ -82,6 +82,10 @@ export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCall
   try {
     return await hostCall({ pvm, hostCallIdentifier, storage });
   } catch (error) {
-    return { hostCallIdentifier, status: CommandStatus.ERROR, error };
+    return {
+      hostCallIdentifier,
+      status: CommandStatus.ERROR,
+      error: new Error(error instanceof Error ? error.message : "Unknown error"),
+    };
   }
 };

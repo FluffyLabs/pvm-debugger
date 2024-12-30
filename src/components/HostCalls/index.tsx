@@ -7,6 +7,7 @@ import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
 import { useEffect, useState } from "react";
 import { CurrentInstruction, DebuggerEcalliStorage } from "@/types/pvm";
 import { ArgumentType } from "@typeberry/pvm-debugger-adapter";
+import { isSerializedError } from "@/store/utils";
 
 const isEcalliWriteOrRead = (currentInstruction: CurrentInstruction) => {
   return (
@@ -19,7 +20,8 @@ const isEcalliWriteOrRead = (currentInstruction: CurrentInstruction) => {
 };
 export const HostCalls = () => {
   const { storage, hasHostCallOpen, programPreviewResult } = useAppSelector((state) => state.debugger);
-  const { currentInstruction } = useAppSelector((state) => state.workers[0]);
+  const firstWorker = useAppSelector((state) => state.workers?.[0]);
+  const currentInstruction = firstWorker?.currentInstruction;
 
   const dispatch = useAppDispatch();
   const [newStorage, setNewStorage] = useState<DebuggerEcalliStorage | null>();
@@ -49,12 +51,12 @@ export const HostCalls = () => {
 
         dispatch(setHasHostCallOpen(false));
       } catch (e) {
-        if (e instanceof Error) {
+        if (e instanceof Error || isSerializedError(e)) {
           setError(e.message);
         }
       }
     } catch (e) {
-      if (e instanceof Error) {
+      if (e instanceof Error || isSerializedError(e)) {
         setError(e.message);
       }
     }

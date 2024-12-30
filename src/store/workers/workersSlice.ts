@@ -267,30 +267,33 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
     }
 
     return Promise.all(
-      state.workers.map(async (worker) => {
-        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-          command: Commands.HOST_CALL,
-          payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
-        });
+      state.workers
+        // [KF] Remove or change this condition when we support host calls on more PVMs.
+        .filter(({ id }) => id === "typeberry")
+        .map(async (worker) => {
+          const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+            command: Commands.HOST_CALL,
+            payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
+          });
 
-        if (
-          resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
-          resp.payload.storage &&
-          // Remove if we decide to make storage initialization optional
-          state.debugger.storage
-        ) {
-          const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
-          dispatch(setStorage(newStorage));
-        }
+          if (
+            resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
+            resp.payload.storage &&
+            // Remove if we decide to make storage initialization optional
+            state.debugger.storage
+          ) {
+            const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
+            dispatch(setStorage(newStorage));
+          }
 
-        if ((getState() as RootState).debugger.isRunMode) {
-          dispatch(continueAllWorkers());
-        }
+          if ((getState() as RootState).debugger.isRunMode) {
+            dispatch(continueAllWorkers());
+          }
 
-        if (hasCommandStatusError(resp)) {
-          throw resp.error;
-        }
-      }),
+          if (hasCommandStatusError(resp)) {
+            throw new Error(resp.error.message);
+          }
+        }),
     );
 
     // await dispatch(continueAllWorkers());
@@ -318,11 +321,6 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 
     const state = getState() as RootState;
 
-    // console.log("+======== HOST CALL trying trying ========+", state.workers[0]);
-    //
-    // if (state.workers[0].currentState.status === Status.HOST) {
-    //   console.log("+======== HOST CALL ========+");
-    //   await dispatch(handleHostCall());
     if (selectShouldContinueRunning(state)) {
       await stepAllWorkersAgain();
     }
