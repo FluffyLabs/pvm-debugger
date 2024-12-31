@@ -90,7 +90,6 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
     onChange(newRows);
   };
 
-  // Handle changes in the Key input
   const handleKeyChange = (index: number, value: string): void => {
     const newRows = cloneDeep(rows);
     newRows[index].key = value;
@@ -100,9 +99,7 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
     modifyRows(newRows);
   };
 
-  // Handle changes in the Value input
   const handleValueChange = (index: number, value: string): void => {
-    // Allow user to finish hex value before validation
     const newRows = cloneDeep(rows);
 
     newRows[index].value = value;
@@ -122,7 +119,6 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
   const handleInsertRow = (): void => {
     const newRows = cloneDeep(rows);
 
-    // Create a new unsubmitted row
     newRows.push({
       key: "",
       keyHash: "",
@@ -134,7 +130,6 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
     onChange(newRows);
   };
 
-  // Handle removing a row
   const handleRemoveRow = (index: number): void => {
     const newRows = cloneDeep(rows);
     newRows.splice(index, 1);
