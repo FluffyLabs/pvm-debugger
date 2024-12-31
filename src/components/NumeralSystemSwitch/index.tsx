@@ -5,13 +5,14 @@ import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { NumeralSystem } from "@/context/NumeralSystem";
 
 export const NumeralSystemSwitch = ({ className }: { className: string }) => {
-  const { setNumeralSystem } = useContext(NumeralSystemContext);
+  const { setNumeralSystem, numeralSystem } = useContext(NumeralSystemContext);
 
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <Label htmlFor="numerical-system-mode">DEC</Label>
       <Switch
         id="numerical-system-mode"
+        checked={numeralSystem === NumeralSystem.HEXADECIMAL}
         onCheckedChange={(checked) => setNumeralSystem(checked ? NumeralSystem.HEXADECIMAL : NumeralSystem.DECIMAL)}
       />
       <Label htmlFor="numerical-system-mode">HEX</Label>
