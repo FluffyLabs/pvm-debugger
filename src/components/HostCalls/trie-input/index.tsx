@@ -51,7 +51,6 @@ const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValue
               Key Hash: {row.key && row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
             </span>
           </div>
-          {/* Checkmark Icon */}
 
           <Button variant="ghost" onClick={() => handleRemoveRow(index)}>
             <XIcon className="w-4 h-4" />
@@ -156,7 +155,6 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
           />
         );
       })}
-      {/* Add Button */}
       <Button className="mt-3 ml-3" variant="secondary" onClick={() => handleInsertRow()}>
         <PlusIcon className="w-4 h-4" /> Add new
       </Button>
