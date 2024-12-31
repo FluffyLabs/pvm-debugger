@@ -9,7 +9,7 @@ export function createGoWasmPvmShell(): WasmPvmShellInterface {
     __wbg_set_wasm,
     resetGeneric: reset,
     nextStep,
-    run: (steps: number) => {
+    nSteps: (steps: number) => {
       for (let i = 0; i < steps; i++) {
         if (!nextStep()) {
           return false;
