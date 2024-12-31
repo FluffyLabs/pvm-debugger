@@ -40,6 +40,8 @@ export const HostCalls = () => {
   }, [storage]);
 
   const onSubmit = async () => {
+    setError("");
+
     try {
       dispatch(setStorage(newStorage || []));
       await dispatch(setAllWorkersStorage()).unwrap();
