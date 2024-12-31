@@ -140,13 +140,15 @@ export const Registers = ({
                     className="w-20 h-6 m-0 py-0 px-[4px] text-md border-white hover:border-input"
                     onChange={(e) => {
                       const value = e.target?.value;
-                      const valueInDecimal =
-                        numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
-                      const pcValue =
-                        valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : 0;
+                      let newValue = 0;
+                      try {
+                        newValue = Number(value);
+                      } catch (_e) {
+                        newValue = 0;
+                      }
                       onCurrentStateChange({
                         ...currentState,
-                        pc: pcValue,
+                        pc: newValue,
                       });
                     }}
                     onKeyUp={(e) => {

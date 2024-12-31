@@ -8,7 +8,7 @@ export const valueToNumeralSystem = (
   withPrefix: boolean = true,
 ): string => {
   const stringValue =
-    typeof value === "bigint" ? BigInt.asUintN(32, value).toString(16) : ((value ?? 0) >>> 0).toString(16);
+    typeof value === "bigint" ? BigInt.asUintN(64, value).toString(16) : ((value ?? 0) >>> 0).toString(16);
 
   return numeralSystem === NumeralSystem.HEXADECIMAL
     ? `${withPrefix ? "0x" : ""}${stringValue.padStart(padStartVal, "0")}`
