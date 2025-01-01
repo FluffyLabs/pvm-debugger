@@ -1,7 +1,8 @@
-import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
+import { CurrentInstruction, ExpectedState, HostCallIdentifiers, InitialState } from "@/types/pvm";
 import { SupportedLangs } from "./utils";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
+import { bytes } from "@typeberry/jam-host-calls";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 
@@ -14,7 +15,13 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
       }
     | {
         command: Commands.STEP;
-        payload: { state: ExpectedState; result: CurrentInstruction | object; isFinished: boolean; isRunMode: boolean };
+        payload: {
+          state: ExpectedState;
+          result: CurrentInstruction | object;
+          isFinished: boolean;
+          isRunMode: boolean;
+          exitArg: number;
+        };
       }
     | {
         command: Commands.RUN;
@@ -22,6 +29,19 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
       }
     | { command: Commands.STOP; payload: { isRunMode: boolean } }
     | { command: Commands.MEMORY; payload: { memoryChunk: Uint8Array } }
+    | { command: Commands.SET_STORAGE }
+    | {
+        command: Commands.HOST_CALL;
+        payload:
+          | {
+              hostCallIdentifier: Exclude<HostCallIdentifiers, HostCallIdentifiers.WRITE>;
+            }
+          | {
+              hostCallIdentifier: HostCallIdentifiers.WRITE;
+              storage?: Storage;
+            };
+      }
+    | { command: Commands.SET_SERVICE_ID }
   );
 
 type CommonWorkerRequestParams = { messageId: string };
@@ -34,7 +54,10 @@ export type CommandWorkerRequestParams =
   | { command: Commands.STEP; payload: { program: Uint8Array; stepsToPerform: number } }
   | { command: Commands.RUN }
   | { command: Commands.STOP }
-  | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } };
+  | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
+  | { command: Commands.SET_STORAGE; payload: { storage: Storage } }
+  | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers } }
+  | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } };
 
 export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
 
@@ -45,6 +68,9 @@ export enum Commands {
   RUN = "run",
   STOP = "stop",
   MEMORY = "memory",
+  SET_STORAGE = "set_storage",
+  HOST_CALL = "host_call",
+  SET_SERVICE_ID = "set_service_id",
 }
 
 export enum PvmTypes {
@@ -60,3 +86,5 @@ export enum CommandStatus {
 
 // TODO: unify the api
 export type PvmApiInterface = WasmPvmShellInterface | InternalPvm;
+
+export type Storage = Map<string, bytes.BytesBlob>;
