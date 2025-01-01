@@ -37,18 +37,21 @@ type StorageItemProps = {
 const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValueChange }: StorageItemProps) => {
   const backgroundClass = index % 2 === 0 ? "bg-white" : "bg-gray-100";
 
+  // Cover PVM generated hash
+  const isKeySameAsHash = (row.key && row.key === row.keyHash) || (!row.key && row.keyHash);
+
   return (
     <div className={`p-3 flex ${backgroundClass}`}>
       <div className="flex-col w-full">
         <div className="flex items-start">
           <div className="flex flex-col w-full">
             <Input
-              placeholder={!row.key && row.keyHash ? `Key (PVM generated)` : "Key"}
-              value={row.key}
+              placeholder="Key"
+              value={row.key || row.keyHash}
               onChange={(e) => handleKeyChange(index, e.target.value)}
             />
             <span className="text-xs py-1 ml-2">
-              Key Hash: {row.key && row.key === row.keyHash ? "--- key is already a hash ---" : row.keyHash}
+              Key Hash: {isKeySameAsHash ? "--- key is already a hash ---" : row.keyHash}
             </span>
           </div>
 
