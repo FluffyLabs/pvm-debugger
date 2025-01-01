@@ -19,6 +19,7 @@ export interface DebuggerState {
   pvmInitialized: boolean;
   stepsToPerform: number;
   storage: DebuggerEcalliStorage | null;
+  serviceId: number | null;
 }
 
 const initialState: DebuggerState = {
@@ -43,6 +44,7 @@ const initialState: DebuggerState = {
   pvmInitialized: false,
   stepsToPerform: 1,
   storage: null,
+  serviceId: parseInt("0x30303030", 16),
 };
 
 const debuggerSlice = createSlice({
@@ -94,6 +96,9 @@ const debuggerSlice = createSlice({
     setStorage(state, action) {
       state.storage = action.payload;
     },
+    setServiceId(state, action) {
+      state.serviceId = action.payload;
+    },
   },
 });
 
@@ -113,6 +118,7 @@ export const {
   setPvmInitialized,
   setStepsToPerform,
   setStorage,
+  setServiceId,
 } = debuggerSlice.actions;
 
 export const selectProgram = (state: RootState) => state.debugger.program;

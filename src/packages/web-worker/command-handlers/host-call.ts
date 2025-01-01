@@ -10,6 +10,7 @@ type HostCallParams = {
   pvm: PvmApiInterface | null;
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage | null;
+  serviceId: number | null;
 };
 
 type HostCallResponse =
@@ -33,10 +34,12 @@ const hostCall = async ({
   pvm,
   hostCallIdentifier,
   storage,
+  serviceId,
 }: {
   pvm: PvmApiInterface;
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage;
+  serviceId: number;
 }): Promise<HostCallResponse> => {
   if (!isInternalPvm(pvm)) {
     return { hostCallIdentifier, status: CommandStatus.ERROR, error: new Error("External PVM not supported") };
@@ -46,7 +49,7 @@ const hostCall = async ({
     const readAccounts = new ReadAccounts(storage);
     const jamHostCall = new read.Read(readAccounts);
     // TODO the types are the same, but exported from different packages and lost track of the type
-    jamHostCall.currentServiceId = tryAsServiceId(0x30303030) as unknown as typeof jamHostCall.currentServiceId;
+    jamHostCall.currentServiceId = tryAsServiceId(serviceId) as unknown as typeof jamHostCall.currentServiceId;
 
     await jamHostCall.execute(
       pvm.getInterpreter().getGasCounter(),
@@ -70,7 +73,12 @@ const hostCall = async ({
   return { hostCallIdentifier, status: CommandStatus.ERROR, error: new Error("Unknown host call identifier") };
 };
 
-export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCallParams): Promise<HostCallResponse> => {
+export const runHostCall = async ({
+  pvm,
+  hostCallIdentifier,
+  storage,
+  serviceId,
+}: HostCallParams): Promise<HostCallResponse> => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
   }
@@ -79,8 +87,12 @@ export const runHostCall = async ({ pvm, hostCallIdentifier, storage }: HostCall
     throw new Error("Storage is uninitialized.");
   }
 
+  if (serviceId === null) {
+    throw new Error("Service ID is uninitialized.");
+  }
+
   try {
-    return await hostCall({ pvm, hostCallIdentifier, storage });
+    return await hostCall({ pvm, hostCallIdentifier, storage, serviceId });
   } catch (error) {
     return {
       hostCallIdentifier,

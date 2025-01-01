@@ -134,6 +134,27 @@ export const setAllWorkersStorage = createAsyncThunk("workers/setAllStorage", as
   );
 });
 
+export const setAllWorkersServiceId = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
+  const state = getState() as RootState;
+  const debuggerState = state.debugger;
+  const serviceId = debuggerState.serviceId;
+
+  if (serviceId === null) {
+    throw new Error("Service id is not set");
+  }
+
+  return Promise.all(
+    await state.workers.map(async (worker) => {
+      await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.SET_SERVICE_ID,
+        payload: {
+          serviceId,
+        },
+      });
+    }),
+  );
+});
+
 export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
   const debuggerState = state.debugger;

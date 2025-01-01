@@ -41,6 +41,7 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
               storage?: Storage;
             };
       }
+    | { command: Commands.SET_SERVICE_ID }
   );
 
 type CommonWorkerRequestParams = { messageId: string };
@@ -55,7 +56,8 @@ export type CommandWorkerRequestParams =
   | { command: Commands.STOP }
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
   | { command: Commands.SET_STORAGE; payload: { storage: Storage } }
-  | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers } };
+  | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers } }
+  | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } };
 
 export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
 
@@ -68,6 +70,7 @@ export enum Commands {
   MEMORY = "memory",
   SET_STORAGE = "set_storage",
   HOST_CALL = "host_call",
+  SET_SERVICE_ID = "set_service_id",
 }
 
 export enum PvmTypes {

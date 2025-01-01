@@ -6,6 +6,8 @@ let pvm: PvmApiInterface | null = null;
 let memorySize: number | null = null;
 let isRunMode = false;
 let storage: Storage | null = null;
+// Set default serviceId to 0x30303030. This is the ASCII code for '0000'.
+let serviceId: number | null = parseInt("0x30303030", 16);
 
 export function postTypedMessage(msg: WorkerResponseParams) {
   postMessage(msg);
@@ -108,6 +110,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       pvm,
       hostCallIdentifier: e.data.payload.hostCallIdentifier,
       storage,
+      serviceId,
     });
 
     postTypedMessage({
@@ -116,6 +119,15 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       command: Commands.HOST_CALL,
       messageId: e.data.messageId,
       payload: data,
+    });
+  } else if (e.data.command === Commands.SET_SERVICE_ID) {
+    serviceId = e.data.payload.serviceId;
+
+    postTypedMessage({
+      command: Commands.SET_SERVICE_ID,
+      status: CommandStatus.SUCCESS,
+      error: null,
+      messageId: e.data.messageId,
     });
   }
 };
