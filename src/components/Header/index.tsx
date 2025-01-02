@@ -8,9 +8,7 @@ export const Header = () => {
       <div className="flex items-center gap-5">
         <img src={Logo} alt="FluffyLabs logo" className="w-[90px] ml-3" />
         <pre className="text-brand">PVM debugger</pre>
-        <pre className="text-white text-xs">
-          <a href="https://pvm-debugger.netlify.app/">64-bit beta</a>
-        </pre>
+        <Environment />
       </div>
       <div className="mr-3 text-white flex flex-row items-center justify-center gap-5">
         <TooltipProvider>
@@ -28,4 +26,16 @@ export const Header = () => {
       </div>
     </div>
   );
+};
+
+const Environment = () => {
+  const { host } = window.location;
+  let env = "PR preview";
+  if (host === "pvm.fluffylabs.dev") {
+    env = "prod";
+  } else if (host === "pvm-debugger.netlify.app") {
+    env = "beta";
+  }
+
+  return <pre className="text-white text-xs">{env}</pre>;
 };
