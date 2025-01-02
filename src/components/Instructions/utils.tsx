@@ -51,6 +51,12 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
           , {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
         </span>
       );
+    case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
+      return (
+        <span>
+          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getValue(), numeralSystem)}
+        </span>
+      );
     case ArgumentType.TWO_REGISTERS:
       return (
         <span>

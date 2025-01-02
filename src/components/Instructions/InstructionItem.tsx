@@ -125,7 +125,7 @@ export const InstructionItem = forwardRef(
                   <span className="uppercase font-bold">{programRow.name}</span>
                 </a>
               </TableCell>
-              <TableCell className="p-1.5">
+              <TableCell className="p-1.5 whitespace-nowrap">
                 <span className="">
                   {"args" in programRow &&
                     mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
