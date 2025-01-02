@@ -93,7 +93,7 @@ export const ProgramFileUpload = ({
             program: Array.from(code),
             name: "custom",
             initial: {
-              regs: Array.from(registers) as RegistersArray,
+              regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
               pc: 0,
               pageMap: [],
               // TODO: map memory properly

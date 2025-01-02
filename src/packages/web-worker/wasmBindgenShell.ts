@@ -16,7 +16,7 @@ export interface WasmPvmShellInterface {
     gas: bigint,
   ): void;
   nextStep(): boolean;
-  run(steps: number): boolean;
+  nSteps(steps: number): boolean;
   getExitArg(): number;
   getStatus(): Status;
   getRegisters(): Uint8Array;
@@ -31,7 +31,7 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
-    run,
+    nSteps,
     getProgramCounter,
     setNextProgramCounter,
     getExitArg,
@@ -48,7 +48,7 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
-    run,
+    nSteps,
     getProgramCounter,
     setNextProgramCounter,
     getStatus,

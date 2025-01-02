@@ -17,7 +17,7 @@ const step = ({ pvm, program, stepsToPerform }: StepParams) => {
     throw new Error("PVM is uninitialized.");
   }
 
-  const isFinished = stepsToPerform > 1 ? !pvm.run(stepsToPerform) : !pvm.nextStep();
+  const isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
   const state = getState(pvm);
   const result = nextInstruction(state.pc ?? 0, program) as unknown as CurrentInstruction;
 

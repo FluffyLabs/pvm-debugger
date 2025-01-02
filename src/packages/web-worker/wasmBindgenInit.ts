@@ -92,8 +92,8 @@ export function nextStep() {
  * @param {number} steps
  * @returns {boolean}
  */
-export function run(steps) {
-  const ret = wasm.run(steps);
+export function nSteps(steps) {
+  const ret = wasm.nSteps(steps);
   return ret !== 0;
 }
 
