@@ -7,7 +7,7 @@ type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; mess
 
 export type WorkerResponseParams = CommonWorkerResponseParams &
   (
-    | { command: Commands.LOAD }
+    | { command: Commands.LOAD; payload: { memorySize: number } }
     | {
         command: Commands.INIT;
         payload: { initialState: InitialState };
