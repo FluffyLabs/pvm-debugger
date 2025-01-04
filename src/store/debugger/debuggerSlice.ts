@@ -25,7 +25,7 @@ export interface DebuggerState {
 const initialState: DebuggerState = {
   program: [],
   initialState: {
-    regs: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    regs: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
     pc: 0,
     pageMap: [],
     memory: [],

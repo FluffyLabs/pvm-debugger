@@ -24,7 +24,7 @@ const step = async ({ pvm, program, stepsToPerform, storage }: StepParams) => {
     throw new Error("PVM is uninitialized.");
   }
 
-  let isFinished = stepsToPerform > 1 ? !pvm.run(stepsToPerform) : !pvm.nextStep();
+  const isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
   let state = getState(pvm);
 
   if (state.status === Status.HOST && storage !== null) {

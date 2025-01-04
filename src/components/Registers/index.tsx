@@ -1,6 +1,5 @@
 import { ExpectedState, InitialState, RegistersArray, Status } from "@/types/pvm";
 import { ReactNode, useContext } from "react";
-import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
 import classNames from "classnames";
@@ -131,7 +130,7 @@ export const Registers = ({
     <div className="border-2 rounded-md h-[70vh] overflow-auto">
       <div className="p-3">
         <div>
-          <div className="font-mono flex flex-col items-start">
+          <div className="font-mono flex flex-col items-start text-xs">
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">PC</p>
               {allowEditingPc ? (
@@ -140,13 +139,10 @@ export const Registers = ({
                     className="w-20 h-6 m-0 py-0 px-[4px] text-md border-white hover:border-input"
                     onChange={(e) => {
                       const value = e.target?.value;
-                      const valueInDecimal =
-                        numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
-                      const pcValue =
-                        valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : 0;
+                      const newValue = stringToNumber(value, Number);
                       onCurrentStateChange({
                         ...currentState,
-                        pc: pcValue,
+                        pc: newValue,
                       });
                     }}
                     onKeyUp={(e) => {
@@ -205,14 +201,11 @@ export const Registers = ({
                       className="w-20 h-6 m-0 p-0"
                       onChange={(e) => {
                         const value = e.target?.value;
-                        const valueInDecimal =
-                          numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
-                        const regValue =
-                          valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : "";
+                        const newValue = stringToNumber(value, BigInt);
                         onCurrentStateChange({
                           ...currentState,
-                          regs: currentState.regs?.map((val: number, index: number) =>
-                            index === regNo ? regValue : val,
+                          regs: currentState.regs?.map((val: bigint, index: number) =>
+                            index === regNo ? newValue : val,
                           ) as InitialState["regs"],
                         });
                       }}
@@ -231,7 +224,7 @@ export const Registers = ({
                     propName="regs"
                     propNameIndex={regNo}
                     workers={workers}
-                    padStartVal={numeralSystem ? 8 : 0}
+                    padStartVal={numeralSystem ? 16 : 0}
                   />
                 )}
               </div>
@@ -242,3 +235,11 @@ export const Registers = ({
     </div>
   );
 };
+
+function stringToNumber<T>(value: string, cb: (x: string) => T): T {
+  try {
+    return cb(value);
+  } catch (_e) {
+    return cb("0");
+  }
+}

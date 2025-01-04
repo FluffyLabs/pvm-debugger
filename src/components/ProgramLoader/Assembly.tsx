@@ -37,6 +37,7 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
   if (program.length === 0) {
     return DEFAULT_ASSEMBLY;
   }
+
   try {
     const raw = disassemble(new Uint8Array(program));
     const lines = raw.split("\n");
@@ -71,7 +72,7 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
     // now append initial registers
     const registers: string[] = [];
     for (const [idx, reg] of (initialState.regs ?? []).entries()) {
-      if (reg !== 0) {
+      if (BigInt(reg) !== 0n) {
         registers.push(`pre: r${idx} = ${reg}`);
       }
     }
@@ -131,7 +132,9 @@ export const Assembly = ({
         }
         // we want to keep all of the old stuff to avoid re-rendering.
         output.initial = newInitialState;
-        onProgramLoad(output);
+        // TODO [ToDr] Assembly for 64-bit is temporarily broken, so we don't trigger
+        // the `onProgramLoad` here.
+        // onProgramLoad(output);
         setError(undefined);
       } catch (e) {
         if (e instanceof Error) {
@@ -149,8 +152,7 @@ export const Assembly = ({
         setError(`${e}`);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onProgramLoad, program],
+    [onProgramLoad, program, initialState],
   );
 
   const [error, setError] = useState<string>();
@@ -193,8 +195,10 @@ export const Assembly = ({
           className="h-full"
           height="100%"
           placeholder="Try writing some PolkaVM assembly code."
+          /* TODO [ToDr] Marking as readonly since the 64-bit assembly is not working correctly yet */
+          readOnly
           value={assembly}
-          onChange={(value) => compile(value)}
+          onChange={compile}
         />
       </div>
       <div>

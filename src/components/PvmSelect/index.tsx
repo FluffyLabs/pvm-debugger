@@ -171,7 +171,7 @@ export const PvmSelect = () => {
             id: value,
             type: PvmTypes.WASM_URL,
             params: {
-              url: path.join(url, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl),
+              url: path.join(url, "../", metadata.wasmBlobUrl),
               lang,
             },
           },
