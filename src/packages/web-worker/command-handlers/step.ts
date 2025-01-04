@@ -9,6 +9,7 @@ export type StepParams = {
   pvm: PvmApiInterface | null;
   stepsToPerform: number;
   storage: Storage | null;
+  serviceId: number | null;
 };
 export type StepResponse = {
   status: CommandStatus;
@@ -19,17 +20,17 @@ export type StepResponse = {
   isFinished: boolean;
 };
 
-const step = async ({ pvm, program, stepsToPerform, storage }: StepParams) => {
+const step = async ({ pvm, program, stepsToPerform, storage, serviceId }: StepParams) => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
   }
 
-  const isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
+  let isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
   let state = getState(pvm);
 
-  if (state.status === Status.HOST && storage !== null) {
+  if (state.status === Status.HOST && storage !== null && serviceId !== null) {
     const hostCallIdentifier = pvm.getExitArg();
-    await runHostCall({ pvm, hostCallIdentifier, storage });
+    await runHostCall({ pvm, hostCallIdentifier, storage, serviceId });
     // pvm.nextStep();
     state = getState(pvm);
   }
@@ -44,9 +45,15 @@ const step = async ({ pvm, program, stepsToPerform, storage }: StepParams) => {
   return { result, state, isFinished, exitArg: pvm.getExitArg() };
 };
 
-export const runStep = async ({ pvm, program, stepsToPerform, storage }: StepParams): Promise<StepResponse> => {
+export const runStep = async ({
+  pvm,
+  program,
+  stepsToPerform,
+  storage,
+  serviceId,
+}: StepParams): Promise<StepResponse> => {
   try {
-    const data = await step({ pvm, program, stepsToPerform, storage });
+    const data = await step({ pvm, program, stepsToPerform, storage, serviceId });
     return { status: CommandStatus.SUCCESS, ...data };
   } catch (error) {
     return { status: CommandStatus.ERROR, error, isFinished: true, result: {}, state: {}, exitArg: 0 };

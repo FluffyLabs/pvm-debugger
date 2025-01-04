@@ -49,6 +49,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       program: e.data.payload.program,
       stepsToPerform: e.data.payload.stepsToPerform,
       storage,
+      serviceId,
     });
     isRunMode = !isFinished;
 
