@@ -287,7 +287,7 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
       throw new Error("Invalid host call instruction");
     }
 
-    return Promise.all(
+    await Promise.all(
       state.workers
         // [KF] Remove or change this condition when we support host calls on more PVMs.
         .filter(({ id }) => id === "typeberry")
@@ -316,12 +316,6 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
           }
         }),
     );
-
-    // await dispatch(continueAllWorkers());
-    // const hostCallIndex = currentInstructionEnriched.args.immediateDecoder.getUnsigned();
-
-    // if (hostCallIndex === HostCallIdentifiers.READ || hostCallIndex === HostCallIdentifiers.WRITE) {
-    // }
 
     if (selectShouldContinueRunning(state)) {
       dispatch(continueAllWorkers());
@@ -429,7 +423,7 @@ export const stepAllWorkers = createAsyncThunk(
             dispatch(setIsRunMode(false));
           }
 
-          await dispatch(handleHostCall());
+          await dispatch(handleHostCall()).unwrap();
         }
 
         return {
