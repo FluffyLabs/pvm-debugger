@@ -333,7 +333,8 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const stepAllWorkersAgain = async () => {
-    await dispatch(stepAllWorkers()).unwrap();
+    const debuggerState = (getState() as RootState).debugger;
+    await dispatch(stepAllWorkers({ stepsToPerform: debuggerState.stepsToPerform })).unwrap();
     const allSame = selectHasAllSameState(getState() as RootState);
 
     if (!allSame) {
@@ -372,79 +373,83 @@ export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_,
   }
 });
 
-export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (_, { getState, dispatch }) => {
-  const state = getState() as RootState;
-  const debuggerState = state.debugger;
+export const stepAllWorkers = createAsyncThunk(
+  "workers/stepAllWorkers",
+  async (params: { stepsToPerform?: number }, { getState, dispatch }) => {
+    const stepsToPerform = params?.stepsToPerform || 1;
+    const state = getState() as RootState;
+    const debuggerState = state.debugger;
 
-  if (debuggerState.isDebugFinished) {
-    return;
-  }
+    if (debuggerState.isDebugFinished) {
+      return;
+    }
 
-  const responses = await Promise.all(
-    state.workers.map(async (worker) => {
-      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.STEP,
-        payload: {
-          program: new Uint8Array(debuggerState.program),
-          // NOTE [ToDr] Despite settings "batched steps", when
-          // the user clicks "Step" we want just single step to happen.
-          stepsToPerform: 1,
-        },
-      });
+    const responses = await Promise.all(
+      state.workers.map(async (worker) => {
+        const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.STEP,
+          payload: {
+            program: new Uint8Array(debuggerState.program),
+            // NOTE [ToDr] Despite settings "batched steps", when
+            // the user clicks "Step" we want just single step to happen.
+            stepsToPerform,
+          },
+        });
 
-      if (hasCommandStatusError(data)) {
-        throw data.error;
-      }
-
-      const { state, isFinished, isRunMode, exitArg } = data.payload;
-
-      dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-      dispatch(setWorkerExitArg({ id: worker.id, exitArg }));
-
-      dispatch(
-        setWorkerCurrentInstruction({
-          id: worker.id,
-          instruction: data.payload.result,
-        }),
-      );
-      dispatch(setIsStepMode(true));
-
-      if (state.pc === undefined) {
-        throw new Error("Program counter is undefined");
-      }
-
-      const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
-
-      if (isBreakpoint) {
-        dispatch(setIsRunMode(false));
-        dispatch(setIsBreakpoint({ id: worker.id, isBreakpoint: true }));
-      }
-
-      if (state.status === Status.HOST) {
-        if (debuggerState.storage === null) {
-          dispatch(setIsRunMode(false));
+        if (hasCommandStatusError(data)) {
+          throw data.error;
         }
 
-        await dispatch(handleHostCall());
-      }
+        const { state, isFinished, isRunMode, exitArg } = data.payload;
 
-      return {
-        isFinished,
-        state,
-        isRunMode,
-        isBreakpoint,
-      };
-    }),
-  );
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+        dispatch(setWorkerExitArg({ id: worker.id, exitArg }));
 
-  const allFinished = responses.every((response) => response.isFinished);
+        dispatch(
+          setWorkerCurrentInstruction({
+            id: worker.id,
+            instruction: data.payload.result,
+          }),
+        );
+        dispatch(setIsStepMode(true));
 
-  await dispatch(refreshPageAllWorkers());
+        if (state.pc === undefined) {
+          throw new Error("Program counter is undefined");
+        }
 
-  if (allFinished) {
-    dispatch(setIsDebugFinished(true));
-  }
-});
+        const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
+
+        if (isBreakpoint) {
+          dispatch(setIsRunMode(false));
+          dispatch(setIsBreakpoint({ id: worker.id, isBreakpoint: true }));
+        }
+
+        if (state.status === Status.HOST) {
+          if (debuggerState.storage === null) {
+            dispatch(setIsRunMode(false));
+          }
+
+          await dispatch(handleHostCall());
+        }
+
+        return {
+          isFinished,
+          state,
+          isRunMode,
+          isBreakpoint,
+        };
+      }),
+    );
+
+    const allFinished = responses.every((response) => response.isFinished);
+
+    await dispatch(refreshPageAllWorkers());
+
+    if (allFinished) {
+      dispatch(setIsDebugFinished(true));
+    }
+  },
+);
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
   const state = getState() as RootState;
