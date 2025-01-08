@@ -45,8 +45,9 @@ export const DebuggerControlls = () => {
         await dispatch(setAllWorkersCurrentState(initialState));
       }
 
-      await dispatch(stepAllWorkers()).unwrap();
-
+      // NOTE [ToDr] Despite settings "batched steps", when
+      // the user clicks "Step" we want just single step to happen.
+      await dispatch(stepAllWorkers({ stepsToPerform: 1 })).unwrap();
       dispatch(setIsProgramEditMode(false));
     } catch (error) {
       if (error instanceof Error || isSerializedError(error)) {
