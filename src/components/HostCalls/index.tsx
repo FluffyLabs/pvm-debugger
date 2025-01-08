@@ -1,17 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
-import { handleHostCall, setAllWorkersServiceId, setAllWorkersStorage } from "@/store/workers/workersSlice";
+import { handleHostCall, setAllWorkersStorage } from "@/store/workers/workersSlice";
 import { TrieInput } from "./trie-input";
 import { Button } from "../ui/button";
-import { setHasHostCallOpen, setServiceId, setStorage } from "@/store/debugger/debuggerSlice";
-import { useContext, useEffect, useState } from "react";
+import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
+import { useEffect, useState } from "react";
 import { CurrentInstruction, DebuggerEcalliStorage } from "@/types/pvm";
 import { ArgumentType } from "@typeberry/pvm-debugger-adapter";
 import { isSerializedError } from "@/store/utils";
-import { Input } from "../ui/input";
-import { NumeralSystemContext } from "@/context/NumeralSystemContext";
-import { NumeralSystem } from "@/context/NumeralSystem";
-import { valueToNumeralSystem } from "../Instructions/utils";
 
 const isEcalliWriteOrRead = (currentInstruction: CurrentInstruction) => {
   return (
@@ -24,12 +20,10 @@ const isEcalliWriteOrRead = (currentInstruction: CurrentInstruction) => {
 };
 export const HostCalls = () => {
   const dispatch = useAppDispatch();
-  const { numeralSystem } = useContext(NumeralSystemContext);
-  const { storage, hasHostCallOpen, programPreviewResult, serviceId } = useAppSelector((state) => state.debugger);
+  const { storage, hasHostCallOpen, programPreviewResult } = useAppSelector((state) => state.debugger);
   const firstWorker = useAppSelector((state) => state.workers?.[0]);
   const currentInstruction = firstWorker?.currentInstruction;
 
-  const [newServiceId, setNewServiceId] = useState<number | null>();
   const [newStorage, setNewStorage] = useState<DebuggerEcalliStorage | null>();
   const [error, setError] = useState<string>();
   const previousInstruction =
@@ -43,18 +37,14 @@ export const HostCalls = () => {
 
   useEffect(() => {
     setNewStorage(storage);
-    setNewServiceId(serviceId);
-  }, [serviceId, storage]);
+  }, [storage]);
 
   const onSubmit = async () => {
     setError("");
 
     try {
       dispatch(setStorage(newStorage || []));
-      dispatch(setServiceId(newServiceId));
       await dispatch(setAllWorkersStorage()).unwrap();
-      await dispatch(setAllWorkersServiceId()).unwrap();
-
       try {
         if (isOnEcalli) {
           await dispatch(handleHostCall()).unwrap();
@@ -87,21 +77,7 @@ export const HostCalls = () => {
           <DialogHeader>
             <DialogTitle className="mb-4">Define ecalli data</DialogTitle>
           </DialogHeader>
-          <div className="mt-3">
-            <span className="block text-md text-black font-bold mb-2">Service id</span>
-            <span className="mb-3 block">Provide storage service id</span>
-            <Input
-              onChange={(e) => {
-                const value = e.target?.value;
-                const valueInDecimal = numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
-                const newValue =
-                  valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : 0;
 
-                setNewServiceId(newValue);
-              }}
-              value={valueToNumeralSystem(newServiceId ?? 0, numeralSystem)}
-            />
-          </div>
           <div className="mt-6">
             <span className="block text-md text-black font-bold mb-2">Storage value</span>
             <span>Please provide JSON storage or confirm empty</span>
