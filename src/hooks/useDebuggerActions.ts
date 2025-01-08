@@ -24,6 +24,7 @@ import {
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
+  setAllWorkersStorage,
   WorkerState,
 } from "@/store/workers/workersSlice";
 import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
@@ -31,7 +32,9 @@ import { logger } from "@/utils/loggerService";
 import { useCallback } from "react";
 
 export const useDebuggerActions = () => {
-  const { programPreviewResult, breakpointAddresses, initialState } = useAppSelector((state) => state.debugger);
+  const { programPreviewResult, breakpointAddresses, initialState, storage } = useAppSelector(
+    (state) => state.debugger,
+  );
   const workers = useAppSelector((state) => state.workers);
   const dispatch = useAppDispatch();
 
@@ -47,8 +50,12 @@ export const useDebuggerActions = () => {
       await dispatch(refreshPageAllWorkers()).unwrap();
       dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
       dispatch(setClickedInstruction(null));
+
+      if (storage) {
+        await dispatch(setAllWorkersStorage()).unwrap();
+      }
     },
-    [dispatch, programPreviewResult],
+    [dispatch, programPreviewResult, storage],
   );
 
   const startProgram = useCallback(

@@ -1,22 +1,25 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
+import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 
 export interface DebuggerState {
-  program: number[];
-  initialState: ExpectedState;
-  isProgramEditMode: boolean;
   isProgramInvalid: boolean;
-  isRunMode: boolean;
-  isStepMode: boolean;
-  programPreviewResult: CurrentInstruction[];
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
+  hasHostCallOpen: boolean;
+  initialState: ExpectedState;
   instructionMode: InstructionMode;
   isDebugFinished: boolean;
+  isProgramEditMode: boolean;
+  isRunMode: boolean;
+  isStepMode: boolean;
+  program: number[];
+  programPreviewResult: CurrentInstruction[];
   pvmInitialized: boolean;
   stepsToPerform: number;
+  storage: DebuggerEcalliStorage | null;
+  serviceId: number | null;
 }
 
 const initialState: DebuggerState = {
@@ -32,6 +35,7 @@ const initialState: DebuggerState = {
   isProgramInvalid: false,
   isRunMode: false,
   isStepMode: false,
+  hasHostCallOpen: false,
   programPreviewResult: [],
   breakpointAddresses: [],
   clickedInstruction: null,
@@ -39,6 +43,8 @@ const initialState: DebuggerState = {
   isDebugFinished: false,
   pvmInitialized: false,
   stepsToPerform: 1,
+  storage: null,
+  serviceId: parseInt("0x30303030", 16),
 };
 
 const debuggerSlice = createSlice({
@@ -84,23 +90,35 @@ const debuggerSlice = createSlice({
     setStepsToPerform(state, action) {
       state.stepsToPerform = action.payload;
     },
+    setHasHostCallOpen(state, action) {
+      state.hasHostCallOpen = action.payload;
+    },
+    setStorage(state, action) {
+      state.storage = action.payload;
+    },
+    setServiceId(state, action) {
+      state.serviceId = action.payload;
+    },
   },
 });
 
 export const {
-  setProgram,
-  setInitialState,
-  setIsProgramEditMode,
   setIsProgramInvalid,
-  setIsRunMode,
-  setIsStepMode,
-  setProgramPreviewResult,
   setBreakpointAddresses,
   setClickedInstruction,
+  setHasHostCallOpen,
+  setInitialState,
   setInstructionMode,
   setIsDebugFinished,
+  setIsProgramEditMode,
+  setIsRunMode,
+  setIsStepMode,
+  setProgram,
+  setProgramPreviewResult,
   setPvmInitialized,
   setStepsToPerform,
+  setStorage,
+  setServiceId,
 } = debuggerSlice.actions;
 
 export const selectProgram = (state: RootState) => state.debugger.program;
