@@ -12,12 +12,19 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setHasHostCallOpen, setServiceId, setStepsToPerform } from "@/store/debugger/debuggerSlice";
 import { Button } from "../ui/button";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
-import { NumeralSystem } from "@/context/NumeralSystem";
 import { valueToNumeralSystem } from "../Instructions/utils";
 import { useContext, useState } from "react";
 import { setAllWorkersServiceId } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { logger } from "@/utils/loggerService";
+
+function stringToNumber<T>(value: string, cb: (x: string) => T): T {
+  try {
+    return cb(value);
+  } catch (_e) {
+    return cb("0");
+  }
+}
 
 export const DebuggerSettings = () => {
   const debuggerState = useAppSelector((state) => state.debugger);
@@ -58,12 +65,8 @@ export const DebuggerSettings = () => {
                 <Input
                   onChange={(e) => {
                     const value = e.target?.value;
-                    const valueInDecimal =
-                      numeralSystem === NumeralSystem.HEXADECIMAL ? `${parseInt(value, 16)}` : value;
-                    const newValue =
-                      valueInDecimal && !Number.isNaN(parseInt(valueInDecimal)) ? parseInt(valueInDecimal) : 0;
-
-                    onServiceIdChange(newValue);
+                    const parsedValue = stringToNumber(value, Number);
+                    onServiceIdChange(parsedValue);
                   }}
                   value={valueToNumeralSystem(debuggerState.serviceId ?? 0, numeralSystem)}
                 />
