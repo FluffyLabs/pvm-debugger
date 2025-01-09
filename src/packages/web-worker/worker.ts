@@ -1,10 +1,13 @@
 import commandHandlers from "./command-handlers";
 import { logger } from "@/utils/loggerService";
-import { WorkerRequestParams, WorkerResponseParams, PvmApiInterface, Commands, CommandStatus } from "./types";
+import { WorkerRequestParams, WorkerResponseParams, PvmApiInterface, Commands, CommandStatus, Storage } from "./types";
 
 let pvm: PvmApiInterface | null = null;
 let memorySize: number | null = null;
 let isRunMode = false;
+let storage: Storage | null = null;
+// Set default serviceId to 0x30303030. This is the ASCII code for '0000'.
+let serviceId: number | null = parseInt("0x30303030", 16);
 
 export function postTypedMessage(msg: WorkerResponseParams) {
   postMessage(msg);
@@ -41,10 +44,12 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.STEP) {
-    const { result, state, isFinished, status, error } = commandHandlers.runStep({
+    const { result, state, isFinished, status, exitArg, error } = await commandHandlers.runStep({
       pvm,
       program: e.data.payload.program,
       stepsToPerform: e.data.payload.stepsToPerform,
+      storage,
+      serviceId,
     });
     isRunMode = !isFinished;
 
@@ -52,7 +57,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       command: Commands.STEP,
       status,
       error,
-      payload: { result, state, isFinished, isRunMode },
+      payload: { result, state, isFinished, isRunMode, exitArg },
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.RUN) {
@@ -91,6 +96,39 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       payload: {
         memoryChunk: data.memoryChunk,
       },
+    });
+  } else if (e.data.command === Commands.SET_STORAGE) {
+    storage = e.data.payload.storage;
+
+    postTypedMessage({
+      command: Commands.SET_STORAGE,
+      status: CommandStatus.SUCCESS,
+      error: null,
+      messageId: e.data.messageId,
+    });
+  } else if (e.data.command === Commands.HOST_CALL) {
+    const data = await commandHandlers.runHostCall({
+      pvm,
+      hostCallIdentifier: e.data.payload.hostCallIdentifier,
+      storage,
+      serviceId,
+    });
+
+    postTypedMessage({
+      status: data.status,
+      error: data.error,
+      command: Commands.HOST_CALL,
+      messageId: e.data.messageId,
+      payload: data,
+    });
+  } else if (e.data.command === Commands.SET_SERVICE_ID) {
+    serviceId = e.data.payload.serviceId;
+
+    postTypedMessage({
+      command: Commands.SET_SERVICE_ID,
+      status: CommandStatus.SUCCESS,
+      error: null,
+      messageId: e.data.messageId,
     });
   }
 };

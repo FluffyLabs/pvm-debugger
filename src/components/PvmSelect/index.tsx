@@ -163,9 +163,7 @@ export const PvmSelect = () => {
               type: PvmTypes.WASM_URL,
               params: {
                 ...pvmsWithPayload.find((p) => p.id === pvm.id)?.params,
-                url: path
-                  .join(pvm.params.url, "../", metadata.wasmBlobUrl32 || metadata.wasmBlobUrl)
-                  .replace("https:/", "https://"), // TODO: check why the http protocol path is getting messed up
+                url: path.join(pvm.params.url, "../", metadata.wasmBlobUrl).replace("https:/", "https://"), // TODO: check why the http protocol path is getting messed up
               },
               label: `${metadata.name} v${metadata.version}` as string,
             };

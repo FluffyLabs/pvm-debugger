@@ -1,5 +1,6 @@
 import { mapKeys, camelCase, pickBy } from "lodash";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
+import { RegistersArray } from "@/types/pvm";
 
 export function mapUploadFileInputToOutput(data: ProgramUploadFileInput): ProgramUploadFileOutput {
   const camelCasedData = mapKeys(data, (_value: unknown, key: string) => camelCase(key));
@@ -20,5 +21,6 @@ export function mapUploadFileInputToOutput(data: ProgramUploadFileInput): Progra
     // expected: mapKeys(expected, (_value: unknown, key) => camelCase(key.replace("expected", ""))) as unknown as ProgramUploadFileOutput["expected"],
   };
 
+  result.initial.regs = result.initial.regs?.map((x) => BigInt(x as number | bigint)) as RegistersArray;
   return result;
 }

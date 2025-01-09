@@ -8,7 +8,7 @@ export const valueToNumeralSystem = (
   withPrefix: boolean = true,
 ): string => {
   const stringValue =
-    typeof value === "bigint" ? BigInt.asUintN(32, value).toString(16) : ((value ?? 0) >>> 0).toString(16);
+    typeof value === "bigint" ? BigInt.asUintN(64, value).toString(16) : ((value ?? 0) >>> 0).toString(16);
 
   return numeralSystem === NumeralSystem.HEXADECIMAL
     ? `${withPrefix ? "0x" : ""}${stringValue.padStart(padStartVal, "0")}`
@@ -49,6 +49,12 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
         <span>
           ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getUnsigned(), numeralSystem)}
           , {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
+        </span>
+      );
+    case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
+      return (
+        <span>
+          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getValue(), numeralSystem)}
         </span>
       );
     case ArgumentType.TWO_REGISTERS:

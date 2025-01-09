@@ -1,14 +1,30 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState } from "@/types/pvm.ts";
-import { setIsDebugFinished, setIsRunMode, setIsStepMode } from "@/store/debugger/debuggerSlice.ts";
+import { CurrentInstruction, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
+import {
+  selectIsDebugFinished,
+  setHasHostCallOpen,
+  setIsDebugFinished,
+  setIsRunMode,
+  setIsStepMode,
+  setStorage,
+} from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
-import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
+import {
+  asyncWorkerPostMessage,
+  hasCommandStatusError,
+  LOAD_MEMORY_CHUNK_SIZE,
+  MEMORY_SPLIT_STEP,
+  mergePVMAndDebuggerEcalliStorage,
+  toPvmStorage,
+} from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
+import { isInstructionError } from "@/types/type-guards";
+import { nextInstruction } from "@/packages/web-worker/pvm.ts";
 import { SerializedFile } from "@/lib/utils.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -35,7 +51,9 @@ export interface WorkerState {
   currentState: ExpectedState;
   previousState: ExpectedState;
   currentInstruction?: CurrentInstruction;
+  exitArg?: number;
   isRunMode?: boolean;
+  isBreakpoint?: boolean;
   isDebugFinished?: boolean;
   isLoading?: boolean;
   memory: {
@@ -95,6 +113,48 @@ export const loadWorker = createAsyncThunk(
     }
   },
 );
+
+export const setAllWorkersStorage = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
+  const state = getState() as RootState;
+  const debuggerState = state.debugger;
+  const storage = debuggerState.storage;
+
+  if (storage === null) {
+    throw new Error("Storage is not set");
+  }
+
+  return Promise.all(
+    await state.workers.map(async (worker) => {
+      await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.SET_STORAGE,
+        payload: {
+          storage: toPvmStorage(storage),
+        },
+      });
+    }),
+  );
+});
+
+export const setAllWorkersServiceId = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
+  const state = getState() as RootState;
+  const debuggerState = state.debugger;
+  const serviceId = debuggerState.serviceId;
+
+  if (serviceId === null) {
+    throw new Error("Service id is not set");
+  }
+
+  return Promise.all(
+    await state.workers.map(async (worker) => {
+      await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.SET_SERVICE_ID,
+        payload: {
+          serviceId,
+        },
+      });
+    }),
+  );
+});
 
 export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
@@ -205,87 +265,79 @@ export const refreshPageAllWorkers = createAsyncThunk(
   },
 );
 
-export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
+export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  let debuggerState = state.debugger;
 
-  const stepAllWorkersAgain = async () => {
-    const responses = await Promise.all(
-      state.workers.map(async (worker) => {
-        const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
-          command: Commands.STEP,
-          payload: {
-            program: new Uint8Array(debuggerState.program),
-            stepsToPerform: debuggerState.stepsToPerform,
-          },
-        });
-
-        if (hasCommandStatusError(data)) {
-          throw data.error;
-        }
-
-        const { state, isRunMode, isFinished } = data.payload;
-
-        // START MOVED FROM initAllWorkers
-        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-        dispatch(
-          setWorkerCurrentInstruction({
-            id: worker.id,
-            instruction: data.payload.result,
-          }),
-        );
-
-        // END MOVED FOM initAllWorkers
-
-        const currentState = getState() as RootState;
-        debuggerState = currentState.debugger;
-
-        if (state.pc === undefined) {
-          throw new Error("Program counter is undefined");
-        }
-
-        const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
-
-        logger.info("Response from worker:", {
-          isFinished,
-          state,
-          isRunMode,
-          debuggerHit: isBreakpoint,
-        });
-
-        if (isBreakpoint) {
-          dispatch(setIsRunMode(false));
-        }
-
-        return {
-          isFinished,
-          state,
-          isRunMode,
-          isBreakpoint,
-        };
-      }),
+  if (state.debugger.storage === null) {
+    return dispatch(setHasHostCallOpen(true));
+  } else {
+    const previousInstruction = nextInstruction(
+      state.workers[0].previousState.pc ?? 0,
+      new Uint8Array(state.debugger.program),
     );
 
-    const { workers } = getState() as RootState;
-    const allSame = workers.every(
-      ({ currentState }) => JSON.stringify(currentState) === JSON.stringify(workers[0].currentState),
+    const instructionEnriched = state.debugger.programPreviewResult.find(
+      (instruction) => instruction.instructionCode === previousInstruction?.instructionCode,
     );
 
-    const allFinished = responses.every((response) => response.isFinished);
-    const allRunning = responses.every((response) => response.isRunMode);
-    const anyBreakpoint = responses.some((response) => response.isBreakpoint);
-
-    if (allFinished) {
-      dispatch(setIsDebugFinished(true));
+    if (
+      !instructionEnriched ||
+      isInstructionError(instructionEnriched)
+      // !isOneImmediateArgs(instructionEnriched.args)
+    ) {
+      throw new Error("Invalid host call instruction");
     }
+
+    await Promise.all(
+      state.workers
+        // [KF] Remove or change this condition when we support host calls on more PVMs.
+        .filter(({ id }) => id === "typeberry")
+        .map(async (worker) => {
+          const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+            command: Commands.HOST_CALL,
+            payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
+          });
+
+          if (
+            resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
+            resp.payload.storage &&
+            // Remove if we decide to make storage initialization optional
+            state.debugger.storage
+          ) {
+            const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
+            dispatch(setStorage(newStorage));
+          }
+
+          if ((getState() as RootState).debugger.isRunMode) {
+            dispatch(continueAllWorkers());
+          }
+
+          if (hasCommandStatusError(resp)) {
+            throw new Error(resp.error.message);
+          }
+        }),
+    );
+
+    if (selectShouldContinueRunning(state)) {
+      dispatch(continueAllWorkers());
+    }
+
+    return;
+  }
+});
+
+export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
+  const stepAllWorkersAgain = async () => {
+    await dispatch(stepAllWorkers({})).unwrap();
+    const allSame = selectHasAllSameState(getState() as RootState);
 
     if (!allSame) {
       dispatch(setIsRunMode(false));
     }
 
-    await dispatch(refreshPageAllWorkers());
+    const state = getState() as RootState;
 
-    if (debuggerState.isRunMode && allSame && !allFinished && allRunning && !anyBreakpoint) {
+    if (selectShouldContinueRunning(state)) {
       await stepAllWorkersAgain();
     }
   };
@@ -315,60 +367,81 @@ export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_,
   }
 });
 
-export const stepAllWorkers = createAsyncThunk("workers/stepAllWorkers", async (_, { getState, dispatch }) => {
-  const state = getState() as RootState;
-  const debuggerState = state.debugger;
+export const stepAllWorkers = createAsyncThunk(
+  "workers/stepAllWorkers",
+  async (params: { stepsToPerform?: number }, { getState, dispatch }) => {
+    const state = getState() as RootState;
+    const debuggerState = state.debugger;
+    const stepsToPerform = params?.stepsToPerform || debuggerState.stepsToPerform;
 
-  if (debuggerState.isDebugFinished) {
-    return;
-  }
+    if (debuggerState.isDebugFinished) {
+      return;
+    }
 
-  const responses = await Promise.all(
-    state.workers.map(async (worker) => {
-      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.STEP,
-        payload: {
-          program: new Uint8Array(debuggerState.program),
-          // NOTE [ToDr] Despite settings "batched steps", when
-          // the user clicks "Step" we want just single step to happen.
-          stepsToPerform: 1,
-        },
-      });
+    const responses = await Promise.all(
+      state.workers.map(async (worker) => {
+        const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.STEP,
+          payload: {
+            program: new Uint8Array(debuggerState.program),
+            stepsToPerform,
+          },
+        });
 
-      if (hasCommandStatusError(data)) {
-        throw data.error;
-      }
+        if (hasCommandStatusError(data)) {
+          throw data.error;
+        }
 
-      const { state, isFinished } = data.payload;
+        const { state, isFinished, isRunMode, exitArg } = data.payload;
 
-      dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
-      dispatch(
-        setWorkerCurrentInstruction({
-          id: worker.id,
-          instruction: data.payload.result,
-        }),
-      );
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: state }));
+        dispatch(setWorkerExitArg({ id: worker.id, exitArg }));
 
-      dispatch(setIsStepMode(true));
+        dispatch(
+          setWorkerCurrentInstruction({
+            id: worker.id,
+            instruction: data.payload.result,
+          }),
+        );
+        dispatch(setIsStepMode(true));
 
-      if (state.pc === undefined) {
-        throw new Error("Program counter is undefined");
-      }
+        if (state.pc === undefined) {
+          throw new Error("Program counter is undefined");
+        }
 
-      return {
-        isFinished,
-      };
-    }),
-  );
+        const isBreakpoint = debuggerState.breakpointAddresses.includes(state.pc);
 
-  const allFinished = responses.every((response) => response.isFinished);
+        if (isBreakpoint) {
+          dispatch(setIsRunMode(false));
+          dispatch(setIsBreakpoint({ id: worker.id, isBreakpoint: true }));
+        }
 
-  await dispatch(refreshPageAllWorkers());
+        if (state.status === Status.HOST) {
+          if (debuggerState.storage === null) {
+            dispatch(setIsRunMode(false));
+          }
 
-  if (allFinished) {
-    dispatch(setIsDebugFinished(true));
-  }
-});
+          await dispatch(handleHostCall()).unwrap();
+        }
+
+        return {
+          isFinished,
+          state,
+          isRunMode,
+          isBreakpoint,
+        };
+      }),
+    );
+
+    const allFinished = responses.every((response) => response.isFinished);
+
+    await dispatch(refreshPageAllWorkers());
+
+    if (allFinished) {
+      dispatch(setIsDebugFinished(true));
+    }
+  },
+);
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
   const state = getState() as RootState;
@@ -448,6 +521,7 @@ const workers = createSlice({
     },
     setWorkerCurrentInstruction(state, action) {
       const worker = getWorker(state, action.payload.id);
+
       if (worker) {
         if (action.payload.instruction === null) {
           worker.currentInstruction = virtualTrapInstruction;
@@ -465,6 +539,12 @@ const workers = createSlice({
       const worker = getWorker(state, action.payload.id);
       if (worker) {
         worker.isLoading = action.payload.isLoading;
+      }
+    },
+    setIsBreakpoint(state, action) {
+      const worker = getWorker(state, action.payload.id);
+      if (worker) {
+        worker.isBreakpoint = action.payload.isBreakpoint;
       }
     },
     appendMemory: (
@@ -511,6 +591,12 @@ const workers = createSlice({
 
       memory.isLoading = action.payload.isLoading;
     },
+    setWorkerExitArg(state, action) {
+      const worker = getWorker(state, action.payload.id);
+      if (worker) {
+        worker.exitArg = action.payload.exitArg;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(createWorker.fulfilled, (state, action) => {
@@ -541,7 +627,9 @@ export const {
   setAllWorkersPreviousState,
   setAllWorkersCurrentInstruction,
   setWorkerIsLoading,
+  setIsBreakpoint,
   appendMemory,
+  setWorkerExitArg,
 } = workers.actions;
 
 export const selectWorkers = (state: RootState) => state.workers;
@@ -556,6 +644,23 @@ export const selectMemoryForFirstWorker = (state: RootState) => {
 
   return worker.memory;
 };
+
+export const selectHasAllSameState = (state: RootState) => {
+  const allSame = state.workers.every(
+    ({ currentState }) => JSON.stringify(currentState) === JSON.stringify(state.workers[0].currentState),
+  );
+
+  return allSame;
+};
+
+export const selectShouldContinueRunning = (state: RootState) => {
+  const allSame = selectHasAllSameState(state);
+  const allFinished = selectIsDebugFinished(state);
+  const anyBreakpoint = state.workers.some((response) => response.isBreakpoint);
+
+  return state.debugger.isRunMode && allSame && !allFinished && !anyBreakpoint;
+};
+
 export const selectIsAnyWorkerLoading = (state: RootState) => state.workers.some((worker) => worker.isLoading);
 
 export default workers.reducer;

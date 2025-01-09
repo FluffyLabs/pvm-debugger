@@ -1,10 +1,11 @@
+import { StorageRow } from "@/components/HostCalls/trie-input";
 import { Args } from "@typeberry/pvm-debugger-adapter";
 export { Pvm } from "@typeberry/pvm-debugger-adapter";
 
 type GrowToSize<T, N extends number, A extends T[]> = A["length"] extends N ? A : GrowToSize<T, N, [...A, T]>;
 type FixedArray<T, N extends number> = GrowToSize<T, N, []>;
 
-export type RegistersArray = FixedArray<number, 13>;
+export type RegistersArray = FixedArray<bigint, 13>;
 
 export type InitialState = {
   regs?: RegistersArray;
@@ -73,3 +74,12 @@ export enum AvailablePvms {
 }
 
 export type decodeStandardProgram = (program: number[]) => CurrentInstruction;
+
+export enum HostCallIdentifiers {
+  GAS = 0,
+  LOOKUP = 1,
+  READ = 2,
+  WRITE = 3,
+}
+
+export type DebuggerEcalliStorage = StorageRow[];
