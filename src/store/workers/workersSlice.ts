@@ -23,7 +23,7 @@ import {
   toPvmStorage,
 } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
-import { isInstructionError, isOneImmediateArgs } from "@/types/type-guards";
+import { isInstructionError } from "@/types/type-guards";
 import { nextInstruction } from "@/packages/web-worker/pvm.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -281,8 +281,8 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
 
     if (
       !instructionEnriched ||
-      isInstructionError(instructionEnriched) ||
-      !isOneImmediateArgs(instructionEnriched.args)
+      isInstructionError(instructionEnriched)
+      // !isOneImmediateArgs(instructionEnriched.args)
     ) {
       throw new Error("Invalid host call instruction");
     }
