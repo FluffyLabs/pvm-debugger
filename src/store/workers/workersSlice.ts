@@ -288,33 +288,30 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
     }
 
     await Promise.all(
-      state.workers
-        // [KF] Remove or change this condition when we support host calls on more PVMs.
-        .filter(({ id }) => id === "typeberry")
-        .map(async (worker) => {
-          const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-            command: Commands.HOST_CALL,
-            payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
-          });
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.HOST_CALL,
+          payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
+        });
 
-          if (
-            resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
-            resp.payload.storage &&
-            // Remove if we decide to make storage initialization optional
-            state.debugger.storage
-          ) {
-            const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
-            dispatch(setStorage(newStorage));
-          }
+        if (
+          resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
+          resp.payload.storage &&
+          // Remove if we decide to make storage initialization optional
+          state.debugger.storage
+        ) {
+          const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
+          dispatch(setStorage(newStorage));
+        }
 
-          if ((getState() as RootState).debugger.isRunMode) {
-            dispatch(continueAllWorkers());
-          }
+        if ((getState() as RootState).debugger.isRunMode) {
+          dispatch(continueAllWorkers());
+        }
 
-          if (hasCommandStatusError(resp)) {
-            throw new Error(resp.error.message);
-          }
-        }),
+        if (hasCommandStatusError(resp)) {
+          throw new Error(resp.error.message);
+        }
+      }),
     );
 
     if (selectShouldContinueRunning(state)) {
