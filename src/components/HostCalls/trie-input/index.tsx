@@ -98,7 +98,7 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
     newRows[index].key = value;
 
     newRows[index].keyHash =
-      !value || is32BytesHex(value) ? value : hash.hashBytes(bytes.BytesBlob.blobFromString(value)).toString();
+      !value || is32BytesHex(value) ? value : hash.blake2b.hashBytes(bytes.BytesBlob.blobFromString(value)).toString();
     modifyRows(newRows);
   };
 

@@ -5,35 +5,20 @@ import { TrieInput } from "./trie-input";
 import { Button } from "../ui/button";
 import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
 import { useEffect, useState } from "react";
-import { CurrentInstruction, DebuggerEcalliStorage } from "@/types/pvm";
-import { ArgumentType } from "@typeberry/pvm-debugger-adapter";
+import { DebuggerEcalliStorage } from "@/types/pvm";
 import { isSerializedError } from "@/store/utils";
 
-const isEcalliWriteOrRead = (currentInstruction: CurrentInstruction) => {
-  return (
-    currentInstruction &&
-    "args" in currentInstruction &&
-    currentInstruction.args.type === ArgumentType.ONE_IMMEDIATE &&
-    (currentInstruction.args.immediateDecoder.getSigned() === 2 ||
-      currentInstruction.args.immediateDecoder.getSigned() === 3)
-  );
+const isEcalliWriteOrRead = (exitArg?: number) => {
+  return exitArg === 2 || exitArg === 3;
 };
 export const HostCalls = () => {
   const dispatch = useAppDispatch();
-  const { storage, hasHostCallOpen, programPreviewResult } = useAppSelector((state) => state.debugger);
+  const { storage, hasHostCallOpen } = useAppSelector((state) => state.debugger);
   const firstWorker = useAppSelector((state) => state.workers?.[0]);
-  const currentInstruction = firstWorker?.currentInstruction;
 
   const [newStorage, setNewStorage] = useState<DebuggerEcalliStorage | null>();
   const [error, setError] = useState<string>();
-  const previousInstruction =
-    programPreviewResult[
-      programPreviewResult.findIndex(
-        (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
-      ) - 1
-    ];
-
-  const isOnEcalli = previousInstruction && isEcalliWriteOrRead(previousInstruction);
+  const isOnEcalli = isEcalliWriteOrRead(firstWorker?.exitArg);
 
   useEffect(() => {
     setNewStorage(storage);
