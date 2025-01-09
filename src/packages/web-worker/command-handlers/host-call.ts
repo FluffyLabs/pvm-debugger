@@ -5,7 +5,7 @@ import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
 import { tryAsServiceId } from "@typeberry/block";
-import { Memory, MemoryIndex, SbrkIndex, tryAsGas } from "@typeberry/pvm-debugger-adapter";
+import { MemoryIndex, tryAsGas } from "@typeberry/pvm-debugger-adapter";
 
 type HostCallParams = {
   pvm: PvmApiInterface | null;
@@ -96,25 +96,6 @@ const getMemory = (pvm: PvmApiInterface) => {
       pvm.setMemory(address, bytes);
       return null;
     },
-
-    // [KrFr] The following functions are not used in the read and write host call handlers. Can be mocked for now.
-    /* eslint-disable @typescript-eslint/no-unused-vars */
-    fromInitialMemory: () => {
-      return new Memory(); // Returns the mock itself for simplicity
-    },
-    reset: () => {},
-    copyFrom: (_memory: Memory) => {},
-    sbrk: (_length: number) => {
-      return 0 as SbrkIndex; // Simulates returning the current sbrk index
-    },
-    getPageDump: (_pageNumber: number) => {
-      return null; // Simulates no page dump available
-    },
-    getDirtyPages: function* () {
-      // Simulates an empty iterator
-      yield* [];
-    },
-    /* eslint-enable @typescript-eslint/no-unused-vars */
   };
 };
 
