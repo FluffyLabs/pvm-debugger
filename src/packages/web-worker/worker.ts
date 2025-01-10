@@ -112,6 +112,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       hostCallIdentifier: e.data.payload.hostCallIdentifier,
       storage,
       serviceId,
+      memorySize,
     });
 
     postTypedMessage({

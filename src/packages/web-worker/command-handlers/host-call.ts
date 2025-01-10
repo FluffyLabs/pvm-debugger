@@ -1,17 +1,19 @@
 import { HostCallIdentifiers } from "@/types/pvm";
 import { CommandStatus, PvmApiInterface, Storage } from "../types";
-import { read, Registers, write } from "@typeberry/jam-host-calls";
+import { read, Registers, write, Memory } from "@typeberry/jam-host-calls";
 import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
 import { tryAsServiceId } from "@typeberry/block";
 import { MemoryIndex, tryAsGas } from "@typeberry/pvm-debugger-adapter";
+import { WasmPvmShellInterface } from "../wasmBindgenShell";
 
 type HostCallParams = {
   pvm: PvmApiInterface | null;
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage | null;
   serviceId: number | null;
+  memorySize: number | null;
 };
 
 type HostCallResponse =
@@ -116,25 +118,35 @@ const getRegisters = (pvm: PvmApiInterface) => {
 //   };
 // };
 
-const getMemory = (pvm: PvmApiInterface) => {
+class SimpleMemory implements Memory {
+  pvm!: WasmPvmShellInterface;
+  memorySize!: number;
+  loadInto(result: Uint8Array, startAddress: MemoryIndex) {
+    const memoryDump = this.pvm.getPageDump(startAddress / this.memorySize);
+    result.set(memoryDump.subarray(0, result.length));
+
+    return null;
+  }
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+  isWriteable(_destinationStart: MemoryIndex, _length: number) {
+    return true;
+  }
+
+  storeFrom(address: MemoryIndex, bytes: Uint8Array) {
+    this.pvm.setMemory(address, bytes);
+    return null;
+  }
+}
+
+const getMemory = (pvm: PvmApiInterface, memorySize: number) => {
   if (isInternalPvm(pvm)) {
     return pvm.getInterpreter().getMemory();
   }
+  const memory = new SimpleMemory();
+  memory.pvm = pvm;
+  memory.memorySize = memorySize;
 
-  return {
-    loadInto: (result: Uint8Array, startAddress: MemoryIndex) => {
-      result = pvm.getPageDump(startAddress);
-      return null;
-    },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isWriteable: (_destinationStart: MemoryIndex, _length: number) => {
-      return true; // Simulates that the memory slice is writeable
-    },
-    storeFrom: (address: MemoryIndex, bytes: Uint8Array) => {
-      pvm.setMemory(address, bytes);
-      return null;
-    },
-  };
+  return memory;
 };
 
 const hostCall = async ({
@@ -142,25 +154,27 @@ const hostCall = async ({
   hostCallIdentifier,
   storage,
   serviceId,
+  memorySize,
 }: {
   pvm: PvmApiInterface;
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage;
   serviceId: number;
+  memorySize: number | null;
 }): Promise<HostCallResponse> => {
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
     const readAccounts = new ReadAccounts(storage);
     const jamHostCall = new read.Read(readAccounts);
     // TODO the types are the same, but exported from different packages and lost track of the type
     jamHostCall.currentServiceId = tryAsServiceId(serviceId) as unknown as typeof jamHostCall.currentServiceId;
-    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm));
+    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm, memorySize || 0));
 
     return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
     const writeAccounts = new WriteAccounts(storage);
     const jamHostCall = new write.Write(writeAccounts);
 
-    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm));
+    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm, memorySize || 0));
 
     return { hostCallIdentifier, storage, status: CommandStatus.SUCCESS };
   }
@@ -173,6 +187,7 @@ export const runHostCall = async ({
   hostCallIdentifier,
   storage,
   serviceId,
+  memorySize,
 }: HostCallParams): Promise<HostCallResponse> => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
@@ -187,7 +202,7 @@ export const runHostCall = async ({
   }
 
   try {
-    return await hostCall({ pvm, hostCallIdentifier, storage, serviceId });
+    return await hostCall({ pvm, hostCallIdentifier, storage, serviceId, memorySize });
   } catch (error) {
     return {
       hostCallIdentifier,
