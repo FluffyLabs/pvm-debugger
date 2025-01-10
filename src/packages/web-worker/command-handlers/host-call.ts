@@ -1,6 +1,6 @@
 import { HostCallIdentifiers } from "@/types/pvm";
 import { CommandStatus, PvmApiInterface, Storage } from "../types";
-import { read, write } from "@typeberry/jam-host-calls";
+import { read, Registers, write } from "@typeberry/jam-host-calls";
 import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
@@ -44,39 +44,77 @@ const getGasCounter = (pvm: PvmApiInterface) => {
   };
 };
 
+class SimpleRegisters implements Registers {
+  flatRegisters!: Uint8Array;
+
+  getU32(registerIndex: number): number {
+    return Number(this.getU64(registerIndex) & 0xffff_ffffn);
+  }
+  getI32(registerIndex: number): number {
+    return Number(this.getU32(registerIndex)) >> 0;
+  }
+  setU32(registerIndex: number, value: number): void {
+    this.setU64(registerIndex, BigInt(value));
+  }
+  setI32(registerIndex: number, value: number): void {
+    this.setI64(registerIndex, BigInt(value));
+  }
+  getU64(registerIndex: number): bigint {
+    return new BigUint64Array(this.flatRegisters.buffer)[registerIndex];
+  }
+  getI64(registerIndex: number): bigint {
+    return new BigInt64Array(this.flatRegisters.buffer)[registerIndex];
+  }
+  setU64(registerIndex: number, value: bigint): void {
+    new BigUint64Array(this.flatRegisters.buffer)[registerIndex] = value;
+  }
+  setI64(registerIndex: number, value: bigint): void {
+    new BigInt64Array(this.flatRegisters.buffer)[registerIndex] = value;
+  }
+}
+
 const getRegisters = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
     return pvm.getInterpreter().getRegisters();
   }
 
-  return {
-    getU32: (registerIndex: number) => {
-      return pvm.getRegisters()[registerIndex];
-    },
-    setU32: (registerIndex: number, value: number) => {
-      const registers = pvm.getRegisters();
-      registers[registerIndex] = value;
-      pvm.setRegisters(registers);
-    },
+  const registers = new SimpleRegisters();
+  registers.flatRegisters = pvm.getRegisters();
 
-    // [KrFr] The following functions are not used in the read and write host call handlers. Can be mocked for now.
-    /* eslint-disable @typescript-eslint/no-unused-vars */
-    getI32: (_registerIndex: number) => {
-      return 0;
-    },
-    setI32: (_registerIndex: number, _value: number) => {},
-
-    getU64: (_registerIndex: number) => {
-      return BigInt(0);
-    },
-    getI64: (_registerIndex: number) => {
-      return BigInt(0);
-    },
-    setU64: (_registerIndex: number, _value: bigint) => {},
-    setI64: (_registerIndex: number, _value: bigint) => {},
-    /* eslint-enable @typescript-eslint/no-unused-vars */
-  };
+  return registers;
 };
+
+// const getRegisters = (pvm: PvmApiInterface) => {
+//   if (isInternalPvm(pvm)) {
+//     return pvm.getInterpreter().getRegisters();
+//   }
+
+//   return {
+//     getU32: (registerIndex: number) => {
+//       return Number(uint8asRegs(pvm.getRegisters())[registerIndex]);
+//     },
+//     setU32: (registerIndex: number, value: number) => {
+//       const registers = uint8asRegs(pvm.getRegisters());
+//       registers[registerIndex] = BigInt(value);
+//       pvm.setRegisters(regsAsUint8(registers));
+//     },
+//     // [KrFr] The following functions are not used in the read and write host call handlers. Can be mocked for now.
+//     /* eslint-disable @typescript-eslint/no-unused-vars */
+//     getI32: (_registerIndex: number) => {
+//       return 0;
+//     },
+//     setI32: (_registerIndex: number, _value: number) => {},
+//     getU64: (_registerIndex: number) => {
+//       return BigInt(0);
+//     },
+//     getI64: (_registerIndex: number) => {
+//       return BigInt(0);
+//     },
+//     setU64: (_registerIndex: number, _value: bigint) => {},
+//     setI64: (_registerIndex: number, _value: bigint) => {},
+//     /* eslint-enable @typescript-eslint/no-unused-vars */
+//   };
+// };
 
 const getMemory = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
@@ -115,7 +153,6 @@ const hostCall = async ({
     const jamHostCall = new read.Read(readAccounts);
     // TODO the types are the same, but exported from different packages and lost track of the type
     jamHostCall.currentServiceId = tryAsServiceId(serviceId) as unknown as typeof jamHostCall.currentServiceId;
-
     await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm));
 
     return { hostCallIdentifier, status: CommandStatus.SUCCESS };
