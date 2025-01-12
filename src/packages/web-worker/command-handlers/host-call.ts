@@ -48,6 +48,7 @@ const getGasCounter = (pvm: PvmApiInterface) => {
 
 class SimpleRegisters implements Registers {
   flatRegisters!: Uint8Array;
+  pvm!: WasmPvmShellInterface;
 
   getU32(registerIndex: number): number {
     return Number(this.getU64(registerIndex) & 0xffff_ffffn);
@@ -69,6 +70,7 @@ class SimpleRegisters implements Registers {
   }
   setU64(registerIndex: number, value: bigint): void {
     new BigUint64Array(this.flatRegisters.buffer)[registerIndex] = value;
+    this.pvm.setRegisters(this.flatRegisters);
   }
   setI64(registerIndex: number, value: bigint): void {
     new BigInt64Array(this.flatRegisters.buffer)[registerIndex] = value;
@@ -82,6 +84,7 @@ const getRegisters = (pvm: PvmApiInterface) => {
 
   const registers = new SimpleRegisters();
   registers.flatRegisters = pvm.getRegisters();
+  registers.pvm = pvm;
 
   return registers;
 };
@@ -167,7 +170,8 @@ const hostCall = async ({
     const jamHostCall = new read.Read(readAccounts);
     // TODO the types are the same, but exported from different packages and lost track of the type
     jamHostCall.currentServiceId = tryAsServiceId(serviceId) as unknown as typeof jamHostCall.currentServiceId;
-    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm, memorySize || 0));
+    const registers = getRegisters(pvm);
+    await jamHostCall.execute(getGasCounter(pvm), registers, getMemory(pvm, memorySize || 0));
 
     return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
