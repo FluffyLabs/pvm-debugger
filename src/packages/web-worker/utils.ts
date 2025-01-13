@@ -14,16 +14,16 @@ export enum SupportedLangs {
   AssemblyScript = "AssemblyScript",
 }
 
-export function getState(pvm: PvmApiInterface): ExpectedState {
+export async function getState(pvm: PvmApiInterface): Promise<ExpectedState> {
   const regs = isInternalPvm(pvm)
-    ? (Array.from(pvm.getRegisters()) as RegistersArray)
-    : uint8asRegs(pvm.getRegisters());
+    ? (Array.from(await pvm.getRegisters()) as RegistersArray)
+    : uint8asRegs(await pvm.getRegisters());
 
   return {
-    pc: pvm.getProgramCounter(),
+    pc: await pvm.getProgramCounter(),
     regs,
-    gas: pvm.getGasLeft(),
-    status: pvm.getStatus(),
+    gas: await pvm.getGasLeft(),
+    status: await pvm.getStatus(),
   };
 }
 
@@ -93,10 +93,11 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
 
   if (lang === SupportedLangs.Rust) {
     const wasmModule = await WebAssembly.instantiate(bytes, {});
-    logger.info("Rust WASM module loaded", wasmModule.instance.exports);
-    const wasmPvmShell = createWasmPvmShell();
-    wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
-    return wasmPvmShell;
+    // logger.info("Rust WASM module loaded", wasmModule.instance.exports);
+    // const wasmPvmShell = createWasmPvmShell();
+    // wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
+    // return wasmPvmShell;
+    return wasmModule
   }
 
   if (lang === SupportedLangs.AssemblyScript) {
@@ -110,13 +111,17 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
   throw new Error(`Unsupported lang: ${lang}`);
 }
 
-export function getMemorySize(pvm: PvmApiInterface | null) {
+export async function getMemorySize(pvm: PvmApiInterface | null) {
+  console.log("getMemorySize bitch")
+
   if (!pvm) {
     logger.warn("Accesing memory of not initialized PVM");
     return null;
   }
 
-  const page = pvm.getPageDump(0);
+  console.log('gonna page yeah')
+  const page = await pvm.getPageDump(0);
+  console.log('gonna not??? ;(', page.length)
 
   if (!page) {
     logger.warn("PVM memory page is null");

@@ -26,13 +26,13 @@ const step = async ({ pvm, program, stepsToPerform, storage, serviceId }: StepPa
   }
 
   let isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
-  let state = getState(pvm);
+  let state = await getState(pvm);
 
   if (state.status === Status.HOST && storage !== null && serviceId !== null) {
-    const hostCallIdentifier = pvm.getExitArg();
+    const hostCallIdentifier = await pvm.getExitArg();
     await runHostCall({ pvm, hostCallIdentifier, storage, serviceId });
     // pvm.nextStep();
-    state = getState(pvm);
+    state = await getState(pvm);
   }
 
   // It's not really finished if we're in host status
@@ -42,7 +42,7 @@ const step = async ({ pvm, program, stepsToPerform, storage, serviceId }: StepPa
 
   const result = nextInstruction(state.pc ?? 0, program) as unknown as CurrentInstruction;
 
-  return { result, state, isFinished, exitArg: pvm.getExitArg() };
+  return { result, state, isFinished, exitArg: await pvm.getExitArg() };
 };
 
 export const runStep = async ({

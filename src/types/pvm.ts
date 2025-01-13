@@ -71,6 +71,7 @@ export enum AvailablePvms {
   ANANAS = "ananas",
   WASM_URL = "wasm-url",
   WASM_FILE = "wasm-file",
+  WASM_WS = "wasm-websocket",
 }
 
 export type decodeStandardProgram = (program: number[]) => CurrentInstruction;

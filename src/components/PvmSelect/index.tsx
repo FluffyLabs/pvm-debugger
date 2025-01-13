@@ -149,6 +149,25 @@ export const PvmSelect = () => {
     }
   };
 
+  const handlePvmWsOptions = async () => {
+    const id = generatePvmId("ws-pvm");
+
+    const newValues = [
+      ...pvmsWithPayload,
+      {
+        id,
+        type: PvmTypes.WASM_WS,
+        params: {
+          port: 8765,
+        },
+        label: `${id}`, // v${.version}` as string, TODO: fetch version from ws
+        removable: true,
+      },
+    ];
+    dispatch(setPvmOptions(newValues));
+    dispatch(setSelectedPvms([...selectedPvms, id]));
+  }
+
   useEffect(() => {
     Promise.all(
       pvmsWithPayload.map(async (pvm) => {
@@ -216,6 +235,9 @@ export const PvmSelect = () => {
         </span>
         <span className="cursor-pointer" onClick={handlePvmFileOption}>
           Upload custom PVM from a file as a WASM
+        </span>
+        <span className="cursor-pointer" onClick={handlePvmWsOptions}>
+          Connect to a WebSocket PVM at ws://localhost:8765
         </span>
         <span>
           Learn to add your PVM implementation here{" "}
