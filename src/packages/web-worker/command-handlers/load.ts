@@ -3,6 +3,7 @@ import { getMemorySize, loadArrayBufferAsWasm, SupportedLangs } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { deserializeFile, SerializedFile } from "@/lib/utils.ts";
+import loadWasmFromWebsockets from "../wasmFromWebsockets";
 
 export type LoadParams = { type: PvmTypes; params: { url?: string; file?: SerializedFile; lang?: SupportedLangs } };
 export type LoadResponse = {
@@ -38,15 +39,15 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
     const bytes = await response.arrayBuffer();
 
     return await loadArrayBufferAsWasm(bytes, args.params.lang);
+  } else if (args.type === PvmTypes.WASM_WS) {
+    return await loadWasmFromWebsockets();
   }
-
-  return null;
 };
 
 export const runLoad = async (args: LoadParams): Promise<LoadResponse> => {
   try {
     const pvm = await load(args);
-    const memorySize = getMemorySize(pvm);
+    const memorySize = await getMemorySize(pvm);
     if (pvm) {
       return { pvm, memorySize, status: CommandStatus.SUCCESS };
     }

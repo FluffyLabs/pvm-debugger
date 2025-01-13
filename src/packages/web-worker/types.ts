@@ -78,6 +78,7 @@ export enum PvmTypes {
   BUILT_IN = "built-in",
   WASM_URL = "wasm-url",
   WASM_FILE = "wasm-file",
+  WASM_WS = "wasm-websocket",
 }
 
 export enum CommandStatus {
