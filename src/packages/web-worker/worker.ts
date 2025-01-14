@@ -50,6 +50,7 @@ onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
       stepsToPerform: e.data.payload.stepsToPerform,
       storage,
       serviceId,
+      memorySize,
     });
     isRunMode = !isFinished;
 
