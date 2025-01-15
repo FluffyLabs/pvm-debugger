@@ -32,7 +32,7 @@ const step = async ({ pvm, program, stepsToPerform, storage, serviceId, memorySi
   if (state.status === Status.HOST && storage !== null && serviceId !== null) {
     const hostCallIdentifier = pvm.getExitArg();
     await runHostCall({ pvm, hostCallIdentifier, storage, serviceId, memorySize });
-    pvm.nextStep();
+    // pvm.nextStep();
     state = getState(pvm);
   }
 

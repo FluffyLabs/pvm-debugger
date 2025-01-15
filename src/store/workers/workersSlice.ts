@@ -293,7 +293,6 @@ export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (
           command: Commands.HOST_CALL,
           payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
         });
-
         if (
           resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
           resp.payload.storage &&
