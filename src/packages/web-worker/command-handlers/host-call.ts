@@ -5,7 +5,7 @@ import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
 import { tryAsServiceId } from "@typeberry/block";
-import { MemoryIndex, tryAsGas } from "@typeberry/pvm-debugger-adapter";
+import { Gas, MemoryIndex, tryAsGas } from "@typeberry/pvm-debugger-adapter";
 import { WasmPvmShellInterface } from "../wasmBindgenShell";
 
 type HostCallParams = {
@@ -37,9 +37,13 @@ const getGasCounter = (pvm: PvmApiInterface) => {
 
   return {
     get: () => {
-      return tryAsGas(10_000);
+      return tryAsGas(pvm.getGasLeft());
     },
-    set: () => {},
+    set: (gas: Gas) => {
+      if (pvm.setGasLeft) {
+        pvm.setGasLeft(BigInt(gas.toString()));
+      }
+    },
     sub: () => {
       return false;
     },
@@ -88,38 +92,6 @@ const getRegisters = (pvm: PvmApiInterface) => {
 
   return registers;
 };
-
-// const getRegisters = (pvm: PvmApiInterface) => {
-//   if (isInternalPvm(pvm)) {
-//     return pvm.getInterpreter().getRegisters();
-//   }
-
-//   return {
-//     getU32: (registerIndex: number) => {
-//       return Number(uint8asRegs(pvm.getRegisters())[registerIndex]);
-//     },
-//     setU32: (registerIndex: number, value: number) => {
-//       const registers = uint8asRegs(pvm.getRegisters());
-//       registers[registerIndex] = BigInt(value);
-//       pvm.setRegisters(regsAsUint8(registers));
-//     },
-//     // [KrFr] The following functions are not used in the read and write host call handlers. Can be mocked for now.
-//     /* eslint-disable @typescript-eslint/no-unused-vars */
-//     getI32: (_registerIndex: number) => {
-//       return 0;
-//     },
-//     setI32: (_registerIndex: number, _value: number) => {},
-//     getU64: (_registerIndex: number) => {
-//       return BigInt(0);
-//     },
-//     getI64: (_registerIndex: number) => {
-//       return BigInt(0);
-//     },
-//     setU64: (_registerIndex: number, _value: bigint) => {},
-//     setI64: (_registerIndex: number, _value: bigint) => {},
-//     /* eslint-enable @typescript-eslint/no-unused-vars */
-//   };
-// };
 
 class SimpleMemory implements Memory {
   pvm!: WasmPvmShellInterface;
