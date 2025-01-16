@@ -108,6 +108,7 @@ class SimpleMemory implements Memory {
   }
 
   storeFrom(address: MemoryIndex, bytes: Uint8Array) {
+    // TODO [ToDr] Either change the API to require handling multi-page writes or change this code to split the write into multiple pages.
     this.pvm.setMemory(address, bytes);
     return null;
   }
