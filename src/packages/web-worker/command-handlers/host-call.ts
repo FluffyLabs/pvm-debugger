@@ -28,7 +28,6 @@ type HostCallResponse =
       error?: unknown;
     };
 
-// [KrFr] Gas counter is not used. Can be mocked for now.
 const getGasCounter = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
     return pvm.getInterpreter().getGasCounter();
@@ -40,7 +39,7 @@ const getGasCounter = (pvm: PvmApiInterface) => {
     },
     set: (gas: Gas) => {
       if (pvm.setGasLeft) {
-        pvm.setGasLeft(BigInt(gas.toString()));
+        pvm.setGasLeft(BigInt(gas));
       }
     },
     sub: () => {
