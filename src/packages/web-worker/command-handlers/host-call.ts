@@ -42,8 +42,15 @@ const getGasCounter = (pvm: PvmApiInterface) => {
         pvm.setGasLeft(BigInt(gas));
       }
     },
-    sub: () => {
-      return false;
+    sub: (v) => {
+      const current = this.get();
+      if (current > v) {
+        this.set(current - v);
+        return false;
+      }
+      // underflow
+      this.set(0);
+      return true;
     },
   };
 };
