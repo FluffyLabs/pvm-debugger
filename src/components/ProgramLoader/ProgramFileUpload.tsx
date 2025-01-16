@@ -3,10 +3,56 @@ import { Input } from "../ui/input";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
 import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
-import { RegistersArray } from "@/types/pvm.ts";
+import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { SafeParseReturnType, z } from "zod";
 import { useAppSelector } from "@/store/hooks";
 import { selectInitialState } from "@/store/debugger/debuggerSlice";
+
+const PAGE_SHIFT = 12; // log_2(4096)
+const PAGE_SIZE = 1 << PAGE_SHIFT;
+function pageAlign(v: number) {
+  return (((v + PAGE_SIZE - 1) >> PAGE_SHIFT) << PAGE_SHIFT) >>> 0;
+}
+
+function asChunks(mem: MemorySegment[]): MemoryChunkItem[] {
+  const items = [];
+  for (const segment of mem) {
+    if (segment.data === null) {
+      continue;
+    }
+    let data = segment.data;
+    let address = segment.start;
+    while (data.length > 0) {
+      const lenForPage = address % PAGE_SIZE === 0 ? PAGE_SIZE : pageAlign(address) - address;
+      const contents = Array.from<number>(data.subarray(0, Math.min(data.length, lenForPage)));
+      items.push({
+        address,
+        // TODO [ToDr] TEMPORARY until sikora fixes the boundaries.
+        contents: contents.slice(0, Math.min(PAGE_SIZE - 1, contents.length)),
+      });
+
+      // move data & address
+      data = data.subarray(contents.length);
+      address += contents.length;
+    }
+  }
+  return items;
+}
+function asPageMap(mem: MemorySegment[], isWriteable: boolean): PageMapItem[] {
+  const items = [];
+  for (const segment of mem) {
+    const pageStart = segment.start % PAGE_SIZE === 0 ? segment.start : pageAlign(segment.start - PAGE_SIZE + 1);
+    const pageEnd = pageAlign(segment.end);
+    for (let i = pageStart; i < pageEnd; i += PAGE_SIZE) {
+      items.push({
+        address: i,
+        length: Math.min(PAGE_SIZE, pageEnd - i),
+        "is-writable": isWriteable,
+      });
+    }
+  }
+  return items;
+}
 
 const validateJsonTestCaseSchema = (json: unknown) => {
   const pageMapSchema = z.object({
@@ -87,7 +133,11 @@ export const ProgramFileUpload = ({
 
         // Try to decode the program as an SPI
         try {
-          const { code, /*memory,*/ registers } = decodeStandardProgram(uint8Array, new Uint8Array());
+          const { code, memory, registers } = decodeStandardProgram(uint8Array, new Uint8Array());
+
+          const pageMap: PageMapItem[] = asPageMap(memory.readable, false).concat(asPageMap(memory.writeable, true));
+
+          const chunks: MemoryChunkItem[] = asChunks(memory.readable).concat(asChunks(memory.writeable));
 
           onFileUpload({
             program: Array.from(code),
@@ -95,9 +145,8 @@ export const ProgramFileUpload = ({
             initial: {
               regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
               pc: 0,
-              pageMap: [],
-              // TODO: map memory properly
-              // memory: [...memory],
+              pageMap,
+              memory: chunks,
               gas: 10000n,
             },
           });
