@@ -28,31 +28,38 @@ type HostCallResponse =
       error?: unknown;
     };
 
+class SimpleGas {
+  pvm!: WasmPvmShellInterface;
+
+  get(): Gas {
+    return tryAsGas(this.pvm.getGasLeft());
+  }
+  set(gas: Gas) {
+    if (this.pvm.setGasLeft) {
+      this.pvm.setGasLeft(BigInt(gas));
+    }
+  }
+  sub(v: Gas) {
+    const current = this.get();
+    if (current > v) {
+      this.set(tryAsGas(BigInt(current) - BigInt(v)));
+      return false;
+    }
+    // underflow
+    this.set(tryAsGas(0));
+    return true;
+  }
+}
+
 const getGasCounter = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
     return pvm.getInterpreter().getGasCounter();
   }
 
-  return {
-    get: () => {
-      return tryAsGas(pvm.getGasLeft());
-    },
-    set: (gas: Gas) => {
-      if (pvm.setGasLeft) {
-        pvm.setGasLeft(BigInt(gas));
-      }
-    },
-    sub: (v) => {
-      const current = this.get();
-      if (current > v) {
-        this.set(current - v);
-        return false;
-      }
-      // underflow
-      this.set(0);
-      return true;
-    },
-  };
+  const gas = new SimpleGas();
+  gas.pvm = pvm;
+
+  return gas;
 };
 
 class SimpleRegisters implements Registers {
