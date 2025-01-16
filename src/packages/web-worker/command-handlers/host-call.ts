@@ -90,6 +90,7 @@ class SimpleRegisters implements Registers {
   }
   setI64(registerIndex: number, value: bigint): void {
     new BigInt64Array(this.flatRegisters.buffer)[registerIndex] = value;
+    this.pvm.setRegisters(this.flatRegisters);
   }
 }
 
