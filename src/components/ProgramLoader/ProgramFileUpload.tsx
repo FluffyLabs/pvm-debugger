@@ -2,7 +2,7 @@ import { ExternalLink } from "lucide-react";
 import { Input } from "../ui/input";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
-import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
+import { MemorySegment, decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { SafeParseReturnType, z } from "zod";
 import { useAppSelector } from "@/store/hooks";
