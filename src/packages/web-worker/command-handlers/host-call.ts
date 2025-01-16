@@ -13,7 +13,6 @@ type HostCallParams = {
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage | null;
   serviceId: number | null;
-  memorySize: number | null;
 };
 
 type HostCallResponse =
@@ -95,7 +94,8 @@ const getRegisters = (pvm: PvmApiInterface) => {
 
 class SimpleMemory implements Memory {
   pvm!: WasmPvmShellInterface;
-  memorySize!: number;
+  memorySize: number = 4096;
+
   loadInto(result: Uint8Array, startAddress: MemoryIndex) {
     const memoryDump = this.pvm.getPageDump(startAddress / this.memorySize);
     result.set(memoryDump.subarray(0, result.length));
@@ -114,13 +114,12 @@ class SimpleMemory implements Memory {
   }
 }
 
-const getMemory = (pvm: PvmApiInterface, memorySize: number) => {
+const getMemory = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
     return pvm.getInterpreter().getMemory();
   }
   const memory = new SimpleMemory();
   memory.pvm = pvm;
-  memory.memorySize = memorySize;
 
   return memory;
 };
@@ -130,13 +129,11 @@ const hostCall = async ({
   hostCallIdentifier,
   storage,
   serviceId,
-  memorySize,
 }: {
   pvm: PvmApiInterface;
   hostCallIdentifier: HostCallIdentifiers;
   storage: Storage;
   serviceId: number;
-  memorySize: number | null;
 }): Promise<HostCallResponse> => {
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
     const readAccounts = new ReadAccounts(storage);
@@ -144,14 +141,14 @@ const hostCall = async ({
     // TODO the types are the same, but exported from different packages and lost track of the type
     jamHostCall.currentServiceId = tryAsServiceId(serviceId) as unknown as typeof jamHostCall.currentServiceId;
     const registers = getRegisters(pvm);
-    await jamHostCall.execute(getGasCounter(pvm), registers, getMemory(pvm, memorySize || 0));
+    await jamHostCall.execute(getGasCounter(pvm), registers, getMemory(pvm));
 
     return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
     const writeAccounts = new WriteAccounts(storage);
     const jamHostCall = new write.Write(writeAccounts);
 
-    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm, memorySize || 0));
+    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm));
 
     return { hostCallIdentifier, storage, status: CommandStatus.SUCCESS };
   }
@@ -164,7 +161,6 @@ export const runHostCall = async ({
   hostCallIdentifier,
   storage,
   serviceId,
-  memorySize,
 }: HostCallParams): Promise<HostCallResponse> => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
@@ -179,7 +175,7 @@ export const runHostCall = async ({
   }
 
   try {
-    return await hostCall({ pvm, hostCallIdentifier, storage, serviceId, memorySize });
+    return await hostCall({ pvm, hostCallIdentifier, storage, serviceId });
   } catch (error) {
     return {
       hostCallIdentifier,
