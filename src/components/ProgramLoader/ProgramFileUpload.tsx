@@ -10,7 +10,7 @@ import { selectInitialState } from "@/store/debugger/debuggerSlice";
 
 const PAGE_SHIFT = 12; // log_2(4096)
 const PAGE_SIZE = 1 << PAGE_SHIFT;
-function pageAlign(v: number) {
+function pageAlignUp(v: number) {
   return (((v + PAGE_SIZE - 1) >> PAGE_SHIFT) << PAGE_SHIFT) >>> 0;
 }
 
@@ -28,8 +28,7 @@ function asChunks(mem: MemorySegment[]): MemoryChunkItem[] {
       const contents = Array.from<number>(data.subarray(0, Math.min(data.length, lenForPage)));
       items.push({
         address,
-        // TODO [ToDr] TEMPORARY until sikora fixes the boundaries.
-        contents: contents.slice(0, Math.min(PAGE_SIZE, contents.length)),
+        contents,
       });
 
       // move data & address
@@ -42,8 +41,9 @@ function asChunks(mem: MemorySegment[]): MemoryChunkItem[] {
 function asPageMap(mem: MemorySegment[], isWriteable: boolean): PageMapItem[] {
   const items = [];
   for (const segment of mem) {
-    const pageStart = segment.start % PAGE_SIZE === 0 ? segment.start : pageAlign(segment.start - PAGE_SIZE + 1);
-    const pageEnd = pageAlign(segment.end);
+    const pageOffset = segment.start % PAGE_SIZE;
+    const pageStart = segment.start - pageOffset;
+    const pageEnd = pageAlignUp(segment.end);
     for (let i = pageStart; i < pageEnd; i += PAGE_SIZE) {
       items.push({
         address: i,
