@@ -16,7 +16,7 @@ export type MemoryResponse = {
   error?: unknown;
 };
 
-const getMemoryPage = (pageNumber: number, pvm: PvmApiInterface | null) => {
+export const getMemoryPage = (pageNumber: number, pvm: PvmApiInterface | null) => {
   if (!pvm) {
     return new Uint8Array();
   }
