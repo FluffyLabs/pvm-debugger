@@ -63,6 +63,16 @@ const instructionsWithOneRegisterOneImmediateAndOneOffset: InstructionTuple[] = 
 const instructionsWithTwoRegisters: InstructionTuple[] = [
   [Instruction.MOVE_REG, 1],
   [Instruction.SBRK, 1],
+  [Instruction.COUNT_SET_BITS_64, 1],
+  [Instruction.COUNT_SET_BITS_32, 1],
+  [Instruction.LEADING_ZERO_BITS_64, 1],
+  [Instruction.LEADING_ZERO_BITS_32, 1],
+  [Instruction.TRAILING_ZERO_BITS_64, 1],
+  [Instruction.TRAILING_ZERO_BITS_32, 1],
+  [Instruction.SIGN_EXTEND_8, 1],
+  [Instruction.SIGN_EXTEND_16, 1],
+  [Instruction.ZERO_EXTEND_16, 1],
+  [Instruction.REVERSE_BYTES, 1],
 ];
 
 const instructionsWithTwoRegistersAndOneImmediate: InstructionTuple[] = [
@@ -104,6 +114,10 @@ const instructionsWithTwoRegistersAndOneImmediate: InstructionTuple[] = [
   [Instruction.SHLO_L_IMM_ALT_64, 1],
   [Instruction.SHLO_R_IMM_ALT_64, 1],
   [Instruction.SHAR_R_IMM_ALT_64, 1],
+  [Instruction.ROT_R_64_IMM, 1],
+  [Instruction.ROT_R_64_IMM_ALT, 1],
+  [Instruction.ROT_R_32_IMM, 1],
+  [Instruction.ROT_R_32_IMM_ALT, 1],
 ];
 
 const instructionsWithTwoRegistersAndOneOffset: InstructionTuple[] = [
@@ -148,6 +162,17 @@ const instructionsWithThreeRegisters: InstructionTuple[] = [
   [Instruction.SET_LT_S, 1],
   [Instruction.CMOV_IZ, 1],
   [Instruction.CMOV_NZ, 1],
+  [Instruction.ROT_L_64, 1],
+  [Instruction.ROT_L_32, 1],
+  [Instruction.ROT_R_64, 1],
+  [Instruction.ROT_R_32, 1],
+  [Instruction.AND_INV, 1],
+  [Instruction.OR_INV, 1],
+  [Instruction.XNOR, 1],
+  [Instruction.MAX, 1],
+  [Instruction.MAX_U, 1],
+  [Instruction.MIN, 1],
+  [Instruction.MIN_U, 1],
 ];
 
 const instructions: InstructionTuple[] = [
