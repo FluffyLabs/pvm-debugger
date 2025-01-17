@@ -32,7 +32,7 @@ export const HostCalls = () => {
       await dispatch(setAllWorkersStorage()).unwrap();
       try {
         if (isOnEcalli) {
-          await dispatch(handleHostCall()).unwrap();
+          await dispatch(handleHostCall({})).unwrap();
         }
 
         dispatch(setHasHostCallOpen(false));

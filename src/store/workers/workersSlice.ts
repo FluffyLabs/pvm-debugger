@@ -264,62 +264,70 @@ export const refreshPageAllWorkers = createAsyncThunk(
   },
 );
 
-export const handleHostCall = createAsyncThunk("workers/handleHostCall", async (_, { getState, dispatch }) => {
-  const state = getState() as RootState;
+export const handleHostCall = createAsyncThunk(
+  "workers/handleHostCall",
+  async ({ workerId }: { workerId?: string }, { getState, dispatch }) => {
+    const state = getState() as RootState;
 
-  if (state.debugger.storage === null) {
-    return dispatch(setHasHostCallOpen(true));
-  } else {
-    const previousInstruction = nextInstruction(
-      state.workers[0].previousState.pc ?? 0,
-      new Uint8Array(state.debugger.program),
-    );
+    if (state.debugger.storage === null) {
+      return dispatch(setHasHostCallOpen(true));
+    } else {
+      const previousInstruction = nextInstruction(
+        state.workers[0].previousState.pc ?? 0,
+        new Uint8Array(state.debugger.program),
+      );
 
-    const instructionEnriched = state.debugger.programPreviewResult.find(
-      (instruction) => instruction.instructionCode === previousInstruction?.instructionCode,
-    );
+      const instructionEnriched = state.debugger.programPreviewResult.find(
+        (instruction) => instruction.instructionCode === previousInstruction?.instructionCode,
+      );
 
-    if (
-      !instructionEnriched ||
-      isInstructionError(instructionEnriched)
-      // !isOneImmediateArgs(instructionEnriched.args)
-    ) {
-      throw new Error("Invalid host call instruction");
+      if (
+        !instructionEnriched ||
+        isInstructionError(instructionEnriched)
+        // !isOneImmediateArgs(instructionEnriched.args)
+      ) {
+        throw new Error("Invalid host call instruction");
+      }
+
+      await Promise.all(
+        state.workers
+          .filter(({ id }) => {
+            // Allow to call it for a single worker
+            return workerId ? workerId === id : true;
+          })
+          .map(async (worker) => {
+            const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+              command: Commands.HOST_CALL,
+              payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
+            });
+            if (
+              resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
+              resp.payload.storage &&
+              // Remove if we decide to make storage initialization optional
+              state.debugger.storage
+            ) {
+              const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
+              dispatch(setStorage(newStorage));
+            }
+
+            if ((getState() as RootState).debugger.isRunMode) {
+              dispatch(continueAllWorkers());
+            }
+
+            if (hasCommandStatusError(resp)) {
+              throw new Error(resp.error.message);
+            }
+          }),
+      );
+
+      if (selectShouldContinueRunning(state)) {
+        dispatch(continueAllWorkers());
+      }
+
+      return;
     }
-
-    await Promise.all(
-      state.workers.map(async (worker) => {
-        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-          command: Commands.HOST_CALL,
-          payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
-        });
-        if (
-          resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
-          resp.payload.storage &&
-          // Remove if we decide to make storage initialization optional
-          state.debugger.storage
-        ) {
-          const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
-          dispatch(setStorage(newStorage));
-        }
-
-        if ((getState() as RootState).debugger.isRunMode) {
-          dispatch(continueAllWorkers());
-        }
-
-        if (hasCommandStatusError(resp)) {
-          throw new Error(resp.error.message);
-        }
-      }),
-    );
-
-    if (selectShouldContinueRunning(state)) {
-      dispatch(continueAllWorkers());
-    }
-
-    return;
-  }
-});
+  },
+);
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const stepAllWorkersAgain = async () => {
@@ -416,7 +424,7 @@ export const stepAllWorkers = createAsyncThunk(
             dispatch(setIsRunMode(false));
           }
 
-          await dispatch(handleHostCall()).unwrap();
+          await dispatch(handleHostCall({ workerId: worker.id })).unwrap();
         }
 
         return {
