@@ -2,7 +2,6 @@ import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { nextInstruction } from "../pvm";
 import { getState } from "../utils";
 import { CommandStatus, PvmApiInterface, Storage } from "../types";
-import { runHostCall } from "./host-call";
 
 export type StepParams = {
   program: Uint8Array;
@@ -10,7 +9,6 @@ export type StepParams = {
   stepsToPerform: number;
   storage: Storage | null;
   serviceId: number | null;
-  memorySize: number | null;
 };
 export type StepResponse = {
   status: CommandStatus;
@@ -21,20 +19,13 @@ export type StepResponse = {
   isFinished: boolean;
 };
 
-const step = async ({ pvm, program, stepsToPerform, storage, serviceId, memorySize }: StepParams) => {
+const step = async ({ pvm, program, stepsToPerform }: StepParams) => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
   }
 
   let isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
-  let state = getState(pvm);
-
-  if (state.status === Status.HOST && storage !== null && serviceId !== null) {
-    const hostCallIdentifier = pvm.getExitArg();
-    await runHostCall({ pvm, hostCallIdentifier, storage, serviceId, memorySize });
-    // pvm.nextStep();
-    state = getState(pvm);
-  }
+  const state = getState(pvm);
 
   // It's not really finished if we're in host status
   if (isFinished && state.status === Status.HOST) {
@@ -52,10 +43,9 @@ export const runStep = async ({
   stepsToPerform,
   storage,
   serviceId,
-  memorySize,
 }: StepParams): Promise<StepResponse> => {
   try {
-    const data = await step({ pvm, program, stepsToPerform, storage, serviceId, memorySize });
+    const data = await step({ pvm, program, stepsToPerform, storage, serviceId });
     return { status: CommandStatus.SUCCESS, ...data };
   } catch (error) {
     return { status: CommandStatus.ERROR, error, isFinished: true, result: {}, state: {}, exitArg: 0 };
