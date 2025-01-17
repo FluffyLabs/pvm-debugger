@@ -29,7 +29,7 @@ function asChunks(mem: MemorySegment[]): MemoryChunkItem[] {
       items.push({
         address,
         // TODO [ToDr] TEMPORARY until sikora fixes the boundaries.
-        contents: contents.slice(0, Math.min(PAGE_SIZE - 1, contents.length)),
+        contents: contents.slice(0, Math.min(PAGE_SIZE, contents.length)),
       });
 
       // move data & address
