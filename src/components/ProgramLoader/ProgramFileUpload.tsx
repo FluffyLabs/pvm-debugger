@@ -23,7 +23,8 @@ function asChunks(mem: MemorySegment[]): MemoryChunkItem[] {
     let data = segment.data;
     let address = segment.start;
     while (data.length > 0) {
-      const lenForPage = address % PAGE_SIZE === 0 ? PAGE_SIZE : pageAlign(address) - address;
+      const pageOffset = address % PAGE_SIZE;
+      const lenForPage = PAGE_SIZE - pageOffset;
       const contents = Array.from<number>(data.subarray(0, Math.min(data.length, lenForPage)));
       items.push({
         address,
