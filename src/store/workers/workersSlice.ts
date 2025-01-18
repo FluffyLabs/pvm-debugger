@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
+import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
   setHasHostCallOpen,
@@ -112,27 +112,30 @@ export const loadWorker = createAsyncThunk(
     }
   },
 );
-
-export const setAllWorkersStorage = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
+export const clearAllWorkersStorage = createAsyncThunk("workers/clearAllStorage", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  const debuggerState = state.debugger;
-  const storage = debuggerState.storage;
 
-  if (storage === null) {
-    throw new Error("Storage is not set");
-  }
-
-  return Promise.all(
-    await state.workers.map(async (worker) => {
-      await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.SET_STORAGE,
-        payload: {
-          storage: toPvmStorage(storage),
-        },
-      });
-    }),
-  );
+  dispatch(setStorage({ storage: state.debugger.userProvidedStorage, isUserProvided: true }));
+  await dispatch(setAllWorkersStorage({ storage: state.debugger.userProvidedStorage })).unwrap();
 });
+
+export const setAllWorkersStorage = createAsyncThunk(
+  "workers/setAllStorage",
+  async ({ storage }: { storage: DebuggerEcalliStorage | null }, { getState }) => {
+    const state = getState() as RootState;
+
+    return Promise.all(
+      await state.workers.map(async (worker) => {
+        await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.SET_STORAGE,
+          payload: {
+            storage: storage && toPvmStorage(storage),
+          },
+        });
+      }),
+    );
+  },
+);
 
 export const setAllWorkersServiceId = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
   const state = getState() as RootState;
@@ -307,7 +310,7 @@ export const handleHostCall = createAsyncThunk(
               state.debugger.storage
             ) {
               const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
-              dispatch(setStorage(newStorage));
+              dispatch(setStorage({ storage: newStorage, isUserProvided: false }));
             }
 
             if ((getState() as RootState).debugger.isRunMode) {
