@@ -22,7 +22,7 @@ import { NumeralSystem } from "@/context/NumeralSystem";
 
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
-
+const PAGE_SIZE = 4096;
 const BG_COLOR = "#22cccc";
 
 const MemoryCell = ({
@@ -66,7 +66,21 @@ const MemoryCell = ({
         })}
       >
         {isEqualAcrossWorkers ? (
-          valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)
+          <TooltipProvider>
+            <Tooltip delayDuration={100}>
+              <TooltipTrigger>
+                {valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}
+              </TooltipTrigger>
+
+              <TooltipPortal>
+                <TooltipContent>
+                  <div className="font-mono grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                    Page={Math.floor(address / PAGE_SIZE)}
+                  </div>
+                </TooltipContent>
+              </TooltipPortal>
+            </Tooltip>
+          </TooltipProvider>
         ) : (
           <TooltipProvider>
             <Tooltip delayDuration={0}>
