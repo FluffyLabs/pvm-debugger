@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { hasPVMGeneratedStorage } from "@/store/debugger/debuggerSlice";
+import { useAppSelector } from "@/store/hooks";
 import { bytes, hash } from "@typeberry/jam-host-calls";
 import { cloneDeep } from "lodash";
 import { PlusIcon, XIcon } from "lucide-react";
@@ -35,6 +37,7 @@ type StorageItemProps = {
 };
 
 const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValueChange }: StorageItemProps) => {
+  const isDisabled = useAppSelector(hasPVMGeneratedStorage);
   const backgroundClass = index % 2 === 0 ? "bg-white" : "bg-gray-100";
 
   // Cover PVM generated hash
@@ -49,13 +52,14 @@ const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValue
               placeholder="Key"
               value={row.key || row.keyHash}
               onChange={(e) => handleKeyChange(index, e.target.value)}
+              disabled={isDisabled}
             />
             <span className="text-xs py-1 ml-2">
               Key Hash: {isKeySameAsHash ? "--- key is already a hash ---" : row.keyHash}
             </span>
           </div>
 
-          <Button variant="ghost" onClick={() => handleRemoveRow(index)}>
+          <Button variant="ghost" onClick={() => handleRemoveRow(index)} disabled={isDisabled}>
             <XIcon className="w-4 h-4" />
           </Button>
         </div>
@@ -66,6 +70,7 @@ const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValue
             value={row.value}
             onChange={(e) => handleValueChange(index, e.target.value)}
             className="flex-1 mt-1"
+            disabled={isDisabled}
           />
         </div>
       </div>
@@ -73,6 +78,8 @@ const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValue
   );
 };
 export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
+  const isDisabled = useAppSelector(hasPVMGeneratedStorage);
+
   const [rows, setRows] = useState<StorageRow[]>([
     {
       key: "",
@@ -153,7 +160,7 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
           />
         );
       })}
-      <Button className="mt-3 ml-3" variant="secondary" onClick={() => handleInsertRow()}>
+      <Button className="mt-3 ml-3" variant="secondary" onClick={() => handleInsertRow()} disabled={isDisabled}>
         <PlusIcon className="w-4 h-4" /> Add new
       </Button>
     </div>

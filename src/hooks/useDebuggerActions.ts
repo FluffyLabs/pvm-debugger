@@ -16,6 +16,7 @@ import {
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+  clearAllWorkersStorage,
   createWorker,
   destroyWorker,
   initAllWorkers,
@@ -24,7 +25,6 @@ import {
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
-  setAllWorkersStorage,
   WorkerState,
 } from "@/store/workers/workersSlice";
 import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
@@ -52,7 +52,7 @@ export const useDebuggerActions = () => {
       dispatch(setClickedInstruction(null));
 
       if (storage) {
-        await dispatch(setAllWorkersStorage()).unwrap();
+        await dispatch(await clearAllWorkersStorage()).unwrap();
       }
     },
     [dispatch, programPreviewResult, storage],

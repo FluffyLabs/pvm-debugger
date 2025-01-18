@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
+import { isEqual } from "lodash";
 
 export interface DebuggerState {
   isProgramInvalid: boolean;
@@ -19,6 +20,7 @@ export interface DebuggerState {
   pvmInitialized: boolean;
   stepsToPerform: number;
   storage: DebuggerEcalliStorage | null;
+  userProvidedStorage: DebuggerEcalliStorage | null;
   serviceId: number | null;
 }
 
@@ -44,6 +46,7 @@ const initialState: DebuggerState = {
   pvmInitialized: false,
   stepsToPerform: 1,
   storage: null,
+  userProvidedStorage: null,
   serviceId: parseInt("0x30303030", 16),
 };
 
@@ -94,7 +97,11 @@ const debuggerSlice = createSlice({
       state.hasHostCallOpen = action.payload;
     },
     setStorage(state, action) {
-      state.storage = action.payload;
+      state.storage = action.payload.storage;
+
+      if (action.payload.isUserProvided) {
+        state.userProvidedStorage = action.payload;
+      }
     },
     setServiceId(state, action) {
       state.serviceId = action.payload;
@@ -132,5 +139,7 @@ export const selectClickedInstruction = (state: RootState) => state.debugger.cli
 export const selectInstructionMode = (state: RootState) => state.debugger.instructionMode;
 export const selectIsDebugFinished = (state: RootState) => state.debugger.isDebugFinished;
 export const selectPvmInitialized = (state: RootState) => state.debugger.pvmInitialized;
+export const hasPVMGeneratedStorage = (state: RootState) =>
+  state.debugger.storage !== null && !isEqual(state.debugger.storage, state.debugger.userProvidedStorage);
 
 export default debuggerSlice.reducer;
