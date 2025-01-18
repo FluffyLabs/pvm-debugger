@@ -115,7 +115,7 @@ export const loadWorker = createAsyncThunk(
 export const clearAllWorkersStorage = createAsyncThunk("workers/clearAllStorage", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
 
-  setStorage({ storage: state.debugger.userProvidedStorage, isUserProvided: true });
+  dispatch(setStorage({ storage: state.debugger.userProvidedStorage, isUserProvided: true }));
   await dispatch(setAllWorkersStorage({ storage: state.debugger.userProvidedStorage })).unwrap();
 });
 

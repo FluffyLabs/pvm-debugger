@@ -28,7 +28,7 @@ export const HostCalls = () => {
     setError("");
 
     try {
-      dispatch(setStorage({ storage: newStorage, isUserProvided: false }));
+      dispatch(setStorage({ storage: newStorage, isUserProvided: true }));
       await dispatch(setAllWorkersStorage({ storage: newStorage || null })).unwrap();
       try {
         if (isOnEcalli) {

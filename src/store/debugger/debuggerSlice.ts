@@ -100,7 +100,7 @@ const debuggerSlice = createSlice({
       state.storage = action.payload.storage;
 
       if (action.payload.isUserProvided) {
-        state.userProvidedStorage = action.payload;
+        state.userProvidedStorage = action.payload.storage;
       }
     },
     setServiceId(state, action) {
