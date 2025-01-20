@@ -21,6 +21,7 @@ import {
   destroyWorker,
   initAllWorkers,
   loadWorker,
+  refreshMemoryRangeAllWorkers,
   refreshPageAllWorkers,
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
@@ -48,6 +49,7 @@ export const useDebuggerActions = () => {
       dispatch(setAllWorkersPreviousState(state));
       await dispatch(initAllWorkers()).unwrap();
       await dispatch(refreshPageAllWorkers()).unwrap();
+      await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
       dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
       dispatch(setClickedInstruction(null));
 

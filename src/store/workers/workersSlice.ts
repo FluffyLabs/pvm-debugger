@@ -452,6 +452,7 @@ export const stepAllWorkers = createAsyncThunk(
     const allFinished = responses.every((response) => response.isFinished);
 
     await dispatch(refreshPageAllWorkers());
+    await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
 
     if (allFinished) {
       dispatch(setIsDebugFinished(true));
@@ -459,7 +460,44 @@ export const stepAllWorkers = createAsyncThunk(
   },
 );
 
-// 3) A new thunk to load a user-defined memory range from all workers
+export const refreshMemoryRangeAllWorkers = createAsyncThunk(
+  "workers/refreshAllMemoryRanges",
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+
+    await Promise.all(
+      state.workers.map(async (worker) => {
+        // For each range in this worker
+        await Promise.all(
+          worker.memoryRanges.map(async (range) => {
+            const { id: rangeId, startAddress, length } = range;
+            const stopAddress = startAddress + length;
+
+            const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+              command: Commands.MEMORY,
+              payload: { startAddress, stopAddress },
+            });
+
+            if (hasCommandStatusError(resp)) {
+              throw resp.error;
+            }
+
+            dispatch(
+              appendMemoryRange({
+                workerId: worker.id,
+                rangeId,
+                startAddress,
+                length,
+                chunk: resp.payload.memoryChunk,
+              }),
+            );
+          }),
+        );
+      }),
+    );
+  },
+);
+
 export const loadMemoryRangeAllWorkers = createAsyncThunk(
   "workers/loadMemoryRangeAllWorkers",
   async (
@@ -469,7 +507,6 @@ export const loadMemoryRangeAllWorkers = createAsyncThunk(
     const state = getState() as RootState;
     const stopAddress = startAddress + length;
 
-    // Similar to loadMemoryChunkAllWorkers, but for a single [start, length].
     return Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
@@ -481,7 +518,6 @@ export const loadMemoryRangeAllWorkers = createAsyncThunk(
           throw resp.error;
         }
 
-        // Once we get the data, store it in memoryRanges
         dispatch(
           appendMemoryRange({
             workerId: worker.id,

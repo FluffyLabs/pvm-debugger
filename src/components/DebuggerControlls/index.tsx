@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   continueAllWorkers,
+  refreshMemoryRangeAllWorkers,
   refreshPageAllWorkers,
   runAllWorkers,
   selectIsAnyWorkerLoading,
@@ -80,6 +81,7 @@ export const DebuggerControlls = () => {
     }
 
     await dispatch(refreshPageAllWorkers()).unwrap();
+    await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
   };
 
   const handlePauseProgram = async () => {
