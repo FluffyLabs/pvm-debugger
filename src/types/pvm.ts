@@ -73,8 +73,6 @@ export enum AvailablePvms {
   WASM_FILE = "wasm-file",
 }
 
-export type decodeStandardProgram = (program: number[]) => CurrentInstruction;
-
 export enum HostCallIdentifiers {
   GAS = 0,
   LOOKUP = 1,

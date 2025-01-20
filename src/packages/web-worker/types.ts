@@ -56,7 +56,7 @@ export type CommandWorkerRequestParams =
   | { command: Commands.RUN }
   | { command: Commands.STOP }
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
-  | { command: Commands.SET_STORAGE; payload: { storage: Storage } }
+  | { command: Commands.SET_STORAGE; payload: { storage: Storage | null } }
   | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers } }
   | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } };
 
