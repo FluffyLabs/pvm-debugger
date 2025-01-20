@@ -4,8 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import path from "path-browserify";
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { AvailablePvms } from "@/types/pvm.ts";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SupportedLangs } from "@/packages/web-worker/utils";
 import { ExternalLink } from "lucide-react";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
@@ -39,7 +37,6 @@ export interface SelectedPvmWithPayload {
   label: string;
   params?: {
     file?: SerializedFile;
-    lang?: SupportedLangs;
     url?: string;
   };
   removable?: boolean;
@@ -72,7 +69,6 @@ export const PvmSelect = () => {
   const selectedPvms = useAppSelector(selectSelectedPvms);
   const pvmsWithPayload = useAppSelector(selectAllAvailablePvms);
   const dispatch = useAppDispatch();
-  const [selectedLang, setSelectedLang] = useState<SupportedLangs>(SupportedLangs.Rust);
 
   const mapValuesToPvmWithPayload = useCallback(
     (values: string[]) => {
@@ -100,7 +96,6 @@ export const PvmSelect = () => {
         id,
         type: PvmTypes.WASM_FILE,
         params: {
-          lang: selectedLang,
           file: await serializeFile(file),
         },
         label: `${id} - last modified: ${new Date(file.lastModified).toUTCString()}`,
@@ -229,18 +224,6 @@ export const PvmSelect = () => {
           <DialogTitle>Upload WASM file</DialogTitle>
           <DialogDescription>
             <div className="flex justify-between">
-              <div>
-                <Select onValueChange={(value: SupportedLangs) => setSelectedLang(value)} value={selectedLang}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={SupportedLangs.Go}>Go</SelectItem>
-                    <SelectItem value={SupportedLangs.Rust}>Rust</SelectItem>
-                    <SelectItem value={SupportedLangs.AssemblyScript}>AssemblyScript</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div>
                 <Input
                   type="file"

@@ -4,7 +4,6 @@ import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { isEqual } from "lodash";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
-import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
 
 export interface DebuggerState {
@@ -42,7 +41,7 @@ const initialState: DebuggerState = {
       {
         id: AvailablePvms.POLKAVM,
         type: PvmTypes.WASM_URL,
-        params: { url: "https://todr.me/polkavm/pvm-metadata.json", lang: SupportedLangs.Rust },
+        params: { url: "https://todr.me/polkavm/pvm-metadata.json" },
         label: "PolkaVM",
       },
       {
@@ -50,7 +49,6 @@ const initialState: DebuggerState = {
         type: PvmTypes.WASM_URL,
         params: {
           url: "https://todr.me/anan-as/pvm-metadata.json",
-          lang: SupportedLangs.AssemblyScript,
         },
         label: "Anan-AS",
       },

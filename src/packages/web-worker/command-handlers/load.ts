@@ -1,10 +1,10 @@
 import { logger } from "@/utils/loggerService";
-import { getMemorySize, loadArrayBufferAsWasm, SupportedLangs } from "../utils";
+import { getMemorySize, loadArrayBufferAsWasm } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { deserializeFile, SerializedFile } from "@/lib/utils.ts";
 
-export type LoadParams = { type: PvmTypes; params: { url?: string; file?: SerializedFile; lang?: SupportedLangs } };
+export type LoadParams = { type: PvmTypes; params: { url?: string; file?: SerializedFile } };
 export type LoadResponse = {
   pvm: PvmApiInterface | null;
   memorySize: number | null;
@@ -24,7 +24,7 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
 
     logger.info("Load WASM from file", file);
     const bytes = await file.arrayBuffer();
-    return await loadArrayBufferAsWasm(bytes, args.params.lang);
+    return await loadArrayBufferAsWasm(bytes);
   } else if (args.type === PvmTypes.WASM_URL) {
     const url = args.params.url ?? "";
     const isValidUrl = Boolean(new URL(url));
@@ -37,7 +37,7 @@ const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
     const response = await fetch(url);
     const bytes = await response.arrayBuffer();
 
-    return await loadArrayBufferAsWasm(bytes, args.params.lang);
+    return await loadArrayBufferAsWasm(bytes);
   }
 
   return null;
