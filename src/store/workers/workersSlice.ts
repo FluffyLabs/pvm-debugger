@@ -65,6 +65,16 @@ export interface WorkerState {
     startAddress: number;
     stopAddress: number;
   };
+  memoryRanges: {
+    id: string;
+    startAddress: number;
+    length: number;
+    isLoading: boolean;
+    data?: {
+      address: number;
+      bytes: number[];
+    }[];
+  }[];
 }
 
 const initialState: WorkerState[] = [];
@@ -443,12 +453,102 @@ export const stepAllWorkers = createAsyncThunk(
     const allFinished = responses.every((response) => response.isFinished);
 
     await dispatch(refreshPageAllWorkers());
+    await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
 
     if (allFinished) {
       dispatch(setIsDebugFinished(true));
     }
   },
 );
+
+export const syncMemoryRangeAllWorkers = createAsyncThunk(
+  "workers/syncMemoryRangeAllWorkers",
+  async ({ memoryRanges }: { memoryRanges: { id: string; startAddress: number; length: number }[] }, { dispatch }) => {
+    for (const range of memoryRanges) {
+      await dispatch(
+        loadMemoryRangeAllWorkers({
+          rangeId: range.id,
+          startAddress: range.startAddress,
+          length: range.length,
+        }),
+      ).unwrap();
+    }
+  },
+);
+export const refreshMemoryRangeAllWorkers = createAsyncThunk(
+  "workers/refreshAllMemoryRanges",
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+
+    await Promise.all(
+      state.workers.map(async (worker) => {
+        await Promise.all(
+          worker.memoryRanges.map(async (range) => {
+            const { id: rangeId, startAddress, length } = range;
+            const stopAddress = startAddress + length;
+
+            const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+              command: Commands.MEMORY,
+              payload: { startAddress, stopAddress },
+            });
+
+            if (hasCommandStatusError(resp)) {
+              throw resp.error;
+            }
+
+            dispatch(
+              appendMemoryRange({
+                workerId: worker.id,
+                rangeId,
+                startAddress,
+                length,
+                chunk: resp.payload.memoryChunk,
+              }),
+            );
+          }),
+        );
+      }),
+    );
+  },
+);
+
+export const loadMemoryRangeAllWorkers = createAsyncThunk(
+  "workers/loadMemoryRangeAllWorkers",
+  async (
+    { rangeId, startAddress, length }: { rangeId: string; startAddress: number; length: number },
+    { getState, dispatch },
+  ) => {
+    const state = getState() as RootState;
+    const stopAddress = startAddress + length;
+
+    return Promise.all(
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.MEMORY,
+          payload: { startAddress, stopAddress },
+        });
+
+        if (hasCommandStatusError(resp)) {
+          throw resp.error;
+        }
+
+        dispatch(
+          appendMemoryRange({
+            workerId: worker.id,
+            rangeId,
+            startAddress,
+            length,
+            chunk: resp.payload.memoryChunk,
+          }),
+        );
+      }),
+    );
+  },
+);
+
+export const selectMemoryRangesForFirstWorker = (state: RootState) => {
+  return state.workers[0]?.memoryRanges ?? [];
+};
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
   const state = getState() as RootState;
@@ -604,6 +704,42 @@ const workers = createSlice({
         worker.exitArg = action.payload.exitArg;
       }
     },
+    appendMemoryRange: (
+      state,
+      action: {
+        payload: {
+          workerId: string;
+          rangeId: string;
+          startAddress: number;
+          length: number;
+          chunk: Uint8Array;
+        };
+      },
+    ) => {
+      const worker = getWorker(state, action.payload.workerId);
+      if (!worker) return;
+
+      const { rangeId, startAddress, length, chunk } = action.payload;
+
+      let memoryRange = worker.memoryRanges.find((r) => r.id === rangeId);
+      if (!memoryRange) {
+        memoryRange = {
+          id: rangeId,
+          startAddress,
+          length,
+          isLoading: false,
+          data: [],
+        };
+        worker.memoryRanges.push(memoryRange);
+      }
+
+      const pagedData = toMemoryPageTabData(Array.from(chunk), startAddress);
+
+      memoryRange.data = pagedData;
+      memoryRange.startAddress = startAddress;
+      memoryRange.length = length;
+      memoryRange.isLoading = false;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(createWorker.fulfilled, (state, action) => {
@@ -619,6 +755,7 @@ const workers = createSlice({
           startAddress: 0,
           stopAddress: LOAD_MEMORY_CHUNK_SIZE,
         },
+        memoryRanges: [],
       });
     });
     builder.addCase(destroyWorker.fulfilled, (state, action) => {
@@ -636,6 +773,7 @@ export const {
   setWorkerIsLoading,
   setIsBreakpoint,
   appendMemory,
+  appendMemoryRange,
   setWorkerExitArg,
 } = workers.actions;
 
