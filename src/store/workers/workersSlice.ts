@@ -460,6 +460,21 @@ export const stepAllWorkers = createAsyncThunk(
   },
 );
 
+export const syncMemoryRangeAllWorkers = createAsyncThunk(
+  "workers/syncMemoryRangeAllWorkers",
+  async ({ memoryRanges }: { memoryRanges: { id: string; startAddress: number; length: number }[] }, { dispatch }) => {
+    for (const range of memoryRanges) {
+      await dispatch(
+        loadMemoryRangeAllWorkers({
+          // Reuse the same rangeId so we consistently label it
+          rangeId: range.id,
+          startAddress: range.startAddress,
+          length: range.length,
+        }),
+      ).unwrap();
+    }
+  },
+);
 export const refreshMemoryRangeAllWorkers = createAsyncThunk(
   "workers/refreshAllMemoryRanges",
   async (_, { getState, dispatch }) => {

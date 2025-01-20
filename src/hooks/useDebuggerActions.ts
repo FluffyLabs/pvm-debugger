@@ -26,6 +26,7 @@ import {
   setAllWorkersCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
+  syncMemoryRangeAllWorkers,
   WorkerState,
 } from "@/store/workers/workersSlice";
 import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
@@ -126,6 +127,8 @@ export const useDebuggerActions = () => {
         }),
       );
 
+      const memoryRanges = workers[0]?.memoryRanges;
+
       await Promise.all(
         selectedPvms.map(async ({ id, type, params }) => {
           logger.info("Selected PVM type", id, type, params);
@@ -183,6 +186,8 @@ export const useDebuggerActions = () => {
         }),
       );
 
+      await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
       await restartProgram(initialState);
     },
     [dispatch, initialState, restartProgram, workers],
