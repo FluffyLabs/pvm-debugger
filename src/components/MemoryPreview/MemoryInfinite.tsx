@@ -384,7 +384,7 @@ export const MemoryInfinite = () => {
 
   return (
     <div className="overflow-auto p-1 h-[62vh] flex flex-col">
-      <JumpInput
+      <AddressInput
         value={selectedAddress !== null ? selectedAddress.toString() : ""}
         onChange={async (address: number | null) => {
           if (address === null) {
@@ -395,6 +395,7 @@ export const MemoryInfinite = () => {
           await jumpToAddress(address);
           setSelectedAddress(address);
         }}
+        placeholder="Jump to address"
       />
       <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
       {error && <div className="text-red-500 mt-3">{error}</div>}
@@ -402,11 +403,13 @@ export const MemoryInfinite = () => {
   );
 };
 
-type JumpInputProps = {
+type AddressInputProps = {
   value: string;
+  id?: string;
+  placeholder?: string;
   onChange: (v: number | null) => void;
 };
-export function JumpInput({ value, onChange }: JumpInputProps) {
+export function AddressInput({ value, onChange, placeholder, id }: AddressInputProps) {
   const [input, setInput] = useState(value);
   const [isValid, setIsValid] = useState(true);
 
@@ -431,12 +434,13 @@ export function JumpInput({ value, onChange }: JumpInputProps) {
   return (
     <>
       <input
+        id={id}
         className={classNames(INPUT_STYLES.replace("focus-visible:ring-ring", ""), "w-full", {
           "ring-2 ring-red-500": !isValid,
           "focus-visible:ring-ring": isValid,
           "focus-visible:ring-red-500": !isValid,
         })}
-        placeholder="Jump to address"
+        placeholder={placeholder}
         value={input}
         onChange={changeValue}
       />

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { X, Edit3, Check, HelpCircle, ArrowUp, ArrowDown } from "lucide-react";
 import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { MemoryRow } from "./MemoryInfinite";
+import { AddressInput, MemoryRow } from "./MemoryInfinite";
 import { MEMORY_SPLIT_STEP } from "@/store/utils";
 import { addressFormatter, FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
@@ -105,7 +105,13 @@ function MemoryRangeRow({
           <>
             <div className="grid gap-1">
               <Label htmlFor={`start-${id}`}>Start</Label>
-              <Input
+
+              <AddressInput
+                id={`start-${id}`}
+                onChange={(v) => v !== null && setDraftStart(v)}
+                value={draftStart.toString()}
+              />
+              {/* <Input
                 id={`start-${id}`}
                 type="number"
                 value={draftStart}
@@ -114,7 +120,7 @@ function MemoryRangeRow({
                   setDraftStart(val);
                 }}
                 className="w-[100px]"
-              />
+              /> */}
             </div>
             <div className="grid gap-1">
               <Label htmlFor={`length-${id}`}>Length</Label>
@@ -203,7 +209,12 @@ function MemoryRangeRow({
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
             {/* Link to external codec tool (replace '#' with your real link) */}
-            <a href="#" target="_blank" rel="noreferrer" className="underline text-blue-600 block mb-2">
+            <a
+              href={`https:codec.fluffylabs.dev?memory=${flatData}&numeralSystem=dec`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline text-blue-600 block mb-2"
+            >
               Open codec tool
             </a>
 
