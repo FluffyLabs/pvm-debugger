@@ -5,12 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { X, Edit3, Check, HelpCircle, ArrowUp, ArrowDown } from "lucide-react";
-
-// Redux + store
 import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-
-// This is your existing MemoryRow component from "MemoryInfinite"
 import { MemoryRow } from "./MemoryInfinite";
 import { MEMORY_SPLIT_STEP } from "@/store/utils";
 import { addressFormatter, FindMemoryForWorkerType } from "./utils";
@@ -43,31 +39,27 @@ interface MemoryRangeRowProps extends RangeRow {
   onMoveDown: () => void;
 }
 
-function MemoryRangeRow(props: MemoryRangeRowProps) {
-  const {
-    id,
-    index,
-    totalCount,
-    start,
-    length,
-    isEditing,
-    isLast,
-    onChange,
-    onAddNew,
-    onEditToggle,
-    onRemove,
-    onMoveUp,
-    onMoveDown,
-  } = props;
-
+function MemoryRangeRow({
+  id,
+  index,
+  totalCount,
+  start,
+  length,
+  isEditing,
+  isLast,
+  onChange,
+  onAddNew,
+  onEditToggle,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+}: MemoryRangeRowProps) {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const dispatch = useAppDispatch();
   const [draftStart, setDraftStart] = useState(start);
   const [draftLength, setDraftLength] = useState(length);
 
-  // Whenever the user changes start/length, fetch memory "live."
   useEffect(() => {
-    // Only fetch if the user has at least length > 0, start >= 0, etc.
     if (draftLength > 0 && draftStart >= 0) {
       dispatch(
         loadMemoryRangeAllWorkers({
@@ -79,28 +71,20 @@ function MemoryRangeRow(props: MemoryRangeRowProps) {
     }
   }, [draftStart, draftLength, dispatch, id]);
 
-  // Grab the memory from Redux for this row
   const memoryRanges = useAppSelector(selectMemoryRangesForFirstWorker);
-
   const matchingRange = memoryRanges.find((r) => r.id === id);
-  // Flatten all pages -> bytes
   const rowData = matchingRange?.data?.map((page) => page.bytes) ?? [];
 
-  // "Save" for normal (non-last) rows
   const handleSave = () => {
-    // Update parent’s state so the row is no longer editing
     onChange(draftStart, draftLength);
     onEditToggle();
   };
 
-  // Confirm the last row => finalize in parent + add new blank row
   const handleAddConfirm = () => {
     onAddNew(draftStart, draftLength, id);
   };
 
-  // Are we showing input fields (when editing or last row) or just read-only?
   const isInputsVisible = isEditing || isLast;
-
   const lastAddressLength = addressFormatter(
     matchingRange?.startAddress || 0 + (matchingRange?.length || 0),
     numeralSystem,
@@ -139,6 +123,7 @@ function MemoryRangeRow(props: MemoryRangeRowProps) {
                   const val = Number(e.target.value);
                   setDraftLength(val);
                 }}
+                min={1}
                 max={40 * MEMORY_SPLIT_STEP}
                 className="w-[60px]"
               />
@@ -227,30 +212,20 @@ function MemoryRangeRow(props: MemoryRangeRowProps) {
   );
 }
 
-export function MemoryRanges() {
-  const [ranges, setRanges] = useState<RangeRow[]>([
-    // Example data
-    { id: crypto.randomUUID(), start: 131072, length: 32, isEditing: false },
-    // The last row is your "Add" row
-    { id: crypto.randomUUID(), start: 0, length: 2 * MEMORY_SPLIT_STEP, isEditing: true },
-  ]);
+const createEmptyRow = () => ({ id: crypto.randomUUID(), start: 0, length: 2 * MEMORY_SPLIT_STEP, isEditing: true });
 
-  // Finalize the last row, add a new blank row
+export function MemoryRanges() {
+  const [ranges, setRanges] = useState<RangeRow[]>([createEmptyRow()]);
+
   function handleAddNewRow(idx: number, start: number, length: number, rowId: string) {
     setRanges((prev) => {
       const copy = [...prev];
       copy[idx] = { id: rowId, start, length, isEditing: false };
-      copy.push({
-        id: crypto.randomUUID(),
-        start: 0,
-        length: 2 * MEMORY_SPLIT_STEP,
-        isEditing: true,
-      });
+      copy.push(createEmptyRow());
       return copy;
     });
   }
 
-  // Toggle editing for normal rows
   function handleEditToggle(idx: number) {
     setRanges((prev) => {
       const copy = [...prev];
@@ -259,7 +234,6 @@ export function MemoryRanges() {
     });
   }
 
-  // For normal rows: user finished editing => update `start` & `length`.
   function handleChange(idx: number, start: number, length: number) {
     setRanges((prev) => {
       const copy = [...prev];
@@ -287,7 +261,7 @@ export function MemoryRanges() {
   }
 
   return (
-    <div className="max-h-[65vh] overflow-y-auto [&>*:nth-child(odd)]:bg-gray-100">
+    <div className="max-h-[65vh] overflow-y-auto [&>*:nth-child(even)]:bg-gray-100">
       {ranges.map((r, i) => {
         const isLast = i === ranges.length - 1;
         return (
