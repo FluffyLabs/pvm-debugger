@@ -29,8 +29,6 @@ export const getMemoryInterpretations = (bytes: Uint8Array, numeralSystem: Numer
     return null;
   }
 
-  const isHex = numeralSystem === NumeralSystem.HEXADECIMAL;
-
   function decodeU16At(offset: number): number | null {
     if (offset + 2 > bytes.length) return null;
     const dec = codec.Decoder.fromBlob(bytes);
@@ -51,10 +49,7 @@ export const getMemoryInterpretations = (bytes: Uint8Array, numeralSystem: Numer
   }
 
   function fmt(value: number | bigint): string {
-    if (isHex) {
-      return "0x" + value.toString(16).toUpperCase();
-    }
-    return value.toString();
+    return valueToNumeralSystem(value, numeralSystem, numeralSystem === NumeralSystem.HEXADECIMAL ? 2 : 3, false);
   }
 
   const u16Arr: string[] = [];
