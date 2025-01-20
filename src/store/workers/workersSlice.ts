@@ -467,7 +467,6 @@ export const syncMemoryRangeAllWorkers = createAsyncThunk(
     for (const range of memoryRanges) {
       await dispatch(
         loadMemoryRangeAllWorkers({
-          // Reuse the same rangeId so we consistently label it
           rangeId: range.id,
           startAddress: range.startAddress,
           length: range.length,
@@ -483,7 +482,6 @@ export const refreshMemoryRangeAllWorkers = createAsyncThunk(
 
     await Promise.all(
       state.workers.map(async (worker) => {
-        // For each range in this worker
         await Promise.all(
           worker.memoryRanges.map(async (range) => {
             const { id: rangeId, startAddress, length } = range;
@@ -548,7 +546,6 @@ export const loadMemoryRangeAllWorkers = createAsyncThunk(
   },
 );
 
-// 4) Selector to retrieve these user-defined ranges for the first worker (example).
 export const selectMemoryRangesForFirstWorker = (state: RootState) => {
   return state.workers[0]?.memoryRanges ?? [];
 };
@@ -724,7 +721,6 @@ const workers = createSlice({
 
       const { rangeId, startAddress, length, chunk } = action.payload;
 
-      // Find or create the target memoryRange in this worker
       let memoryRange = worker.memoryRanges.find((r) => r.id === rangeId);
       if (!memoryRange) {
         memoryRange = {
@@ -737,10 +733,8 @@ const workers = createSlice({
         worker.memoryRanges.push(memoryRange);
       }
 
-      // Convert the raw chunk into a page/tab data structure
       const pagedData = toMemoryPageTabData(Array.from(chunk), startAddress);
 
-      // Overwrite or append, depending on your approach:
       memoryRange.data = pagedData;
       memoryRange.startAddress = startAddress;
       memoryRange.length = length;
