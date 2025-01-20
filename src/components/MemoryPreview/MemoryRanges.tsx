@@ -1,6 +1,6 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { INPUT_STYLES } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { AddressInput, MemoryRow } from "./MemoryInfinite";
 import { MEMORY_SPLIT_STEP } from "@/store/utils";
 import { addressFormatter, FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
+import classNames from "classnames";
 
 const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType => {
   return (worker, address) => {
@@ -37,6 +38,52 @@ interface MemoryRangeRowProps extends RangeRow {
   onRemove: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+}
+
+type LengthInputProps = {
+  value: string;
+  id?: string;
+  placeholder?: string;
+  onChange: (v: number | null) => void;
+};
+export function LengthInput({ value, onChange, placeholder, id }: LengthInputProps) {
+  const [input, setInput] = useState(value);
+  const [isValid, setIsValid] = useState(true);
+  const maxValue = 400;
+
+  const changeValue = useCallback(
+    (ev: ChangeEvent<HTMLInputElement>) => {
+      const val = ev.currentTarget.value;
+      setInput(val);
+      const num = Number(val);
+      const isEmpty = val === "" || val.match(/^\s+$/) !== null;
+      const isValid = !Number.isNaN(num) && !isEmpty && num <= maxValue && num > 0;
+      setIsValid(isValid || isEmpty);
+      if (isValid) {
+        onChange(num);
+      }
+      if (isEmpty) {
+        onChange(null);
+      }
+    },
+    [onChange],
+  );
+
+  return (
+    <>
+      <input
+        id={id}
+        className={classNames(INPUT_STYLES.replace("focus-visible:ring-ring", ""), "w-full", {
+          "ring-2 ring-red-500": !isValid,
+          "focus-visible:ring-ring": isValid,
+          "focus-visible:ring-red-500": !isValid,
+        })}
+        placeholder={placeholder}
+        value={input}
+        onChange={changeValue}
+      />
+    </>
+  );
 }
 
 function MemoryRangeRow({
@@ -96,7 +143,6 @@ function MemoryRangeRow({
   return (
     <Card className="p-3 rounded-none">
       <div className="flex items-center gap-3">
-        {/* Read-only vs. input fields */}
         {!isInputsVisible ? (
           <span className="font-mono">
             {start}...+{length}
@@ -111,37 +157,21 @@ function MemoryRangeRow({
                 onChange={(v) => v !== null && setDraftStart(v)}
                 value={draftStart.toString()}
               />
-              {/* <Input
-                id={`start-${id}`}
-                type="number"
-                value={draftStart}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setDraftStart(val);
-                }}
-                className="w-[100px]"
-              /> */}
             </div>
-            <div className="grid gap-1">
+            <div className="grid gap-1 max-w-[55px]">
               <Label htmlFor={`length-${id}`}>Length</Label>
-              <Input
+              <LengthInput
                 id={`length-${id}`}
-                type="number"
-                value={draftLength}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setDraftLength(val);
+                value={draftLength.toString()}
+                onChange={(val) => {
+                  setDraftLength(val || 0);
                 }}
-                min={1}
-                max={40 * MEMORY_SPLIT_STEP}
-                className="w-[60px]"
               />
             </div>
           </>
         )}
 
         <div className="ml-auto flex items-center gap-1">
-          {/* If it's the last row => single confirm. Otherwise normal row edit/save/remove. */}
           {isLast ? (
             <Button variant="outline" size="icon" onClick={handleAddConfirm}>
               <Check className="h-4 w-4" />
@@ -178,7 +208,6 @@ function MemoryRangeRow({
         </div>
       </div>
 
-      {/* Memory preview (using MemoryRow) */}
       <div className="mt-2 text-sm font-mono">
         <div style={{ maxHeight: "100px", overflowY: "auto" }}>
           {rowData.length === 0 ? (
@@ -208,7 +237,6 @@ function MemoryRangeRow({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
-            {/* Link to external codec tool (replace '#' with your real link) */}
             <a
               href={`https:codec.fluffylabs.dev?memory=${flatData}&numeralSystem=dec`}
               target="_blank"
