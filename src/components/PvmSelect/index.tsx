@@ -12,19 +12,14 @@ import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import classNames from "classnames";
 import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
 import { isSerializedError } from "@/store/utils";
-
-const PVMS_TO_LOAD_ON_START = [
-  {
-    value: AvailablePvms.POLKAVM,
-    url: "https://todr.me/polkavm/pvm-metadata.json",
-    lang: SupportedLangs.Rust,
-  },
-  {
-    value: AvailablePvms.ANANAS,
-    url: "https://todr.me/anan-as/pvm-metadata.json",
-    lang: SupportedLangs.AssemblyScript,
-  },
-];
+import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
+import {
+  selectAllAvailablePvms,
+  selectSelectedPvms,
+  setPvmOptions,
+  setSelectedPvms,
+} from "@/store/debugger/debuggerSlice.ts";
+import { SerializedFile, serializeFile } from "@/lib/utils.ts";
 
 interface WasmMetadata {
   name: string;
@@ -40,12 +35,14 @@ interface WasmMetadata {
 
 export interface SelectedPvmWithPayload {
   id: string;
-  type: string;
+  type: PvmTypes | AvailablePvms;
+  label: string;
   params?: {
-    file?: Blob;
+    file?: SerializedFile;
     lang?: SupportedLangs;
     url?: string;
   };
+  removable?: boolean;
 }
 
 const fetchWasmMetadata = async (url: string): Promise<WasmMetadata | undefined> => {
@@ -71,16 +68,10 @@ export const PvmSelect = () => {
   const { handlePvmTypeChange } = useDebuggerActions();
   const [error, setError] = useState<string>();
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
-  const [selectedPvms, setSelectedPvms] = useState<string[]>([AvailablePvms.TYPEBERRY]);
-  const [pvmsWithPayload, setPvmsWithPayload] = useState<SelectedPvmWithPayload[]>([
-    {
-      id: "typeberry",
-      type: "built-in",
-    },
-  ]);
-  const [multiSelectOptions, setMultiSelectOptions] = useState<{ value: string; label: string }[]>([
-    { value: AvailablePvms.TYPEBERRY, label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}` },
-  ]);
+
+  const selectedPvms = useAppSelector(selectSelectedPvms);
+  const pvmsWithPayload = useAppSelector(selectAllAvailablePvms);
+  const dispatch = useAppDispatch();
   const [selectedLang, setSelectedLang] = useState<SupportedLangs>(SupportedLangs.Rust);
 
   const mapValuesToPvmWithPayload = useCallback(
@@ -100,7 +91,7 @@ export const PvmSelect = () => {
       : name;
   };
 
-  const handlePvmFileUpload = (file: File) => {
+  const handlePvmFileUpload = async (file: File) => {
     const id = generatePvmId(file.name);
 
     const newValues = [
@@ -110,13 +101,15 @@ export const PvmSelect = () => {
         type: PvmTypes.WASM_FILE,
         params: {
           lang: selectedLang,
-          file,
+          file: await serializeFile(file),
         },
+        label: `${id} - last modified: ${new Date(file.lastModified).toUTCString()}`,
+        removable: true,
       },
     ];
-    setPvmsWithPayload(newValues);
-    setMultiSelectOptions((prevState) => [...prevState, { value: id, label: id }]);
-    setSelectedPvms([...selectedPvms, id]);
+
+    dispatch(setPvmOptions(newValues));
+    dispatch(setSelectedPvms([...selectedPvms, id]));
   };
 
   const handlePvmFileOption = () => {
@@ -145,39 +138,44 @@ export const PvmSelect = () => {
           params: {
             url: path.join(url, "../", wasmMetadata.wasmBlobUrl),
           },
+          label: `${id} v${wasmMetadata.version}` as string,
+          removable: true,
         },
       ];
-      setPvmsWithPayload(newValues);
-      setMultiSelectOptions((prevState) => [...prevState, { value: id, label: `${id} v${wasmMetadata.version}` }]);
-      setSelectedPvms([...selectedPvms, id]);
+      dispatch(setPvmOptions(newValues));
+      dispatch(setSelectedPvms([...selectedPvms, id]));
     } else {
       alert("No URL provided");
     }
   };
 
   useEffect(() => {
-    PVMS_TO_LOAD_ON_START.forEach(({ url, value, lang }) => {
-      fetchWasmMetadata(url).then((metadata) => {
-        if (!metadata) {
-          throw new Error("Invalid metadata");
+    Promise.all(
+      pvmsWithPayload.map(async (pvm) => {
+        if (pvm.type === PvmTypes.WASM_URL) {
+          if (pvm.params?.url) {
+            const metadata = await fetchWasmMetadata(pvm.params.url);
+            if (!metadata) {
+              throw new Error("Invalid metadata");
+            }
+            return {
+              id: pvm.id,
+              type: PvmTypes.WASM_URL,
+              params: {
+                ...pvmsWithPayload.find((p) => p.id === pvm.id)?.params,
+                url: path.join(pvm.params.url, "../", metadata.wasmBlobUrl).replace("https:/", "https://"), // TODO: check why the http protocol path is getting messed up
+              },
+              label: `${metadata.name} v${metadata.version}` as string,
+            };
+          }
         }
-        setMultiSelectOptions((prevState) => [
-          ...prevState,
-          { value, label: `${metadata.name} v${metadata.version}` as string },
-        ]);
-        setPvmsWithPayload((prevState) => [
-          ...prevState,
-          {
-            id: value,
-            type: PvmTypes.WASM_URL,
-            params: {
-              url: path.join(url, "../", metadata.wasmBlobUrl),
-              lang,
-            },
-          },
-        ]);
-      });
+        return pvm;
+      }),
+    ).then((values) => {
+      dispatch(setPvmOptions(values));
     });
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -203,11 +201,14 @@ export const PvmSelect = () => {
         maxCount={1}
         required
         className={classNames({ "border-red-500": !!error })}
-        options={multiSelectOptions}
+        options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label, removable: pvm.removable }))}
         selectedValues={selectedPvms}
         defaultValue={[AvailablePvms.TYPEBERRY]}
         onValueChange={async (values) => {
-          setSelectedPvms(values);
+          dispatch(setSelectedPvms(values));
+        }}
+        removeOption={(value) => {
+          dispatch(setPvmOptions(pvmsWithPayload.filter((pvm) => pvm.id !== value)));
         }}
       >
         <span className="cursor-pointer" onClick={handlePvmUrlOption}>

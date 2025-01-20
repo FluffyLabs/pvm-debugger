@@ -25,6 +25,7 @@ import {
 import { chunk, inRange, isNumber } from "lodash";
 import { isInstructionError } from "@/types/type-guards";
 import { nextInstruction } from "@/packages/web-worker/pvm.ts";
+import { SerializedFile } from "@/lib/utils.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -95,7 +96,7 @@ export const loadWorker = createAsyncThunk(
       payload,
     }: {
       id: string;
-      payload: { type: PvmTypes; params?: { url?: string; file?: Blob; lang?: SupportedLangs } };
+      payload: { type: PvmTypes; params?: { url?: string; file?: SerializedFile; lang?: SupportedLangs } };
     },
     { getState, dispatch },
   ) => {

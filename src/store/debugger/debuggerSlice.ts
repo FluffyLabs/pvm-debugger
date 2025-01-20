@@ -1,10 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState } from "@/types/pvm.ts";
+import { AvailablePvms, CurrentInstruction, DebuggerEcalliStorage, ExpectedState } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { isEqual } from "lodash";
+import { SelectedPvmWithPayload } from "@/components/PvmSelect";
+import { SupportedLangs } from "@/packages/web-worker/utils.ts";
+import { PvmTypes } from "@/packages/web-worker/types.ts";
 
 export interface DebuggerState {
+  pvmOptions: {
+    allAvailablePvms: SelectedPvmWithPayload[];
+    selectedPvm: string[];
+  };
   isProgramInvalid: boolean;
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
@@ -25,6 +32,31 @@ export interface DebuggerState {
 }
 
 const initialState: DebuggerState = {
+  pvmOptions: {
+    allAvailablePvms: [
+      {
+        id: AvailablePvms.TYPEBERRY,
+        type: PvmTypes.BUILT_IN,
+        label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}`,
+      },
+      {
+        id: AvailablePvms.POLKAVM,
+        type: PvmTypes.WASM_URL,
+        params: { url: "https://todr.me/polkavm/pvm-metadata.json", lang: SupportedLangs.Rust },
+        label: "PolkaVM",
+      },
+      {
+        id: AvailablePvms.ANANAS,
+        type: PvmTypes.WASM_URL,
+        params: {
+          url: "https://todr.me/anan-as/pvm-metadata.json",
+          lang: SupportedLangs.AssemblyScript,
+        },
+        label: "Anan-AS",
+      },
+    ],
+    selectedPvm: [AvailablePvms.TYPEBERRY],
+  },
   program: [],
   initialState: {
     regs: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
@@ -106,6 +138,12 @@ const debuggerSlice = createSlice({
     setServiceId(state, action) {
       state.serviceId = action.payload;
     },
+    setPvmOptions(state, action) {
+      state.pvmOptions.allAvailablePvms = action.payload;
+    },
+    setSelectedPvms(state, action) {
+      state.pvmOptions.selectedPvm = action.payload;
+    },
   },
 });
 
@@ -126,6 +164,8 @@ export const {
   setStepsToPerform,
   setStorage,
   setServiceId,
+  setPvmOptions,
+  setSelectedPvms,
 } = debuggerSlice.actions;
 
 export const selectProgram = (state: RootState) => state.debugger.program;
@@ -141,5 +181,7 @@ export const selectIsDebugFinished = (state: RootState) => state.debugger.isDebu
 export const selectPvmInitialized = (state: RootState) => state.debugger.pvmInitialized;
 export const hasPVMGeneratedStorage = (state: RootState) =>
   state.debugger.storage !== null && !isEqual(state.debugger.storage, state.debugger.userProvidedStorage);
+export const selectAllAvailablePvms = (state: RootState) => state.debugger.pvmOptions.allAvailablePvms;
+export const selectSelectedPvms = (state: RootState) => state.debugger.pvmOptions.selectedPvm;
 
 export default debuggerSlice.reducer;
