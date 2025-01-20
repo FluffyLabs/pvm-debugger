@@ -96,6 +96,8 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
 
     logger.info("Rust WASM module loaded", wasmModule.instance.exports);
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     if (wasmModule["__wbg_set_wasm"]) {
       return wasmModule as unknown as PvmApiInterface;
     }
@@ -116,7 +118,7 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: Supported
   throw new Error(`Unsupported lang: ${lang}`);
 }
 
-export async function getMemorySize(pvm: PvmApiInterface | null) {
+export async function getMemorySize(pvm?: PvmApiInterface | null) {
   if (!pvm) {
     logger.warn("Accesing memory of not initialized PVM");
     return null;

@@ -13,7 +13,7 @@ export type LoadResponse = {
   error?: unknown;
 };
 
-const load = async (args: LoadParams): Promise<PvmApiInterface | null> => {
+const load = async (args: LoadParams): Promise<PvmApiInterface | null | undefined> => {
   if (args.type === PvmTypes.BUILT_IN) {
     return new InternalPvmInstance();
   } else if (args.type === PvmTypes.WASM_FILE) {

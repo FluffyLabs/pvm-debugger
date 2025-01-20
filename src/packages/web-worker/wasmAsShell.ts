@@ -12,6 +12,7 @@ export async function createAssemblyScriptWasmPvmShell(module: WebAssembly.Modul
     // runProgram,
     // runVm,
     resetGeneric,
+
     resetGenericWithMemory,
     nextStep,
     nSteps,

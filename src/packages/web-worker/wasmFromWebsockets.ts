@@ -56,10 +56,6 @@ export default function wasmFromWebsockets(): Promise<PvmApiInterface> {
           {} as Record<string, (...params: unknown[]) => unknown>,
         );
 
-        // Add methods with different parameter handling
-        // resolveObj.setNextProgramCounter = (pc: any) => invokeMethodViaRpc("setNextProgramCounter", pc);
-        // resolveObj.setGasLeft = (gas: any) => invokeMethodViaRpc("setGasLeft", gas);
-
         resolve(resolveObj as unknown as PvmApiInterface);
       }
     });
@@ -69,11 +65,12 @@ export default function wasmFromWebsockets(): Promise<PvmApiInterface> {
     });
 
     socket.addEventListener("error", (error) => {
-      logger.error("📡 WebSocket error:", error);
+      logger.error("📡 WebSocket error:", { error });
       reject();
     });
 
-    const invokeMethodViaRpc = (method, ...params) => {
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+    const invokeMethodViaRpc = (method: string, ...params: any[]) => {
       const requestId = generateMessageId();
 
       const request = {
@@ -89,6 +86,11 @@ export default function wasmFromWebsockets(): Promise<PvmApiInterface> {
 
           if (jsonResponse.id === requestId) {
             logger.info("📡 Received response:", message);
+
+            if (jsonResponse.method === "getRegisters") {
+              resolve(new Uint8Array(jsonResponse.result));
+            }
+
             resolve(jsonResponse.result);
             socket.removeEventListener("message", messageHandler);
           }
@@ -96,11 +98,16 @@ export default function wasmFromWebsockets(): Promise<PvmApiInterface> {
 
         socket.addEventListener("message", messageHandler);
 
-        if (method === "resetGeneric" || method === "resetGenericWithMemory") {
-          request.params = params.map((param) => {
-            return param?.map((p) => Array.from(p));
-          });
+        if (method === "resetGenericWithMemory") {
+          const newParams = request.params[0];
 
+          request.params = [
+            newParams[0] ? Array.from(newParams[0]) : [],
+            newParams[1] ? Array.from(newParams[1]) : [],
+            newParams[2] ? Array.from(newParams[2]) : [],
+            newParams[3] ? Array.from(newParams[3]) : [],
+            newParams[4],
+          ];
           return socket.send(JSON.stringify(request));
         }
 
