@@ -9,7 +9,7 @@ import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/s
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { MemoryRow } from "./MemoryInfinite";
 import { MEMORY_SPLIT_STEP } from "@/store/utils";
-import { addressFormatter, FindMemoryForWorkerType } from "./utils";
+import { addressFormatter, FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 
 const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType => {
@@ -89,6 +89,9 @@ function MemoryRangeRow({
     matchingRange?.startAddress || 0 + (matchingRange?.length || 0),
     numeralSystem,
   ).length;
+
+  const flatData = new Uint8Array(rowData.flatMap((chunk) => chunk));
+  const interpretResult = getMemoryInterpretations(flatData, numeralSystem);
 
   return (
     <Card className="p-3 rounded-none">
@@ -190,7 +193,6 @@ function MemoryRangeRow({
         </div>
       </div>
 
-      {/* Example popover for advanced interpretations or other metadata */}
       <div className="mt-2">
         <Popover>
           <PopoverTrigger asChild>
@@ -200,11 +202,20 @@ function MemoryRangeRow({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
-            {/*
-              You could interpret the entire rowData or chunkBytes
-              and display them here.
-            */}
-            <p className="text-sm">Interpret this memory however you like!</p>
+            {/* Link to external codec tool (replace '#' with your real link) */}
+            <a href="#" target="_blank" rel="noreferrer" className="underline text-blue-600 block mb-2">
+              Open codec tool
+            </a>
+
+            {!interpretResult ? (
+              <div>(no data)</div>
+            ) : (
+              <div className="text-sm space-y-1 font-mono">
+                <div>{interpretResult.u16Line}</div>
+                <div>{interpretResult.u32Line}</div>
+                <div>{interpretResult.u64Line}</div>
+              </div>
+            )}
           </PopoverContent>
         </Popover>
       </div>
