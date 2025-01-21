@@ -8,12 +8,6 @@ import { logger } from "@/utils/loggerService.tsx";
 import { PvmApiInterface } from "./types.ts";
 import { createAssemblyScriptWasmPvmShell } from "./wasmAsShell.ts";
 
-export enum SupportedLangs {
-  Go = "Go",
-  Rust = "Rust",
-  AssemblyScript = "AssemblyScript",
-}
-
 export function getState(pvm: PvmApiInterface): ExpectedState {
   const regs = isInternalPvm(pvm)
     ? (Array.from(pvm.getRegisters()) as RegistersArray)
@@ -80,34 +74,38 @@ export function isInternalPvm(pvm: PvmApiInterface): pvm is InternalPvm {
   return pvm instanceof InternalPvm;
 }
 
-export async function loadArrayBufferAsWasm(bytes: ArrayBuffer, lang?: SupportedLangs): Promise<PvmApiInterface> {
-  if (lang === SupportedLangs.Go) {
-    const go = new Go();
-    const wasmModule = await WebAssembly.instantiate(bytes, go.importObject);
-    go.run(wasmModule.instance);
-    logger.info("Go WASM module loaded", wasmModule.instance.exports);
-    const wasmPvmShell = createGoWasmPvmShell();
-    wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
-    return wasmPvmShell;
-  }
+export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiInterface> {
+  const go = new Go();
+  const wasmModule = await WebAssembly.compile(bytes);
 
-  if (lang === SupportedLangs.Rust) {
-    const wasmModule = await WebAssembly.instantiate(bytes, {});
-    logger.info("Rust WASM module loaded", wasmModule.instance.exports);
-    const wasmPvmShell = createWasmPvmShell();
-    wasmPvmShell.__wbg_set_wasm(wasmModule.instance.exports);
-    return wasmPvmShell;
-  }
+  try {
+    // Even though we're not always using Go, we instantiate it here as any Rust WASM has a subset of Go WASM import object (it's empty for Rust)
+    const wasmInstance = await WebAssembly.instantiate(wasmModule, go.importObject);
+    const wasmMethods = wasmInstance.exports;
 
-  if (lang === SupportedLangs.AssemblyScript) {
-    const compiled = await WebAssembly.compile(bytes);
-    logger.info("AssemblyScript WASM module compiled", compiled);
-    const wasmPvmShell = await createAssemblyScriptWasmPvmShell(compiled);
-    logger.info("AssemblyScript WASM module loaded", wasmPvmShell);
-    return wasmPvmShell;
+    if (wasmMethods.__wbindgen_add_to_stack_pointer) {
+      logger.info("Rust WASM module loaded", wasmInstance.exports);
+      const wasmPvmShell = createWasmPvmShell();
+      wasmPvmShell.__wbg_set_wasm(wasmInstance.exports);
+      return wasmPvmShell;
+    } else {
+      go.run(wasmInstance);
+      logger.info("Go WASM module loaded", wasmInstance.exports);
+      const wasmPvmShell = createGoWasmPvmShell();
+      wasmPvmShell.__wbg_set_wasm(wasmInstance.exports);
+      return wasmPvmShell;
+    }
+  } catch (_) {
+    try {
+      logger.info("AssemblyScript WASM module compiled", wasmModule);
+      const wasmPvmShell = await createAssemblyScriptWasmPvmShell(wasmModule);
+      logger.info("AssemblyScript WASM module loaded", wasmPvmShell);
+      return wasmPvmShell;
+    } catch (e) {
+      logger.warn(e);
+      throw new Error(`Error instantiating WASM. Possibly unsupported language.`);
+    }
   }
-
-  throw new Error(`Unsupported lang: ${lang}`);
 }
 
 export function getMemorySize(pvm: PvmApiInterface | null) {

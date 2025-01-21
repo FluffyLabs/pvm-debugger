@@ -10,7 +10,6 @@ import {
   setStorage,
 } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
-import { SupportedLangs } from "@/packages/web-worker/utils.ts";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
@@ -96,7 +95,7 @@ export const loadWorker = createAsyncThunk(
       payload,
     }: {
       id: string;
-      payload: { type: PvmTypes; params?: { url?: string; file?: SerializedFile; lang?: SupportedLangs } };
+      payload: { type: PvmTypes; params?: { url?: string; file?: SerializedFile } };
     },
     { getState, dispatch },
   ) => {
