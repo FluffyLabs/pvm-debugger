@@ -181,7 +181,7 @@ function MemoryRangeRow({
               <Button variant="outline" size="icon" onClick={onMoveUp} disabled={index === 0}>
                 <ArrowUp className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="icon" onClick={onMoveDown} disabled={index === totalCount - 1}>
+              <Button variant="outline" size="icon" onClick={onMoveDown} disabled={index === totalCount - 2}>
                 <ArrowDown className="h-4 w-4" />
               </Button>
               {!isEditing ? (

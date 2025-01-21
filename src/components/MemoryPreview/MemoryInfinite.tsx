@@ -44,7 +44,7 @@ const MemoryCell = ({
     return addressRow?.bytes[index];
   });
   const { numeralSystem } = useContext(NumeralSystemContext);
-  const isEqualAcrossWorkers = addressInAllWorkers.every((val) => val === value);
+  const isEqualAcrossWorkers = addressInAllWorkers.every((val) => val === undefined || val === value);
 
   return (
     <span
