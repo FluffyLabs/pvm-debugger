@@ -1,6 +1,6 @@
 import { HostCallIdentifiers } from "@/types/pvm";
 import { CommandStatus, PvmApiInterface, Storage } from "../types";
-import { read, Registers, write, Memory } from "@typeberry/jam-host-calls";
+import { read, Registers, write, Memory, gas } from "@typeberry/jam-host-calls";
 import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
@@ -165,6 +165,12 @@ const hostCall = async ({
     await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm));
 
     return { hostCallIdentifier, storage, status: CommandStatus.SUCCESS };
+  } else if (hostCallIdentifier === HostCallIdentifiers.GAS) {
+    const jamHostCall = new gas.Gas();
+
+    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm));
+
+    return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   }
 
   return { hostCallIdentifier, status: CommandStatus.ERROR, error: new Error("Unknown host call identifier") };
