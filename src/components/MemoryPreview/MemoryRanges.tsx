@@ -4,7 +4,7 @@ import { INPUT_STYLES } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { X, Edit3, Check, HelpCircle, ArrowUp, ArrowDown } from "lucide-react";
+import { Edit3, Check, HelpCircle, ArrowUp, ArrowDown, Trash } from "lucide-react";
 import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { AddressInput, MemoryRow } from "./MemoryInfinite";
@@ -190,7 +190,7 @@ function MemoryRangeRow({
                     <Edit3 className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" onClick={onRemove}>
-                    <X className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </>
               ) : (
@@ -199,7 +199,7 @@ function MemoryRangeRow({
                     <Check className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" onClick={onRemove}>
-                    <X className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </>
               )}
