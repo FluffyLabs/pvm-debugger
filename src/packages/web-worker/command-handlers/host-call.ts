@@ -146,10 +146,14 @@ const hostCall = async ({
 }: {
   pvm: PvmApiInterface;
   hostCallIdentifier: HostCallIdentifiers;
-  storage: Storage;
+  storage: Storage | null;
   serviceId: number;
 }): Promise<HostCallResponse> => {
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
+    if (storage === null) {
+      throw new Error("Storage is uninitialized.");
+    }
+
     const readAccounts = new ReadAccounts(storage);
     const jamHostCall = new read.Read(readAccounts);
     // TODO the types are the same, but exported from different packages and lost track of the type
@@ -159,6 +163,10 @@ const hostCall = async ({
 
     return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
+    if (storage === null) {
+      throw new Error("Storage is uninitialized.");
+    }
+
     const writeAccounts = new WriteAccounts(storage);
     const jamHostCall = new write.Write(writeAccounts);
 
@@ -184,10 +192,6 @@ export const runHostCall = async ({
 }: HostCallParams): Promise<HostCallResponse> => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
-  }
-
-  if (storage === null) {
-    throw new Error("Storage is uninitialized.");
   }
 
   if (serviceId === null) {

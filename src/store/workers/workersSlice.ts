@@ -282,7 +282,10 @@ export const handleHostCall = createAsyncThunk(
   async ({ workerId }: { workerId?: string }, { getState, dispatch }) => {
     const state = getState() as RootState;
 
-    if (state.debugger.storage === null) {
+    if (
+      state.debugger.storage === null &&
+      state.workers.findIndex((worker: WorkerState) => worker.exitArg === HostCallIdentifiers.READ) !== -1
+    ) {
       return dispatch(setHasHostCallOpen(true));
     } else {
       const previousInstruction = nextInstruction(
