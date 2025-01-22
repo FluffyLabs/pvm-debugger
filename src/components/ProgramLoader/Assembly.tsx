@@ -65,6 +65,8 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
       l = l.replace(/= -/, "= 0 -");
       // replace `invalid` instructions with a comment
       l = l.replace("invalid", "// invalid");
+      // set first block as entry point
+      l = l.replace("@block0", "pub @main");
       return l;
     });
 
@@ -132,9 +134,7 @@ export const Assembly = ({
         }
         // we want to keep all of the old stuff to avoid re-rendering.
         output.initial = newInitialState;
-        // TODO [ToDr] Assembly for 64-bit is temporarily broken, so we don't trigger
-        // the `onProgramLoad` here.
-        // onProgramLoad(output);
+        onProgramLoad(output);
         setError(undefined);
       } catch (e) {
         if (e instanceof Error) {
@@ -195,8 +195,6 @@ export const Assembly = ({
           className="h-full"
           height="100%"
           placeholder="Try writing some PolkaVM assembly code."
-          /* TODO [ToDr] Marking as readonly since the 64-bit assembly is not working correctly yet */
-          readOnly
           value={assembly}
           onChange={compile}
         />

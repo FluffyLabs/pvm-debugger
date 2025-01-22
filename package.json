@@ -31,7 +31,7 @@
     "@typeberry/block": "0.0.1-447d5c4",
     "@typeberry/jam-host-calls": "0.0.1-459ce0b",
     "@typeberry/pvm-debugger-adapter": "0.1.0-459ce0b",
-    "@typeberry/spectool-wasm": "0.18.1",
+    "@typeberry/spectool-wasm": "0.20.5",
     "@uiw/react-codemirror": "^4.23.6",
     "blake2b": "^2.1.4",
     "class-variance-authority": "^0.7.0",
