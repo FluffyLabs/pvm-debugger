@@ -1,6 +1,6 @@
 import { HostCallIdentifiers } from "@/types/pvm";
 import { CommandStatus, PvmApiInterface, Storage } from "../types";
-import { read, Registers, write, Memory } from "@typeberry/jam-host-calls";
+import { read, Registers, write, Memory, gas } from "@typeberry/jam-host-calls";
 import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
@@ -146,10 +146,14 @@ const hostCall = async ({
 }: {
   pvm: PvmApiInterface;
   hostCallIdentifier: HostCallIdentifiers;
-  storage: Storage;
+  storage: Storage | null;
   serviceId: number;
 }): Promise<HostCallResponse> => {
   if (hostCallIdentifier === HostCallIdentifiers.READ) {
+    if (storage === null) {
+      throw new Error("Storage is uninitialized.");
+    }
+
     const readAccounts = new ReadAccounts(storage);
     const jamHostCall = new read.Read(readAccounts);
     // TODO the types are the same, but exported from different packages and lost track of the type
@@ -159,12 +163,22 @@ const hostCall = async ({
 
     return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
+    if (storage === null) {
+      throw new Error("Storage is uninitialized.");
+    }
+
     const writeAccounts = new WriteAccounts(storage);
     const jamHostCall = new write.Write(writeAccounts);
 
     await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm));
 
     return { hostCallIdentifier, storage, status: CommandStatus.SUCCESS };
+  } else if (hostCallIdentifier === HostCallIdentifiers.GAS) {
+    const jamHostCall = new gas.Gas();
+
+    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm));
+
+    return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   }
 
   return { hostCallIdentifier, status: CommandStatus.ERROR, error: new Error("Unknown host call identifier") };
@@ -178,10 +192,6 @@ export const runHostCall = async ({
 }: HostCallParams): Promise<HostCallResponse> => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
-  }
-
-  if (storage === null) {
-    throw new Error("Storage is uninitialized.");
   }
 
   if (serviceId === null) {

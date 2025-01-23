@@ -1,5 +1,5 @@
 import { logger } from "@/utils/loggerService";
-import { getMemorySize, loadArrayBufferAsWasm, SupportedLangs } from "../utils";
+import { getMemorySize, loadArrayBufferAsWasm } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
 import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
 import { deserializeFile, SerializedFile } from "@/lib/utils.ts";
@@ -7,7 +7,7 @@ import loadWasmFromWebsockets from "../wasmFromWebsockets";
 
 export type LoadParams = {
   type: PvmTypes;
-  params: { url?: string; file?: SerializedFile; lang?: SupportedLangs };
+  params: { url?: string; file?: SerializedFile };
 };
 export type LoadResponse = {
   pvm: PvmApiInterface | null;
@@ -36,7 +36,7 @@ const load = async (
 
     logger.info("Load WASM from file", file);
     const bytes = await file.arrayBuffer();
-    const pvm = await loadArrayBufferAsWasm(bytes, args.params.lang);
+    const pvm = await loadArrayBufferAsWasm(bytes);
 
     return {
       pvm,
@@ -53,7 +53,7 @@ const load = async (
     const response = await fetch(url);
     const bytes = await response.arrayBuffer();
 
-    const pvm = await loadArrayBufferAsWasm(bytes, args.params.lang);
+    const pvm = await loadArrayBufferAsWasm(bytes);
 
     return {
       pvm,

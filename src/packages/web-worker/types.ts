@@ -1,5 +1,4 @@
 import { CurrentInstruction, ExpectedState, HostCallIdentifiers, InitialState } from "@/types/pvm";
-import { SupportedLangs } from "./utils";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
 import { bytes } from "@typeberry/jam-host-calls";
@@ -50,7 +49,7 @@ type CommonWorkerRequestParams = { messageId: string };
 export type CommandWorkerRequestParams =
   | {
       command: Commands.LOAD;
-      payload: { type: PvmTypes; params: { url?: string; file?: SerializedFile; lang?: SupportedLangs } };
+      payload: { type: PvmTypes; params: { url?: string; file?: SerializedFile } };
     }
   | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
   | { command: Commands.STEP; payload: { program: Uint8Array; stepsToPerform: number } }
