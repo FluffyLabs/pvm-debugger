@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ProgramUploadFileOutput } from "./types";
-import { InitialState } from "../../types/pvm";
+import { InitialState, RegistersArray } from "../../types/pvm";
 import classNames from "classnames";
 import { compile_assembly, disassemble } from "@typeberry/spectool-wasm";
 import { mapUploadFileInputToOutput } from "./utils";
@@ -116,7 +116,7 @@ export const Assembly = ({
         const newInitialState = {
           ...initialState,
         };
-        newInitialState.regs = output.initial.regs;
+        newInitialState.regs = truncateRegs(output.initial.regs);
         // this is incorrect, but we would need to alter the
         // assembly to include the actual data:
         // pub @main: (pc)
@@ -132,9 +132,12 @@ export const Assembly = ({
         if ((output.initial.pageMap?.length ?? 0) !== 0) {
           newInitialState.pageMap = output.initial.pageMap;
         }
-        // we want to keep all of the old stuff to avoid re-rendering.
-        output.initial = newInitialState;
-        onProgramLoad(output);
+        // if there are no changes do not re-render.
+        if (JSON.stringify(output.initial) !== JSON.stringify(newInitialState)) {
+          // we want to keep all of the old stuff to avoid re-rendering.
+          output.initial = newInitialState;
+          onProgramLoad(output);
+        }
         setError(undefined);
       } catch (e) {
         if (e instanceof Error) {
@@ -157,15 +160,6 @@ export const Assembly = ({
 
   const [error, setError] = useState<string>();
   const [assembly, setAssembly] = useState(defaultAssembly);
-  const [isFirstCompilation, setFirstCompilation] = useState(true);
-
-  // compile the assembly for the first time
-  useEffect(() => {
-    if (isFirstCompilation) {
-      compile(assembly);
-      setFirstCompilation(false);
-    }
-  }, [compile, assembly, isFirstCompilation]);
 
   const isError = !!error;
 
@@ -220,4 +214,16 @@ function isArrayEqual<T>(a: T[], b: T[]) {
   }
 
   return true;
+}
+
+function truncateRegs(regs: RegistersArray | undefined) {
+  if (!regs) {
+    return regs;
+  }
+
+  for (let i = 0; i < regs.length; i++) {
+    // currently the assembler requires that registers are provided as u32
+    regs[i] = regs[i] & 0xffff_ffffn;
+  }
+  return regs;
 }
