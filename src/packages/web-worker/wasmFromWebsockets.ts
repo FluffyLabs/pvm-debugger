@@ -10,7 +10,10 @@ BigInt.prototype["toJSON"] = function () {
   return this.toString();
 };
 
-export default function wasmFromWebsockets(): Promise<PvmApiInterface> {
+export default function wasmFromWebsockets(): Promise<{
+  pvm: PvmApiInterface;
+  socket: WebSocket;
+}> {
   return new Promise((resolve, reject) => {
     // Connect to WebSocket server
     const socket = new WebSocket("ws://localhost:8765");
@@ -56,7 +59,10 @@ export default function wasmFromWebsockets(): Promise<PvmApiInterface> {
           {} as Record<string, (...params: unknown[]) => unknown>,
         );
 
-        resolve(resolveObj as unknown as PvmApiInterface);
+        resolve({
+          pvm: resolveObj as unknown as PvmApiInterface,
+          socket,
+        });
       }
     });
 
