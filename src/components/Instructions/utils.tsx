@@ -20,12 +20,12 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
     case ArgumentType.NO_ARGUMENTS:
       return "";
     case ArgumentType.ONE_IMMEDIATE:
-      return <span>{valueToNumeralSystem(args.immediateDecoder.getUnsigned(), numeralSystem)}</span>;
+      return <span>{valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem)}</span>;
     case ArgumentType.TWO_IMMEDIATES:
       return (
         <span>
-          {valueToNumeralSystem(args?.firstImmediateDecoder.getUnsigned(), numeralSystem)},{" "}
-          {valueToNumeralSystem(args?.secondImmediateDecoder.getUnsigned(), numeralSystem)}
+          {valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem)},{" "}
+          {valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem)}
         </span>
       );
     case ArgumentType.ONE_OFFSET:
@@ -33,22 +33,21 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
       return (
         <span>
-          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args.immediateDecoder.getUnsigned(), numeralSystem)}
+          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem)}
         </span>
       );
     case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES:
       return (
         <span>
-          ω<sub>{args?.registerIndex}</sub>,{" "}
-          {valueToNumeralSystem(args?.firstImmediateDecoder.getUnsigned(), numeralSystem)},{" "}
-          {valueToNumeralSystem(args?.secondImmediateDecoder.getUnsigned(), numeralSystem)}
+          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem)}
+          , {valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem)}
         </span>
       );
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
       return (
         <span>
-          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getUnsigned(), numeralSystem)}
-          , {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
+          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem)},{" "}
+          {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
         </span>
       );
     case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
@@ -67,7 +66,7 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
       return (
         <span>
           ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(args?.immediateDecoder.getUnsigned(), numeralSystem)}
+          {valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem)}
         </span>
       );
     case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
@@ -81,8 +80,8 @@ export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: Nume
       return (
         <span>
           ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(args?.firstImmediateDecoder.getUnsigned(), numeralSystem)},{" "}
-          {valueToNumeralSystem(args?.secondImmediateDecoder.getUnsigned(), numeralSystem)}
+          {valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem)},{" "}
+          {valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem)}
         </span>
       );
     case ArgumentType.THREE_REGISTERS:
