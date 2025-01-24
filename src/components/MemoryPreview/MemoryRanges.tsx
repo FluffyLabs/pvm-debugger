@@ -21,6 +21,12 @@ const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType
   };
 };
 
+const unt8ToHex = (value: Uint8Array) =>
+  "0x" +
+  Array.from(value)
+    .map((byte) => byte.toString(16).padStart(2, "0")) // Convert to hex and pad with leading zero if necessary
+    .join("");
+
 interface RangeRow {
   id: string;
   start: number;
@@ -238,7 +244,7 @@ function MemoryRangeRow({
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
             <a
-              href={`https:codec.fluffylabs.dev?memory=${flatData}&numeralSystem=dec`}
+              href={`https://papi.fluffylabs.dev/?data=${unt8ToHex(flatData)}`}
               target="_blank"
               rel="noreferrer"
               className="underline text-blue-600 block mb-2"
