@@ -30,11 +30,13 @@ export const MemoryCell = ({
   selectedAddress,
   index,
   findMemoryForWorker,
+  isPageTooltipDisabled = false,
 }: {
   value: number;
   address: number;
   selectedAddress: number | null;
   index: number;
+  isPageTooltipDisabled?: boolean;
   findMemoryForWorker: FindMemoryForWorkerType;
 }) => {
   const workers = useAppSelector(selectWorkers);
@@ -66,7 +68,7 @@ export const MemoryCell = ({
       >
         {isEqualAcrossWorkers ? (
           <TooltipProvider>
-            <Tooltip delayDuration={100}>
+            <Tooltip delayDuration={100} open={isPageTooltipDisabled ? false : undefined}>
               <TooltipTrigger>
                 {valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}
               </TooltipTrigger>

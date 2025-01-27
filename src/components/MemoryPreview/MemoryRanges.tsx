@@ -4,7 +4,7 @@ import { INPUT_STYLES } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { Edit3, Check, HelpCircle, ArrowUp, ArrowDown, Trash } from "lucide-react";
+import { Edit3, Check, ArrowUp, ArrowDown, Trash } from "lucide-react";
 import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { AddressInput, MemoryCell } from "./MemoryInfinite";
@@ -210,53 +210,47 @@ function MemoryRangeRow({
         </div>
       </div>
 
-      <div className="mt-2 text-sm font-mono">
+      <div className="mt-4 mb-2 mx-2 text-sm font-mono">
         <div style={{ maxHeight: "100px", overflowY: "auto" }}>
           {flatData.length === 0 ? (
             <div>(no data)</div>
           ) : (
             flatData.map((byte, idx) => (
-              <MemoryCell
-                index={idx}
-                address={draftStart + idx}
-                value={byte}
-                selectedAddress={null}
-                findMemoryForWorker={findMemoryForWorkerRange(matchingRange?.startAddress || 0)}
-              />
+              <Popover>
+                <PopoverTrigger>
+                  <MemoryCell
+                    index={idx}
+                    address={draftStart + idx}
+                    value={byte}
+                    selectedAddress={null}
+                    findMemoryForWorker={findMemoryForWorkerRange(matchingRange?.startAddress || 0)}
+                    isPageTooltipDisabled
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2">
+                  <a
+                    href={`https://papi.fluffylabs.dev/?data=${uint8ToHex(new Uint8Array(flatData))}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline text-blue-600 block mb-2"
+                  >
+                    Open codec tool
+                  </a>
+
+                  {!interpretResult ? (
+                    <div>(no data)</div>
+                  ) : (
+                    <div className="text-sm space-y-1 font-mono">
+                      {interpretResult.map((interpretation) => (
+                        <div key={interpretation}>{interpretation}</div>
+                      ))}
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
             ))
           )}
         </div>
-      </div>
-
-      <div className="mt-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex gap-1 items-center">
-              <HelpCircle className="h-4 w-4" />
-              Interpretations
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2">
-            <a
-              href={`https://papi.fluffylabs.dev/?data=${uint8ToHex(new Uint8Array(flatData))}`}
-              target="_blank"
-              rel="noreferrer"
-              className="underline text-blue-600 block mb-2"
-            >
-              Open codec tool
-            </a>
-
-            {!interpretResult ? (
-              <div>(no data)</div>
-            ) : (
-              <div className="text-sm space-y-1 font-mono">
-                {interpretResult.map((interpretation) => (
-                  <div key={interpretation}>{interpretation}</div>
-                ))}
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
       </div>
     </Card>
   );
