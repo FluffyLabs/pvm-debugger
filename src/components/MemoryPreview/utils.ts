@@ -86,7 +86,7 @@ export const getMemoryInterpretations = (bytes: Uint8Array, numeralSystem: Numer
   }
 
   if (bytes.length > 32) {
-    return ["Memory too large to display"];
+    return ["Max memory for interpretations is 32 bytes"];
   }
 
   function fmt(value: number | bigint): string {
