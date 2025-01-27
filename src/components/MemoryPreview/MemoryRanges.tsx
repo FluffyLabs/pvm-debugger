@@ -210,7 +210,7 @@ function MemoryRangeRow({
         </div>
       </div>
 
-      <div className="mt-2 text-sm font-mono">
+      <div className="mt-4 mb-2 mx-2 text-sm font-mono">
         <div style={{ maxHeight: "100px", overflowY: "auto" }}>
           {flatData.length === 0 ? (
             <div>(no data)</div>
