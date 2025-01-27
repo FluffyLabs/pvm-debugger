@@ -112,7 +112,6 @@ export const getMemoryInterpretations = (bytes: Uint8Array, numeralSystem: Numer
     return `${label}: ${arr.join(" ")}`;
   }
 
-  // Now decode each type in single row
   const lines: Array<string> = [];
 
   // i8 => up to 32 items
@@ -151,6 +150,5 @@ export const getMemoryInterpretations = (bytes: Uint8Array, numeralSystem: Numer
   const u64Line = decodeArray("u64", 8, 4, decodeU64At);
   if (u64Line) lines.push(u64Line);
 
-  // If everything is empty, return null
   return lines.length > 0 ? lines : null;
 };
