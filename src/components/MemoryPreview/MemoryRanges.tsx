@@ -238,7 +238,7 @@ function MemoryRangeRow({
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
             <a
-              href={`https://papi.fluffylabs.dev/?data=${uint8ToHex(flatData)}`}
+              href={`https://papi.fluffylabs.dev/?data=${uint8ToHex(new Uint8Array(flatData))}`}
               target="_blank"
               rel="noreferrer"
               className="underline text-blue-600 block mb-2"
