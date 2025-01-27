@@ -24,7 +24,7 @@ const ITEM_SIZE = 24;
 const PAGE_SIZE = 4096;
 const BG_COLOR = "#22cccc";
 
-const MemoryCell = ({
+export const MemoryCell = ({
   value,
   address,
   selectedAddress,

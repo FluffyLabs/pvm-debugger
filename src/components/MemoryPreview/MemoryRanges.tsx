@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Edit3, Check, HelpCircle, ArrowUp, ArrowDown, Trash } from "lucide-react";
 import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { AddressInput, MemoryRow } from "./MemoryInfinite";
+import { AddressInput, MemoryCell } from "./MemoryInfinite";
 import { MEMORY_SPLIT_STEP } from "@/store/utils";
-import { addressFormatter, FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
+import { FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import classNames from "classnames";
+import { valueToNumeralSystem } from "../Instructions/utils";
 
 const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType => {
   return (worker, address) => {
@@ -138,20 +139,15 @@ function MemoryRangeRow({
   };
 
   const isInputsVisible = isEditing || isLast;
-  const lastAddressLength = addressFormatter(
-    matchingRange?.startAddress || 0 + (matchingRange?.length || 0),
-    numeralSystem,
-  ).length;
-
-  const flatData = new Uint8Array(rowData.flatMap((chunk) => chunk));
-  const interpretResult = getMemoryInterpretations(flatData, numeralSystem);
+  const flatData = rowData.flatMap((chunk) => chunk);
+  const interpretResult = getMemoryInterpretations(new Uint8Array(flatData), numeralSystem);
 
   return (
-    <Card className="p-3 rounded-none">
+    <Card className="p-3 border-0 border-b-2 rounded-none">
       <div className="flex items-center gap-3">
         {!isInputsVisible ? (
           <span className="font-mono">
-            {start}...+{length}
+            {valueToNumeralSystem(start, numeralSystem)}...+{valueToNumeralSystem(length, numeralSystem)}
           </span>
         ) : (
           <>
@@ -164,7 +160,7 @@ function MemoryRangeRow({
                 value={draftStart.toString()}
               />
             </div>
-            <div className="grid gap-1 max-w-[55px]">
+            <div className="grid gap-1 max-w-[65px]">
               <Label htmlFor={`length-${id}`}>Length</Label>
               <LengthInput
                 id={`length-${id}`}
@@ -216,19 +212,17 @@ function MemoryRangeRow({
 
       <div className="mt-2 text-sm font-mono">
         <div style={{ maxHeight: "100px", overflowY: "auto" }}>
-          {rowData.length === 0 ? (
+          {flatData.length === 0 ? (
             <div>(no data)</div>
           ) : (
-            rowData.map((chunkBytes, idx) => (
-              <div key={idx} className="flex items-start">
-                <MemoryRow
-                  address={draftStart + idx * MEMORY_SPLIT_STEP}
-                  bytes={chunkBytes}
-                  selectedAddress={null}
-                  addressLength={lastAddressLength}
-                  findMemoryForWorker={findMemoryForWorkerRange(matchingRange?.startAddress || 0)}
-                />
-              </div>
+            flatData.map((byte, idx) => (
+              <MemoryCell
+                index={idx}
+                address={draftStart + idx}
+                value={byte}
+                selectedAddress={null}
+                findMemoryForWorker={findMemoryForWorkerRange(matchingRange?.startAddress || 0)}
+              />
             ))
           )}
         </div>
@@ -256,9 +250,9 @@ function MemoryRangeRow({
               <div>(no data)</div>
             ) : (
               <div className="text-sm space-y-1 font-mono">
-                <div>{interpretResult.u16Line}</div>
-                <div>{interpretResult.u32Line}</div>
-                <div>{interpretResult.u64Line}</div>
+                {interpretResult.map((interpretation) => (
+                  <div key={interpretation}>{interpretation}</div>
+                ))}
               </div>
             )}
           </PopoverContent>
