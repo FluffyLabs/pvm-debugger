@@ -3,9 +3,8 @@ import classNames from "classnames";
 import { getStatusColor } from "../Registers/utils";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
-import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
+import { forwardRef, useCallback, useContext, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
-import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from ".";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
@@ -34,110 +33,104 @@ const AddressCell = ({
   const [isHover, setIsHover] = useState(false);
 
   return (
-    <TableCell
+    <div
       className="p-1.5 border-transparent cursor-pointer relative"
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
       <div
-        className={classNames("w-[4px] absolute h-[100%] left-0 top-0", {
+        className={classNames("w-[4px] absolute h-full left-0 top-0", {
           "bg-red-600": breakpointAddresses.includes(programRow.counter),
           "bg-red-400": isHover,
         })}
-      ></div>
+      />
       <span onClick={() => onAddressClick(programRow.counter)}>{programRow.addressEl}</span>
-    </TableCell>
+    </div>
   );
 };
 
-export const InstructionItem = forwardRef(
-  (
-    {
-      status,
-      isLast,
-      instructionMode,
-      programRow,
-      onClick,
-      onAddressClick,
-      breakpointAddresses,
-    }: {
-      status?: Status;
-      isLast: boolean;
-      programRow: ProgramRow;
-      currentPc: number | undefined;
-      instructionMode: InstructionMode;
-      onClick: (r: ProgramRow) => void;
-      onAddressClick: (address: number) => void;
-      breakpointAddresses: (number | undefined)[];
-    },
-    ref: ForwardedRef<HTMLTableRowElement>,
-  ) => {
-    const { numeralSystem } = useContext(NumeralSystemContext);
+export const InstructionItem = forwardRef<
+  HTMLDivElement,
+  {
+    status?: Status;
+    isLast: boolean;
+    programRow: ProgramRow;
+    currentPc: number | undefined;
+    instructionMode: InstructionMode;
+    onClick: (r: ProgramRow) => void;
+    onAddressClick: (address: number) => void;
+    breakpointAddresses: (number | undefined)[];
+  }
+>(({ status, isLast, instructionMode, programRow, onClick, onAddressClick, breakpointAddresses }, ref) => {
+  const { numeralSystem } = useContext(NumeralSystemContext);
 
-    const workers = useAppSelector(selectWorkers);
-    const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
+  const workers = useAppSelector(selectWorkers);
+  const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
 
-    const fillSearch = useCallback(() => {
-      onClick(programRow);
-    }, [programRow, onClick]);
+  const fillSearch = useCallback(() => {
+    onClick(programRow);
+  }, [programRow, onClick]);
 
-    const { backgroundColor, hasTooltip } = getHighlightStatus(workers, programRow, status);
+  const { backgroundColor, hasTooltip } = getHighlightStatus(workers, programRow, status);
 
-    const renderContent = () => {
-      return (
-        <TableRow
-          ref={ref}
-          className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
-          test-id="instruction-item"
-          style={{
-            backgroundColor,
-            borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined,
-          }}
-          title={programRow.block.name}
-        >
-          {instructionMode === InstructionMode.BYTECODE && (
-            <>
-              <AddressCell
-                breakpointAddresses={breakpointAddresses}
-                programRow={programRow}
-                onAddressClick={onAddressClick}
-              />
-              <TableCell className="p-1.5">
-                {"instructionBytes" in programRow && programRow.instructionBytes && (
-                  <span className="text-gray-500">
-                    {[...programRow.instructionBytes]
-                      ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
-                      .join(" ")}
-                  </span>
-                )}
-              </TableCell>
-            </>
-          )}
-          {instructionMode === InstructionMode.ASM && (
-            <>
-              <AddressCell
-                breakpointAddresses={breakpointAddresses}
-                programRow={programRow}
-                onAddressClick={onAddressClick}
-              />
-              <TableCell className="p-1.5">
-                <a onClick={fillSearch} className="cursor-pointer">
-                  <span className="uppercase font-bold">{programRow.name}</span>
-                </a>
-              </TableCell>
-              <TableCell className="p-1.5 whitespace-nowrap">
-                <span className="">
-                  {"args" in programRow &&
-                    mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
+  function renderContent() {
+    return (
+      <div
+        ref={ref}
+        className={classNames("hover:bg-gray-300", {
+          "opacity-50": isLast,
+        })}
+        data-test-id="instruction-item"
+        style={{
+          backgroundColor,
+          // If you no longer want a “block” separator effect, remove this:
+          borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined,
+        }}
+        // Using a plain title attribute or remove it if you prefer a custom tooltip
+        title={programRow.block.name}
+      >
+        {instructionMode === InstructionMode.BYTECODE && (
+          <div className="flex">
+            <AddressCell
+              breakpointAddresses={breakpointAddresses}
+              programRow={programRow}
+              onAddressClick={onAddressClick}
+            />
+            <div className="p-1.5">
+              {"instructionBytes" in programRow && programRow.instructionBytes && (
+                <span className="text-gray-500">
+                  {[...programRow.instructionBytes]
+                    ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
+                    .join(" ")}
                 </span>
-              </TableCell>
-            </>
-          )}
-        </TableRow>
-      );
-    };
+              )}
+            </div>
+          </div>
+        )}
 
-    return hasTooltip ? (
+        {instructionMode === InstructionMode.ASM && (
+          <div className="flex">
+            <AddressCell
+              breakpointAddresses={breakpointAddresses}
+              programRow={programRow}
+              onAddressClick={onAddressClick}
+            />
+            <div className="p-1.5">
+              <a onClick={fillSearch} className="cursor-pointer">
+                <span className="uppercase font-bold">{programRow.name}</span>
+              </a>
+            </div>
+            <div className="p-1.5 whitespace-nowrap">
+              {"args" in programRow && mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (hasTooltip) {
+    return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
@@ -155,19 +148,17 @@ export const InstructionItem = forwardRef(
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-    ) : (
-      renderContent()
     );
-  },
-);
+  }
+
+  return renderContent();
+});
 
 function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status) {
   const pcInAllWorkers = (state: "currentState" | "previousState") =>
     workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
 
-  const isActive = (programRow: ProgramRow) => {
-    return pcInAllWorkers("currentState").includes(programRow.address);
-  };
+  const isActive = (p: ProgramRow) => pcInAllWorkers("currentState").includes(p.address);
 
   const isHighlighted = isActive(programRow);
   const bgColor = getBackgroundForStatus(status, isHighlighted).toUpperCase();
@@ -189,6 +180,5 @@ function getBackgroundForStatus(status: Status | undefined, isHighlighted: boole
   if (status === Status.OK && isHighlighted) {
     return getStatusColor();
   }
-
   return getStatusColor(status);
 }
