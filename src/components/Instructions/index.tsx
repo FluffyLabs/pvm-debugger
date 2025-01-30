@@ -1,16 +1,17 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { InstructionMode } from "@/components/Instructions/types.ts";
+import { InstructionMode } from "@/components/Instructions/types";
 import { InstructionItem } from "./InstructionItem";
-import { NumeralSystem } from "@/context/NumeralSystem.tsx";
+import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
-import { useAppSelector } from "@/store/hooks.ts";
-import { selectWorkers } from "@/store/workers/workersSlice.ts";
+import { useAppSelector } from "@/store/hooks";
+import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 
 export type ProgramRow = CurrentInstruction & {
   addressEl: ReactNode;
   counter: number;
+  // Possibly other fields, e.g., block?
 };
 
 interface InstructionsProps {
@@ -35,10 +36,11 @@ export const Instructions = ({
   const { numeralSystem } = useContext(NumeralSystemContext);
   const workers = useAppSelector(selectWorkers);
 
-  // We'll calculate the maximum PC across all workers to know which row to scroll to
+  // We'll calculate the maximum PC across all workers
   const maxPc = workers.reduce((acc, worker) => Math.max(acc, worker.currentState.pc ?? 0), 0);
 
-  const programPreview = useMemo<ProgramRow[] | undefined>(() => {
+  // Transform the instructions into ProgramRows
+  const programRows = useMemo<ProgramRow[] | undefined>(() => {
     if (!programPreviewResult) return;
 
     const isHex = numeralSystem === NumeralSystem.HEXADECIMAL;
@@ -68,7 +70,7 @@ export const Instructions = ({
   const parentRef = useRef<HTMLDivElement>(null);
 
   const rowVirtualizer = useVirtualizer({
-    count: programPreview?.length ?? 0,
+    count: programRows?.length ?? 0,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 36,
     overscan: 8,
@@ -78,61 +80,74 @@ export const Instructions = ({
     (index: number) => {
       rowVirtualizer.scrollToIndex(index, {
         align: "center",
-        behavior: "auto",
+        behavior: "smooth",
       });
     },
     [rowVirtualizer],
   );
 
   useEffect(() => {
-    if (!programPreview) return;
-    const idx = programPreview.findIndex((r) => r.counter === maxPc);
+    if (!programRows) return;
+    const idx = programRows.findIndex((r) => r.counter === maxPc);
     if (idx > -1) {
       scrollToIndex(idx);
     }
-  }, [maxPc, programPreview, scrollToIndex]);
+  }, [maxPc, programRows, scrollToIndex]);
 
-  if (!programPreview) {
+  if (!programRows) {
     return <div>No instructions to display</div>;
   }
 
   return (
     <div ref={parentRef} className="font-mono overflow-auto border-2 rounded-md h-[70vh]">
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: rowVirtualizer.getTotalSize(),
-        }}
-      >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const row = programPreview[virtualRow.index];
-          return (
-            <div
-              key={virtualRow.key}
-              ref={rowVirtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start}px)`,
-              }}
-            >
+      {/* A table with fixed layout so columns remain consistent */}
+      <table className="table-fixed w-full" style={{ position: "relative" }}>
+        {/* (Optional) <colgroup> or <thead> to fix column widths */}
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="w-32 px-3 py-2 border-b">Address</th>
+            <th className="w-40 px-3 py-2 border-b">Instruction</th>
+            <th className="px-3 py-2 border-b">Data / Args</th>
+          </tr>
+        </thead>
+
+        <tbody
+          style={{
+            // Display block to allow absolute positioning of rows
+            display: "block",
+            position: "relative",
+            // We let the table's "spacer" be the total height
+            height: rowVirtualizer.getTotalSize(),
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const row = programRows[virtualRow.index];
+            return (
+              // Instead of <div>, we place a <tr> with absolutely positioned styling
               <InstructionItem
+                key={virtualRow.key}
+                ref={rowVirtualizer.measureElement}
                 status={status}
-                isLast={virtualRow.index === programPreview.length - 1}
+                isLast={virtualRow.index === programRows.length - 1}
                 onClick={onInstructionClick}
                 instructionMode={instructionMode}
                 programRow={row}
                 currentPc={currentState.pc}
                 onAddressClick={onAddressClick}
                 breakpointAddresses={breakpointAddresses}
+                // Add absolute positioning so each row is stacked vertically
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
               />
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 };
