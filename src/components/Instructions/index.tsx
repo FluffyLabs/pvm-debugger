@@ -72,7 +72,7 @@ export const Instructions = ({
   const rowVirtualizer = useVirtualizer({
     count: programRows?.length ?? 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 36,
+    estimateSize: () => 32,
     overscan: 8,
   });
 
@@ -99,55 +99,35 @@ export const Instructions = ({
   }
 
   return (
-    <div ref={parentRef} className="font-mono overflow-auto border-2 rounded-md h-[70vh]">
-      {/* A table with fixed layout so columns remain consistent */}
-      <table className="table-fixed w-full" style={{ position: "relative" }}>
-        {/* (Optional) <colgroup> or <thead> to fix column widths */}
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="w-32 px-3 py-2 border-b">Address</th>
-            <th className="w-40 px-3 py-2 border-b">Instruction</th>
-            <th className="px-3 py-2 border-b">Data / Args</th>
-          </tr>
-        </thead>
+    <div ref={parentRef} className="font-mono overflow-auto border-2 rounded-md h-[70vh] relative">
+      <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+        <table className="w-full caption-bottom text-sm border-separate border-spacing-0">
+          <tbody>
+            {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+              const row = programRows[virtualRow.index];
 
-        <tbody
-          style={{
-            // Display block to allow absolute positioning of rows
-            display: "block",
-            position: "relative",
-            // We let the table's "spacer" be the total height
-            height: rowVirtualizer.getTotalSize(),
-          }}
-        >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const row = programRows[virtualRow.index];
-            return (
-              // Instead of <div>, we place a <tr> with absolutely positioned styling
-              <InstructionItem
-                key={virtualRow.key}
-                ref={rowVirtualizer.measureElement}
-                status={status}
-                isLast={virtualRow.index === programRows.length - 1}
-                onClick={onInstructionClick}
-                instructionMode={instructionMode}
-                programRow={row}
-                currentPc={currentState.pc}
-                onAddressClick={onAddressClick}
-                breakpointAddresses={breakpointAddresses}
-                // Add absolute positioning so each row is stacked vertically
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              />
-            );
-          })}
-        </tbody>
-      </table>
+              return (
+                <InstructionItem
+                  key={virtualRow.key}
+                  ref={rowVirtualizer.measureElement}
+                  status={status}
+                  isLast={virtualRow.index === programRows.length - 1}
+                  onClick={onInstructionClick}
+                  instructionMode={instructionMode}
+                  programRow={row}
+                  currentPc={currentState.pc}
+                  onAddressClick={onAddressClick}
+                  breakpointAddresses={breakpointAddresses}
+                  style={{
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start - index * virtualRow.size}px)`,
+                  }}
+                />
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
