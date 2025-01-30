@@ -129,6 +129,7 @@ const DebuggerContent = () => {
             debuggerActions.restartProgram(state);
           }}
           allowEditingPc={!isDebugFinished && !isRunMode && !isStepMode}
+          allowEditingGas={!isDebugFinished && !isRunMode && !isStepMode}
           allowEditingRegisters={false}
         />
       </div>
