@@ -80,7 +80,7 @@ export const Instructions = ({
     (index: number) => {
       rowVirtualizer.scrollToIndex(index, {
         align: "center",
-        behavior: "smooth",
+        behavior: "auto",
       });
     },
     [rowVirtualizer],
