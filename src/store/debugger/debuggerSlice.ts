@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { AvailablePvms, CurrentInstruction, DebuggerEcalliStorage, ExpectedState } from "@/types/pvm.ts";
+import { AvailablePvms, CurrentInstruction, DebuggerEcalliStorage, ExpectedState, Status } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { isEqual } from "lodash";
@@ -62,6 +62,7 @@ const initialState: DebuggerState = {
     pageMap: [],
     memory: [],
     gas: 10000n,
+    status: Status.OK,
   },
   isProgramEditMode: false,
   isProgramInvalid: false,

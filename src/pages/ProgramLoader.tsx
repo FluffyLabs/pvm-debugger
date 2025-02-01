@@ -16,8 +16,6 @@ const ProgramLoader = () => {
   const { pvmInitialized } = useAppSelector((state) => state.debugger);
 
   useEffect(() => {
-    // console.log('program', searchParams.get("program"))
-
     const loadProgramFromUrl = async () => {
       const searchParams = new URLSearchParams(window.location.search);
       const programFromSearchParams = searchParams.get("program");
