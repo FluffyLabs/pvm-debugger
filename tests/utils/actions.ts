@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
 
 export const openDebugger = async (page: Page) => {
-  await page.goto("/", { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
 };
 
 export const openProgram = async (page: Page, name: string) => {
