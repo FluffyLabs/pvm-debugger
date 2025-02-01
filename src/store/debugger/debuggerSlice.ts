@@ -1,10 +1,11 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
 import { AvailablePvms, CurrentInstruction, DebuggerEcalliStorage, ExpectedState, Status } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { isEqual } from "lodash";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
+import { logger } from "@/utils/loggerService.tsx";
 
 export interface DebuggerState {
   pvmOptions: {
@@ -166,6 +167,31 @@ export const {
   setPvmOptions,
   setSelectedPvms,
 } = debuggerSlice.actions;
+
+export const debuggerSliceListenerMiddleware = createListenerMiddleware();
+
+debuggerSliceListenerMiddleware.startListening({
+  actionCreator: setProgram,
+  effect: async (action) => {
+    const value = action.payload;
+
+    // Update the URL with the new program converted to a hex string
+    const hexProgram = value.map((x: number) => x.toString(16).padStart(2, "0")).join("");
+
+    // MAX_URL_LENGTH is an arbitrary limit so there may be a better value for this purpose
+    const MAX_URL_LENGTH = 2 ** 13;
+
+    // If the program is less than MAX_URL_LENGTH, update the URL, otherwise do nothing as it will probably crash the browser or make it very slow
+    if (hexProgram?.length < MAX_URL_LENGTH) {
+      const params = new URLSearchParams(window.location.search);
+      params.set("program", `0x${hexProgram}`);
+
+      window.history.pushState({}, "", `?${params.toString()}`);
+    } else {
+      logger.warn("Program is too large to be stored in the URL");
+    }
+  },
+});
 
 export const selectProgram = (state: RootState) => state.debugger.program;
 export const selectInitialState = (state: RootState) => state.debugger.initialState;
