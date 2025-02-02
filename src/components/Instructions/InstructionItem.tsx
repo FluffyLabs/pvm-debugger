@@ -1,4 +1,4 @@
-import { mapInstructionsArgsByType, valueToNumeralSystem } from "./utils";
+import { argType, mapInstructionsArgsByType, valueToBinary, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
 import { getStatusColor } from "../Registers/utils";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
@@ -86,7 +86,7 @@ export const InstructionItem = forwardRef(
       onClick(programRow);
     }, [programRow, onClick]);
 
-    const { backgroundColor, hasTooltip } = getHighlightStatus(workers, programRow, status);
+    const { backgroundColor, hasOpacity } = getHighlightStatus(workers, programRow, status);
 
     const renderContent = () => {
       return (
@@ -143,8 +143,16 @@ export const InstructionItem = forwardRef(
                 style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
               >
                 <span className="">
-                  {"args" in programRow &&
-                    mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
+                  {"args" in programRow && (
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)
+                            ?.map((instruction) => instruction.value)
+                            .join(", ") ?? "",
+                      }}
+                    />
+                  )}
                 </span>
               </TableCell>
             </>
@@ -153,7 +161,67 @@ export const InstructionItem = forwardRef(
       );
     };
 
-    return hasTooltip ? (
+    const renderTooltipContentInstructionInfo = () => {
+      return (
+        <div>
+          <div className="flex flex-row bg-white">
+            <div>
+              <div className="font-mono text-xs text-gray-500 pl-1 pb-1">opcode</div>
+              <div className="border-r-2 border-red-400 ">
+                <div className="font-mono text-md tracking-[0.2rem] bg-red-200 pl-1 text-right">
+                  {valueToBinary(programRow.instructionCode, 8)}
+                </div>
+                <div className="font-mono text-xs p-1 font-bold">
+                  {valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
+                </div>
+              </div>
+            </div>
+
+            {"args" in programRow &&
+              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)?.map(
+                (instruction, index) => (
+                  <div key={index}>
+                    <div className="font-mono text-xs text-gray-500 pl-1 pb-1 lowercase">{instruction.type}</div>
+                    <div
+                      className={classNames(
+                        "border-r-2",
+                        { "border-violet-400": instruction.type === argType.REGISTER },
+                        { "border-green-300": instruction.type !== argType.REGISTER },
+                      )}
+                    >
+                      <div
+                        className={classNames(
+                          "font-mono text-md tracking-[0.2rem] pl-1",
+                          {
+                            "bg-violet-200": instruction.type === argType.REGISTER,
+                          },
+                          { "bg-green-100": instruction.type !== argType.REGISTER },
+                        )}
+                      >
+                        {valueToBinary(
+                          instruction.value,
+                          instruction.type === argType.EXTENDED_WIDTH_IMMEDIATE ? 16 : 8,
+                        )}
+                      </div>
+                      <div
+                        className={classNames("text-xs p-1", {
+                          "font-sans": instruction.type === argType.REGISTER,
+                          "font-mono": instruction.type !== argType.REGISTER,
+                        })}
+                        dangerouslySetInnerHTML={{
+                          __html: instruction.value,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ),
+              )}
+          </div>
+        </div>
+      );
+    };
+
+    return hasOpacity ? (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
@@ -172,7 +240,12 @@ export const InstructionItem = forwardRef(
         </Tooltip>
       </TooltipProvider>
     ) : (
-      renderContent()
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
+          <TooltipContent side="bottom">{renderTooltipContentInstructionInfo()}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   },
 );
@@ -197,7 +270,7 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
 
   return {
     backgroundColor,
-    hasTooltip: bgOpacity > 0 && bgOpacity < 1,
+    hasOpacity: bgOpacity > 0 && bgOpacity < 1,
   };
 }
 

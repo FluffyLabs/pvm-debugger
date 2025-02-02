@@ -15,84 +15,173 @@ export const valueToNumeralSystem = (
     : (value ?? 0).toString().padStart(padStartVal, "0");
 };
 
-export const mapInstructionsArgsByType = (args: Args | null, numeralSystem: NumeralSystem, counter: number) => {
+export const valueToBinary = (value?: number | bigint | string, padStartVal: number = 0): string => {
+  return ((Number(value) ?? 0) >>> 0).toString(2).padStart(padStartVal, "0");
+};
+
+export enum argType {
+  IMMEDIATE = "IMMEDIATE",
+  OFFSET = "OFFSET",
+  REGISTER = "REGISTER",
+  EXTENDED_WIDTH_IMMEDIATE = "EXTENDED_WIDTH_IMMEDIATE",
+}
+
+export const mapInstructionsArgsByType = (
+  args: Args | null,
+  numeralSystem: NumeralSystem,
+  counter: number,
+):
+  | {
+      type: argType;
+      value: string | number;
+    }[]
+  | null => {
   switch (args?.type) {
     case ArgumentType.NO_ARGUMENTS:
-      return "";
+      return [];
     case ArgumentType.ONE_IMMEDIATE:
-      return <span>{valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem)}</span>;
+      return [{ type: argType.IMMEDIATE, value: valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem) }];
     case ArgumentType.TWO_IMMEDIATES:
-      return (
-        <span>
-          {valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem)},{" "}
-          {valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
+        },
+      ];
     case ArgumentType.ONE_OFFSET:
-      return <span>{valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}</span>;
+      return [{ type: argType.OFFSET, value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem) }];
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
-      return (
-        <span>
-          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.registerIndex}</sub>`,
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem),
+        },
+      ];
     case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES:
-      return (
-        <span>
-          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem)}
-          , {valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.registerIndex}</sub>`,
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
+        },
+      ];
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
-      return (
-        <span>
-          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem)},{" "}
-          {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.registerIndex}</sub>`,
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem),
+        },
+        {
+          type: argType.OFFSET,
+          value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
+        },
+      ];
     case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
-      return (
-        <span>
-          ω<sub>{args?.registerIndex}</sub>, {valueToNumeralSystem(args?.immediateDecoder.getValue(), numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.registerIndex}</sub>`,
+        },
+        {
+          type: argType.EXTENDED_WIDTH_IMMEDIATE,
+          value: valueToNumeralSystem(args?.immediateDecoder.getValue(), numeralSystem),
+        },
+      ];
     case ArgumentType.TWO_REGISTERS:
-      return (
-        <span>
-          ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+        },
+      ];
     case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
-      return (
-        <span>
-          ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem),
+        },
+      ];
     case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
-      return (
-        <span>
-          ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(args?.nextPc - counter, numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.OFFSET,
+          value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
+        },
+      ];
     case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES:
-      return (
-        <span>
-          ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>,{" "}
-          {valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem)},{" "}
-          {valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem)}
-        </span>
-      );
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
+        },
+        {
+          type: argType.IMMEDIATE,
+          value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
+        },
+      ];
     case ArgumentType.THREE_REGISTERS:
-      return (
-        <span>
-          ω<sub>{args?.firstRegisterIndex}</sub>, ω<sub>{args?.secondRegisterIndex}</sub>, ω
-          <sub>{args?.thirdRegisterIndex}</sub>
-        </span>
-      );
-
+      return [
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+        },
+        {
+          type: argType.REGISTER,
+          value: `ω<sub>${args?.thirdRegisterIndex}</sub>`,
+        },
+      ];
     default:
-      return "err";
+      return null;
   }
 };
