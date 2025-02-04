@@ -2,58 +2,12 @@ import { ExternalLink } from "lucide-react";
 import { Input } from "../ui/input";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
-import { MemorySegment, decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
+import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { SafeParseReturnType, z } from "zod";
 import { useAppSelector } from "@/store/hooks";
 import { selectInitialState } from "@/store/debugger/debuggerSlice";
-
-const PAGE_SHIFT = 12; // log_2(4096)
-const PAGE_SIZE = 1 << PAGE_SHIFT;
-function pageAlignUp(v: number) {
-  return (((v + PAGE_SIZE - 1) >> PAGE_SHIFT) << PAGE_SHIFT) >>> 0;
-}
-
-function asChunks(mem: MemorySegment[]): MemoryChunkItem[] {
-  const items = [];
-  for (const segment of mem) {
-    if (segment.data === null) {
-      continue;
-    }
-    let data = segment.data;
-    let address = segment.start;
-    while (data.length > 0) {
-      const pageOffset = address % PAGE_SIZE;
-      const lenForPage = PAGE_SIZE - pageOffset;
-      const contents = Array.from<number>(data.subarray(0, Math.min(data.length, lenForPage)));
-      items.push({
-        address,
-        contents,
-      });
-
-      // move data & address
-      data = data.subarray(contents.length);
-      address += contents.length;
-    }
-  }
-  return items;
-}
-function asPageMap(mem: MemorySegment[], isWriteable: boolean): PageMapItem[] {
-  const items = [];
-  for (const segment of mem) {
-    const pageOffset = segment.start % PAGE_SIZE;
-    const pageStart = segment.start - pageOffset;
-    const pageEnd = pageAlignUp(segment.end);
-    for (let i = pageStart; i < pageEnd; i += PAGE_SIZE) {
-      items.push({
-        address: i,
-        length: Math.min(PAGE_SIZE, pageEnd - i),
-        "is-writable": isWriteable,
-      });
-    }
-  }
-  return items;
-}
+import { getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 
 const validateJsonTestCaseSchema = (json: unknown) => {
   const pageMapSchema = z.object({
@@ -136,9 +90,8 @@ export const ProgramFileUpload = ({
         try {
           const { code, memory, registers } = decodeStandardProgram(uint8Array, new Uint8Array());
 
-          const pageMap: PageMapItem[] = asPageMap(memory.readable, false).concat(asPageMap(memory.writeable, true));
-
-          const chunks: MemoryChunkItem[] = asChunks(memory.readable).concat(asChunks(memory.writeable));
+          const pageMap: PageMapItem[] = getAsPageMap(memory);
+          const chunks: MemoryChunkItem[] = getAsChunks(memory);
 
           onFileUpload({
             program: Array.from(code),
