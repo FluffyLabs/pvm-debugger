@@ -52,6 +52,8 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
     // 4. `ecalli` instructions seem to have `// INVALID` comments next to them, but
     //    the assembler does not handle comments at all.
     // 5. disassembler produces unary minus (i.e. `r0 = -r7`), which isn't handled by the compiler.
+    // 6. disassembler produces <<r (rotate) which is not supported
+    // 7. diassembler produces only 32-bit representation of negative values `0xffffffff`
     const fixedLines: string[] = lines.map((l: string) => {
       // remove leading whitespace
       l = l.trim();
@@ -67,6 +69,10 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
       l = l.replace("invalid", "// invalid");
       // set first block as entry point
       l = l.replace("@block0", "pub @main");
+      // replace rotate with shift (INCORRECT!)
+      l = l.replace("<<r", "<<").replace(">>r", ">>");
+      // replace large values with their 64-bit extensions (INCORRECT!; just for fib)
+      l = l.replace("0xffffffff", "0xffffffffffffffff");
       return l;
     });
 
