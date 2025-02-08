@@ -4,14 +4,15 @@ import { INPUT_STYLES } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { Edit3, Check, HelpCircle, ArrowUp, ArrowDown, Trash } from "lucide-react";
+import { Edit3, Check, ArrowUp, ArrowDown, Trash } from "lucide-react";
 import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { AddressInput, MemoryRow } from "./MemoryInfinite";
+import { AddressInput, MemoryCell } from "./MemoryInfinite";
 import { MEMORY_SPLIT_STEP } from "@/store/utils";
-import { addressFormatter, FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
+import { FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import classNames from "classnames";
+import { valueToNumeralSystem } from "../Instructions/utils";
 
 const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType => {
   return (worker, address) => {
@@ -20,6 +21,12 @@ const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType
     return range?.data?.find((mem) => mem.address === address);
   };
 };
+
+const uint8ToHex = (value: Uint8Array) =>
+  "0x" +
+  Array.from(value)
+    .map((byte) => byte.toString(16).padStart(2, "0")) // Convert to hex and pad with leading zero if necessary
+    .join("");
 
 interface RangeRow {
   id: string;
@@ -132,20 +139,15 @@ function MemoryRangeRow({
   };
 
   const isInputsVisible = isEditing || isLast;
-  const lastAddressLength = addressFormatter(
-    matchingRange?.startAddress || 0 + (matchingRange?.length || 0),
-    numeralSystem,
-  ).length;
-
-  const flatData = new Uint8Array(rowData.flatMap((chunk) => chunk));
-  const interpretResult = getMemoryInterpretations(flatData, numeralSystem);
+  const flatData = rowData.flatMap((chunk) => chunk);
+  const interpretResult = getMemoryInterpretations(new Uint8Array(flatData), numeralSystem);
 
   return (
-    <Card className="p-3 rounded-none">
+    <Card className="p-3 border-0 border-b-2 rounded-none">
       <div className="flex items-center gap-3">
         {!isInputsVisible ? (
           <span className="font-mono">
-            {start}...+{length}
+            {valueToNumeralSystem(start, numeralSystem)}...+{valueToNumeralSystem(length, numeralSystem)}
           </span>
         ) : (
           <>
@@ -158,7 +160,7 @@ function MemoryRangeRow({
                 value={draftStart.toString()}
               />
             </div>
-            <div className="grid gap-1 max-w-[55px]">
+            <div className="grid gap-1 max-w-[65px]">
               <Label htmlFor={`length-${id}`}>Length</Label>
               <LengthInput
                 id={`length-${id}`}
@@ -208,55 +210,47 @@ function MemoryRangeRow({
         </div>
       </div>
 
-      <div className="mt-2 text-sm font-mono">
+      <div className="mt-4 mb-2 mx-2 text-sm font-mono">
         <div style={{ maxHeight: "100px", overflowY: "auto" }}>
-          {rowData.length === 0 ? (
+          {flatData.length === 0 ? (
             <div>(no data)</div>
           ) : (
-            rowData.map((chunkBytes, idx) => (
-              <div key={idx} className="flex items-start">
-                <MemoryRow
-                  address={draftStart + idx * MEMORY_SPLIT_STEP}
-                  bytes={chunkBytes}
-                  selectedAddress={null}
-                  addressLength={lastAddressLength}
-                  findMemoryForWorker={findMemoryForWorkerRange(matchingRange?.startAddress || 0)}
-                />
-              </div>
+            flatData.map((byte, idx) => (
+              <Popover>
+                <PopoverTrigger>
+                  <MemoryCell
+                    index={idx}
+                    address={draftStart + idx}
+                    value={byte}
+                    selectedAddress={null}
+                    findMemoryForWorker={findMemoryForWorkerRange(matchingRange?.startAddress || 0)}
+                    isPageTooltipDisabled
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-2">
+                  <a
+                    href={`https://papi.fluffylabs.dev/?data=${uint8ToHex(new Uint8Array(flatData))}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline text-blue-600 block mb-2"
+                  >
+                    Open codec tool
+                  </a>
+
+                  {!interpretResult ? (
+                    <div>(no data)</div>
+                  ) : (
+                    <div className="text-sm space-y-1 font-mono">
+                      {interpretResult.map((interpretation) => (
+                        <div key={interpretation}>{interpretation}</div>
+                      ))}
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
             ))
           )}
         </div>
-      </div>
-
-      <div className="mt-2">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex gap-1 items-center">
-              <HelpCircle className="h-4 w-4" />
-              Interpretations
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-2">
-            <a
-              href={`https:codec.fluffylabs.dev?memory=${flatData}&numeralSystem=dec`}
-              target="_blank"
-              rel="noreferrer"
-              className="underline text-blue-600 block mb-2"
-            >
-              Open codec tool
-            </a>
-
-            {!interpretResult ? (
-              <div>(no data)</div>
-            ) : (
-              <div className="text-sm space-y-1 font-mono">
-                <div>{interpretResult.u16Line}</div>
-                <div>{interpretResult.u32Line}</div>
-                <div>{interpretResult.u64Line}</div>
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
       </div>
     </Card>
   );

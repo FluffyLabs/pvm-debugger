@@ -24,17 +24,19 @@ const ITEM_SIZE = 24;
 const PAGE_SIZE = 4096;
 const BG_COLOR = "#22cccc";
 
-const MemoryCell = ({
+export const MemoryCell = ({
   value,
   address,
   selectedAddress,
   index,
   findMemoryForWorker,
+  isPageTooltipDisabled = false,
 }: {
   value: number;
   address: number;
   selectedAddress: number | null;
   index: number;
+  isPageTooltipDisabled?: boolean;
   findMemoryForWorker: FindMemoryForWorkerType;
 }) => {
   const workers = useAppSelector(selectWorkers);
@@ -66,7 +68,7 @@ const MemoryCell = ({
       >
         {isEqualAcrossWorkers ? (
           <TooltipProvider>
-            <Tooltip delayDuration={100}>
+            <Tooltip delayDuration={100} open={isPageTooltipDisabled ? false : undefined}>
               <TooltipTrigger>
                 {valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}
               </TooltipTrigger>

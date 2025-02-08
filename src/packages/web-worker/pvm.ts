@@ -32,7 +32,7 @@ export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialSt
   }
 
   const pageSize = 2 ** 12;
-  const maxAddressFromPageMap = Math.max(...pageMap.map((page) => page.address));
+  const maxAddressFromPageMap = Math.max(...pageMap.map((page) => page.address + page.length));
   const hasMemoryLayout = maxAddressFromPageMap >= 0;
   const heapStartIndex = tryAsSbrkIndex(hasMemoryLayout ? maxAddressFromPageMap + pageSize : 0);
   const heapEndIndex = tryAsSbrkIndex(2 ** 32 - 2 * 2 ** 16 - 2 ** 24);

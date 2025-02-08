@@ -26,16 +26,19 @@ const AddressCell = ({
   breakpointAddresses,
   programRow,
   onAddressClick,
+  style,
 }: {
   breakpointAddresses: (number | undefined)[];
   programRow: ProgramRow;
   onAddressClick: (address: number) => void;
+  style: React.CSSProperties;
 }) => {
   const [isHover, setIsHover] = useState(false);
 
   return (
     <TableCell
       className="p-1.5 border-transparent cursor-pointer relative"
+      style={style}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
@@ -60,6 +63,7 @@ export const InstructionItem = forwardRef(
       onClick,
       onAddressClick,
       breakpointAddresses,
+      style,
     }: {
       status?: Status;
       isLast: boolean;
@@ -69,6 +73,7 @@ export const InstructionItem = forwardRef(
       onClick: (r: ProgramRow) => void;
       onAddressClick: (address: number) => void;
       breakpointAddresses: (number | undefined)[];
+      style: React.CSSProperties;
     },
     ref: ForwardedRef<HTMLTableRowElement>,
   ) => {
@@ -91,18 +96,22 @@ export const InstructionItem = forwardRef(
           test-id="instruction-item"
           style={{
             backgroundColor,
-            borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined,
+            ...style,
           }}
           title={programRow.block.name}
         >
           {instructionMode === InstructionMode.BYTECODE && (
             <>
               <AddressCell
+                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
               />
-              <TableCell className="p-1.5">
+              <TableCell
+                className="p-1.5"
+                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
+              >
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
                   <span className="text-gray-500">
                     {[...programRow.instructionBytes]
@@ -116,16 +125,23 @@ export const InstructionItem = forwardRef(
           {instructionMode === InstructionMode.ASM && (
             <>
               <AddressCell
+                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
               />
-              <TableCell className="p-1.5">
+              <TableCell
+                className="p-1.5"
+                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
+              >
                 <a onClick={fillSearch} className="cursor-pointer">
                   <span className="uppercase font-bold">{programRow.name}</span>
                 </a>
               </TableCell>
-              <TableCell className="p-1.5 whitespace-nowrap">
+              <TableCell
+                className="p-1.5 whitespace-nowrap"
+                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
+              >
                 <span className="">
                   {"args" in programRow &&
                     mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)}
