@@ -17,6 +17,7 @@ import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useState } from "react";
 import { ErrorWarningTooltip } from "../ErrorWarningTooltip";
 import { isSerializedError } from "@/store/utils";
+import { Separator } from "../ui/separator";
 
 export const DebuggerControlls = () => {
   const debuggerActions = useDebuggerActions();
@@ -89,7 +90,7 @@ export const DebuggerControlls = () => {
   };
 
   return (
-    <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3">
+    <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3 bg-gray-100 p-3 rounded-xl border border-gray-200">
       <div className="md:mr-3">
         <ProgramLoader
           initialState={initialState}
@@ -99,8 +100,10 @@ export const DebuggerControlls = () => {
           }}
         />
       </div>
+      <Separator orientation="vertical" />
       <Button
         className="md:mr-3"
+        variant="ghost"
         onClick={() => {
           debuggerActions.restartProgram(initialState);
           setError(undefined);
@@ -110,14 +113,16 @@ export const DebuggerControlls = () => {
         <RefreshCcw className="w-3.5 md:mr-1.5" />
         <span className="hidden md:block">Reset</span>
       </Button>
+      <Separator orientation="vertical" />
       {!isDebugFinished && isRunMode ? (
-        <Button className="md:mr-3" onClick={handlePauseProgram}>
+        <Button className="md:mr-3" variant="ghost" onClick={handlePauseProgram}>
           <Pause className="w-3.5 md:mr-1.5" />
           <span className="hidden md:block">Stop</span>
         </Button>
       ) : (
         <Button
           className="md:mr-3"
+          variant="ghost"
           onClick={handleRunProgram}
           disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
         >
@@ -125,8 +130,10 @@ export const DebuggerControlls = () => {
           <span className="hidden md:block">Run</span>
         </Button>
       )}
+      <Separator orientation="vertical" />
       <Button
         className="md:mr-3"
+        variant="ghost"
         onClick={onNext}
         disabled={
           (!isDebugFinished && isRunMode) ||

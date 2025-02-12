@@ -6,7 +6,7 @@ import { InstructionMode } from "./types";
 import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { TableCell, TableRow } from "../ui/table";
-import { ProgramRow } from ".";
+import { ProgramRow } from "./InstructionsTable";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";

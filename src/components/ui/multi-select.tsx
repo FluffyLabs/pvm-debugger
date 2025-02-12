@@ -230,13 +230,13 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                     selectedValues.slice(0, maxCount).map((value) => {
                       const option = options.find((o) => o.value === value);
                       return (
-                        <span key={value} className="text-black px-2">
+                        <span key={value} className="text-gray-500 px-2">
                           {option?.label}
                         </span>
                       );
                     })}
                   {!showOptionsAsTags && selectedValues.length > maxCount && (
-                    <span className="text-black px-2">{selectedValues.length} PVMs in parallel</span>
+                    <span className="text-gray-500 px-2">{selectedValues.length} PVMs in parallel</span>
                   )}
                   {showOptionsAsTags &&
                     selectedValues.slice(0, maxCount).map((value) => {
@@ -290,7 +290,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                       }}
                     />
                   )}
-                  <Separator orientation="vertical" className="flex min-h-6 h-full" />
                   <ChevronDown className="h-4 mx-2 cursor-pointer text-muted-foreground" />
                 </div>
               </div>
