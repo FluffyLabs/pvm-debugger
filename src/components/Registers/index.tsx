@@ -110,17 +110,44 @@ const ComputedValue = ({
   );
 };
 
+const EditableField = ({
+  onChange,
+  value,
+}: {
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  value?: number | bigint;
+}) => {
+  const { numeralSystem } = useContext(NumeralSystemContext);
+
+  return (
+    <div className="flex-[3]">
+      <Input
+        className="w-20 h-6 m-0 py-0 px-[4px] text-md border-white hover:border-input"
+        onChange={onChange}
+        onKeyUp={(e) => {
+          if (e.key === "Enter") {
+            e.currentTarget.blur();
+          }
+        }}
+        value={valueToNumeralSystem(value ?? 0, numeralSystem)}
+      />
+    </div>
+  );
+};
+
 export const Registers = ({
   currentState,
   previousState,
   onCurrentStateChange,
   allowEditingPc,
+  allowEditingGas,
   allowEditingRegisters,
 }: {
   currentState: ExpectedState;
   previousState: ExpectedState;
   onCurrentStateChange: (changedState: ExpectedState) => void;
   allowEditingPc: boolean;
+  allowEditingGas: boolean;
   allowEditingRegisters: boolean;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
@@ -134,25 +161,17 @@ export const Registers = ({
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">PC</p>
               {allowEditingPc ? (
-                <div className="flex-[3]">
-                  <Input
-                    className="w-20 h-6 m-0 py-0 px-[4px] text-md border-white hover:border-input"
-                    onChange={(e) => {
-                      const value = e.target?.value;
-                      const newValue = stringToNumber(value, Number);
-                      onCurrentStateChange({
-                        ...currentState,
-                        pc: newValue,
-                      });
-                    }}
-                    onKeyUp={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    value={valueToNumeralSystem(currentState.pc ?? 0, numeralSystem)}
-                  />
-                </div>
+                <EditableField
+                  onChange={(e) => {
+                    const value = e.target?.value;
+                    const newValue = stringToNumber(value, Number);
+                    onCurrentStateChange({
+                      ...currentState,
+                      pc: newValue,
+                    });
+                  }}
+                  value={currentState.pc}
+                />
               ) : (
                 <ComputedValue
                   value={currentState.pc}
@@ -164,12 +183,26 @@ export const Registers = ({
             </div>
             <div className="flex flex-row items-center justify-between w-full mb-2">
               <p className="flex-[2]">Gas</p>
-              <ComputedValue
-                value={currentState.gas}
-                previousValue={previousState.gas}
-                propName="gas"
-                workers={workers}
-              />
+              {allowEditingGas ? (
+                <EditableField
+                  onChange={(e) => {
+                    const value = e.target?.value;
+                    const newValue = BigInt(stringToNumber(value, Number));
+                    onCurrentStateChange({
+                      ...currentState,
+                      gas: newValue,
+                    });
+                  }}
+                  value={currentState.gas}
+                />
+              ) : (
+                <ComputedValue
+                  value={currentState.gas}
+                  previousValue={previousState.gas}
+                  propName="gas"
+                  workers={workers}
+                />
+              )}
             </div>
             <div className="flex flex-row items-center justify-between w-full">
               <p className="flex-[2]">Status</p>

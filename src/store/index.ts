@@ -3,7 +3,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, persistStore } from "redux-persist";
 import workersReducer from "./workers/workersSlice";
-import debuggerReducer, { DebuggerState } from "./debugger/debuggerSlice";
+import debuggerReducer, { debuggerSliceListenerMiddleware, DebuggerState } from "./debugger/debuggerSlice";
 
 const persistConfig = {
   key: "debugger",
@@ -19,7 +19,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
+    }).prepend(debuggerSliceListenerMiddleware.middleware),
 });
 
 setupListeners(store.dispatch);

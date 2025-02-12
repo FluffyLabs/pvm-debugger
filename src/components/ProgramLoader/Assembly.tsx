@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ProgramUploadFileOutput } from "./types";
-import { InitialState } from "../../types/pvm";
+import { InitialState, RegistersArray } from "../../types/pvm";
 import classNames from "classnames";
 import { compile_assembly, disassemble } from "@typeberry/spectool-wasm";
 import { mapUploadFileInputToOutput } from "./utils";
@@ -52,6 +52,8 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
     // 4. `ecalli` instructions seem to have `// INVALID` comments next to them, but
     //    the assembler does not handle comments at all.
     // 5. disassembler produces unary minus (i.e. `r0 = -r7`), which isn't handled by the compiler.
+    // 6. disassembler produces <<r (rotate) which is not supported
+    // 7. diassembler produces only 32-bit representation of negative values `0xffffffff`
     const fixedLines: string[] = lines.map((l: string) => {
       // remove leading whitespace
       l = l.trim();
@@ -65,6 +67,12 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
       l = l.replace(/= -/, "= 0 -");
       // replace `invalid` instructions with a comment
       l = l.replace("invalid", "// invalid");
+      // set first block as entry point
+      l = l.replace("@block0", "pub @main");
+      // replace rotate with shift (INCORRECT!)
+      l = l.replace("<<r", "<<").replace(">>r", ">>");
+      // replace large values with their 64-bit extensions (INCORRECT!; just for fib)
+      l = l.replace("0xffffffff", "0xffffffffffffffff");
       return l;
     });
 
@@ -114,7 +122,7 @@ export const Assembly = ({
         const newInitialState = {
           ...initialState,
         };
-        newInitialState.regs = output.initial.regs;
+        newInitialState.regs = truncateRegs(output.initial.regs);
         // this is incorrect, but we would need to alter the
         // assembly to include the actual data:
         // pub @main: (pc)
@@ -130,11 +138,12 @@ export const Assembly = ({
         if ((output.initial.pageMap?.length ?? 0) !== 0) {
           newInitialState.pageMap = output.initial.pageMap;
         }
-        // we want to keep all of the old stuff to avoid re-rendering.
-        output.initial = newInitialState;
-        // TODO [ToDr] Assembly for 64-bit is temporarily broken, so we don't trigger
-        // the `onProgramLoad` here.
-        // onProgramLoad(output);
+        // if there are no changes do not re-render.
+        if (JSON.stringify(output.initial) !== JSON.stringify(newInitialState)) {
+          // we want to keep all of the old stuff to avoid re-rendering.
+          output.initial = newInitialState;
+          onProgramLoad(output);
+        }
         setError(undefined);
       } catch (e) {
         if (e instanceof Error) {
@@ -157,15 +166,6 @@ export const Assembly = ({
 
   const [error, setError] = useState<string>();
   const [assembly, setAssembly] = useState(defaultAssembly);
-  const [isFirstCompilation, setFirstCompilation] = useState(true);
-
-  // compile the assembly for the first time
-  useEffect(() => {
-    if (isFirstCompilation) {
-      compile(assembly);
-      setFirstCompilation(false);
-    }
-  }, [compile, assembly, isFirstCompilation]);
 
   const isError = !!error;
 
@@ -195,8 +195,6 @@ export const Assembly = ({
           className="h-full"
           height="100%"
           placeholder="Try writing some PolkaVM assembly code."
-          /* TODO [ToDr] Marking as readonly since the 64-bit assembly is not working correctly yet */
-          readOnly
           value={assembly}
           onChange={compile}
         />
@@ -222,4 +220,16 @@ function isArrayEqual<T>(a: T[], b: T[]) {
   }
 
   return true;
+}
+
+function truncateRegs(regs: RegistersArray | undefined) {
+  if (!regs) {
+    return regs;
+  }
+
+  for (let i = 0; i < regs.length; i++) {
+    // currently the assembler requires that registers are provided as u32
+    regs[i] = regs[i] & 0xffff_ffffn;
+  }
+  return regs;
 }
