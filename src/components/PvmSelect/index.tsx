@@ -189,13 +189,17 @@ export const PvmSelect = () => {
   }, [selectedPvms]);
 
   return (
-    <div className="flex">
-      {error && <ErrorWarningTooltip classNames="mr-3" msg={error} />}
+    <div
+      className={classNames({
+        "flex text-gray-500 border rounded-lg border-gray-500": true,
+        "border-red-500": !!error,
+      })}
+    >
+      {error && <ErrorWarningTooltip msg={error} />}
       <MultiSelect
         test-id="pvm-select"
         maxCount={1}
         required
-        className={classNames({ "border-red-500": !!error })}
         options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label, removable: pvm.removable }))}
         selectedValues={selectedPvms}
         defaultValue={[AvailablePvms.TYPEBERRY]}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { useState } from "react";
 import { InitialState } from "@/types/pvm";
 import { Loader } from "./Loader.tsx";
+import { Upload } from "lucide-react";
 
 export const ProgramLoader = (props: { initialState: InitialState; program: number[]; onOpen: () => void }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -25,7 +26,9 @@ export const ProgramLoader = (props: { initialState: InitialState; program: numb
       }}
     >
       <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button>Load</Button>
+        <Button>
+          <Upload size="12px" className="mr-2" /> Load
+        </Button>
       </DialogTrigger>
       <DialogContent className="min-h-[500px] max-h-[85vh] flex flex-col overflow-auto">
         <DialogHeader>

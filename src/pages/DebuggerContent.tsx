@@ -2,12 +2,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
 import { useCallback, useRef } from "react";
 import { CurrentInstruction } from "@/types/pvm.ts";
-import {
-  setClickedInstruction,
-  setInstructionMode,
-  setIsProgramEditMode,
-  setIsProgramInvalid,
-} from "@/store/debugger/debuggerSlice.ts";
+import { setClickedInstruction, setIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { Assembly } from "@/components/ProgramLoader/Assembly.tsx";
@@ -18,11 +13,6 @@ import { MobileRegisters } from "@/components/MobileRegisters";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
-import { Label } from "@/components/ui/label.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
-import { Button } from "@/components/ui/button.tsx";
-import { Pencil, PencilOff } from "lucide-react";
-import { NumeralSystemSwitch } from "@/components/NumeralSystemSwitch";
 import { HostCalls } from "@/components/HostCalls";
 
 const DebuggerContent = () => {
@@ -32,7 +22,6 @@ const DebuggerContent = () => {
     program,
     initialState,
     isProgramEditMode,
-    isProgramInvalid,
     programPreviewResult,
     clickedInstruction,
     instructionMode,
@@ -76,7 +65,7 @@ const DebuggerContent = () => {
         {!!program.length && (
           <>
             {isProgramEditMode && (
-              <div className="border-2 rounded-md h-full p-2">
+              <div className="border-2 rounded-md h-full">
                 {instructionMode === InstructionMode.ASM ? (
                   <Assembly
                     program={program}
@@ -156,41 +145,6 @@ const DebuggerContent = () => {
           open={clickedInstruction !== null && isMobileViewActive()}
           onClose={() => setClickedInstruction(null)}
         />
-      </div>
-
-      <div className="col-span-12 md:col-span-4 max-sm:order-first flex items-center justify-between my-3">
-        <div className={`flex items-center space-x-2 ${!program.length ? "invisible" : "visible"}`}>
-          <Label htmlFor="instruction-mode">ASM</Label>
-          <Switch
-            id="instruction-mode"
-            checked={instructionMode === InstructionMode.BYTECODE}
-            onCheckedChange={(checked) =>
-              dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))
-            }
-          />
-          <Label htmlFor="instruction-mode">RAW</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="link"
-            size="icon"
-            className={!program.length ? "invisible" : "visible"}
-            disabled={!program.length || isProgramInvalid}
-            title="Edit the code"
-            onClick={() => {
-              if (isProgramEditMode) {
-                debuggerActions.startProgram(initialState, program);
-                dispatch(setIsProgramEditMode(false));
-              } else {
-                debuggerActions.restartProgram(initialState);
-                dispatch(setIsProgramEditMode(true));
-              }
-            }}
-          >
-            {isProgramEditMode ? <PencilOff /> : <Pencil />}
-          </Button>
-        </div>
-        <NumeralSystemSwitch className="ml-3 md:hidden" />
       </div>
     </>
   );

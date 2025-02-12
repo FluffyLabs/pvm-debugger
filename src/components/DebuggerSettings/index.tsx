@@ -49,7 +49,7 @@ export const DebuggerSettings = () => {
     <Dialog>
       <DialogTrigger>
         <div className="opacity-60 mt-2">
-          <Settings />
+          <Settings className="text-gray-400" />
         </div>
       </DialogTrigger>
       <DialogContent>

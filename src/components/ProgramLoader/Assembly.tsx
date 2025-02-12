@@ -5,6 +5,7 @@ import classNames from "classnames";
 import { compile_assembly, disassemble } from "@typeberry/spectool-wasm";
 import { mapUploadFileInputToOutput } from "./utils";
 import CodeMirror from "@uiw/react-codemirror";
+import { ProgramEdit } from "../ProgramEdit";
 
 const DEFAULT_ASSEMBLY = `pre: a0 = 9
 pre: ra = 0xffff0000
@@ -171,21 +172,23 @@ export const Assembly = ({
 
   return (
     <div className="h-full flex flex-col">
-      <p className="pb-2 mb-1">
-        <small>
-          Experimental assembler format as defined in{" "}
-          <a
-            target="_blank"
-            href="https://github.com/koute/polkavm/blob/master/crates/polkavm-common/src/assembler.rs"
-            className="underline"
-          >
-            koute/polkavm
-          </a>
-          .
-        </small>
-      </p>
+      <ProgramEdit
+        startSlot={
+          <small>
+            Experimental assembler format as defined in{" "}
+            <a
+              target="_blank"
+              href="https://github.com/koute/polkavm/blob/master/crates/polkavm-common/src/assembler.rs"
+              className="underline"
+            >
+              koute/polkavm
+            </a>
+            .
+          </small>
+        }
+      />
       <div
-        className={classNames("flex-auto gap-1 font-mono border-2 rounded-md overflow-auto", {
+        className={classNames("flex-auto gap-1 font-mono overflow-auto", {
           "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
           "border-red-500": isError,
         })}
