@@ -56,13 +56,13 @@ export const runInit = async ({ pvm, program, initialState }: InitParams): Promi
 
     return {
       status: CommandStatus.SUCCESS,
-      initialState: pvm ? getState(pvm) : {},
+      initialState: pvm ? await getState(pvm) : {},
     };
   } catch (error) {
     return {
       status: CommandStatus.ERROR,
       error,
-      initialState: pvm ? getState(pvm) : {},
+      initialState: pvm ? await getState(pvm) : {},
     };
   }
 };

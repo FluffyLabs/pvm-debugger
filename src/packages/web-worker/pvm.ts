@@ -9,7 +9,7 @@ import {
 import { ArgsDecoder, Registers } from "@typeberry/pvm-debugger-adapter";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
 import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm-debugger-adapter";
-export const initPvm = (pvm: InternalPvmInstance, program: Uint8Array, initialState: InitialState) => {
+export const initPvm = async (pvm: InternalPvmInstance, program: Uint8Array, initialState: InitialState) => {
   const initialMemory = initialState.memory ?? [];
   const pageMap = initialState.pageMap ?? [];
 

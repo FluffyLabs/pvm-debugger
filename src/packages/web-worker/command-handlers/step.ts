@@ -25,7 +25,7 @@ const step = async ({ pvm, program, stepsToPerform }: StepParams) => {
   }
 
   let isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
-  const state = getState(pvm);
+  const state = await getState(pvm);
 
   // It's not really finished if we're in host status
   if (isFinished && state.status === Status.HOST) {
@@ -34,7 +34,7 @@ const step = async ({ pvm, program, stepsToPerform }: StepParams) => {
 
   const result = nextInstruction(state.pc ?? 0, program) as unknown as CurrentInstruction;
 
-  return { result, state, isFinished, exitArg: pvm.getExitArg() };
+  return { result, state, isFinished, exitArg: await pvm.getExitArg() };
 };
 
 export const runStep = async ({

@@ -8,16 +8,16 @@ import { logger } from "@/utils/loggerService.tsx";
 import { PvmApiInterface } from "./types.ts";
 import { createAssemblyScriptWasmPvmShell } from "./wasmAsShell.ts";
 
-export function getState(pvm: PvmApiInterface): ExpectedState {
+export async function getState(pvm: PvmApiInterface): Promise<ExpectedState> {
   const regs = isInternalPvm(pvm)
-    ? (Array.from(pvm.getRegisters()) as RegistersArray)
-    : uint8asRegs(pvm.getRegisters());
+    ? (Array.from(await pvm.getRegisters()) as RegistersArray)
+    : uint8asRegs(await pvm.getRegisters());
 
   return {
-    pc: pvm.getProgramCounter(),
+    pc: await pvm.getProgramCounter(),
     regs,
-    gas: pvm.getGasLeft(),
-    status: pvm.getStatus(),
+    gas: await pvm.getGasLeft(),
+    status: await pvm.getStatus(),
   };
 }
 
@@ -85,6 +85,13 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiI
 
     if (wasmMethods.__wbindgen_add_to_stack_pointer) {
       logger.info("Rust WASM module loaded", wasmInstance.exports);
+
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      if (wasmModule["__wbg_set_wasm"]) {
+        return wasmModule as unknown as PvmApiInterface;
+      }
+
       const wasmPvmShell = createWasmPvmShell();
       wasmPvmShell.__wbg_set_wasm(wasmInstance.exports);
       return wasmPvmShell;
@@ -108,13 +115,13 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiI
   }
 }
 
-export function getMemorySize(pvm: PvmApiInterface | null) {
+export async function getMemorySize(pvm?: PvmApiInterface | null) {
   if (!pvm) {
     logger.warn("Accesing memory of not initialized PVM");
     return null;
   }
 
-  const page = pvm.getPageDump(0);
+  const page = await pvm.getPageDump(0);
 
   if (!page) {
     logger.warn("PVM memory page is null");

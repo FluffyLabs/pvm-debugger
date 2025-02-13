@@ -559,6 +559,18 @@ export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id
     return;
   }
 
+  await Promise.all(
+    state.workers.map(async (worker) => {
+      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+        command: Commands.UNLOAD,
+      });
+
+      if (hasCommandStatusError(data)) {
+        throw data.error;
+      }
+    }),
+  );
+
   worker.worker.terminate();
 
   return id;

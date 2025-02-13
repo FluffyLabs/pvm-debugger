@@ -42,6 +42,7 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
             };
       }
     | { command: Commands.SET_SERVICE_ID }
+    | { command: Commands.UNLOAD }
   );
 
 type CommonWorkerRequestParams = { messageId: string };
@@ -57,7 +58,8 @@ export type CommandWorkerRequestParams =
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
   | { command: Commands.SET_STORAGE; payload: { storage: Storage | null } }
   | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers } }
-  | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } };
+  | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } }
+  | { command: Commands.UNLOAD };
 
 export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
 
@@ -71,12 +73,14 @@ export enum Commands {
   SET_STORAGE = "set_storage",
   HOST_CALL = "host_call",
   SET_SERVICE_ID = "set_service_id",
+  UNLOAD = "unload",
 }
 
 export enum PvmTypes {
   BUILT_IN = "built-in",
   WASM_URL = "wasm-url",
   WASM_FILE = "wasm-file",
+  WASM_WS = "wasm-websocket",
 }
 
 export enum CommandStatus {

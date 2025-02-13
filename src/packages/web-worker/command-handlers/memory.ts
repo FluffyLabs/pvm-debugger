@@ -16,7 +16,7 @@ export type MemoryResponse = {
   error?: unknown;
 };
 
-export const getMemoryPage = (pageNumber: number, pvm: PvmApiInterface | null) => {
+export const getMemoryPage = async (pageNumber: number, pvm: PvmApiInterface | null) => {
   if (!pvm) {
     return new Uint8Array();
   }
@@ -24,7 +24,7 @@ export const getMemoryPage = (pageNumber: number, pvm: PvmApiInterface | null) =
   return pvm.getPageDump(pageNumber) || new Uint8Array();
 };
 
-const getMemory = ({
+const getMemory = async ({
   pvm,
   startAddress,
   stopAddress,
@@ -34,14 +34,14 @@ const getMemory = ({
   startAddress: number;
   stopAddress: number;
   memorySize: number;
-}): Uint8Array => {
+}): Promise<Uint8Array> => {
   const memoryChunk = new Uint8Array(stopAddress - startAddress);
   let memoryIndex = 0;
   let address = startAddress;
 
   while (address < stopAddress) {
     const pageNumber = Math.floor(address / memorySize);
-    const page = getMemoryPage(pageNumber, pvm);
+    const page = await getMemoryPage(pageNumber, pvm);
     let offset = address % memorySize;
 
     while (address < stopAddress && offset < memorySize) {
@@ -97,7 +97,7 @@ export const runMemory = async (params: MemoryParams): Promise<MemoryResponse> =
   }
 
   try {
-    const memoryChunk = getMemory({
+    const memoryChunk = await getMemory({
       pvm: params.pvm,
       startAddress: params.startAddress,
       stopAddress: params.stopAddress,

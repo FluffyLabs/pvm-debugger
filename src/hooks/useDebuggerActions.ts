@@ -182,6 +182,17 @@ export const useDebuggerActions = () => {
                 },
               }),
             ).unwrap();
+          } else if (type === AvailablePvms.WASM_WS) {
+            await dispatch(createWorker(id)).unwrap();
+            await dispatch(
+              loadWorker({
+                id,
+                payload: {
+                  type: PvmTypes.WASM_WS,
+                  params,
+                },
+              }),
+            ).unwrap();
           }
         }),
       );
