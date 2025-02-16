@@ -11,7 +11,7 @@ import { Instructions } from "@/components/Instructions";
 import { Registers } from "@/components/Registers";
 import { MobileRegisters } from "@/components/MobileRegisters";
 import { MemoryPreview } from "@/components/MemoryPreview";
-import { KnowledgeBase } from "@/components/KnowledgeBase";
+// import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
 import { HostCalls } from "@/components/HostCalls";
 
@@ -58,7 +58,7 @@ const DebuggerContent = () => {
 
   return (
     <>
-      <div className="col-span-12 md:col-span-4 max-h-[70vh] max-sm:min-h-[330px]">
+      <div className="col-span-12 md:col-span-6 max-h-[70vh] max-sm:min-h-[330px]">
         <HostCalls />
 
         {!program.length && <InitialLoadProgramCTA />}
@@ -110,7 +110,7 @@ const DebuggerContent = () => {
         )}
       </div>
 
-      <div className="max-sm:hidden md:col-span-2">
+      <div className="max-sm:hidden md:col-span-3">
         <Registers
           currentState={isProgramEditMode ? initialState : currentState}
           previousState={isProgramEditMode ? initialState : previousState}
@@ -134,10 +134,10 @@ const DebuggerContent = () => {
       <div className="max-sm:hidden col-span-12 md:col-span-3">
         <MemoryPreview />
       </div>
-
+      {/*
       <div className="max-sm:hidden md:col-span-3 overflow-hidden">
         <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstructionEnriched} />
-      </div>
+      </div> */}
 
       <div className="md:hidden col-span-12 order-last" ref={mobileView}>
         <MobileKnowledgeBase

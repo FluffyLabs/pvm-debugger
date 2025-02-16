@@ -90,7 +90,7 @@ export const DebuggerControlls = () => {
   };
 
   return (
-    <div className="col-span-12 md:col-span-6 max-sm:order-2 flex align-middle max-sm:justify-between mb-3 bg-gray-100 p-3 rounded-xl border border-gray-200">
+    <div className="flex align-middle max-sm:justify-between mb-3 bg-gray-100 p-2 rounded-xl border border-gray-200">
       <div className="md:mr-3">
         <ProgramLoader
           initialState={initialState}
@@ -100,7 +100,6 @@ export const DebuggerControlls = () => {
           }}
         />
       </div>
-      <Separator orientation="vertical" />
       <Button
         className="md:mr-3"
         variant="ghost"
@@ -130,7 +129,6 @@ export const DebuggerControlls = () => {
           <span className="hidden md:block">Run</span>
         </Button>
       )}
-      <Separator orientation="vertical" />
       <Button
         className="md:mr-3"
         variant="ghost"
