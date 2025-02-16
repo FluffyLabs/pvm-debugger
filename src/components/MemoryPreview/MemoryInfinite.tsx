@@ -54,7 +54,7 @@ export const MemoryCell = ({
       className={classNames("relative mr-[1px]", {
         "text-gray-700": (index + 1) % 2 === 0,
         "text-gray-950": (index + 1) % 2 === 1,
-        "font-bold": value !== 0,
+        "font-bold text-brand": value !== 0,
         "opacity-50": isEqualAcrossWorkers && value === 0,
       })}
     >
@@ -158,7 +158,7 @@ export const MemoryRow = ({
       >
         {displayAddress}
       </div>
-      <div className="font-mono font-medium pl-1">
+      <div className="font-mono font-medium pl-2 flex justify-around w-full">
         {bytes.map((byte, index) => (
           <MemoryCell
             findMemoryForWorker={findMemoryForWorker}
@@ -289,7 +289,7 @@ export const MemoryTable = ({
           return (
             <div
               style={style}
-              className="top-0 left-0 flex absolute"
+              className="top-0 left-0 flex absolute w-full"
               data-index={index}
               ref={rowVirtualizer.measureElement}
               key={virtualRow.key}

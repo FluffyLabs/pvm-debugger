@@ -62,7 +62,6 @@ const ComputedValue = ({
     return (
       <p
         className={classNames({
-          "flex-[3]": true,
           "pl-2": true,
           "opacity-60": value === 0 || value === 0n || value === "0",
         })}
@@ -73,10 +72,9 @@ const ComputedValue = ({
   }
 
   return (
-    <div className="flex-[3] pl-2">
+    <div className="pl-2">
       <div
         className={classNames({
-          "flex-[3]": true,
           "text-blue-500": value !== previousValue,
           "text-red-500": !isEqualAcrossWorkers,
         })}
@@ -120,18 +118,16 @@ const EditableField = ({
   const { numeralSystem } = useContext(NumeralSystemContext);
 
   return (
-    <div className="flex-[3]">
-      <Input
-        className="w-20 h-6 m-0 py-0 px-[4px] text-md border-white hover:border-input"
-        onChange={onChange}
-        onKeyUp={(e) => {
-          if (e.key === "Enter") {
-            e.currentTarget.blur();
-          }
-        }}
-        value={valueToNumeralSystem(value ?? 0, numeralSystem)}
-      />
-    </div>
+    <Input
+      className="m-auto w-20 h-6 py-0 px-[4px] text-md border-white hover:border-input"
+      onChange={onChange}
+      onKeyUp={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        }
+      }}
+      value={valueToNumeralSystem(value ?? 0, numeralSystem)}
+    />
   );
 };
 
@@ -155,102 +151,112 @@ export const Registers = ({
 
   return (
     <div className="border-2 rounded-md h-[70vh] overflow-auto">
-      <div className="p-3">
-        <div>
-          <div className="font-mono flex flex-col items-start text-xs">
-            <div className="flex flex-row items-center justify-between w-full mb-2">
-              <p className="flex-[2]">PC</p>
-              {allowEditingPc ? (
-                <EditableField
-                  onChange={(e) => {
-                    const value = e.target?.value;
-                    const newValue = stringToNumber(value, Number);
-                    onCurrentStateChange({
-                      ...currentState,
-                      pc: newValue,
-                    });
-                  }}
-                  value={currentState.pc}
-                />
-              ) : (
-                <ComputedValue
-                  value={currentState.pc}
-                  previousValue={previousState.pc}
-                  propName="pc"
-                  workers={workers}
-                />
-              )}
-            </div>
-            <div className="flex flex-row items-center justify-between w-full mb-2">
-              <p className="flex-[2]">Gas</p>
-              {allowEditingGas ? (
-                <EditableField
-                  onChange={(e) => {
-                    const value = e.target?.value;
-                    const newValue = BigInt(stringToNumber(value, Number));
-                    onCurrentStateChange({
-                      ...currentState,
-                      gas: newValue,
-                    });
-                  }}
-                  value={currentState.gas}
-                />
-              ) : (
-                <ComputedValue
-                  value={currentState.gas}
-                  previousValue={previousState.gas}
-                  propName="gas"
-                  workers={workers}
-                />
-              )}
-            </div>
-            <div className="flex flex-row items-center justify-between w-full">
-              <p className="flex-[2]">Status</p>
-              {currentState.status !== undefined && previousState.status !== undefined && (
-                <ComputedValue
-                  value={currentState.status}
-                  previousValue={previousState.status}
-                  propName="status"
-                  formatter={(value) => (
-                    <span style={{ color: getStatusColor(Number(value)) }} test-id="program-status">
-                      {Status[Number(value)] ?? `Invalid(${value})`}
-                    </span>
-                  )}
-                  workers={workers}
-                />
-              )}
-            </div>
-
-            <hr className="w-full h-px mx-auto bg-gray-100 my-2" />
-
-            {currentState.regs?.map((_: unknown, regNo: number) => (
-              <div key={regNo} className="flex flex-row items-center w-full my-0.5">
-                <p className="flex-[2]">
-                  ω<sub>{regNo}</sub>
-                </p>
-                {allowEditingRegisters ? (
-                  <div className="flex-[3]">
-                    <Input
-                      className="w-20 h-6 m-0 p-0"
-                      onChange={(e) => {
-                        const value = e.target?.value;
-                        const newValue = stringToNumber(value, BigInt);
-                        onCurrentStateChange({
-                          ...currentState,
-                          regs: currentState.regs?.map((val: bigint, index: number) =>
-                            index === regNo ? newValue : val,
-                          ) as InitialState["regs"],
-                        });
-                      }}
-                      onKeyUp={(e) => {
-                        if (e.key === "Enter") {
-                          e.currentTarget.blur();
-                        }
-                      }}
-                      value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
-                    />
-                  </div>
+      <div className="font-mono flex flex-col items-start text-xs">
+        {/* Summary */}
+        <table className="w-full table-fixed  text-center">
+          <thead>
+            <tr>
+              <th className="border border-gray-200 py-3 bg-gray-100">Status</th>
+              <th className="border border-gray-200 bg-gray-100">PC</th>
+              <th className="border border-gray-200 bg-gray-100">Gas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border border-gray-200">
+                {currentState.status !== undefined && previousState.status !== undefined && (
+                  <ComputedValue
+                    value={currentState.status}
+                    previousValue={previousState.status}
+                    propName="status"
+                    formatter={(value) => (
+                      <span style={{ color: getStatusColor(Number(value)) }} test-id="program-status">
+                        {Status[Number(value)] ?? `Invalid(${value})`}
+                      </span>
+                    )}
+                    workers={workers}
+                  />
+                )}
+              </td>
+              <td className="border border-gray-200 py-2 text-center">
+                {allowEditingPc ? (
+                  <EditableField
+                    onChange={(e) => {
+                      const value = e.target?.value;
+                      const newValue = stringToNumber(value, Number);
+                      onCurrentStateChange({
+                        ...currentState,
+                        pc: newValue,
+                      });
+                    }}
+                    value={currentState.pc}
+                  />
                 ) : (
+                  <ComputedValue
+                    value={currentState.pc}
+                    previousValue={previousState.pc}
+                    propName="pc"
+                    workers={workers}
+                  />
+                )}
+              </td>
+              <td className="border border-gray-200">
+                {allowEditingGas ? (
+                  <EditableField
+                    onChange={(e) => {
+                      const value = e.target?.value;
+                      const newValue = BigInt(stringToNumber(value, Number));
+                      onCurrentStateChange({
+                        ...currentState,
+                        gas: newValue,
+                      });
+                    }}
+                    value={currentState.gas}
+                  />
+                ) : (
+                  <ComputedValue
+                    value={currentState.gas}
+                    previousValue={previousState.gas}
+                    propName="gas"
+                    workers={workers}
+                  />
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Registers */}
+        <table className="table-fixed m-3">
+          {currentState.regs?.map((_: unknown, regNo: number) => (
+            <tr key={regNo} className="h-[30px]">
+              <td className="pr-6">
+                ω<sub>{regNo}</sub>
+              </td>
+              {allowEditingRegisters ? (
+                <td className="">
+                  <Input
+                    className="w-20 m-0 p-0"
+                    onChange={(e) => {
+                      const value = e.target?.value;
+                      const newValue = stringToNumber(value, BigInt);
+                      onCurrentStateChange({
+                        ...currentState,
+                        regs: currentState.regs?.map((val: bigint, index: number) =>
+                          index === regNo ? newValue : val,
+                        ) as InitialState["regs"],
+                      });
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                  />
+                </td>
+              ) : (
+                <td>
                   <ComputedValue
                     value={currentState.regs?.[regNo]}
                     previousValue={previousState.regs?.[regNo]}
@@ -259,11 +265,11 @@ export const Registers = ({
                     workers={workers}
                     padStartVal={numeralSystem ? 16 : 0}
                   />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+                </td>
+              )}
+            </tr>
+          ))}
+        </table>
       </div>
     </div>
   );

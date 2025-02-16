@@ -304,7 +304,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
         <PopoverContent className="w-auto p-0" align="start" onEscapeKeyDown={() => setIsPopoverOpen(false)}>
           <Command>
             {showSearch && <CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} />}
-            <CommandList>
+            <CommandList className={cn("bg-gray-900", multiSelectVariants({ variant }))}>
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
                 {showSelectAll && (

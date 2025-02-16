@@ -7,6 +7,9 @@ import { Provider } from "react-redux";
 import { persistor, store } from "./store";
 import { HashRouter } from "react-router";
 import { PersistGate } from "redux-persist/integration/react";
+import { isDarkMode, setColorMode } from "./packages/ui-kit/DarkMode/utils.ts";
+
+setColorMode(isDarkMode());
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   // TODO: strict mode is disabled because of the App useEffect for init being called twice

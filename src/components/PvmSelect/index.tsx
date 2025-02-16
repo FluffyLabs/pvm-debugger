@@ -217,6 +217,7 @@ export const PvmSelect = () => {
       {error && <ErrorWarningTooltip msg={error} />}
       <MultiSelect
         test-id="pvm-select"
+        variant="inverted"
         maxCount={1}
         required
         options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label, removable: pvm.removable }))}

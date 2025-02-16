@@ -17,6 +17,7 @@ import { useContext, useState } from "react";
 import { setAllWorkersServiceId } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { logger } from "@/utils/loggerService";
+import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -59,6 +60,11 @@ export const DebuggerSettings = () => {
           </DialogTitle>
           <DialogDescription asChild>
             <div>
+              <div className="mt-3">
+                <span className="block text-lg text-black font-bold mb-2">Toggle dark Mode</span>
+                <ToggleDarkMode />
+              </div>
+
               <div className="mt-3">
                 <span className="block text-lg text-black font-bold mb-2">Service id</span>
                 <span className="mb-3 block">Provide storage service id</span>
