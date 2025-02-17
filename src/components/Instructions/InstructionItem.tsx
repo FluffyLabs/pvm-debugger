@@ -209,7 +209,7 @@ export const InstructionItem = forwardRef(
                           "font-mono": instruction.type !== argType.REGISTER,
                         })}
                         dangerouslySetInnerHTML={{
-                          __html: instruction.value,
+                          __html: instruction.valueFormatted ?? instruction.value,
                         }}
                       />
                     </div>

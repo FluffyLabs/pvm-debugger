@@ -34,6 +34,7 @@ export const mapInstructionsArgsByType = (
   | {
       type: argType;
       value: string | number;
+      valueFormatted?: string | number;
     }[]
   | null => {
   switch (args?.type) {
@@ -58,7 +59,8 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.registerIndex}</sub>`,
+          value: args?.registerIndex,
+          valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
         },
         {
           type: argType.IMMEDIATE,
@@ -69,7 +71,8 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.registerIndex}</sub>`,
+          value: args?.registerIndex,
+          valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
         },
         {
           type: argType.IMMEDIATE,
@@ -84,7 +87,8 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.registerIndex}</sub>`,
+          value: args?.registerIndex,
+          valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
         },
         {
           type: argType.IMMEDIATE,
@@ -99,7 +103,8 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.registerIndex}</sub>`,
+          value: args?.registerIndex,
+          valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
         },
         {
           type: argType.EXTENDED_WIDTH_IMMEDIATE,
@@ -110,22 +115,26 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+          value: args?.firstRegisterIndex,
+          valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
         },
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+          value: args?.secondRegisterIndex,
+          valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
         },
       ];
     case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+          value: args?.firstRegisterIndex,
+          valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
         },
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+          value: args?.secondRegisterIndex,
+          valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
         },
         {
           type: argType.IMMEDIATE,
@@ -136,11 +145,13 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+          value: args?.firstRegisterIndex,
+          valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
         },
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+          value: args?.secondRegisterIndex,
+          valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
         },
         {
           type: argType.OFFSET,
@@ -151,11 +162,13 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+          value: args?.firstRegisterIndex,
+          valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
         },
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+          value: args?.secondRegisterIndex,
+          valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
         },
         {
           type: argType.IMMEDIATE,
@@ -170,15 +183,18 @@ export const mapInstructionsArgsByType = (
       return [
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.firstRegisterIndex}</sub>`,
+          value: args?.firstRegisterIndex,
+          valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
         },
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.secondRegisterIndex}</sub>`,
+          value: args?.secondRegisterIndex,
+          valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
         },
         {
           type: argType.REGISTER,
-          value: `ω<sub>${args?.thirdRegisterIndex}</sub>`,
+          value: args?.thirdRegisterIndex,
+          valueFormatted: `ω<sub>${args?.thirdRegisterIndex}</sub>`,
         },
       ];
     default:
