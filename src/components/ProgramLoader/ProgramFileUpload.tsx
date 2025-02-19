@@ -1,4 +1,3 @@
-import { ExternalLink } from "lucide-react";
 import { Input } from "../ui/input";
 import { ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
@@ -123,47 +122,7 @@ export const ProgramFileUpload = ({
   };
 
   return (
-    <div className="block pb-5">
-      <h2 className="text-lg">Or load a file in one of the following formats:</h2>
-      <ul className="list-disc p-4">
-        <li>
-          <p>JSON test file compatible with JAM TestVectors JSON</p>
-          <p>
-            <small>
-              Examples can be found in <a href="https://github.com/w3f/jamtestvectors">wf3/jamtestvectors</a> Github
-              repo&nbsp;
-              <a href="https://github.com/w3f/jamtestvectors/pull/3/files" target="_blank">
-                <ExternalLink className="inline w-4 mb-1 text-blue-600" />
-              </a>
-            </small>
-          </p>
-        </li>
-        <li>
-          <p>JAM SPI program</p>
-          <p>
-            <small>
-              SPI program definition can be found in
-              <a href="https://graypaper.fluffylabs.dev/#/5b732de/2a7e022a7e02" target="_blank">
-                &nbsp;a GrayPaper&nbsp;
-                <ExternalLink className="inline w-4 mb-1 text-blue-600" />
-              </a>
-            </small>
-          </p>
-        </li>
-        <li>
-          <p>Generic PVM program</p>
-          <p>
-            <small>
-              Generic program definition can be found in
-              <a href="https://graypaper.fluffylabs.dev/#/5b732de/23c60023c600" target="_blank">
-                &nbsp;a GrayPaper&nbsp;
-                <ExternalLink className="inline w-4 mb-1 text-blue-600" />
-              </a>
-            </small>
-          </p>
-        </li>
-      </ul>
-
+    <div className="pb-5">
       <Input
         className="mt-5 mr-3"
         id="test-file"

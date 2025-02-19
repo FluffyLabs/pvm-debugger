@@ -30,9 +30,13 @@ export const ProgramLoader = (props: { initialState: InitialState; program: numb
           <Upload size="12px" className="mr-2" /> Load
         </Button>
       </DialogTrigger>
-      <DialogContent className="min-h-[500px] max-h-[85vh] flex flex-col overflow-auto">
+      <DialogContent className="min-h-[500px] max-h-[85vh] flex flex-col overflow-auto m-0 p-0 border-0">
         <DialogHeader>
-          <DialogTitle></DialogTitle>
+          <DialogTitle>
+            <h2 className="text-lg mb-4 bg-[#4BB6AD] text-white font-light p-2">
+              Start with an example program or upload your file
+            </h2>
+          </DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
         <Loader {...props} setIsDialogOpen={setIsDialogOpen} />

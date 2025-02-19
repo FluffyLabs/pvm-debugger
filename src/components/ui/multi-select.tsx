@@ -224,62 +224,65 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
           >
             {selectedValues.length > 0 ? (
               <div className="flex justify-between items-center w-full">
-                <div className="flex flex-wrap items-center">
-                  {!showOptionsAsTags &&
-                    selectedValues.length <= maxCount &&
-                    selectedValues.slice(0, maxCount).map((value) => {
-                      const option = options.find((o) => o.value === value);
-                      return (
-                        <span key={value} className="text-gray-500 px-2">
-                          {option?.label}
-                        </span>
-                      );
-                    })}
-                  {!showOptionsAsTags && selectedValues.length > maxCount && (
-                    <span className="text-gray-500 px-2">{selectedValues.length} PVMs in parallel</span>
-                  )}
-                  {showOptionsAsTags &&
-                    selectedValues.slice(0, maxCount).map((value) => {
-                      const option = options.find((o) => o.value === value);
-                      const IconComponent = option?.icon;
-                      return (
-                        <Badge
-                          key={value}
-                          className={cn(isAnimating ? "animate-bounce" : "", multiSelectVariants({ variant }))}
-                          style={{ animationDuration: `${animation}s` }}
-                        >
-                          {IconComponent && <IconComponent className="h-4 w-4 mr-2" />}
-                          {option?.label}
-                          <XCircle
-                            className="ml-2 h-4 w-4 cursor-pointer"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              toggleOption(value);
-                            }}
-                          />
-                        </Badge>
-                      );
-                    })}
-                  {showOptionsAsTags && selectedValues.length > maxCount && (
-                    <Badge
-                      className={cn(
-                        "bg-transparent text-foreground border-foreground/1 hover:bg-transparent",
-                        isAnimating ? "animate-bounce" : "",
-                        multiSelectVariants({ variant }),
-                      )}
-                      style={{ animationDuration: `${animation}s` }}
-                    >
-                      {`+ ${selectedValues.length - maxCount} more`}
-                      <XCircle
-                        className="ml-2 h-4 w-4 cursor-pointer"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          clearExtraOptions();
-                        }}
-                      />
-                    </Badge>
-                  )}
+                <div className="w-0 flex-1 overflow-hidden">
+                  <div className="flex flex-wrap items-center truncate">
+                    {!showOptionsAsTags &&
+                      selectedValues.length <= maxCount &&
+                      selectedValues.slice(0, maxCount).map((value) => {
+                        const option = options.find((o) => o.value === value);
+                        return (
+                          <span key={value} className="text-gray-500 px-2">
+                            {option?.label}
+                          </span>
+                        );
+                      })}
+                    {!showOptionsAsTags && selectedValues.length > maxCount && (
+                      <span className="text-gray-500 px-2">{selectedValues.length} PVMs in parallel</span>
+                    )}
+                    {showOptionsAsTags &&
+                      selectedValues.slice(0, maxCount).map((value) => {
+                        const option = options.find((o) => o.value === value);
+                        const IconComponent = option?.icon;
+                        return (
+                          <Badge
+                            key={value}
+                            className={cn(isAnimating ? "animate-bounce" : "", multiSelectVariants({ variant }))}
+                            style={{ animationDuration: `${animation}s` }}
+                          >
+                            {IconComponent && <IconComponent className="h-4 w-4 mr-2" />}
+                            {option?.label}
+                            <XCircle
+                              className="ml-2 h-4 w-4 cursor-pointer"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleOption(value);
+                              }}
+                            />
+                          </Badge>
+                        );
+                      })}
+                    {showOptionsAsTags && selectedValues.length > maxCount && (
+                      <Badge
+                        className={cn(
+                          "bg-transparent text-foreground border-foreground/1 hover:bg-transparent",
+                          isAnimating ? "animate-bounce" : "",
+                          multiSelectVariants({ variant }),
+                        )}
+                        style={{ animationDuration: `${animation}s` }}
+                      >
+                        {`+ ${selectedValues.length - maxCount} more`}
+                        <XCircle
+                          className="ml-2 h-4 w-4 cursor-pointer"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            clearExtraOptions();
+                          }}
+                        />
+                      </Badge>
+                    )}
+                  </div>
                 </div>
+
                 <div className="flex items-center justify-between">
                   {showClearAll && (
                     <XIcon
