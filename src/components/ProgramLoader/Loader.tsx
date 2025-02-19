@@ -9,6 +9,8 @@ import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { ProgramFileUpload } from "@/components/ProgramLoader/ProgramFileUpload.tsx";
 import { useNavigate } from "react-router";
+import { Links } from "./Links";
+import { Separator } from "../ui/separator";
 
 export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
@@ -47,8 +49,11 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   );
 
   return (
-    <>
-      <div className="border-2 rounded p-4 flex-1 flex flex-col w-full h-full md:px-5">
+    <div className="border-2 flex-1 flex flex-col w-full h-full rounded-lg">
+      <h2 className="text-lg mb-4 bg-[#4BB6AD] text-white font-light p-2 rounded-ss-lg rounded-se-lg">
+        Start with an example program or upload your file
+      </h2>
+      <div className="flex flex-col p-4 justify-around h-full">
         <Examples
           onProgramLoad={(val) => {
             setProgramLoad(val);
@@ -65,11 +70,23 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
             setError(error);
           }}
         />
+        <Links />
         {error && isSubmitted && <p className="text-red-500 whitespace-pre-line">{error}</p>}
       </div>
-      <Button className="mt-3" id="load-button" type="button" onClick={handleLoad}>
-        Load
-      </Button>
-    </>
+      <div className="px-5">
+        <Separator />
+      </div>
+      <div className="m-5 flex justify-end">
+        <Button
+          className="mt-3 min-w-[200px] rounded-2xl font-bold text-brand bg-transparent border-brand"
+          variant="outline"
+          id="load-button"
+          type="button"
+          onClick={handleLoad}
+        >
+          Load
+        </Button>
+      </div>
+    </div>
   );
 };

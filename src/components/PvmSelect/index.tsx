@@ -214,7 +214,7 @@ export const PvmSelect = () => {
         "border-red-500": !!error,
       })}
     >
-      {error && <ErrorWarningTooltip msg={error} />}
+      {error && <ErrorWarningTooltip classNames="ml-3" msg={error} />}
       <MultiSelect
         test-id="pvm-select"
         variant="inverted"

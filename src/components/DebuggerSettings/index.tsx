@@ -27,7 +27,7 @@ function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   }
 }
 
-export const DebuggerSettings = () => {
+export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
   const debuggerState = useAppSelector((state) => state.debugger);
   const dispatch = useAppDispatch();
   const { numeralSystem } = useContext(NumeralSystemContext);
@@ -49,8 +49,8 @@ export const DebuggerSettings = () => {
   return (
     <Dialog>
       <DialogTrigger>
-        <div className="opacity-60 mt-2">
-          <Settings className="text-gray-400" />
+        <div className="mt-2">
+          {withLabel ? <span className="mr-2 text-white">Settings</span> : <Settings className="text-gray-400" />}
         </div>
       </DialogTrigger>
       <DialogContent>

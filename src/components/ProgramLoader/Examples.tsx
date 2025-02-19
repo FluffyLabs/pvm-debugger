@@ -1,6 +1,6 @@
 import { RegistersArray } from "@/types/pvm";
 import { ProgramUploadFileOutput } from "./types";
-import { Button } from "@/components/ui/button.tsx";
+import { Badge } from "@/components/ui/badge.tsx";
 
 const programs: {
   [key: string]: {
@@ -100,14 +100,11 @@ const programs: {
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
   return (
     <div className="mb-5">
-      <h2 className="text-lg mb-4">Start with an example program</h2>
-
       {Object.keys(programs).map((key) => {
         return (
-          <Button
+          <Badge
             id={key}
-            variant={"secondary"}
-            size={"sm"}
+            variant="brand"
             className={"mb-2 mr-2"}
             key={key}
             onClick={() => {
@@ -125,7 +122,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
             }}
           >
             {programs[key].name}
-          </Button>
+          </Badge>
         );
       })}
     </div>
