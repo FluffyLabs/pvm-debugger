@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
 import { useCallback, useRef } from "react";
-import { CurrentInstruction } from "@/types/pvm.ts";
+import { CurrentInstruction, RegistersArray } from "@/types/pvm.ts";
 import { setClickedInstruction, setIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { InstructionMode } from "@/components/Instructions/types.ts";
@@ -14,6 +14,7 @@ import { MemoryPreview } from "@/components/MemoryPreview";
 // import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
 import { HostCalls } from "@/components/HostCalls";
+import { Program } from "@typeberry/pvm-debugger-adapter";
 
 const DebuggerContent = () => {
   const dispatch = useAppDispatch();
@@ -80,12 +81,34 @@ const DebuggerContent = () => {
                         dispatch(setIsProgramInvalid(true));
                       }
 
+                      function tryAsSpi(program: number[]) {
+                        try {
+                          const { code, memory, registers } = Program.fromSpi(
+                            new Uint8Array(program),
+                            new Uint8Array(),
+                          );
+                          const regs = Array.from(registers.getAllU64()) as RegistersArray;
+                          return {
+                            program: Array.from(code) || [],
+                            initial: { ...initialState, regs, mem: memory },
+                            name: "custom",
+                          };
+                        } catch {
+                          return null;
+                        }
+                      }
+
                       if (!error && program) {
-                        debuggerActions.handleProgramLoad({
-                          initial: initialState,
-                          program: program || [],
-                          name: "custom",
-                        });
+                        const maybeSpi = tryAsSpi(program.slice());
+                        if (maybeSpi) {
+                          debuggerActions.handleProgramLoad(maybeSpi);
+                        } else {
+                          debuggerActions.handleProgramLoad({
+                            initial: initialState,
+                            program: program || [],
+                            name: "custom",
+                          });
+                        }
                       }
                     }}
                   />
