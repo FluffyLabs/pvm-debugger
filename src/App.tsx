@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <Header />
-      <div className="ext-left w-screen">
+      <div className="text-left w-screen">
         <div className="flex flex-col gap-5">
           <div className="mt-7 mb-3 flex justify-center max-sm:hidden">
             {pvmInitialized ? (
