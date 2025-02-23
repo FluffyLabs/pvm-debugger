@@ -18,7 +18,9 @@ function App() {
       <div className="p-3 text-left w-screen">
         <div className="flex flex-col gap-5">
           <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-12 flex justify-center"> {pvmInitialized ? <DebuggerControlls /> : null}</div>
+            <div className="col-span-12 flex justify-center max-sm:hidden">
+              {pvmInitialized ? <DebuggerControlls /> : null}
+            </div>
 
             <Routes>
               <Route index element={pvmInitialized ? <DebuggerContent /> : <Navigate to={"/load"} />} />

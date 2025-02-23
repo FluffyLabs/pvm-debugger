@@ -156,14 +156,14 @@ export const Registers = ({
         <table className="w-full table-fixed  text-center">
           <thead>
             <tr>
-              <th className="border border-gray-200 py-3 bg-gray-100">Status</th>
-              <th className="border border-gray-200 bg-gray-100">PC</th>
-              <th className="border border-gray-200 bg-gray-100">Gas</th>
+              <th className="border py-3 bg-gray-100">Status</th>
+              <th className="border bg-gray-100">PC</th>
+              <th className="border bg-gray-100">Gas</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-gray-200">
+              <td className="border">
                 {currentState.status !== undefined && previousState.status !== undefined && (
                   <ComputedValue
                     value={currentState.status}
@@ -178,7 +178,7 @@ export const Registers = ({
                   />
                 )}
               </td>
-              <td className="border border-gray-200 py-2 text-center">
+              <td className="border py-2 text-center">
                 {allowEditingPc ? (
                   <EditableField
                     onChange={(e) => {
@@ -200,7 +200,7 @@ export const Registers = ({
                   />
                 )}
               </td>
-              <td className="border border-gray-200">
+              <td className="border">
                 {allowEditingGas ? (
                   <EditableField
                     onChange={(e) => {

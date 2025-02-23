@@ -9,7 +9,6 @@ import { Assembly } from "@/components/ProgramLoader/Assembly.tsx";
 import { ProgramTextLoader } from "@/components/ProgramTextLoader";
 import { Instructions } from "@/components/Instructions";
 import { Registers } from "@/components/Registers";
-import { MobileRegisters } from "@/components/MobileRegisters";
 import { MemoryPreview } from "@/components/MemoryPreview";
 // import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
@@ -26,7 +25,6 @@ const DebuggerContent = () => {
     clickedInstruction,
     instructionMode,
     breakpointAddresses,
-    pvmInitialized,
     isDebugFinished,
     isRunMode,
     isStepMode,
@@ -58,7 +56,7 @@ const DebuggerContent = () => {
 
   return (
     <>
-      <div className="col-span-12 md:col-span-6 max-h-[70vh] max-sm:min-h-[330px]">
+      <div className="col-span-12 md:col-span-6 max-h-[70vh] max-sm:min-h-[330px] overflow-hidden">
         <HostCalls />
 
         {!program.length && <InitialLoadProgramCTA />}
@@ -120,14 +118,6 @@ const DebuggerContent = () => {
           allowEditingPc={!isDebugFinished && !isRunMode && !isStepMode}
           allowEditingGas={!isDebugFinished && !isRunMode && !isStepMode}
           allowEditingRegisters={false}
-        />
-      </div>
-
-      <div className="col-span-12 md:hidden">
-        <MobileRegisters
-          isEnabled={pvmInitialized}
-          currentState={isProgramEditMode ? initialState : currentState}
-          previousState={isProgramEditMode ? initialState : previousState}
         />
       </div>
 
