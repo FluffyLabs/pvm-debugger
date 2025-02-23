@@ -386,21 +386,23 @@ export const MemoryInfinite = () => {
 
   return (
     <div className="overflow-auto p-1 h-[62vh] flex flex-col">
-      <AddressInput
-        value={selectedAddress !== null ? selectedAddress.toString() : ""}
-        onChange={async (address: number | null) => {
-          if (address === null) {
-            setSelectedAddress(address);
-            return;
-          }
-
-          await jumpToAddress(address);
-          setSelectedAddress(address);
-        }}
-        placeholder="Jump to address"
-      />
       <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
       {error && <div className="text-red-500 mt-3">{error}</div>}
+      <div className="mt-2">
+        <AddressInput
+          value={selectedAddress !== null ? selectedAddress.toString() : ""}
+          onChange={async (address: number | null) => {
+            if (address === null) {
+              setSelectedAddress(address);
+              return;
+            }
+
+            await jumpToAddress(address);
+            setSelectedAddress(address);
+          }}
+          placeholder="Jump to address"
+        />
+      </div>
     </div>
   );
 };

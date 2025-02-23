@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
-import { useCallback, useRef } from "react";
+import { useCallback, useState } from "react";
 import { CurrentInstruction } from "@/types/pvm.ts";
 import { setClickedInstruction, setIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
@@ -11,8 +11,50 @@ import { Instructions } from "@/components/Instructions";
 import { Registers } from "@/components/Registers";
 import { MemoryPreview } from "@/components/MemoryPreview";
 // import { KnowledgeBase } from "@/components/KnowledgeBase";
-import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
+// import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
 import { HostCalls } from "@/components/HostCalls";
+import { MobileDebuggerControls } from "@/components/MobileDebuggerControlls";
+import classNames from "classnames";
+
+const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
+  const [activeTab, setActiveTab] = useState("program");
+  const onTabClick = (tab: string) => {
+    setActiveTab(tab);
+    tabChange(tab);
+  };
+
+  return (
+    <div className="grid grid-cols-3 ">
+      <button
+        onClick={() => onTabClick("program")}
+        className={classNames(
+          "text-[#F6F7F9] py-2",
+          activeTab === "program" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
+        )}
+      >
+        Program
+      </button>
+      <button
+        onClick={() => onTabClick("status")}
+        className={classNames(
+          "py-2",
+          activeTab === "status" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
+        )}
+      >
+        Status
+      </button>
+      <button
+        onClick={() => onTabClick("memory")}
+        className={classNames(
+          "text-[#F6F7F9] py-2",
+          activeTab === "memory" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
+        )}
+      >
+        Memory
+      </button>
+    </div>
+  );
+};
 
 const DebuggerContent = () => {
   const dispatch = useAppDispatch();
@@ -22,7 +64,7 @@ const DebuggerContent = () => {
     initialState,
     isProgramEditMode,
     programPreviewResult,
-    clickedInstruction,
+    // clickedInstruction,
     instructionMode,
     breakpointAddresses,
     isDebugFinished,
@@ -30,18 +72,19 @@ const DebuggerContent = () => {
     isStepMode,
   } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
-
+  const [activeTab, setActiveTab] = useState("program");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { currentInstruction, currentState, previousState } = workers[0] || {
     currentInstruction: null,
     currentState: initialState,
     previousState: initialState,
   };
 
-  const currentInstructionEnriched = programPreviewResult.find(
-    (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
-  );
+  // const currentInstructionEnriched = programPreviewResult.find(
+  //   (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
+  // );
 
-  const mobileView = useRef<HTMLDivElement | null>(null);
+  // const mobileView = useRef<HTMLDivElement | null>(null);
 
   const onInstructionClick = useCallback(
     (row: CurrentInstruction) => {
@@ -50,13 +93,21 @@ const DebuggerContent = () => {
     [dispatch],
   );
 
-  const isMobileViewActive = () => {
-    return mobileView?.current?.offsetParent !== null;
-  };
+  // const isMobileViewActive = () => {
+  //   return mobileView?.current?.offsetParent !== null;
+  // };
 
   return (
-    <>
-      <div className="col-span-12 md:col-span-6 max-h-[70vh] max-sm:min-h-[330px] overflow-hidden">
+    <div className="grid grid-rows grid-cols-12 gap-3 overflow-hidden w-full h-full p-3">
+      <div className="w-full col-span-12 sm:hidden">
+        <MobileTabs tabChange={setActiveTab} />
+      </div>
+      <div
+        className={classNames(
+          "md:col-span-6 max-h-[70vh] max-sm:min-h-[330px]",
+          activeTab === "program" ? "col-span-12" : "max-sm:hidden",
+        )}
+      >
         <HostCalls />
 
         {!program.length && <InitialLoadProgramCTA />}
@@ -108,7 +159,12 @@ const DebuggerContent = () => {
         )}
       </div>
 
-      <div className="max-sm:hidden md:col-span-3">
+      <div
+        className={classNames(
+          "md:col-span-3 max-h-[70vh] max-sm:min-h-[330px]",
+          activeTab === "status" ? "col-span-12" : "max-sm:hidden",
+        )}
+      >
         <Registers
           currentState={isProgramEditMode ? initialState : currentState}
           previousState={isProgramEditMode ? initialState : previousState}
@@ -121,7 +177,12 @@ const DebuggerContent = () => {
         />
       </div>
 
-      <div className="max-sm:hidden col-span-12 md:col-span-3">
+      <div
+        className={classNames(
+          "md:col-span-3 max-h-[70vh] max-sm:min-h-[330px]",
+          activeTab === "memory" ? "col-span-12" : "max-sm:hidden",
+        )}
+      >
         <MemoryPreview />
       </div>
       {/*
@@ -129,14 +190,18 @@ const DebuggerContent = () => {
         <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstructionEnriched} />
       </div> */}
 
-      <div className="md:hidden col-span-12 order-last" ref={mobileView}>
+      {/* <div className="md:hidden col-span-12 order-last" ref={mobileView}>
         <MobileKnowledgeBase
           currentInstruction={clickedInstruction ?? currentInstructionEnriched}
           open={clickedInstruction !== null && isMobileViewActive()}
           onClose={() => setClickedInstruction(null)}
         />
+      </div> */}
+
+      <div className="fixed w-full bottom-0 left-0 sm:hidden">
+        <MobileDebuggerControls />
       </div>
-    </>
+    </div>
   );
 };
 

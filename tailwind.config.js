@@ -52,18 +52,18 @@ export default {
 
         // Tailwind override
         gray: {
-          100:  'hsl(var(--color-gray-100))',
-          200: 'hsl(var(--color-gray-200))',
-          300: 'hsl(var(--color-gray-300))',
-          500: 'hsl(var(--color-gray-500))',
-          600: 'hsl(var(--color-gray-600))',
-          700: 'hsl(var(--color-gray-700))',
-          800: 'hsl(var(--color-gray-800))',
-          900: 'hsl(var(--color-gray-900))',
+          100: "hsl(var(--color-gray-100))",
+          200: "hsl(var(--color-gray-200))",
+          300: "hsl(var(--color-gray-300))",
+          500: "hsl(var(--color-gray-500))",
+          600: "hsl(var(--color-gray-600))",
+          700: "hsl(var(--color-gray-700))",
+          800: "hsl(var(--color-gray-800))",
+          900: "hsl(var(--color-gray-900))",
         },
         green: {
-          200: 'hsl(var(--color-gray-200))',
-          900: 'hsl(var(--color-gray-900))',
+          200: "hsl(var(--color-gray-200))",
+          900: "hsl(var(--color-gray-900))",
         },
         white: "#fff",
         black: "#000",
