@@ -15,16 +15,20 @@ function App() {
   return (
     <>
       <Header />
-      <div className="p-3 text-left w-screen">
+      <div className="text-left w-screen">
         <div className="flex flex-col gap-5">
-          <div className="grid grid-rows md:grid-cols-12 gap-1.5 pt-2">
-            <div className="col-span-12 flex justify-center"> {pvmInitialized ? <DebuggerControlls /> : null}</div>
-
-            <Routes>
-              <Route index element={pvmInitialized ? <DebuggerContent /> : <Navigate to={"/load"} />} />
-              <Route path="load" element={<ProgramLoader />} />
-            </Routes>
+          <div className="mt-7 mb-3 flex justify-center max-sm:hidden">
+            {pvmInitialized ? (
+              <div className="rounded-xl border">
+                <DebuggerControlls />
+              </div>
+            ) : null}
           </div>
+
+          <Routes>
+            <Route index element={pvmInitialized ? <DebuggerContent /> : <Navigate to={"/load"} />} />
+            <Route path="load" element={<ProgramLoader />} />
+          </Routes>
         </div>
       </div>
       <ToastContainer />

@@ -92,7 +92,7 @@ export const InstructionItem = forwardRef(
       return (
         <TableRow
           ref={ref}
-          className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
+          className={classNames("hover:bg-gray-300", { "opacity-50": isLast }, "overflow-hidden")}
           test-id="instruction-item"
           style={{
             backgroundColor,

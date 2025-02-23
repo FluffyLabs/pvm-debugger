@@ -49,8 +49,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   );
 
   return (
-    <div className="border-2 flex-1 flex flex-col w-full h-full rounded-lg">
-      <h2 className="text-lg mb-4 bg-[#4BB6AD] text-white font-light p-2 rounded-ss-lg rounded-se-lg">
+    <div className="flex-1 flex flex-col w-full h-full">
+      <h2 className="text-lg mb-4 bg-[#4BB6AD] text-white font-light p-2 sm:rounded-ss-lg sm:rounded-se-lg">
         Start with an example program or upload your file
       </h2>
       <div className="flex flex-col p-4 justify-around h-full">

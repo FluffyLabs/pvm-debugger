@@ -209,15 +209,17 @@ export const PvmSelect = () => {
 
   return (
     <div
-      className={classNames({
-        "flex text-gray-500 border rounded-lg border-gray-500": true,
-        "border-red-500": !!error,
-      })}
+      className={classNames(
+        {
+          "flex text-gray-500 rounded-lg border": true,
+        },
+        !!error || selectedPvms.length === 0 ? "border-destructive" : "border-[#3B4040]",
+      )}
     >
       {error && <ErrorWarningTooltip classNames="ml-3" msg={error} />}
       <MultiSelect
+        className="border-none text-red-400"
         test-id="pvm-select"
-        variant="inverted"
         maxCount={1}
         required
         options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label, removable: pvm.removable }))}
@@ -242,7 +244,7 @@ export const PvmSelect = () => {
         <span>
           Learn to add your PVM implementation here{" "}
           <a href="https://github.com/FluffyLabs/pvm-debugger/issues/81" target="_blank">
-            <ExternalLink className="inline w-4 mb-1 text-blue-600" />
+            <ExternalLink className="inline w-4 mb-1" />
           </a>
         </span>
       </MultiSelect>
