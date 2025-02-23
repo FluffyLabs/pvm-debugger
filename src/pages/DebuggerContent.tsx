@@ -74,8 +74,7 @@ const DebuggerContent = () => {
   } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
   const [activeTab, setActiveTab] = useState("program");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { currentInstruction, currentState, previousState } = workers[0] || {
+  const { currentState, previousState } = workers[0] || {
     currentInstruction: null,
     currentState: initialState,
     previousState: initialState,
