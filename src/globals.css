@@ -4,37 +4,45 @@
 
 @layer base {
   :root {
-    /* Tailwind Override */
-    --color-gray-100: 0 0% 97%;
-    --color-gray-200: 220 20% 97%;
-    --color-gray-300: 0 0% 94%;
-    --color-gray-500: 0 0% 70%;
-    --color-gray-600: 0 0% 56%;
-    --color-gray-700: 0 0% 36%;
-    --color-gray-800: 0 0% 14%;
-    --color-gray-900: 218 22% 10%;
+    --color-title-foreground: 0 0% 56%;
+    --color-title: 0 0% 97%;
+    --color-title-secondary-foreground: 0 0% 70.2%;
 
-    --color-green-200: 176 100% 95%;
-    --color-green-800: 175 77% 39%;
+    /* Buttons */
+    --color-secondary-foreground: 0 0% 36%;
+    --color-secondary: var(--color-title);
+    --color-primary-foreground: 220 20% 97.25%;
+    --color-primary: 0 0% 14.12%;
 
-    --background: 0 0% 100%;
-    --foreground: var(--color-gray-900);
-    --card: 0 0% 100%;
-    --card-foreground: 190 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 190 84% 4.9%;
-    --primary: 190 47.4% 11.2%;
-    --primary-foreground: var(--color-gray-900);
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: var(--color-gray-800);
+    /* rgb(20, 24, 31) */
+    --color-foreground: 218 22% 10%;
+    /* rgb(255, 255, 255) */
+    --color-background: 0 0% 100%;
+    --color-border: 0 0% 94%;
+    --color-brand-foreground: 176 100% 95%;
+    --color-brand: 175 77% 39%;
+
+
+    --background: var(--color-background);
+    --foreground: var(--color-foreground);
+
+
+    --card: var(--color-title);
+    --card-foreground: var(--color-title-foreground);
+    --popover: var(--color-foreground);
+    --popover-foreground: var(--color-title-foreground);
+    --primary: var(--color-primary);
+    --primary-foreground: var(--color-primary-foreground);
+    --secondary: var(--color-secondary);
+    --secondary-foreground:  var(--color-secondary-foreground);
     --muted: 210 40% 96.1%;
-    --muted-foreground: var(--color-gray-600);
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 190 47.4% 11.2%;
+    --muted-foreground: var(--color-title-foreground);
+    --accent: var(--color-primary);
+    --accent-foreground: var(--color-foreground);
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: var(--color-gray-300);
-    --input: 214.3 31.8% 91.4%;
+    --border: var(--color-border);
+    --input:  var(--color-border);
     --ring: 190 84% 4.9%;
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
