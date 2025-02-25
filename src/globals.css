@@ -4,52 +4,38 @@
 
 @layer base {
   :root {
-    --color-title-foreground: 0 0% 56%;
-    --color-title: 0 0% 97%;
-    --color-title-secondary-foreground: 0 0% 70.2%;
+    --title-foreground: 0 0% 56%;
+    --title: 0 0% 97%;
+    --title-secondary-foreground: 0 0% 70.2%;
 
+    --brand-light: 175.56 100% 94.71%;
+    --brand: 175.29 79.55% 65.49%;
+    --brand-dark: 175.26 76.77% 38.82%;
+
+
+    /* ShadCN colors */
+    --background: 0 0% 100%;
+    --foreground: 218 22% 10%;
+    --card: var(--title);
+    --card-foreground: var(--title-foreground);
+    --popover: var(--background);
+    --popover-foreground: var(--title-foreground);
     /* Buttons */
-    --color-secondary-foreground: 0 0% 36%;
-    --color-secondary: var(--color-title);
-    --color-primary-foreground: 220 20% 97.25%;
-    --color-primary: 0 0% 14.12%;
-
-    /* rgb(20, 24, 31) */
-    --color-foreground: 218 22% 10%;
-    /* rgb(255, 255, 255) */
-    --color-background: 0 0% 100%;
-    --color-border: 0 0% 94%;
-    --color-brand-foreground: 176 100% 95%;
-    --color-brand: 175 77% 39%;
-
-
-    --background: var(--color-background);
-    --foreground: var(--color-foreground);
-
-
-    --card: var(--color-title);
-    --card-foreground: var(--color-title-foreground);
-    --popover: var(--color-foreground);
-    --popover-foreground: var(--color-title-foreground);
-    --primary: var(--color-primary);
-    --primary-foreground: var(--color-primary-foreground);
-    --secondary: var(--color-secondary);
-    --secondary-foreground:  var(--color-secondary-foreground);
-    --muted: 210 40% 96.1%;
-    --muted-foreground: var(--color-title-foreground);
-    --accent: var(--color-primary);
-    --accent-foreground: var(--color-foreground);
+    --secondary-foreground: 0 0% 36%;
+    --secondary: var(--title);
+    --primary-foreground: 220 20% 97.25%;
+    --primary: 0 0% 14.12%;
+    /*  */
+    --muted: 0 0% 0;
+    --muted-foreground: var(--title-foreground);
+    --accent: var(--background);
+    --accent-foreground: var(--foreground);
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: var(--color-border);
-    --input:  var(--color-border);
-    --ring: 190 84% 4.9%;
+    --border: 0 0% 94%;
+    --input: var(--border);
+    --ring: var(--title-secondary-foreground);
     --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
 
     --toastify-toast-width: 350px;
   }
@@ -74,11 +60,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
   }
 }
 

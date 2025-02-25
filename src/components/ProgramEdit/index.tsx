@@ -45,6 +45,7 @@ export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
           <Label htmlFor="instruction-mode">Asm</Label>
           <Switch
             id="instruction-mode"
+            className="text-foreground"
             checked={instructionMode === InstructionMode.BYTECODE}
             onCheckedChange={(checked) =>
               dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))

@@ -90,7 +90,7 @@ export const DebuggerControlls = () => {
   };
 
   return (
-    <div className="flex align-middle max-sm:justify-between bg-secondary p-2 w-full">
+    <div className="flex align-middle h-full max-sm:justify-between bg-secondary p-2 w-full">
       <div className="md:mr-3">
         <ProgramLoader
           initialState={initialState}

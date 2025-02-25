@@ -17,7 +17,7 @@ function App() {
       <Header />
       <div className="text-left w-screen">
         <div className="flex flex-col gap-5">
-          <div className="mt-7 mb-3 flex justify-center max-sm:hidden">
+          <div className="mt-7 flex justify-center max-sm:hidden">
             {pvmInitialized ? (
               <div className="rounded-xl border">
                 <DebuggerControlls />

@@ -50,7 +50,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
   return (
     <div className="flex-1 flex flex-col w-full h-full">
-      <h2 className="text-lg mb-4 bg-[#4BB6AD] text-white font-light p-2 sm:rounded-ss-lg sm:rounded-se-lg">
+      <h2 className="text-lg mb-4 bg-brand-dark text-white font-light p-2 sm:rounded-ss-lg sm:rounded-se-lg">
         Start with an example program or upload your file
       </h2>
       <div className="flex flex-col p-4 justify-around h-full">
@@ -77,13 +77,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         <Separator />
       </div>
       <div className="m-5 flex justify-end">
-        <Button
-          className="mt-3 min-w-[200px] rounded-2xl font-bold text-brand bg-transparent border-brand"
-          variant="outline"
-          id="load-button"
-          type="button"
-          onClick={handleLoad}
-        >
+        <Button className="mt-3 min-w-[150px]" id="load-button" type="button" onClick={handleLoad}>
           Load
         </Button>
       </div>

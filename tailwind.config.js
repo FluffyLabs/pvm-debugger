@@ -12,10 +12,20 @@ export default {
       screens: {
         "2xl": "1400px",
       },
+      colors: {},
     },
     extend: {
       colors: {
-        brand: "#61EDE2",
+        'title-secondary-foreground': "hsl(var(--title-secondary-foreground))",
+        title:  {
+          DEFAULT: "hsl(var(--title))",
+          foreground: "hsl(var(--title-foreground))",
+        },
+        brand:  {
+          DEFAULT: "hsl(var(--brand))",
+          dark: "hsl(var(--brand-dark))",
+          light: "hsl(var(--brand-light))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -49,24 +59,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-
-        // Tailwind override
-        gray: {
-          100: "hsl(var(--color-gray-100))",
-          200: "hsl(var(--color-gray-200))",
-          300: "hsl(var(--color-gray-300))",
-          500: "hsl(var(--color-gray-500))",
-          600: "hsl(var(--color-gray-600))",
-          700: "hsl(var(--color-gray-700))",
-          800: "hsl(var(--color-gray-800))",
-          900: "hsl(var(--color-gray-900))",
-        },
-        green: {
-          200: "hsl(var(--color-gray-200))",
-          900: "hsl(var(--color-gray-900))",
-        },
-        white: "#fff",
-        black: "#000",
       },
       borderRadius: {
         lg: "var(--radius)",

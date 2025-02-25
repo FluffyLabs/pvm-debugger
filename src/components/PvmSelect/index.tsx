@@ -211,7 +211,7 @@ export const PvmSelect = () => {
     <div
       className={classNames(
         {
-          "flex text-gray-500 rounded-lg border": true,
+          "flex text-[#858585] rounded-lg border": true,
         },
         !!error || selectedPvms.length === 0 ? "border-destructive" : "border-[#3B4040]",
       )}
