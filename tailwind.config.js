@@ -16,12 +16,12 @@ export default {
     },
     extend: {
       colors: {
-        'title-secondary-foreground': "hsl(var(--title-secondary-foreground))",
-        title:  {
+        "title-secondary-foreground": "hsl(var(--title-secondary-foreground))",
+        title: {
           DEFAULT: "hsl(var(--title))",
           foreground: "hsl(var(--title-foreground))",
         },
-        brand:  {
+        brand: {
           DEFAULT: "hsl(var(--brand))",
           dark: "hsl(var(--brand-dark))",
           light: "hsl(var(--brand-light))",

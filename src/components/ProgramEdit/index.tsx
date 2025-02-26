@@ -15,7 +15,7 @@ export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
   );
 
   return (
-    <div className="flex justify-between items-center px-2 py-3 bg-gray-100">
+    <div className="flex justify-between items-center px-2 py-3 bg-secondary">
       <div>{startSlot}</div>
       <div className="flex">
         <button

@@ -75,7 +75,7 @@ const ComputedValue = ({
     <div className="pl-2">
       <div
         className={classNames({
-          "text-blue-500": value !== previousValue,
+          "text-brand-dark": value !== previousValue,
           "text-red-500": !isEqualAcrossWorkers,
         })}
       >
@@ -156,9 +156,9 @@ export const Registers = ({
         <table className="w-full table-fixed  text-center">
           <thead>
             <tr>
-              <th className="border py-3 bg-gray-100 text-title-foreground">Status</th>
-              <th className="border bg-gray-100 text-title-foreground">PC</th>
-              <th className="border bg-gray-100 text-title-foreground">Gas</th>
+              <th className="border py-3 bg-title text-title-foreground">Status</th>
+              <th className="border bg-title text-title-foreground">PC</th>
+              <th className="border bg-title text-title-foreground">Gas</th>
             </tr>
           </thead>
           <tbody>

@@ -38,7 +38,7 @@ type StorageItemProps = {
 
 const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValueChange }: StorageItemProps) => {
   const isDisabled = useAppSelector(hasPVMGeneratedStorage);
-  const backgroundClass = index % 2 === 0 ? "bg-white" : "bg-gray-100";
+  const backgroundClass = index % 2 === 0 ? "bg-white" : "bg-secondary";
 
   // Cover PVM generated hash
   const isKeySameAsHash = (row.key && row.key === row.keyHash) || (!row.key && row.keyHash);

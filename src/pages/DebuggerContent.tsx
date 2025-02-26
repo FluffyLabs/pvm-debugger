@@ -13,10 +13,8 @@ import { MemoryPreview } from "@/components/MemoryPreview";
 // import { KnowledgeBase } from "@/components/KnowledgeBase";
 // import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
 import { HostCalls } from "@/components/HostCalls";
-import { MobileDebuggerControls } from "@/components/MobileDebuggerControlls";
 import classNames from "classnames";
 import { Program } from "@typeberry/pvm-debugger-adapter";
-import { AppsSidebar } from "@/packages/ui-kit/AppsSidebar";
 
 const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
   const [activeTab, setActiveTab] = useState("program");
@@ -100,134 +98,127 @@ const DebuggerContent = () => {
   // };
 
   return (
-    <div>
-      <AppsSidebar />
-      <div className="grid grid-rows grid-cols-12 gap-3 overflow-hidden w-full h-full p-3">
-        <div className="w-full col-span-12 sm:hidden">
-          <MobileTabs tabChange={setActiveTab} />
-        </div>
-        <div
-          className={classNames(
-            "md:col-span-6 max-h-[70vh] max-sm:min-h-[330px]",
-            activeTab === "program" ? "col-span-12" : "max-sm:hidden",
-          )}
-        >
-          <HostCalls />
+    <div className="grid grid-rows grid-cols-12 gap-3 overflow-hidden w-full h-full p-3">
+      <div className="w-full col-span-12 sm:hidden">
+        <MobileTabs tabChange={setActiveTab} />
+      </div>
+      <div
+        className={classNames(
+          "md:col-span-6 max-h-[70vh] max-sm:min-h-[330px]",
+          activeTab === "program" ? "col-span-12" : "max-sm:hidden",
+        )}
+      >
+        <HostCalls />
 
-          {!program.length && <InitialLoadProgramCTA />}
-          {!!program.length && (
-            <>
-              {isProgramEditMode && (
-                <div className="border-2 rounded-md h-full">
-                  {instructionMode === InstructionMode.ASM ? (
-                    <Assembly
-                      program={program}
-                      onProgramLoad={debuggerActions.handleProgramLoad}
-                      initialState={initialState}
-                    />
-                  ) : (
-                    <ProgramTextLoader
-                      program={program}
-                      setProgram={(program, error) => {
-                        if (error) {
-                          dispatch(setIsProgramInvalid(true));
-                        }
-
-                        function tryAsSpi(program: number[]) {
-                          try {
-                            const { code, memory, registers } = Program.fromSpi(
-                              new Uint8Array(program),
-                              new Uint8Array(),
-                            );
-                            const regs = Array.from(registers.getAllU64()) as RegistersArray;
-                            return {
-                              program: Array.from(code) || [],
-                              initial: { ...initialState, regs, mem: memory },
-                              name: "custom",
-                            };
-                          } catch {
-                            return null;
-                          }
-                        }
-
-                        if (!error && program) {
-                          const maybeSpi = tryAsSpi(program.slice());
-                          if (maybeSpi) {
-                            debuggerActions.handleProgramLoad(maybeSpi);
-                          } else {
-                            debuggerActions.handleProgramLoad({
-                              initial: initialState,
-                              program: program || [],
-                              name: "custom",
-                            });
-                          }
-                        }
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-
-              {!isProgramEditMode && (
-                <>
-                  <Instructions
-                    status={currentState.status}
-                    currentState={currentState}
-                    programPreviewResult={programPreviewResult}
-                    instructionMode={instructionMode}
-                    onAddressClick={debuggerActions.handleBreakpointClick}
-                    breakpointAddresses={breakpointAddresses}
-                    onInstructionClick={onInstructionClick}
+        {!program.length && <InitialLoadProgramCTA />}
+        {!!program.length && (
+          <>
+            {isProgramEditMode && (
+              <div className="border-2 rounded-md h-full">
+                {instructionMode === InstructionMode.ASM ? (
+                  <Assembly
+                    program={program}
+                    onProgramLoad={debuggerActions.handleProgramLoad}
+                    initialState={initialState}
                   />
-                </>
-              )}
-            </>
-          )}
-        </div>
+                ) : (
+                  <ProgramTextLoader
+                    program={program}
+                    setProgram={(program, error) => {
+                      if (error) {
+                        dispatch(setIsProgramInvalid(true));
+                      }
 
-        <div
-          className={classNames(
-            "md:col-span-3 max-h-[70vh] max-sm:min-h-[330px]",
-            activeTab === "status" ? "col-span-12" : "max-sm:hidden",
-          )}
-        >
-          <Registers
-            currentState={isProgramEditMode ? initialState : currentState}
-            previousState={isProgramEditMode ? initialState : previousState}
-            onCurrentStateChange={(state) => {
-              debuggerActions.restartProgram(state);
-            }}
-            allowEditingPc={!isDebugFinished && !isRunMode && !isStepMode}
-            allowEditingGas={!isDebugFinished && !isRunMode && !isStepMode}
-            allowEditingRegisters={false}
-          />
-        </div>
+                      function tryAsSpi(program: number[]) {
+                        try {
+                          const { code, memory, registers } = Program.fromSpi(
+                            new Uint8Array(program),
+                            new Uint8Array(),
+                          );
+                          const regs = Array.from(registers.getAllU64()) as RegistersArray;
+                          return {
+                            program: Array.from(code) || [],
+                            initial: { ...initialState, regs, mem: memory },
+                            name: "custom",
+                          };
+                        } catch {
+                          return null;
+                        }
+                      }
 
-        <div
-          className={classNames(
-            "md:col-span-3 max-sm:min-h-[330px] max-h-[70vh]",
-            activeTab === "memory" ? "col-span-12" : "max-sm:hidden",
-          )}
-        >
-          <MemoryPreview />
-        </div>
-        {/*
+                      if (!error && program) {
+                        const maybeSpi = tryAsSpi(program.slice());
+                        if (maybeSpi) {
+                          debuggerActions.handleProgramLoad(maybeSpi);
+                        } else {
+                          debuggerActions.handleProgramLoad({
+                            initial: initialState,
+                            program: program || [],
+                            name: "custom",
+                          });
+                        }
+                      }
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {!isProgramEditMode && (
+              <>
+                <Instructions
+                  status={currentState.status}
+                  currentState={currentState}
+                  programPreviewResult={programPreviewResult}
+                  instructionMode={instructionMode}
+                  onAddressClick={debuggerActions.handleBreakpointClick}
+                  breakpointAddresses={breakpointAddresses}
+                  onInstructionClick={onInstructionClick}
+                />
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      <div
+        className={classNames(
+          "md:col-span-3 max-h-[70vh] max-sm:min-h-[330px]",
+          activeTab === "status" ? "col-span-12" : "max-sm:hidden",
+        )}
+      >
+        <Registers
+          currentState={isProgramEditMode ? initialState : currentState}
+          previousState={isProgramEditMode ? initialState : previousState}
+          onCurrentStateChange={(state) => {
+            debuggerActions.restartProgram(state);
+          }}
+          allowEditingPc={!isDebugFinished && !isRunMode && !isStepMode}
+          allowEditingGas={!isDebugFinished && !isRunMode && !isStepMode}
+          allowEditingRegisters={false}
+        />
+      </div>
+
+      <div
+        className={classNames(
+          "md:col-span-3 max-sm:min-h-[330px] max-h-[70vh]",
+          activeTab === "memory" ? "col-span-12" : "max-sm:hidden",
+        )}
+      >
+        <MemoryPreview />
+      </div>
+      {/*
       <div className="max-sm:hidden md:col-span-3 overflow-hidden">
         <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstructionEnriched} />
       </div> */}
 
-        {/* <div className="md:hidden col-span-12 order-last" ref={mobileView}>
+      {/* <div className="md:hidden col-span-12 order-last" ref={mobileView}>
         <MobileKnowledgeBase
           currentInstruction={clickedInstruction ?? currentInstructionEnriched}
           open={clickedInstruction !== null && isMobileViewActive()}
           onClose={() => setClickedInstruction(null)}
         />
       </div> */}
-
-        <div className="fixed w-full bottom-0 left-0 sm:hidden">
-          <MobileDebuggerControls />
-        </div>
-      </div>
     </div>
   );
 };

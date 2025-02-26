@@ -12,7 +12,6 @@
     --brand: 175.29 79.55% 65.49%;
     --brand-dark: 175.26 76.77% 38.82%;
 
-
     /* ShadCN colors */
     --background: 0 0% 100%;
     --foreground: 218 22% 10%;
@@ -30,8 +29,10 @@
     --muted-foreground: var(--title-foreground);
     --accent: var(--background);
     --accent-foreground: var(--foreground);
+    /* Defaults */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    /*  */
     --border: 0 0% 94%;
     --input: var(--border);
     --ring: var(--title-secondary-foreground);
