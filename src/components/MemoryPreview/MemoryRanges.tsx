@@ -305,7 +305,7 @@ export function MemoryRanges() {
   }
 
   return (
-    <div className="max-h-[65vh] overflow-y-auto [&>*:nth-child(even)]:bg-gray-100">
+    <div className="max-h-[65vh] overflow-y-auto [&>*:nth-child(even)]:bg-secondary">
       {ranges.map((r, i) => {
         const isLast = i === ranges.length - 1;
         return (

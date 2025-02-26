@@ -50,7 +50,7 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
     <Dialog>
       <DialogTrigger>
         <div className="mt-2">
-          {withLabel ? <span className="mr-2 text-white">Settings</span> : <Settings className="text-gray-700" />}
+          {withLabel ? <span className="mr-2 text-white">Settings</span> : <Settings className="text-[#858585]" />}
         </div>
       </DialogTrigger>
       <DialogContent>

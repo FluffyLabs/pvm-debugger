@@ -1,6 +1,5 @@
 import { argType, mapInstructionsArgsByType, valueToBinary, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
-import { getStatusColor } from "../Registers/utils";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
 import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
@@ -26,19 +25,18 @@ const AddressCell = ({
   breakpointAddresses,
   programRow,
   onAddressClick,
-  style,
+  className,
 }: {
   breakpointAddresses: (number | undefined)[];
   programRow: ProgramRow;
   onAddressClick: (address: number) => void;
-  style: React.CSSProperties;
+  className?: string;
 }) => {
   const [isHover, setIsHover] = useState(false);
 
   return (
     <TableCell
-      className="p-1.5 border-transparent cursor-pointer relative"
-      style={style}
+      className={"p-1.5 cursor-pointer relative " + className}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
@@ -103,15 +101,12 @@ export const InstructionItem = forwardRef(
           {instructionMode === InstructionMode.BYTECODE && (
             <>
               <AddressCell
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
+                className="border-b"
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
               />
-              <TableCell
-                className="p-1.5"
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
-              >
+              <TableCell className="p-1.5 border-b">
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
                   <span className="text-gray-500">
                     {[...programRow.instructionBytes]
@@ -125,23 +120,17 @@ export const InstructionItem = forwardRef(
           {instructionMode === InstructionMode.ASM && (
             <>
               <AddressCell
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
+                className="border-b"
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
               />
-              <TableCell
-                className="p-1.5"
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
-              >
+              <TableCell className="p-1.5 border-b">
                 <a onClick={fillSearch} className="cursor-pointer">
                   <span className="uppercase font-bold">{programRow.name}</span>
                 </a>
               </TableCell>
-              <TableCell
-                className="p-1.5 whitespace-nowrap"
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
-              >
+              <TableCell className="p-1.5 whitespace-nowrap border-b">
                 <span className="">
                   {"args" in programRow && (
                     <span
@@ -265,7 +254,7 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
     pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
     pcInAllWorkers("currentState").length;
 
-  const blockBackground = programRow.block.number % 2 === 0 ? "#fff" : "#efefef";
+  const blockBackground = programRow.block.number % 2 === 0 ? "#fff" : "#EBFFEE";
   const backgroundColor = isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : blockBackground;
 
   return {
@@ -281,3 +270,15 @@ function getBackgroundForStatus(status: Status | undefined, isHighlighted: boole
 
   return getStatusColor(status);
 }
+
+const getStatusColor = (status?: Status) => {
+  if (status === Status.OK || status === Status.HALT) {
+    return "#4caf50";
+  }
+
+  if (status === Status.PANIC) {
+    return "#f44336";
+  }
+
+  return "#E4FFFD";
+};

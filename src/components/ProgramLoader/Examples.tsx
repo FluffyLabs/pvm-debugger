@@ -105,7 +105,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
           <Badge
             id={key}
             variant="brand"
-            className={"mb-2 mr-2"}
+            className={"mb-2 mr-2 text-sm cursor-pointer"}
             key={key}
             onClick={() => {
               onProgramLoad({

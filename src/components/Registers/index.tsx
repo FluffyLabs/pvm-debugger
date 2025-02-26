@@ -75,7 +75,7 @@ const ComputedValue = ({
     <div className="pl-2">
       <div
         className={classNames({
-          "text-blue-500": value !== previousValue,
+          "text-brand-dark": value !== previousValue,
           "text-red-500": !isEqualAcrossWorkers,
         })}
       >
@@ -119,7 +119,7 @@ const EditableField = ({
 
   return (
     <Input
-      className="m-auto w-20 h-6 py-0 px-[4px] text-md border-white hover:border-input"
+      className="m-auto w-20 h-6 py-0 px-[4px] text-brand-dark text-md border-white hover:border-input"
       onChange={onChange}
       onKeyUp={(e) => {
         if (e.key === "Enter") {
@@ -156,9 +156,9 @@ export const Registers = ({
         <table className="w-full table-fixed  text-center">
           <thead>
             <tr>
-              <th className="border py-3 bg-gray-100">Status</th>
-              <th className="border bg-gray-100">PC</th>
-              <th className="border bg-gray-100">Gas</th>
+              <th className="border py-3 bg-title text-title-foreground">Status</th>
+              <th className="border bg-title text-title-foreground">PC</th>
+              <th className="border bg-title text-title-foreground">Gas</th>
             </tr>
           </thead>
           <tbody>
@@ -170,7 +170,10 @@ export const Registers = ({
                     previousValue={previousState.status}
                     propName="status"
                     formatter={(value) => (
-                      <span style={{ color: getStatusColor(Number(value)) }} test-id="program-status">
+                      <span
+                        className={"py-1 px-2 rounded-xl lowercase " + getStatusColor(Number(value))}
+                        test-id="program-status"
+                      >
                         {Status[Number(value)] ?? `Invalid(${value})`}
                       </span>
                     )}

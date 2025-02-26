@@ -385,7 +385,7 @@ export const MemoryInfinite = () => {
   };
 
   return (
-    <div className="overflow-auto p-1 h-[62vh] flex flex-col">
+    <div className="overflow-auto p-1 pt-0 h-[62vh] flex flex-col">
       <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
       {error && <div className="text-red-500 mt-3">{error}</div>}
       <div className="mt-2">

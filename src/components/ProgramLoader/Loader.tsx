@@ -49,11 +49,11 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   );
 
   return (
-    <div className="flex-1 flex flex-col w-full h-full">
-      <h2 className="text-lg mb-4 bg-[#4BB6AD] text-white font-light p-2 sm:rounded-ss-lg sm:rounded-se-lg">
+    <div className="flex flex-col w-full h-full">
+      <h2 className="text-lg mb-4 bg-brand-dark text-white font-light px-3 py-1 sm:rounded-ss-lg sm:rounded-se-lg">
         Start with an example program or upload your file
       </h2>
-      <div className="flex flex-col p-4 justify-around h-full">
+      <div className="flex flex-col p-7 justify-around h-full">
         <Examples
           onProgramLoad={(val) => {
             setProgramLoad(val);
@@ -61,6 +61,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
             handleLoad(undefined, val);
           }}
         />
+
         <ProgramFileUpload
           onFileUpload={(val) => {
             setProgramLoad(val);
@@ -76,14 +77,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       <div className="px-5">
         <Separator />
       </div>
-      <div className="m-5 flex justify-end">
-        <Button
-          className="mt-3 min-w-[200px] rounded-2xl font-bold text-brand bg-transparent border-brand"
-          variant="outline"
-          id="load-button"
-          type="button"
-          onClick={handleLoad}
-        >
+      <div className="m-6 mb-9 flex justify-end">
+        <Button className="mt-3 min-w-[120px]" id="load-button" type="button" onClick={handleLoad}>
           Load
         </Button>
       </div>

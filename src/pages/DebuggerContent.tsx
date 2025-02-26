@@ -13,7 +13,6 @@ import { MemoryPreview } from "@/components/MemoryPreview";
 // import { KnowledgeBase } from "@/components/KnowledgeBase";
 // import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
 import { HostCalls } from "@/components/HostCalls";
-import { MobileDebuggerControls } from "@/components/MobileDebuggerControlls";
 import classNames from "classnames";
 import { Program } from "@typeberry/pvm-debugger-adapter";
 
@@ -29,7 +28,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
       <button
         onClick={() => onTabClick("program")}
         className={classNames(
-          "text-[#F6F7F9] py-2",
+          "py-2",
           activeTab === "program" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
         )}
       >
@@ -47,7 +46,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
       <button
         onClick={() => onTabClick("memory")}
         className={classNames(
-          "text-[#F6F7F9] py-2",
+          "py-2",
           activeTab === "memory" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
         )}
       >
@@ -201,7 +200,7 @@ const DebuggerContent = () => {
 
       <div
         className={classNames(
-          "md:col-span-3 max-h-[70vh] max-sm:min-h-[330px]",
+          "md:col-span-3 max-sm:min-h-[330px] max-h-[70vh]",
           activeTab === "memory" ? "col-span-12" : "max-sm:hidden",
         )}
       >
@@ -219,10 +218,6 @@ const DebuggerContent = () => {
           onClose={() => setClickedInstruction(null)}
         />
       </div> */}
-
-      <div className="fixed w-full bottom-0 left-0 sm:hidden">
-        <MobileDebuggerControls />
-      </div>
     </div>
   );
 };
