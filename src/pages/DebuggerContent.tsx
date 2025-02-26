@@ -28,7 +28,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
       <button
         onClick={() => onTabClick("program")}
         className={classNames(
-          "text-[#F6F7F9] py-2",
+          "py-2",
           activeTab === "program" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
         )}
       >
@@ -46,7 +46,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
       <button
         onClick={() => onTabClick("memory")}
         className={classNames(
-          "text-[#F6F7F9] py-2",
+          "py-2",
           activeTab === "memory" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
         )}
       >
