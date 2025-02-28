@@ -19,7 +19,7 @@ export const ProgramLoader = (props: { initialState: InitialState; program: numb
       }}
     >
       <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button className="text-white">
+        <Button variant="secondary">
           <Upload size="12px" /> <span className="max-sm:hidden ml-2">Load</span>
         </Button>
       </DialogTrigger>

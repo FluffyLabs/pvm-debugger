@@ -22,7 +22,18 @@ import { addressFormatter, findMemoryForWorker, FindMemoryForWorkerType } from "
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
 const PAGE_SIZE = 4096;
-const BG_COLOR = "#22cccc";
+
+const getCellTextColor = (value: number, index: number, isEqualAcrossWorkers: boolean) => {
+  if (!isEqualAcrossWorkers) {
+    return "text-red-500";
+  }
+
+  if (value !== 0) {
+    return "text-brand-dark";
+  }
+
+  return (index + 1) % 2 === 0 ? "text-title-secondary-foreground" : "text-title-foreground";
+};
 
 export const MemoryCell = ({
   value,
@@ -51,19 +62,17 @@ export const MemoryCell = ({
   return (
     <span
       key={index}
-      className={classNames("relative mr-[1px]", {
-        "text-gray-700": (index + 1) % 2 === 0,
-        "text-gray-950": (index + 1) % 2 === 1,
-        "font-bold text-brand": value !== 0,
-        "opacity-50": isEqualAcrossWorkers && value === 0,
-      })}
+      className={classNames(
+        "relative mr-[1px]",
+        {
+          "font-bold": value !== 0,
+        },
+        getCellTextColor(value, index, isEqualAcrossWorkers),
+      )}
     >
       <span
-        style={{
-          backgroundColor: isNumber(selectedAddress) && selectedAddress === address + index ? BG_COLOR : "initial",
-        }}
         className={classNames({
-          "text-red-500": !isEqualAcrossWorkers,
+          "bg-brand": isNumber(selectedAddress) && selectedAddress === address + index,
         })}
       >
         {isEqualAcrossWorkers ? (

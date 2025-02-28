@@ -216,7 +216,7 @@ export const PvmSelect = () => {
         !!error || selectedPvms.length === 0 ? "border-destructive" : "border-[#3B4040]",
       )}
     >
-      {error && <ErrorWarningTooltip classNames="ml-3" msg={error} />}
+      {error && <ErrorWarningTooltip variant="dark" classNames="ml-3" msg={error} />}
       <MultiSelect
         className="border-none text-red-400"
         test-id="pvm-select"

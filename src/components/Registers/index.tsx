@@ -119,7 +119,7 @@ const EditableField = ({
 
   return (
     <Input
-      className="m-auto w-20 h-6 py-0 px-[4px] text-brand-dark text-md border-white hover:border-input"
+      className="m-auto w-20 h-6 py-0 px-[4px] text-brand-dark dark:text-brand text-md border-transparent hover:border-input"
       onChange={onChange}
       onKeyUp={(e) => {
         if (e.key === "Enter") {
@@ -150,7 +150,7 @@ export const Registers = ({
   const workers = useAppSelector(selectWorkers);
 
   return (
-    <div className="border-2 rounded-md h-[70vh] overflow-auto">
+    <div className="border-2 rounded-md h-[70vh] overflow-auto bg-card">
       <div className="font-mono flex flex-col items-start text-xs">
         {/* Summary */}
         <table className="w-full table-fixed  text-center">
@@ -230,7 +230,7 @@ export const Registers = ({
         </table>
 
         {/* Registers */}
-        <table className="table-fixed m-3">
+        <table className="table-fixed mx-5 mt-3">
           {currentState.regs?.map((_: unknown, regNo: number) => (
             <tr key={regNo} className="h-[30px]">
               <td className="pr-6">

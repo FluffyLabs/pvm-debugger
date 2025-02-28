@@ -26,7 +26,7 @@ const multiSelectVariants = cva("transition ease-in-out delay-150 duration-300",
   variants: {
     variant: {
       default: "border-foreground/10 text-foreground bg-card hover:bg-card/80",
-      primary: "border-primary bg-primary text-primary-foreground",
+      primary: "border-primary bg-[#242424] text-primary-foreground",
       secondary: "border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80",
       destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
     },
@@ -302,7 +302,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-2 bg-primary border-[#444444] rounded-lg"
+          className="w-auto p-2 bg-[#242424] border-[#444444] rounded-lg"
           align="start"
           onEscapeKeyDown={() => setIsPopoverOpen(false)}
         >
@@ -317,7 +317,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                       className={cn(
                         "mr-2 flex h-4 w-4 items-center justify-center rounded-sm",
                         selectedValues.length === options.length
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-[#242424] text-primary-foreground"
                           : "opacity-50 [&_svg]:invisible",
                       )}
                     >

@@ -1,41 +1,53 @@
 import { Link } from "react-router";
-import Brick from "@/assets/sidebar/brick.svg";
-import Chip from "@/assets/sidebar/chip.svg";
-import Debugger from "@/assets/sidebar/debugger.svg";
-import Computers from "@/assets/sidebar/computers.svg";
-import Stack from "@/assets/sidebar/stack.svg";
-import Logo from "@/assets/sidebar/logo.svg";
-
-import { Moon } from "lucide-react";
+import { ToggleDarkModeIcon } from "../DarkMode/ToggleDarkMode";
+import { Brick } from "./icons/Brick";
+import { Stack } from "./icons/Stack";
+import { Debugger } from "./icons/Debugger";
+import { Computers } from "./icons/Computers";
+import { Chip } from "./icons/Chip";
+import { Logo } from "./icons/Logo";
 
 export const AppsSidebar = () => {
   return (
-    <div className="flex flex-col gap-5 bg-secondary max-sm:hidden">
+    <div className="flex flex-col gap-5 bg-sidebar max-sm:hidden">
       <div className="grow flex flex-col items-center justify-center  px-3">
         <Link to="/apps/1" className="p-2 border rounded-full my-3">
-          <img src={Stack} className="block h-[30px] w-[30px] max-w-none" />
+          <div className="block h-[30px] w-[30px] max-w-none text-sidebar-foreground">
+            <Stack />
+          </div>
+        </Link>
+        <Link
+          to="/apps/1"
+          className="p-2 border border-brand-dark dark:border-brand rounded-full my-3 bg-brand-light dark:bg-sidebar"
+        >
+          <div className="block h-[30px] w-[30px] max-w-none text-brand-dark dark:text-brand">
+            <Debugger />
+          </div>
         </Link>
         <Link to="/apps/1" className="p-2 border rounded-full my-3">
-          <img src={Debugger} className="block h-[30px] w-[30px] max-w-none" />
+          <div className="block h-[30px] w-[30px] max-w-none text-sidebar-foreground">
+            <Computers />
+          </div>
         </Link>
         <Link to="/apps/1" className="p-2 border rounded-full my-3">
-          <img src={Computers} className="block h-[30px] w-[30px] max-w-none" />
+          <div className="block h-[30px] w-[30px] max-w-none text-sidebar-foreground">
+            <Brick />
+          </div>
         </Link>
         <Link to="/apps/1" className="p-2 border rounded-full my-3">
-          <img src={Brick} className="block h-[30px] w-[30px] max-w-none" />
+          <div className="block h-[30px] w-[30px] max-w-none text-sidebar-foreground">
+            <Chip />
+          </div>
         </Link>
         <Link to="/apps/1" className="p-2 border rounded-full my-3">
-          <img src={Chip} className="block h-[30px] w-[30px] max-w-none" />
-        </Link>
-        <Link to="/apps/1" className="p-2 border rounded-full my-3">
-          <img src={Logo} className="block h-[30px] w-[30px] max-w-none" />
+          <div className="block h-[30px] w-[30px] max-w-none text-sidebar-foreground">
+            <Logo />
+          </div>
         </Link>
       </div>
 
       <div className="py-4 border-t flex justify-center">
-        <div className="p-2 border rounded">
-          <Moon width="30px" className="text-title-foreground" />
-        </div>
+        <ToggleDarkModeIcon />
       </div>
     </div>
   );

@@ -49,8 +49,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   );
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <h2 className="text-lg mb-4 bg-brand-dark text-white font-light px-3 py-1 sm:rounded-ss-lg sm:rounded-se-lg">
+    <div className="flex flex-col w-full h-full bg-card">
+      <h2 className="text-lg mb-4 bg-brand-dark dark:bg-brand/65 text-white font-light px-3 py-1 sm:rounded-ss-lg sm:rounded-se-lg">
         Start with an example program or upload your file
       </h2>
       <div className="flex flex-col p-7 justify-around h-full">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
   return (
-    <div className="bg-[#242424] w-full flex flex-row items-center justify-between py-4 h- overflow-hidden">
+    <div className="bg-[#242424] w-full flex flex-row items-center justify-between py-4 h- overflow-hidden border-b-[#242424] dark:border-b-brand border-b">
       <div className="flex items-center gap-5 w-full">
         <div className="flex items-center pl-4">
           <img src={Logo} alt="FluffyLabs logo" className="w-[35px] h-full max-w-fit" />

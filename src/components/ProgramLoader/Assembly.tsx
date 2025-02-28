@@ -203,7 +203,7 @@ export const Assembly = ({
         />
       </div>
       <div>
-        <p className={classNames(isError ? "text-red-500" : "text-green-500", "pt-4")}>
+        <p className={classNames(isError ? "text-[#D34D4B] bg-[#FFF4F4]" : "text-[#5FC18C] bg-[#F4FFF9]", "p-2")}>
           {error ?? "Compilation successful"}
         </p>
       </div>

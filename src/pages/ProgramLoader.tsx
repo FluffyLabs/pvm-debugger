@@ -72,10 +72,8 @@ const ProgramLoader = () => {
   }, []);
 
   return (
-    <div className="col-span-12 flex justify-center align-middle">
-      <div className="max-w-[700px] flex flex-col sm:rounded-lg sm:border-2">
-        <Loader />
-      </div>
+    <div className="max-w-[700px] sm:my-[100px] max-sm:h-full sm:rounded-lg sm:border-2">
+      <Loader />
     </div>
   );
 };

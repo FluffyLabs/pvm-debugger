@@ -15,7 +15,7 @@ export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
   );
 
   return (
-    <div className="flex justify-between items-center px-2 py-3 bg-secondary">
+    <div className="flex justify-between items-center px-2 py-3 bg-title">
       <div>{startSlot}</div>
       <div className="flex">
         <button
@@ -50,6 +50,7 @@ export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
             onCheckedChange={(checked) =>
               dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))
             }
+            variant="secondary"
           />
           <Label htmlFor="instruction-mode">Raw</Label>
         </div>

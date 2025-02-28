@@ -10,7 +10,7 @@ export const Links = () => {
           </a>
           JSON test file compatible with JAM TestVectors JSON
         </p>
-        <p className="inline ml-6">
+        <p className="inline ml-6 text-secondary-foreground">
           <small>
             Examples can be found in{" "}
             <a className="text-brand-dark " href="https://github.com/w3f/jamtestvectors">
@@ -27,7 +27,7 @@ export const Links = () => {
           </a>
           JAM SPI program
         </p>
-        <p className="inline ml-6">
+        <p className="inline ml-6 text-secondary-foreground">
           <small>
             SPI program definition can be found in{" "}
             <a className="text-brand-dark underline" href="https://graypaper.fluffylabs.dev/#/5b732de/2a7e022a7e02">
@@ -43,7 +43,7 @@ export const Links = () => {
           </a>
           Generic PVM program
         </p>
-        <p className="inline ml-6">
+        <p className="inline ml-6 text-secondary-foreground">
           <small>
             Generic program definition can be found in{" "}
             <a className="text-brand-dark underline" href="https://graypaper.fluffylabs.dev/#/5b732de/23c60023c600">
