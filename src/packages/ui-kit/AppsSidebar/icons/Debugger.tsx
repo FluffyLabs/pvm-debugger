@@ -1,0 +1,12 @@
+export const Debugger = () => {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="27" viewBox="0 0 27 19" fill="none">
+      <path d="M23.5152 0.59082H20.9023V4.07469H23.5152V0.59082Z" fill="currentColor" />
+      <path d="M6.09728 0.59082H3.48438V4.07469H6.09728V0.59082Z" fill="currentColor" />
+      <path
+        d="M24.0066 6.85449H20.9934V4.07471H5.98687V6.85449H2.99343V9.65256H0V18.0102H2.99343V12.4323H5.98687V18.0102H9V15.2121H18V18.0102H20.9934V12.4323H24.0066V18.0102H27V9.65256H24.0066V6.85449ZM11.9934 9.65256H9V6.85449H11.9934V9.65256ZM18 9.65256H15.0066V6.85449H18V9.65256Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+};

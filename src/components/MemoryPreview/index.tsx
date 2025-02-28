@@ -4,17 +4,17 @@ import { MemoryRanges } from "./MemoryRanges";
 
 export const MemoryPreview = () => {
   return (
-    <div className="border-2 rounded-md h-full">
+    <div className="border-2 rounded-md h-full bg-card">
       <Tabs defaultValue="pages" className="h-full flex flex-col">
-        <TabsList className="bg-transparent m-1 max-sm:hidden">
+        <TabsList className="bg-transparent m-2 max-sm:hidden border dark:border-brand p-0">
           <TabsTrigger
-            className="w-1/2 bg-title data-[state=active]:bg-black data-[state=active]:text-white"
+            className="w-1/2 h-full bg-title text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background"
             value="pages"
           >
             Infinite
           </TabsTrigger>
           <TabsTrigger
-            className="w-1/2 bg-title text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white"
+            className="w-1/2 h-full bg-title dark:bg-transparent dark:text-brand text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background"
             value="ranges"
           >
             Ranges

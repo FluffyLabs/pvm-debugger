@@ -10,6 +10,7 @@ import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 
 const getWorkerValueFromState = (
   worker: WorkerState,
@@ -76,7 +77,7 @@ export const InstructionItem = forwardRef(
     ref: ForwardedRef<HTMLTableRowElement>,
   ) => {
     const { numeralSystem } = useContext(NumeralSystemContext);
-
+    const isDarkMode = useIsDarkMode();
     const workers = useAppSelector(selectWorkers);
     const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
 
@@ -84,7 +85,7 @@ export const InstructionItem = forwardRef(
       onClick(programRow);
     }, [programRow, onClick]);
 
-    const { backgroundColor, hasOpacity } = getHighlightStatus(workers, programRow, status);
+    const { backgroundColor, hasOpacity } = getHighlightStatus(workers, programRow, status, isDarkMode);
 
     const renderContent = () => {
       return (
@@ -127,7 +128,7 @@ export const InstructionItem = forwardRef(
               />
               <TableCell className="p-1.5 border-b">
                 <a onClick={fillSearch} className="cursor-pointer">
-                  <span className="uppercase font-bold">{programRow.name}</span>
+                  <span className="uppercase">{programRow.name}</span>
                 </a>
               </TableCell>
               <TableCell className="p-1.5 whitespace-nowrap border-b">
@@ -239,7 +240,7 @@ export const InstructionItem = forwardRef(
   },
 );
 
-function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status) {
+function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status, isDarkMode?: boolean) {
   const pcInAllWorkers = (state: "currentState" | "previousState") =>
     workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
 
@@ -248,13 +249,20 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
   };
 
   const isHighlighted = isActive(programRow);
-  const bgColor = getBackgroundForStatus(status, isHighlighted).toUpperCase();
+  const bgColor = getBackgroundForStatus(status, isHighlighted, isDarkMode).toUpperCase();
 
   const bgOpacity =
     pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
     pcInAllWorkers("currentState").length;
 
-  const blockBackground = programRow.block.number % 2 === 0 ? "#fff" : "#EBFFEE";
+  const blockBackground = isDarkMode
+    ? programRow.block.number % 2 === 0
+      ? "#242424"
+      : "#2D2D2D"
+    : programRow.block.number % 2 === 0
+      ? "#fff"
+      : "#F8F8F8";
+
   const backgroundColor = isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : blockBackground;
 
   return {
@@ -263,12 +271,12 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
   };
 }
 
-function getBackgroundForStatus(status: Status | undefined, isHighlighted: boolean) {
+function getBackgroundForStatus(status: Status | undefined, isHighlighted: boolean, isDarkMode?: boolean) {
   if (status === Status.OK && isHighlighted) {
-    return getStatusColor();
+    return isDarkMode ? getDarkStatusColor() : getStatusColor();
   }
 
-  return getStatusColor(status);
+  return isDarkMode ? getDarkStatusColor(status) : getStatusColor(status);
 }
 
 const getStatusColor = (status?: Status) => {
@@ -280,5 +288,19 @@ const getStatusColor = (status?: Status) => {
     return "#f44336";
   }
 
+  // Highlight color
   return "#E4FFFD";
+};
+
+const getDarkStatusColor = (status?: Status) => {
+  if (status === Status.OK || status === Status.HALT) {
+    return "#124b14";
+  }
+
+  if (status === Status.PANIC) {
+    return "#f44336";
+  }
+
+  // Highlight color
+  return "#00413B";
 };

@@ -15,6 +15,21 @@ export const hexToRgb = (hex: string) => {
   return `${r}, ${g}, ${b}`;
 };
 
+export const invertHexColor = (hex: string) => {
+  hex = hex.replace(/^#/, "");
+
+  if (hex.length === 3) {
+    hex = hex
+      .split("")
+      .map((char) => char + char)
+      .join("");
+  }
+
+  const invertedColor = (0xffffff ^ parseInt(hex, 16)).toString(16).padStart(6, "0");
+
+  return `#${invertedColor}`;
+};
+
 export interface SerializedFile {
   name: string;
   size: number;

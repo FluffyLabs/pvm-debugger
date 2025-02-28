@@ -97,7 +97,7 @@ const DebuggerContent = () => {
   // };
 
   return (
-    <div className="grid grid-rows grid-cols-12 gap-3 overflow-hidden w-full h-full p-3">
+    <div className="grid grid-rows grid-cols-12 gap-3 overflow-hidden w-full h-full p-3 pt-0">
       <div className="w-full col-span-12 sm:hidden">
         <MobileTabs tabChange={setActiveTab} />
       </div>

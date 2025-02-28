@@ -232,7 +232,7 @@ function MemoryRangeRow({
                     href={`https://papi.fluffylabs.dev/?data=${uint8ToHex(new Uint8Array(flatData))}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="underline text-blue-600 block mb-2"
+                    className="underline text-brand-dark block mb-2"
                   >
                     Open codec tool
                   </a>

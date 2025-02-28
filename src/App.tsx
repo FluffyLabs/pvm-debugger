@@ -17,27 +17,33 @@ function App() {
   return (
     <>
       <Header />
-      <div className="flex justify-center h-full max-h-[calc(100vh-82px)] grow">
-        {pvmInitialized ? <AppsSidebar /> : null}
-        <div className="flex flex-col gap-5">
-          <div className="mt-7 flex justify-center max-sm:hidden">
+      <div className="flex h-full max-h-[calc(100vh-82px)] grow">
+        <AppsSidebar />
+
+        <div className="flex justify-center grow">
+          <div className="flex flex-col gap-5">
             {pvmInitialized ? (
-              <div className="rounded-xl border">
-                <DebuggerControlls />
+              <div className="mt-5 flex justify-center max-sm:hidden">
+                <div className="rounded-xl border">
+                  <DebuggerControlls />
+                </div>
+              </div>
+            ) : null}
+
+            <Routes>
+              <Route index element={pvmInitialized ? <DebuggerContent /> : <Navigate to={"/load"} />} />
+              <Route path="load" element={<ProgramLoader />} />
+            </Routes>
+
+            {pvmInitialized ? (
+              <div className="w-full bottom-0 left-0 sm:hidden">
+                <MobileDebuggerControls />
               </div>
             ) : null}
           </div>
-
-          <Routes>
-            <Route index element={pvmInitialized ? <DebuggerContent /> : <Navigate to={"/load"} />} />
-            <Route path="load" element={<ProgramLoader />} />
-          </Routes>
-
-          <div className="w-full bottom-0 left-0 sm:hidden">
-            <MobileDebuggerControls />
-          </div>
         </div>
       </div>
+
       <ToastContainer />
     </>
   );
