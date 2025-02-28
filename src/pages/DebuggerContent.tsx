@@ -28,7 +28,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
       <button
         onClick={() => onTabClick("program")}
         className={classNames(
-          "py-2",
+          "py-2 rounded-ss rounded-es",
           activeTab === "program" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
         )}
       >
@@ -46,7 +46,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
       <button
         onClick={() => onTabClick("memory")}
         className={classNames(
-          "py-2",
+          "py-2 rounded-ee rounded-se",
           activeTab === "memory" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
         )}
       >
@@ -98,7 +98,7 @@ const DebuggerContent = () => {
 
   return (
     <div className="grid grid-rows grid-cols-12 gap-3 overflow-hidden w-full h-full p-3 pt-0">
-      <div className="w-full col-span-12 sm:hidden">
+      <div className="w-full col-span-12 mt-3 sm:hidden">
         <MobileTabs tabChange={setActiveTab} />
       </div>
       <div
