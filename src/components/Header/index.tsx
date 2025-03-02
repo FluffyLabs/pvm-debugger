@@ -29,7 +29,7 @@ const EndSlot = () => {
 
 const MobileMenu = () => {
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="text-brand">
           <EllipsisVertical />
