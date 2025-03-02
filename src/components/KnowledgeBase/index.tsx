@@ -39,8 +39,8 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
     <div className="border-2 rounded-md overflow-auto max-sm:hidden">
       <Accordion type="single" collapsible className="overflow-hidden h-full">
         <AccordionItem value="item-1" className="overflow-hidden h-full">
-          <AccordionTrigger>
-            <div className="flex w-full items-center justify-between space-x-2">
+          <AccordionTrigger className="mb-2">
+            <div className="flex w-full items-center justify-between">
               <span className="ml-4 text-title-foreground">I found {filteredInstructions.length} results</span>
               <Input
                 className="w-[300px] border-none"

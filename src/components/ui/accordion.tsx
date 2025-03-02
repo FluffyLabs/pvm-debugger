@@ -27,7 +27,7 @@ const AccordionTrigger = React.forwardRef<
     {children}
 
     <AccordionPrimitive.Trigger ref={ref} {...props}>
-      <ListCollapse className="h-4 w-4 shrink-0 mx-3 transition-transform duration-200" />
+      <ListCollapse className="h-4 w-4 shrink-0 mx-4 transition-transform duration-200" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ));
