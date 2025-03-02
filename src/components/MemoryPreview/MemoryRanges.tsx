@@ -146,7 +146,7 @@ function MemoryRangeRow({
     <Card className="p-3 border-0 border-b-2 rounded-none">
       <div className="flex items-center gap-3">
         {!isInputsVisible ? (
-          <span className="font-mono">
+          <span className="font-inconsolata">
             {valueToNumeralSystem(start, numeralSystem)}...+{valueToNumeralSystem(length, numeralSystem)}
           </span>
         ) : (
@@ -210,7 +210,7 @@ function MemoryRangeRow({
         </div>
       </div>
 
-      <div className="mt-4 mb-2 mx-2 text-sm font-mono">
+      <div className="mt-4 mb-2 mx-2 text-sm font-poppins">
         <div style={{ maxHeight: "100px", overflowY: "auto" }}>
           {flatData.length === 0 ? (
             <div>(no data)</div>
@@ -240,7 +240,7 @@ function MemoryRangeRow({
                   {!interpretResult ? (
                     <div>(no data)</div>
                   ) : (
-                    <div className="text-sm space-y-1 font-mono">
+                    <div className="text-sm space-y-1 font-inconsolata">
                       {interpretResult.map((interpretation) => (
                         <div key={interpretation}>{interpretation}</div>
                       ))}

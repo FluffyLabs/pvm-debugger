@@ -84,7 +84,7 @@ export const MemoryCell = ({
 
               <TooltipPortal>
                 <TooltipContent>
-                  <div className="font-mono grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                  <div className="font-poppins grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
                     Page={Math.floor(address / PAGE_SIZE)}
                   </div>
                 </TooltipContent>
@@ -96,7 +96,7 @@ export const MemoryCell = ({
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <span
-                  className="font-mono"
+                  className="font-inconsolata"
                   dangerouslySetInnerHTML={{
                     __html: numeralSystem
                       ? "&quest;&#8288;&quest;&#8288;"
@@ -108,7 +108,7 @@ export const MemoryCell = ({
 
               <TooltipPortal>
                 <TooltipContent>
-                  <div className="font-mono grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                  <div className="font-inconsolata grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
                     {workers.map((worker) => (
                       <React.Fragment key={worker.id}>
                         <div>
@@ -159,7 +159,7 @@ export const MemoryRow = ({
   return (
     <>
       <div
-        className="opacity-40"
+        className="opacity-40 font-inconsolata"
         style={{
           fontVariantNumeric: "tabular-nums",
           width: `${addressLength}ch`,
@@ -167,7 +167,7 @@ export const MemoryRow = ({
       >
         {displayAddress}
       </div>
-      <div className="font-mono font-medium pl-2 flex justify-around w-full">
+      <div className="font-inconsolata font-medium pl-2 flex justify-around w-full">
         {bytes.map((byte, index) => (
           <MemoryCell
             findMemoryForWorker={findMemoryForWorker}
@@ -260,7 +260,7 @@ export const MemoryTable = ({
   }
 
   return (
-    <div className={classNames("mt-4 grow h-full overflow-auto", { "opacity-20": hasError })} ref={parentRef}>
+    <div className={classNames("overflow-auto relative", { "opacity-20": hasError })} ref={parentRef}>
       {hasPrevPage && (
         <div className="text-center w-full" ref={beforeInView.ref}>
           ...
@@ -268,7 +268,6 @@ export const MemoryTable = ({
       )}
       <div
         ref={memoryInView.ref}
-        className="w-full relative"
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
         }}
@@ -394,10 +393,13 @@ export const MemoryInfinite = () => {
   };
 
   return (
-    <div className="overflow-auto p-1 pt-0 h-[62vh] flex flex-col">
-      <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
+    <div className="overflow-hidden p-1 pt-3 flex flex-col h-full">
+      {/* Wrapping MemoryTable in a flex-1 container ensures it fills the available height */}
+      <div className="flex-1 overflow-auto">
+        <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
+      </div>
       {error && <div className="text-red-500 mt-3">{error}</div>}
-      <div className="mt-2">
+      <div className="mt-3">
         <AddressInput
           value={selectedAddress !== null ? selectedAddress.toString() : ""}
           onChange={async (address: number | null) => {
@@ -410,6 +412,7 @@ export const MemoryInfinite = () => {
             setSelectedAddress(address);
           }}
           placeholder="Jump to address"
+          classes="max-w-[200px] bg-muted text-muted-foreground mx-auto text-center rounded-[20px]"
         />
       </div>
     </div>
@@ -421,8 +424,9 @@ type AddressInputProps = {
   id?: string;
   placeholder?: string;
   onChange: (v: number | null) => void;
+  classes?: string;
 };
-export function AddressInput({ value, onChange, placeholder, id }: AddressInputProps) {
+export function AddressInput({ value, onChange, placeholder, id, classes }: AddressInputProps) {
   const [input, setInput] = useState(value);
   const [isValid, setIsValid] = useState(true);
 
@@ -448,11 +452,16 @@ export function AddressInput({ value, onChange, placeholder, id }: AddressInputP
     <>
       <input
         id={id}
-        className={classNames(INPUT_STYLES.replace("focus-visible:ring-ring", ""), "w-full", {
-          "ring-2 ring-red-500": !isValid,
-          "focus-visible:ring-ring": isValid,
-          "focus-visible:ring-red-500": !isValid,
-        })}
+        className={classNames(
+          INPUT_STYLES.replace("focus-visible:ring-ring", ""),
+          "w-full",
+          {
+            "ring-2 ring-red-500": !isValid,
+            "focus-visible:ring-ring": isValid,
+            "focus-visible:ring-red-500": !isValid,
+          },
+          classes,
+        )}
         placeholder={placeholder}
         value={input}
         onChange={changeValue}

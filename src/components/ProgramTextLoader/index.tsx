@@ -98,7 +98,7 @@ export const ProgramTextLoader = ({
       <div className={classNames("h-full flex-auto flex gap-1 flex-col")}>
         <Textarea
           autoFocus
-          className={classNames("w-full flex-auto font-mono text-base border-2 rounded-md", {
+          className={classNames("w-full flex-auto font-inconsolata text-base border-2 rounded-md", {
             "focus-visible:ring-3 focus-visible:outline-none active:outline-none border-red-500": isProgramInvalid,
           })}
           id="program"
