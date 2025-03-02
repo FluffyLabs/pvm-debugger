@@ -1,7 +1,7 @@
 export const Computers = () => {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="26" viewBox="0 0 25 26" fill="none">
-      <g clip-path="url(#clip0_392_2468)">
+      <g clipPath="url(#clip0_392_2468)">
         <path d="M25 18.3593H22.6172V20.7421H25V18.3593Z" fill="currentColor" />
         <path d="M22.6172 20.7421H21.4297V21.9296H22.6172V20.7421Z" fill="currentColor" />
         <path d="M22.6172 13.5936V10.0233H23.8125V6.453H20.2422V10.0233H21.4297V13.5936H22.6172Z" fill="currentColor" />

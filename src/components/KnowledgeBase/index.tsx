@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { BlockMath } from "react-katex";
-import { Search } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
-import { Button } from "@/components/ui/button.tsx";
 import { InstructionKnowledgeBaseEntry, instructionsKnowledgeBase } from "@/utils/instructionsKnowledgeBase.ts";
 import { CurrentInstruction } from "@/types/pvm";
 import { debounce } from "lodash";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: CurrentInstruction | undefined }) => {
   const [filteredInstructions, setFilteredInstructions] = useState<InstructionKnowledgeBaseEntry[]>([]);
@@ -36,48 +36,55 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
   }, [searchText]);
 
   return (
-    <div className="border-2 rounded-md overflow-auto h-[70vh] p-3">
-      <div className="flex w-full items-center space-x-2 mb-3">
-        <Input
-          type="text"
-          value={searchText}
-          onChange={(e) => {
-            setSearchText(e.target.value);
-          }}
-        />
-        <Button type="submit">
-          <Search />
-        </Button>
-      </div>
+    <div className="border-2 rounded-md overflow-auto max-sm:hidden">
+      <Accordion type="single" collapsible className="overflow-hidden h-full">
+        <AccordionItem value="item-1" className="overflow-hidden h-full">
+          <AccordionTrigger className="mb-2">
+            <div className="flex w-full items-center justify-between">
+              <span className="ml-4 text-title-foreground">I found {filteredInstructions.length} results</span>
+              <Input
+                className="w-[300px] border-none"
+                type="text"
+                placeholder="Search for instructions"
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                }}
+              />
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="h-[200px] overflow-auto relative">
+              <div className="divide-y overflow-auto  flex flex-wrap gap-3 mx-4">
+                {filteredInstructions.map((instruction, i) => {
+                  const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find(
+                    (instructionFromKB) => instructionFromKB.name?.toUpperCase() === instruction.name?.toUpperCase(),
+                  );
+                  return (
+                    <div className="border p-3 rounded w-[285px] max-h-[250px] overflow-auto" key={i}>
+                      <div className="flex justify-between">
+                        <p className="font-poppins font-bold uppercase">{instruction?.name}</p>
 
-      <div className="divide-y overflow-auto relative" style={{ maxHeight: "calc(100% - 60px)" }}>
-        {filteredInstructions.map((instruction, i) => {
-          const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find(
-            (instructionFromKB) => instructionFromKB.name?.toUpperCase() === instruction.name?.toUpperCase(),
-          );
-          return (
-            <div key={i}>
-              <p className="font-mono font-bold uppercase my-3">{instruction?.name}</p>
-              <div className="text-left">
-                <BlockMath math={currentInstructionFromKnowledgeBase?.latex || ""} />
-              </div>
-              <p className="my-3">{currentInstructionFromKnowledgeBase?.description}</p>
-              <div className="flex mb-3 mr-3 justify-end">
-                {currentInstructionFromKnowledgeBase?.linkInGrayPaperReader && (
-                  <Button
-                    size={"sm"}
-                    onClick={() => {
-                      window.open(currentInstructionFromKnowledgeBase?.linkInGrayPaperReader, "_blank");
-                    }}
-                  >
-                    Open in GP
-                  </Button>
-                )}
+                        <div className="flex justify-end">
+                          {currentInstructionFromKnowledgeBase?.linkInGrayPaperReader && (
+                            <a href={currentInstructionFromKnowledgeBase?.linkInGrayPaperReader} target="_blank">
+                              <ExternalLink height="18px" width="18px" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <BlockMath math={currentInstructionFromKnowledgeBase?.latex || ""} />
+                      </div>
+                      <p className="my-3">{currentInstructionFromKnowledgeBase?.description}</p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          );
-        })}
-      </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 };

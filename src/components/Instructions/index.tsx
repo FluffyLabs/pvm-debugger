@@ -15,8 +15,10 @@ export interface InstructionsProps {
 
 export const Instructions = (props: InstructionsProps) => {
   return (
-    <div className="border-2 rounded-md bg-card">
-      <ProgramEdit startSlot={<></>} />
+    <div className="border-2 rounded-md bg-card h-full">
+      <div className="border-b-2">
+        <ProgramEdit startSlot={<></>} />
+      </div>
       <InstructionsTable {...props} />
     </div>
   );

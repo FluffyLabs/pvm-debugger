@@ -62,7 +62,7 @@ const ComputedValue = ({
     return (
       <p
         className={classNames({
-          "pl-2": true,
+          "pl-2 font-inconsolata text-base": true,
           "opacity-60": value === 0 || value === 0n || value === "0",
         })}
       >
@@ -119,7 +119,7 @@ const EditableField = ({
 
   return (
     <Input
-      className="m-auto w-20 h-6 py-0 px-[4px] text-brand-dark dark:text-brand text-md border-transparent hover:border-input"
+      className="m-auto w-20 h-6 py-0 px-[4px] text-brand-dark dark:text-brand text-base font-inconsolata border-transparent hover:border-input"
       onChange={onChange}
       onKeyUp={(e) => {
         if (e.key === "Enter") {
@@ -150,8 +150,8 @@ export const Registers = ({
   const workers = useAppSelector(selectWorkers);
 
   return (
-    <div className="border-2 rounded-md h-[70vh] overflow-auto bg-card">
-      <div className="font-mono flex flex-col items-start text-xs">
+    <div className="border-2 rounded-md overflow-auto bg-card h-full">
+      <div className="font-poppins flex flex-col items-start text-xs">
         {/* Summary */}
         <table className="w-full table-fixed  text-center">
           <thead>

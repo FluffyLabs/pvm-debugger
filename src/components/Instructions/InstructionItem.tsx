@@ -37,7 +37,7 @@ const AddressCell = ({
 
   return (
     <TableCell
-      className={"p-1.5 cursor-pointer relative " + className}
+      className={"p-1.5 cursor-pointer relative font-inconsolata " + className}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
@@ -109,7 +109,7 @@ export const InstructionItem = forwardRef(
               />
               <TableCell className="p-1.5 border-b">
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
-                  <span className="text-gray-500">
+                  <span className="text-title-foreground">
                     {[...programRow.instructionBytes]
                       ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
                       .join(" ")}
@@ -131,7 +131,7 @@ export const InstructionItem = forwardRef(
                   <span className="uppercase">{programRow.name}</span>
                 </a>
               </TableCell>
-              <TableCell className="p-1.5 whitespace-nowrap border-b">
+              <TableCell className="p-1.5 whitespace-nowrap border-b font-inconsolata">
                 <span className="">
                   {"args" in programRow && (
                     <span
@@ -154,14 +154,14 @@ export const InstructionItem = forwardRef(
     const renderTooltipContentInstructionInfo = () => {
       return (
         <div>
-          <div className="flex flex-row bg-white">
+          <div className="flex flex-row bg-title p-3">
             <div>
-              <div className="font-mono text-xs text-gray-500 pl-1 pb-1">opcode</div>
+              <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1">opcode</div>
               <div className="border-r-2 border-red-400 ">
-                <div className="font-mono text-md tracking-[0.2rem] bg-red-200 pl-1 text-right">
+                <div className="font-inconsolata text-md tracking-[0.2rem] bg-red-200 pl-1 text-right">
                   {valueToBinary(programRow.instructionCode, 8)}
                 </div>
-                <div className="font-mono text-xs p-1 font-bold">
+                <div className="font-inconsolata text-xs p-1 font-bold">
                   {valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
                 </div>
               </div>
@@ -171,7 +171,9 @@ export const InstructionItem = forwardRef(
               mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)?.map(
                 (instruction, index) => (
                   <div key={index}>
-                    <div className="font-mono text-xs text-gray-500 pl-1 pb-1 lowercase">{instruction.type}</div>
+                    <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1 lowercase">
+                      {instruction.type}
+                    </div>
                     <div
                       className={classNames(
                         "border-r-2",
@@ -181,7 +183,7 @@ export const InstructionItem = forwardRef(
                     >
                       <div
                         className={classNames(
-                          "font-mono text-md tracking-[0.2rem] pl-1",
+                          "font-inconsolata text-md tracking-[0.2rem] pl-1",
                           {
                             "bg-violet-200": instruction.type === argType.REGISTER,
                           },
@@ -196,7 +198,7 @@ export const InstructionItem = forwardRef(
                       <div
                         className={classNames("text-xs p-1", {
                           "font-sans": instruction.type === argType.REGISTER,
-                          "font-mono": instruction.type !== argType.REGISTER,
+                          "font-inconsolata": instruction.type !== argType.REGISTER,
                         })}
                         dangerouslySetInnerHTML={{
                           __html: instruction.value,
@@ -233,7 +235,9 @@ export const InstructionItem = forwardRef(
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
-          <TooltipContent side="bottom">{renderTooltipContentInstructionInfo()}</TooltipContent>
+          <TooltipContent side="bottom" className="m-0 p-0">
+            {renderTooltipContentInstructionInfo()}
+          </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );

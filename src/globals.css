@@ -1,6 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inconsolata&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* @font-face {
+  font-family: Oswald;
+  font-style: normal;
+  font-weight: 200 700;
+  font-display: swap;
+  src: url("/fonts/Oswald.woff2") format("woff2");
+} */
 
 @layer base {
   :root {
@@ -24,8 +35,8 @@
     --primary-foreground: 220 20% 97.25%;
     --primary: 0 0% 14.12%;
     /*  */
-    --muted: 0 0% 0;
-    --muted-foreground: var(--title-foreground);
+    --muted: 220 20% 97%;
+    --muted-foreground: 0 0% 72%;
     --accent: var(--background);
     --accent-foreground: var(--foreground);
     /* Defaults */
@@ -41,6 +52,8 @@
     --sidebar-foreground: var(--secondary-foreground);
 
     --toastify-toast-width: 350px;
+
+    --font-display: : "Oswald", "sans-serif";
   }
 
   .dark {
@@ -83,5 +96,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    @apply font-poppins;
+  }
+
+  @font-face {
+    font-family: Oswald;
+    font-style: normal;
+    font-weight: 200 700;
+    font-display: swap;
+    src: url("/fonts/Oswald.woff2") format("woff2");
   }
 }

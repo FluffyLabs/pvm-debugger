@@ -32,7 +32,7 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
   const dispatch = useAppDispatch();
   const { numeralSystem } = useContext(NumeralSystemContext);
   const [error, setError] = useState<string>();
-
+  const [isOpen, setIsOpen] = useState(false);
   const onServiceIdChange = async (newServiceId: number) => {
     setError("");
     try {
@@ -47,78 +47,85 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger>
+    <Dialog open={isOpen}>
+      <DialogTrigger
+        // This is a fix for Radix autoFocus issue
+        // https://stackoverflow.com/questions/79421257/shadcn-sheet-with-dropdown-menu-gives-blocked-aria-hidden-on-an-element-because
+        onClick={(e) => {
+          // document.body.focus();
+          e.stopPropagation();
+          e.preventDefault();
+          setIsOpen(!isOpen);
+        }}
+      >
         <div className="mt-2">
           {withLabel ? <span className="mr-2 text-white">Settings</span> : <Settings className="text-[#858585]" />}
         </div>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            <span className="text-xl">Debugger Settings</span>
-          </DialogTitle>
-          <DialogDescription asChild>
-            <div>
-              <div className="mt-3">
-                <span className="block text-lg text-black font-bold mb-2">Toggle dark Mode</span>
-                <ToggleDarkMode />
-              </div>
+      <DialogContent className="p-0">
+        <DialogHeader className="py-3 px-4 bg-title text-title-foreground rounded-t-lg border-b">
+          <DialogTitle>Settings</DialogTitle>
+        </DialogHeader>
+        <DialogDescription asChild>
+          <div className="text-left text-secondary-foreground">
+            <div className="p-4 mt-3 flex justify-between">
+              <span className="block text-lg font-bold mb-2">Mode</span>
+              <ToggleDarkMode />
+            </div>
 
-              <div className="mt-3">
-                <span className="block text-lg text-black font-bold mb-2">Service id</span>
-                <span className="mb-3 block">Provide storage service id</span>
-                <Input
-                  onChange={(e) => {
-                    const value = e.target?.value;
-                    const parsedValue = stringToNumber(value, Number);
-                    onServiceIdChange(parsedValue);
-                  }}
-                  value={valueToNumeralSystem(debuggerState.serviceId ?? 0, numeralSystem)}
-                />
-              </div>
+            <div className="p-4 mt-3 flex justify-between">
+              <span className="block text-lg font-bold mb-2">Service id</span>
+              {/* <span className="mb-3 block">Provide storage service id</span> */}
+              <Input
+                onChange={(e) => {
+                  const value = e.target?.value;
+                  const parsedValue = stringToNumber(value, Number);
+                  onServiceIdChange(parsedValue);
+                }}
+                value={valueToNumeralSystem(debuggerState.serviceId ?? 0, numeralSystem)}
+              />
+            </div>
 
-              <div className="py-4">
-                <span className="block text-lg text-black font-bold mb-2">Number of batched steps</span>
-                <span className="mb-3 block">
+            <div className="p-4 flex justify-between">
+              <span className="block text-lg font-bold mb-2">Number of batched steps</span>
+              {/* <span className="mb-3 block">
                   To speed up execution PVMs can run multiple steps internally after clicking "Run". This may lead to
                   inaccurate stops in case the execution diverges between them.
-                </span>
-                <Input
-                  type="number"
-                  step={1}
-                  min={1}
-                  max={1000}
-                  placeholder="Batched steps"
-                  onChange={(ev) => {
-                    dispatch(setStepsToPerform(parseInt(ev.target.value)));
-                  }}
-                  value={debuggerState.stepsToPerform}
-                />
-                <div className="py-4">
-                  <span className="block text-lg text-black font-bold mb-2">Storage Value</span>
-
-                  <span className="mb-3 block">
-                    Set storage for read & write host calls. Confirm empty, if you want to process. Storage can be
-                    modified by running program.
-                  </span>
-
-                  <div className="flex">
-                    <Button onClick={() => dispatch(setHasHostCallOpen(true))}>Set storage</Button>
-
-                    {debuggerState.storage !== null && (
-                      <span className="flex items-center ml-3">
-                        <CheckCircle color="green" className="mr-2" /> Storage provided
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                </span> */}
+              <Input
+                type="number"
+                step={1}
+                min={1}
+                max={1000}
+                placeholder="Batched steps"
+                onChange={(ev) => {
+                  dispatch(setStepsToPerform(parseInt(ev.target.value)));
+                }}
+                value={debuggerState.stepsToPerform}
+              />
             </div>
-          </DialogDescription>
-        </DialogHeader>
+            <div className="p-4 flex justify-between">
+              <span className="block text-lg font-bold mb-2">Storage Value</span>
+
+              {/* <span className="mb-3 block">
+                Set storage for read & write host calls. Confirm empty, if you want to process. Storage can be modified
+                by running program.
+              </span> */}
+
+              <div className="flex">
+                <Button onClick={() => dispatch(setHasHostCallOpen(true))}>Set storage</Button>
+
+                {debuggerState.storage !== null && (
+                  <span className="flex items-center ml-3">
+                    <CheckCircle color="green" className="mr-2" /> Storage provided
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          </div>
+        </DialogDescription>
       </DialogContent>
     </Dialog>
   );

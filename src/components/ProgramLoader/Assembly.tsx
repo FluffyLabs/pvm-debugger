@@ -188,7 +188,7 @@ export const Assembly = ({
         }
       />
       <div
-        className={classNames("flex-auto gap-1 font-mono overflow-auto", {
+        className={classNames("flex-auto gap-1 font-poppins overflow-auto", {
           "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
           "border-red-500": isError,
         })}
