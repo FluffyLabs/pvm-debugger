@@ -99,10 +99,10 @@ const DebuggerContent = () => {
 
   return (
     <div className="w-full h-full p-3 pt-0 flex flex-col gap-4 overflow-hidden">
+      <div className="w-full col-span-12 mt-3 sm:hidden">
+        <MobileTabs tabChange={setActiveTab} />
+      </div>
       <div className="grow h-full overflow-hidden grid grid-rows grid-cols-12 gap-3">
-        <div className="w-full col-span-12 mt-3 sm:hidden">
-          <MobileTabs tabChange={setActiveTab} />
-        </div>
         <div
           className={classNames(
             "md:col-span-6 max-sm:min-h-[330px] h-full overflow-hidden",

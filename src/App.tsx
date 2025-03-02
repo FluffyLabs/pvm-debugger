@@ -17,7 +17,7 @@ function App() {
   return (
     <>
       <Header />
-      <div className="flex h-full max-h-[calc(100vh-82px)] grow">
+      <div className="flex h-full max-h-[calc(100dvh-82px)] grow">
         <AppsSidebar />
 
         <div className="flex justify-center grow">
