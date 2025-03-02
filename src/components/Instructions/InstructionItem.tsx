@@ -198,10 +198,7 @@ export const InstructionItem = forwardRef(
                           { "bg-green-100": instruction.type !== argType.REGISTER },
                         )}
                       >
-                        {valueToBinary(
-                          instruction.value,
-                          instruction.type === argType.EXTENDED_WIDTH_IMMEDIATE ? 16 : 8,
-                        )}
+                        {valueToBinary(instruction.value, instruction.argumentBitLength)}
                       </div>
                       <div
                         className={classNames("text-xs p-1", {
