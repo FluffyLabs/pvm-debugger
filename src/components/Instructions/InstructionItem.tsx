@@ -148,7 +148,7 @@ export const InstructionItem = forwardRef(
                       dangerouslySetInnerHTML={{
                         __html:
                           mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)
-                            ?.map((instruction) => instruction.value)
+                            ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
                             .join(", ") ?? "",
                       }}
                     />
