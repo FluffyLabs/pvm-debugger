@@ -30,7 +30,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
         onClick={() => onTabClick("program")}
         className={classNames(
           "py-2 rounded-ss rounded-es",
-          activeTab === "program" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
+          activeTab === "program" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
         )}
       >
         Program
@@ -39,7 +39,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
         onClick={() => onTabClick("status")}
         className={classNames(
           "py-2",
-          activeTab === "status" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
+          activeTab === "status" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
         )}
       >
         Status
@@ -48,7 +48,7 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
         onClick={() => onTabClick("memory")}
         className={classNames(
           "py-2 rounded-ee rounded-se",
-          activeTab === "memory" ? "bg-[#242424] text-[#F6F7F9]" : "bg-[#EAEAEA] text-[#5C5C5C]",
+          activeTab === "memory" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
         )}
       >
         Memory

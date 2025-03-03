@@ -2,7 +2,7 @@ import { ExternalLink } from "lucide-react";
 
 export const Links = () => {
   return (
-    <ul className="list-none">
+    <ul className="list-none sm:text-sm">
       <li>
         <p>
           <a className="inline" href="https://github.com/w3f/jamtestvectors/pull/3/files" target="_blank">
@@ -13,7 +13,7 @@ export const Links = () => {
         <p className="inline ml-6 text-secondary-foreground">
           <small>
             Examples can be found in{" "}
-            <a className="text-brand-dark " href="https://github.com/w3f/jamtestvectors">
+            <a className="text-brand-dark" href="https://github.com/w3f/jamtestvectors">
               wf3/jamtestvectors
             </a>{" "}
             Github repo

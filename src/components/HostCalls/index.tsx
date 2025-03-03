@@ -7,6 +7,9 @@ import { setHasHostCallOpen, setStorage } from "@/store/debugger/debuggerSlice";
 import { useEffect, useState } from "react";
 import { DebuggerEcalliStorage } from "@/types/pvm";
 import { isSerializedError } from "@/store/utils";
+import { ChevronLeft, InfoIcon } from "lucide-react";
+import { Separator } from "../ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 const isEcalliWriteOrRead = (exitArg?: number) => {
   return exitArg === 2 || exitArg === 3;
@@ -57,23 +60,42 @@ export const HostCalls = () => {
         }
       }}
     >
-      <DialogContent className="min-w-[80vw] min-h-[70vh] max-h-[70vh]" hideClose={isOnEcalli}>
+      <DialogContent className="min-w-[80vw] h-full sm:h-[75vh] p-0" hideClose={isOnEcalli}>
         <div className="flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="mb-4">Define ecalli data</DialogTitle>
+          <DialogHeader className="py-3 px-4 bg-title text-title-foreground rounded-t-lg border-b">
+            <DialogTitle>Define ecalli data</DialogTitle>
           </DialogHeader>
+          <div className="flex items-center my-4">
+            <Button variant="ghost" onClick={() => dispatch(setHasHostCallOpen(false))}>
+              <ChevronLeft className="text-brand-dark dark:text-brand" />
+            </Button>
+            Settings
+          </div>
 
-          <div className="mt-6">
-            <span className="block text-md text-black font-bold mb-2">Storage value</span>
-            <span>Please provide JSON storage or confirm empty</span>
-            <div className="border-gray-100 border-2 rounded-lg pt-1 mt-2 h-[45vh] overflow-y-auto">
+          <Separator />
+
+          <div className="mt-6 px-6">
+            <span className="text-md text-foreground font-bold mb-2 flex">
+              Storage{" "}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Please provide JSON storage or confirm empty</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </span>
+            <div className="pt-1 mt-2 h-full sm:h-[370px] overflow-y-auto">
               <TrieInput onChange={(v) => setNewStorage(v)} initialRows={storage} />
             </div>
           </div>
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
-        <div className="flex mt-2 ml-auto">
-          <Button type="submit" onClick={onSubmit}>
+        <div className="flex mr-6  ml-auto items-end pb-5">
+          <Button type="submit" onClick={onSubmit} className="w-[150px]">
             Confirm
           </Button>
         </div>

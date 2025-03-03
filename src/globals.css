@@ -49,7 +49,7 @@
     --radius: 0.5rem;
 
     --sidebar: var(--secondary);
-    --sidebar-foreground: var(--secondary-foreground);
+    --sidebar-foreground: 0 0% 73%;
 
     --toastify-toast-width: 350px;
 
@@ -73,7 +73,7 @@
     --secondary: 0 0% 23%;
     --secondary-foreground: 0 0% 52%;
 
-    --card-foreground: 210 40% 98%;
+    --card-foreground: var(--title-foreground);
     --popover: 190 84% 4.9%;
     --popover-foreground: 210 40% 98%;
     --primary: 175 80% 65%;

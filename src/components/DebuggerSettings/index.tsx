@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CheckCircle, Settings } from "lucide-react";
+import { CheckCircle, InfoIcon, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setHasHostCallOpen, setServiceId, setStepsToPerform } from "@/store/debugger/debuggerSlice";
@@ -18,6 +18,8 @@ import { setAllWorkersServiceId } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { logger } from "@/utils/loggerService";
 import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
+import { Separator } from "../ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -47,12 +49,12 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
   };
 
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger
+        // TODO Find better solution
         // This is a fix for Radix autoFocus issue
         // https://stackoverflow.com/questions/79421257/shadcn-sheet-with-dropdown-menu-gives-blocked-aria-hidden-on-an-element-because
         onClick={(e) => {
-          // document.body.focus();
           e.stopPropagation();
           e.preventDefault();
           setIsOpen(!isOpen);
@@ -62,21 +64,35 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
           {withLabel ? <span className="mr-2 text-white">Settings</span> : <Settings className="text-[#858585]" />}
         </div>
       </DialogTrigger>
-      <DialogContent className="p-0">
+      <DialogContent className="p-0 pb-4 max-sm:h-full flex flex-col">
         <DialogHeader className="py-3 px-4 bg-title text-title-foreground rounded-t-lg border-b">
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>
         <DialogDescription asChild>
-          <div className="text-left text-secondary-foreground">
+          <div className="text-left text-secondary-foreground h-full">
             <div className="p-4 mt-3 flex justify-between">
               <span className="block text-lg font-bold mb-2">Mode</span>
               <ToggleDarkMode />
             </div>
 
+            <Separator />
+
             <div className="p-4 mt-3 flex justify-between">
-              <span className="block text-lg font-bold mb-2">Service id</span>
-              {/* <span className="mb-3 block">Provide storage service id</span> */}
+              <span className="block text-lg font-bold mb-2">
+                Service id{" "}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Provide storage service id </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </span>
               <Input
+                className="w-[180px]"
                 onChange={(e) => {
                   const value = e.target?.value;
                   const parsedValue = stringToNumber(value, Number);
@@ -87,12 +103,24 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
             </div>
 
             <div className="p-4 flex justify-between">
-              <span className="block text-lg font-bold mb-2">Number of batched steps</span>
-              {/* <span className="mb-3 block">
-                  To speed up execution PVMs can run multiple steps internally after clicking "Run". This may lead to
-                  inaccurate stops in case the execution diverges between them.
-                </span> */}
+              <span className="block text-lg font-bold mb-2">
+                Number of batched steps{" "}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        To speed up execution PVMs can run multiple steps internally after clicking "Run". This may lead
+                        to inaccurate stops in case the execution diverges between them.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </span>
               <Input
+                className="w-[180px]"
                 type="number"
                 step={1}
                 min={1}
@@ -105,15 +133,27 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
               />
             </div>
             <div className="p-4 flex justify-between">
-              <span className="block text-lg font-bold mb-2">Storage Value</span>
-
-              {/* <span className="mb-3 block">
-                Set storage for read & write host calls. Confirm empty, if you want to process. Storage can be modified
-                by running program.
-              </span> */}
+              <span className="block text-lg font-bold mb-2">
+                Storage Value{" "}
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        Set storage for read & write host calls. Confirm empty, if you want to process. Storage can be
+                        modified by running program.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </span>
 
               <div className="flex">
-                <Button onClick={() => dispatch(setHasHostCallOpen(true))}>Set storage</Button>
+                <Button variant="outlineBrand" onClick={() => dispatch(setHasHostCallOpen(true))} className="w-[180px]">
+                  Set storage
+                </Button>
 
                 {debuggerState.storage !== null && (
                   <span className="flex items-center ml-3">

@@ -63,6 +63,7 @@ export const InstructionItem = forwardRef(
       onAddressClick,
       breakpointAddresses,
       style,
+      index,
     }: {
       status?: Status;
       isLast: boolean;
@@ -72,6 +73,7 @@ export const InstructionItem = forwardRef(
       onClick: (r: ProgramRow) => void;
       onAddressClick: (address: number) => void;
       breakpointAddresses: (number | undefined)[];
+      index: number;
       style: React.CSSProperties;
     },
     ref: ForwardedRef<HTMLTableRowElement>,
@@ -97,6 +99,7 @@ export const InstructionItem = forwardRef(
             backgroundColor,
             ...style,
           }}
+          data-index={index}
           title={programRow.block.name}
         >
           {instructionMode === InstructionMode.BYTECODE && (

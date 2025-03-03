@@ -99,13 +99,13 @@ const programs: {
 
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
   return (
-    <div className="mb-5">
+    <div className="sm:mb-5">
       {Object.keys(programs).map((key) => {
         return (
           <Badge
             id={key}
             variant="brand"
-            className={"mb-2 mr-2 text-sm cursor-pointer"}
+            className={"mb-2 mr-2 text-xs sm:text-md cursor-pointer"}
             key={key}
             onClick={() => {
               onProgramLoad({
