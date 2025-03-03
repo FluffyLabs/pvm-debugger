@@ -6,7 +6,7 @@ export const MobileDebuggerControls = () => {
   return (
     <div>
       {/* <ControllsDrawer /> */}
-      <div className="flex items-center bg-[#F6F6F6] p-2">
+      <div className="flex items-center bg-secondary p-2">
         <DebuggerControlls />
         <NumeralSystemSwitch className="" />
       </div>

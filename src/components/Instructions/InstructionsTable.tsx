@@ -98,6 +98,7 @@ export const InstructionsTable = ({
 
               return (
                 <InstructionItem
+                  index={virtualRow.index}
                   key={virtualRow.key}
                   ref={rowVirtualizer.measureElement}
                   status={status}
