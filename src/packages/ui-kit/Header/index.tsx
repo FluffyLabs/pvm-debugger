@@ -3,6 +3,13 @@ import Brand from "@/assets/brand.svg";
 import { Separator } from "@radix-ui/react-separator";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ExternalLink } from "lucide-react";
 
 export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
   return (
@@ -22,11 +29,51 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
       </div>
       <div className="flex w-full">
         {endSlot}
-        <Button variant="outline" className="text-brand bg-transparent border-brand max-sm:hidden mr-4">
-          <a target="_blank" href="https://github.com/fluffylabs/pvm-debugger" rel="noreferrer">
-            Github
-          </a>
-        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="text-brand bg-transparent border-brand max-sm:hidden mr-4">
+              <a target="_blank" href="https://github.com/fluffylabs/pvm-debugger" rel="noreferrer">
+                Github
+              </a>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent className="bg-[#242424] mt-1 p-2 border-none text-white">
+            <DropdownMenuItem
+              onSelect={() => window.open("https://github.com/your-repo/issues/new", "_blank")}
+              className="pl-3 py-3 flex items-start justify-between"
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium mb-1">Report an issue or suggestion</span>
+                <span className="text-xs text-muted-foreground">Go to the issue creation page</span>
+              </div>
+              <ExternalLink className="text-brand-dark dark:text-brand" size={16} />
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onSelect={() => window.open("https://github.com/your-repo", "_blank")}
+              className="pl-3 py-3 flex items-start justify-between"
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium mb-1">Star us on Github to show support</span>
+                <span className="text-xs text-muted-foreground">Visit our Github</span>
+              </div>
+              <ExternalLink className="text-brand-dark dark:text-brand" size={16} />
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              onSelect={() => window.open("https://github.com/your-repo/fork", "_blank")}
+              className="pl-3 py-3 flex items-start justify-between"
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium mb-1">Fork & contribute</span>
+                <span className="text-xs text-muted-foreground pt-1">Opens the fork creation page</span>
+              </div>
+              <ExternalLink className="text-brand-dark dark:text-brand" size={16} />
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
