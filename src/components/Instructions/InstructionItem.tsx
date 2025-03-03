@@ -190,10 +190,7 @@ export const InstructionItem = forwardRef(
                           { "bg-green-100": instruction.type !== argType.REGISTER },
                         )}
                       >
-                        {valueToBinary(
-                          instruction.value,
-                          instruction.type === argType.EXTENDED_WIDTH_IMMEDIATE ? 16 : 8,
-                        )}
+                        {valueToBinary(instruction.value, instruction.argumentBitLength)}
                       </div>
                       <div
                         className={classNames("text-xs p-1", {
@@ -201,7 +198,7 @@ export const InstructionItem = forwardRef(
                           "font-inconsolata": instruction.type !== argType.REGISTER,
                         })}
                         dangerouslySetInnerHTML={{
-                          __html: instruction.value,
+                          __html: instruction.valueFormatted ?? instruction.value,
                         }}
                       />
                     </div>
