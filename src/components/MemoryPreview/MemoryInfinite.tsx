@@ -260,7 +260,7 @@ export const MemoryTable = ({
   }
 
   return (
-    <div className={classNames("overflow-auto relative", { "opacity-20": hasError })} ref={parentRef}>
+    <div className={classNames("overflow-auto relative h-[70vh]", { "opacity-20": hasError })} ref={parentRef}>
       {hasPrevPage && (
         <div className="text-center w-full" ref={beforeInView.ref}>
           ...

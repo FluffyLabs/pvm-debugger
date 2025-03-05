@@ -83,7 +83,7 @@ const ComputedValue = ({
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              rgt<span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
+              <span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
             </TooltipTrigger>
 
             <TooltipContent>
