@@ -2,10 +2,11 @@ import { Page } from "@playwright/test";
 
 export const openDebugger = async (page: Page) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => window.localStorage.clear());
 };
 
 export const openProgram = async (page: Page, name: string) => {
-  await page.click(`button[id="${name}"]`);
+  await page.click(`div[id="${name}"]`);
 
   await page.waitForTimeout(1000);
 };
@@ -18,13 +19,13 @@ export const selectPVM = async (page: Page, pvmType: string) => {
   await page.waitForSelector('button[test-id="pvm-select"]');
   await page.click('button[test-id="pvm-select"]');
 
-  await page.waitForSelector(".text-popover-foreground");
+  await page.waitForSelector('[role="dialog"]');
 
   // Locate all options in the multi-select
-  const allPvmOptions = page.locator('div[role="option"]');
+  const allPvmOptions = await page.locator('div[role="option"]');
 
   // Check for selected options
-  const selectedPvmOptions = allPvmOptions.locator(".bg-primary"); // Adjust the class name as needed
+  const selectedPvmOptions = allPvmOptions.locator(".bg-brand"); // Adjust the class name as needed
   const selectedPvmCount = await selectedPvmOptions.count();
 
   for (let i = 0; i < selectedPvmCount; i++) {
