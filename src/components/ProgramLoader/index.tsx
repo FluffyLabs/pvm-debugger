@@ -23,7 +23,7 @@ export const ProgramLoader = (props: { initialState: InitialState; program: numb
           <Upload size="12px" /> <span className="max-sm:hidden ml-2">Load</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="min-h-[500px] max-h-[85vh] flex flex-col overflow-auto m-0 p-0 border-0">
+      <DialogContent className="max-h-[504px] flex flex-col overflow-auto m-0 p-0 border-0">
         <Loader {...props} setIsDialogOpen={setIsDialogOpen} />
       </DialogContent>
     </Dialog>

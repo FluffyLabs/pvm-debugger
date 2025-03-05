@@ -72,7 +72,7 @@ const ProgramLoader = () => {
   }, []);
 
   return (
-    <div className="max-w-[700px] sm:my-[100px] max-sm:h-full sm:rounded-lg sm:border-2">
+    <div className="max-w-[505px] sm:my-[100px] max-sm:h-full sm:rounded-lg sm:border-2">
       <Loader />
     </div>
   );

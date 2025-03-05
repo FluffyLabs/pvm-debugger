@@ -5,9 +5,9 @@ import { setInstructionMode, setIsProgramEditMode } from "@/store/debugger/debug
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { InstructionMode } from "../Instructions/types";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
-import classNames from "classnames";
+import cs from "classnames";
 
-export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
+export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element; classNames?: string }) => {
   const dispatch = useAppDispatch();
   const debuggerActions = useDebuggerActions();
   const { program, initialState, isProgramEditMode, isProgramInvalid, instructionMode } = useAppSelector(
@@ -15,11 +15,14 @@ export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
   );
 
   return (
-    <div className="flex justify-between items-center px-2 py-3 bg-title">
+    <div className={"flex justify-between items-center px-2 py-3 bg-title " + classNames}>
       <div>{startSlot}</div>
-      <div className="flex">
+      <div className="flex text-xs">
         <button
-          className={classNames(["flex items-center mr-3", !program.length ? "invisible" : "visible"])}
+          className={cs([
+            "flex text-secondary-foreground items-center mr-3",
+            !program.length ? "invisible" : "visible",
+          ])}
           disabled={!program.length || isProgramInvalid}
           title="Edit the code"
           onClick={() => {
@@ -33,16 +36,24 @@ export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
           }}
         >
           {isProgramEditMode ? (
-            <PencilOff size="17px" className="mr-3" />
+            <PencilOff height={15} />
           ) : (
-            <span className="flex">
-              <Pencil size="17px" className="mr-1" />
+            <span className="flex items-center">
+              <Pencil height={15} />
               Edit
             </span>
           )}
         </button>
         <div className={`flex items-center space-x-2 ${!program.length ? "invisible" : "visible"}`}>
-          <Label htmlFor="instruction-mode">Asm</Label>
+          <Label
+            className={cs(
+              "text-xs",
+              instructionMode === InstructionMode.BYTECODE ? "text-title-foreground" : "text-secondary-foreground",
+            )}
+            htmlFor="instruction-mode"
+          >
+            Asm
+          </Label>
           <Switch
             id="instruction-mode"
             className="text-foreground"
@@ -52,7 +63,15 @@ export const ProgramEdit = ({ startSlot }: { startSlot: JSX.Element }) => {
             }
             variant="secondary"
           />
-          <Label htmlFor="instruction-mode">Raw</Label>
+          <Label
+            className={cs(
+              "text-xs",
+              instructionMode === InstructionMode.BYTECODE ? "text-secondary-foreground" : "text-title-foreground",
+            )}
+            htmlFor="instruction-mode"
+          >
+            Raw
+          </Label>
         </div>
       </div>
     </div>

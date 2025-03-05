@@ -11,13 +11,13 @@ import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } fro
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import classNames from "classnames";
-import { INPUT_STYLES } from "../ui/input";
 import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "@/store/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useInView } from "react-intersection-observer";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from "@/components/ui/tooltip.tsx";
 import React from "react";
 import { addressFormatter, findMemoryForWorker, FindMemoryForWorkerType } from "./utils";
+import { Search } from "../SearchInput";
 
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
@@ -260,7 +260,7 @@ export const MemoryTable = ({
   }
 
   return (
-    <div className={classNames("overflow-auto relative", { "opacity-20": hasError })} ref={parentRef}>
+    <div className={classNames("overflow-auto relative h-[70vh]", { "opacity-20": hasError })} ref={parentRef}>
       {hasPrevPage && (
         <div className="text-center w-full" ref={beforeInView.ref}>
           ...
@@ -412,7 +412,7 @@ export const MemoryInfinite = () => {
             setSelectedAddress(address);
           }}
           placeholder="Jump to address"
-          classes="max-w-[200px] bg-muted text-muted-foreground mx-auto text-center rounded-[20px]"
+          classes="bg-muted text-muted-foreground mx-auto text-center rounded-[5px]"
         />
       </div>
     </div>
@@ -449,23 +449,20 @@ export function AddressInput({ value, onChange, placeholder, id, classes }: Addr
   );
 
   return (
-    <>
-      <input
-        id={id}
-        className={classNames(
-          INPUT_STYLES.replace("focus-visible:ring-ring", ""),
-          "w-full",
-          {
-            "ring-2 ring-red-500": !isValid,
-            "focus-visible:ring-ring": isValid,
-            "focus-visible:ring-red-500": !isValid,
-          },
-          classes,
-        )}
-        placeholder={placeholder}
-        value={input}
-        onChange={changeValue}
-      />
-    </>
+    <Search
+      id={id}
+      className={classNames(
+        "w-full",
+        {
+          "ring-2 ring-red-500": !isValid,
+          "focus-visible:ring-ring": isValid,
+          "focus-visible:ring-red-500": !isValid,
+        },
+        classes,
+      )}
+      placeholder={placeholder}
+      value={input}
+      onChange={changeValue}
+    />
   );
 }

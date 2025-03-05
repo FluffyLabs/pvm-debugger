@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { BlockMath } from "react-katex";
 import { ExternalLink } from "lucide-react";
-import { Input } from "@/components/ui/input.tsx";
 import { InstructionKnowledgeBaseEntry, instructionsKnowledgeBase } from "@/utils/instructionsKnowledgeBase.ts";
 import { CurrentInstruction } from "@/types/pvm";
 import { debounce } from "lodash";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Search } from "../SearchInput";
 
 export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: CurrentInstruction | undefined }) => {
   const [filteredInstructions, setFilteredInstructions] = useState<InstructionKnowledgeBaseEntry[]>([]);
@@ -42,10 +42,11 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
           <AccordionTrigger className="mb-2">
             <div className="flex w-full items-center justify-between">
               <span className="ml-4 text-title-foreground">I found {filteredInstructions.length} results</span>
-              <Input
-                className="w-[300px] border-none"
+              <Search
+                className="w-[300px] border-none text-foreground"
+                inputClassName="text-title-foreground"
                 type="text"
-                placeholder="Search for instructions"
+                placeholder="Search for instructions..."
                 value={searchText}
                 onChange={(e) => {
                   setSearchText(e.target.value);

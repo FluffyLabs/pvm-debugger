@@ -60,9 +60,13 @@ export const DebuggerSettings = ({ withLabel }: { withLabel?: boolean }) => {
           setIsOpen(!isOpen);
         }}
       >
-        <div className="mt-2">
-          {withLabel ? <span className="mr-2 text-white">Settings</span> : <Settings className="text-[#858585]" />}
-        </div>
+        {withLabel ? (
+          <div className="mt-2">
+            <span className="mr-2 text-white">Settings</span>
+          </div>
+        ) : (
+          <Settings height="34px" width="20px" className="text-[#858585]" />
+        )}
       </DialogTrigger>
       <DialogContent className="p-0 pb-4 max-sm:h-full flex flex-col">
         <DialogHeader className="py-3 px-4 bg-title text-title-foreground rounded-t-lg border-b">

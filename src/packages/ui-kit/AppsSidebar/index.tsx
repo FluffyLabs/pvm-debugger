@@ -17,9 +17,9 @@ export const AppsSidebar = () => {
         </a>
         <a
           href="#"
-          className="p-2 border border-brand-dark dark:border-brand rounded-full my-3 bg-brand-light dark:bg-sidebar"
+          className="p-2 border border-[#639894] dark:border-brand rounded-full my-3 bg-[#F2FFFE] dark:bg-sidebar"
         >
-          <div className="block h-[30px] w-[30px] max-w-none text-brand-dark dark:text-brand">
+          <div className="block h-[30px] w-[30px] max-w-none text-[#639894] dark:text-brand">
             <Debugger />
           </div>
         </a>
