@@ -32,7 +32,7 @@ const ComputedValue = ({
 
   const getWorkerValueFromState = (worker: WorkerState, state: "currentState" | "previousState") => {
     return propNameIndex !== undefined
-      ? (worker[state][propName] as RegistersArray)[propNameIndex]
+      ? (worker[state][propName] as RegistersArray)?.[propNameIndex]
       : (worker[state][propName] as number);
   };
 
