@@ -19,7 +19,7 @@ const getWorkerValueFromState = (
   propNameIndex?: number,
 ) =>
   propNameIndex !== undefined
-    ? (worker[state][propName] as RegistersArray)[propNameIndex]
+    ? (worker[state][propName] as RegistersArray)?.[propNameIndex]
     : (worker[state][propName] as number);
 
 const AddressCell = ({
