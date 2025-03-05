@@ -13,7 +13,7 @@ export const Links = () => {
         <p className="inline ml-6 text-secondary-foreground">
           <small>
             Examples can be found in{" "}
-            <a className="text-brand-dark dark:text-brand" href="https://github.com/w3f/jamtestvectors">
+            <a className="text-brand-dark underline dark:text-brand" href="https://github.com/w3f/jamtestvectors">
               wf3/jamtestvectors
             </a>{" "}
             Github repo

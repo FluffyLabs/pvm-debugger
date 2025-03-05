@@ -8,13 +8,13 @@ export const MemoryPreview = () => {
       <Tabs defaultValue="pages" className="h-full flex flex-col">
         <TabsList className="bg-transparent m-2 mb-0 max-sm:hidden border dark:border-brand p-0">
           <TabsTrigger
-            className="w-1/2 h-full bg-title text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background"
+            className="text-xs w-1/2 h-full bg-title text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background rounded-se-none rounded-ee-none"
             value="pages"
           >
             Infinite
           </TabsTrigger>
           <TabsTrigger
-            className="w-1/2 h-full bg-title dark:bg-transparent dark:text-brand text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background"
+            className="text-xs w-1/2 h-full bg-title dark:bg-transparent dark:text-brand text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background rounded-ss-none rounded-es-none"
             value="ranges"
           >
             Ranges

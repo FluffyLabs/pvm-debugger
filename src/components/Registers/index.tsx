@@ -30,10 +30,11 @@ const ComputedValue = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
-  const getWorkerValueFromState = (worker: WorkerState, state: "currentState" | "previousState") =>
-    propNameIndex !== undefined
+  const getWorkerValueFromState = (worker: WorkerState, state: "currentState" | "previousState") => {
+    return propNameIndex !== undefined
       ? (worker[state][propName] as RegistersArray)[propNameIndex]
       : (worker[state][propName] as number);
+  };
 
   const valuesInAllWorkers = (state: "currentState" | "previousState") =>
     workers.map((worker) => getWorkerValueFromState(worker, state));
@@ -62,7 +63,7 @@ const ComputedValue = ({
     return (
       <p
         className={classNames({
-          "pl-2 font-inconsolata text-base": true,
+          "font-inconsolata text-base": true,
           "opacity-60": value === 0 || value === 0n || value === "0",
         })}
       >
@@ -82,7 +83,7 @@ const ComputedValue = ({
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
-              <span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
+              rgt<span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
             </TooltipTrigger>
 
             <TooltipContent>
@@ -154,16 +155,16 @@ export const Registers = ({
       <div className="font-poppins flex flex-col items-start text-xs">
         {/* Summary */}
         <table className="w-full table-fixed  text-center">
-          <thead>
+          <thead className="">
             <tr>
-              <th className="border py-3 bg-title text-title-foreground">Status</th>
-              <th className="border bg-title text-title-foreground">PC</th>
-              <th className="border bg-title text-title-foreground">Gas</th>
+              <th className="border border-l-0 border-t-0 py-3 bg-title text-title-foreground rounded-ss">Status</th>
+              <th className="border border-t-0 bg-title text-title-foreground">PC</th>
+              <th className="border border-r-0 border-t-0 rounded-se bg-title text-title-foreground">Gas</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border">
+              <td className="border border-l-0">
                 {currentState.status !== undefined && previousState.status !== undefined && (
                   <ComputedValue
                     value={currentState.status}
@@ -171,7 +172,7 @@ export const Registers = ({
                     propName="status"
                     formatter={(value) => (
                       <span
-                        className={"py-1 px-2 rounded-xl lowercase " + getStatusColor(Number(value))}
+                        className={"py-1 px-4 rounded-xl lowercase " + getStatusColor(Number(value))}
                         test-id="program-status"
                       >
                         {Status[Number(value)] ?? `Invalid(${value})`}
@@ -203,7 +204,7 @@ export const Registers = ({
                   />
                 )}
               </td>
-              <td className="border">
+              <td className="border border-r-0">
                 {allowEditingGas ? (
                   <EditableField
                     onChange={(e) => {
@@ -231,47 +232,49 @@ export const Registers = ({
 
         {/* Registers */}
         <table className="table-fixed mx-5 mt-3">
-          {currentState.regs?.map((_: unknown, regNo: number) => (
-            <tr key={regNo} className="h-[30px]">
-              <td className="pr-6">
-                ω<sub>{regNo}</sub>
-              </td>
-              {allowEditingRegisters ? (
-                <td className="">
-                  <Input
-                    className="w-20 m-0 p-0"
-                    onChange={(e) => {
-                      const value = e.target?.value;
-                      const newValue = stringToNumber(value, BigInt);
-                      onCurrentStateChange({
-                        ...currentState,
-                        regs: currentState.regs?.map((val: bigint, index: number) =>
-                          index === regNo ? newValue : val,
-                        ) as InitialState["regs"],
-                      });
-                    }}
-                    onKeyUp={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
-                  />
+          <tbody>
+            {currentState.regs?.map((_: unknown, regNo: number) => (
+              <tr key={regNo} className="h-[30px]">
+                <td className="pr-6">
+                  ω<sub>{regNo}</sub>
                 </td>
-              ) : (
-                <td>
-                  <ComputedValue
-                    value={currentState.regs?.[regNo]}
-                    previousValue={previousState.regs?.[regNo]}
-                    propName="regs"
-                    propNameIndex={regNo}
-                    workers={workers}
-                    padStartVal={numeralSystem ? 16 : 0}
-                  />
-                </td>
-              )}
-            </tr>
-          ))}
+                {allowEditingRegisters ? (
+                  <td className="">
+                    <Input
+                      className="w-20 m-0 p-0"
+                      onChange={(e) => {
+                        const value = e.target?.value;
+                        const newValue = stringToNumber(value, BigInt);
+                        onCurrentStateChange({
+                          ...currentState,
+                          regs: currentState.regs?.map((val: bigint, index: number) =>
+                            index === regNo ? newValue : val,
+                          ) as InitialState["regs"],
+                        });
+                      }}
+                      onKeyUp={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                    />
+                  </td>
+                ) : (
+                  <td>
+                    <ComputedValue
+                      value={currentState.regs?.[regNo]}
+                      previousValue={previousState.regs?.[regNo]}
+                      propName="regs"
+                      propNameIndex={regNo}
+                      workers={workers}
+                      padStartVal={numeralSystem ? 16 : 0}
+                    />
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
