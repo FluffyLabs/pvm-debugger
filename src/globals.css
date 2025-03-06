@@ -41,7 +41,7 @@
     --accent-foreground: var(--foreground);
     /* Defaults */
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 1 61% 56%;
     /*  */
     --border: 0 0% 94%;
     --input: var(--border);
