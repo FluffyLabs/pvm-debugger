@@ -295,7 +295,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
               </div>
             ) : (
               <div className="flex items-center justify-between w-full mx-auto">
-                <span className="text-sm text-muted-foreground mx-3">{placeholder}</span>
+                <span className="text-smtext- muted-foreground mx-3">{placeholder}</span>
                 <ChevronDown className="h-4 cursor-pointer text-muted-foreground mx-2" />
               </div>
             )}
@@ -321,7 +321,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                           : "opacity-50 [&_svg]:invisible",
                       )}
                     >
-                      <CheckIcon className="h-4 w-4" />
+                      <CheckIcon className="h-3 w-3" />
                     </div>
                     <span>(Select All)</span>
                   </CommandItem>
@@ -336,14 +336,14 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                     >
                       <div
                         className={cn(
-                          "mr-2 flex h-5 w-5 p-0.5 items-center justify-center rounded-sm border-[#3B4040] bg-[#323232]",
+                          "mr-2 flex h-4 w-4 p-0.5 items-center justify-center rounded-sm border-[#3B4040] bg-[#323232]",
                           isSelected ? "bg-brand text-[#1C1B1F]" : "opacity-50 [&_svg]:invisible",
                         )}
                       >
-                        <CheckIcon className="h-4 w-4" />
+                        <CheckIcon className="h-3 w-3" />
                       </div>
                       {option.icon && <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
-                      <span className="flex-1">{option.label}</span>
+                      <span className="flex-1 text-[11px]">{option.label}</span>
                       {option.removable && (
                         <XCircle
                           className="ml-2 h-4 w-4 cursor-pointer"
