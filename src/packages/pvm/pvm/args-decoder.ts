@@ -16,7 +16,7 @@ export interface ArgumentBitLengths {
   immediateDecoderBits?: number;
   firstImmediateDecoderBits?: number;
   secondImmediateDecoderBits?: number;
-  nextPcBits?: number;
+  offsetBits?: number;
   totalBits: number;
 }
 
@@ -377,7 +377,7 @@ export class ArgsDecoder {
         return {
           registerIndexBits: REGISTER_BITS_LENGTH,
           immediateDecoderBits: immediateLength * BITS_PER_BYTE,
-          nextPcBits: offsetLength * BITS_PER_BYTE,
+          offsetBits: offsetLength * BITS_PER_BYTE,
           totalBits,
         };
       }
@@ -388,7 +388,7 @@ export class ArgsDecoder {
         return {
           firstRegisterIndexBits: REGISTER_BITS_LENGTH,
           secondRegisterIndexBits: REGISTER_BITS_LENGTH,
-          nextPcBits: offsetLength * BITS_PER_BYTE,
+          offsetBits: offsetLength * BITS_PER_BYTE,
           totalBits,
         };
       }
@@ -405,7 +405,7 @@ export class ArgsDecoder {
         const offsetLength = Math.min(IMMEDIATE_AND_OFFSET_MAX_LENGTH, nextInstructionDistance - 1);
 
         return {
-          nextPcBits: offsetLength * BITS_PER_BYTE,
+          offsetBits: offsetLength * BITS_PER_BYTE,
           totalBits,
         };
       }

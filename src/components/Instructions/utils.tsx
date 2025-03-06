@@ -1,5 +1,5 @@
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
-import { ArgumentType, Args } from "@typeberry/pvm-debugger-adapter";
+import { ArgumentType, Args, ProgramDecoder, BasicBlocks } from "@typeberry/pvm-debugger-adapter";
 import { ArgumentBitLengths, ArgsDecoder } from "@/packages/pvm/pvm/args-decoder";
 
 export const valueToNumeralSystem = (
@@ -39,6 +39,7 @@ export const mapInstructionsArgsByType = (
   args: Args | null,
   numeralSystem: NumeralSystem,
   counter: number,
+  program: number[],
 ):
   | {
       type: argType;
@@ -50,7 +51,14 @@ export const mapInstructionsArgsByType = (
   if (!args) return null;
 
   // Create an instance of ArgsDecoder to calculate bit lengths
+  const programDecoder = new ProgramDecoder(new Uint8Array(program));
+  const code = programDecoder.getCode();
+  const mask = programDecoder.getMask();
+  const blocks = new BasicBlocks();
+  blocks.reset(code, mask);
   const argsDecoder = new ArgsDecoder();
+  argsDecoder.reset(code, mask);
+
   // Calculate bit lengths for the current instruction
   const bitLengths =
     args.type !== ArgumentType.NO_ARGUMENTS ? getArgumentBitLengths(argsDecoder, counter, args.type) : undefined;
@@ -84,7 +92,7 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
-          argumentBitLength: bitLengths?.nextPcBits,
+          argumentBitLength: bitLengths?.offsetBits,
         },
       ];
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
@@ -136,7 +144,7 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
-          argumentBitLength: bitLengths?.nextPcBits,
+          argumentBitLength: bitLengths?.offsetBits,
         },
       ];
     case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
@@ -205,7 +213,7 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
-          argumentBitLength: bitLengths?.nextPcBits,
+          argumentBitLength: bitLengths?.offsetBits,
         },
       ];
     case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES:

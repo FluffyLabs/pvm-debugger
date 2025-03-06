@@ -11,6 +11,7 @@ import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
 
 const getWorkerValueFromState = (
   worker: WorkerState,
@@ -78,6 +79,7 @@ export const InstructionItem = forwardRef(
     ref: ForwardedRef<HTMLTableRowElement>,
   ) => {
     const { numeralSystem } = useContext(NumeralSystemContext);
+    const program = useAppSelector(selectProgram);
 
     const workers = useAppSelector(selectWorkers);
     const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
@@ -147,7 +149,7 @@ export const InstructionItem = forwardRef(
                     <span
                       dangerouslySetInnerHTML={{
                         __html:
-                          mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)
+                          mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)
                             ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
                             .join(", ") ?? "",
                       }}
@@ -178,7 +180,7 @@ export const InstructionItem = forwardRef(
             </div>
 
             {"args" in programRow &&
-              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)?.map(
+              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)?.map(
                 (instruction, index) => (
                   <div key={index}>
                     <div className="font-mono text-xs text-gray-500 pl-1 pb-1 lowercase">{instruction.type}</div>
