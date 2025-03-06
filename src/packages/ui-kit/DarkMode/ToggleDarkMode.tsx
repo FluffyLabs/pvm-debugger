@@ -22,7 +22,7 @@ export const ToggleDarkMode = () => {
           e.stopPropagation();
           // document.querySelector('[role="dialog"]')?.removeAttribute("aria-hidden");
         }}
-        className="w-[180px]"
+        className="w-[106px]"
       >
         <SelectValue
           onClick={(e) => {
