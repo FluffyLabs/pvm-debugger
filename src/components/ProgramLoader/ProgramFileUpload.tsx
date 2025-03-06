@@ -112,6 +112,8 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
           });
         }
       }
+    } else {
+      setError("Failed to read the file");
     }
   };
 
