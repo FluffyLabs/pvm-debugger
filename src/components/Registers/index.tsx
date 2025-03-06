@@ -76,7 +76,7 @@ const ComputedValue = ({
     <div className="pl-2">
       <div
         className={classNames({
-          "text-brand-dark": value !== previousValue,
+          "text-brand-dark dark:text-brand": value !== previousValue,
           "text-red-500": !isEqualAcrossWorkers,
         })}
       >
