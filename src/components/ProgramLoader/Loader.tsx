@@ -50,7 +50,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   );
 
   return (
-    <div className="flex flex-col w-full h-full bg-card">
+    <div className="flex flex-col w-full h-full bg-card pb-3">
       <h2 className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 py-2 sm:rounded-ss-lg sm:rounded-se-lg">
         Start with an example program or upload your file
       </h2>
@@ -63,7 +63,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
           }}
         />
 
-        <div className="mt-2 mb-6">
+        <div className="mb-6 mt-2">
           <ProgramFileUpload
             onFileUpload={(val) => {
               setProgramLoad(val);

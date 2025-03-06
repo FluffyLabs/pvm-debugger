@@ -22,9 +22,9 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
           <img src={Brand} alt="FluffyLabs brand" className="hidden md:inline ml-4 h-[28px]" />
         </div>
         <Separator className="bg-gray-600 w-[1px] h-[50px]" orientation="vertical" />
-        <div className="flex max-sm:flex-col-reverse items-end md:items-center">
+        <div className="flex max-sm:flex-col-reverse items-end md:items-center h-[50px]">
           <img src={ToolName} alt="FluffyLabs brand" className="h-[40px]" />
-          <div className="shrink ml-1 mb-4">
+          <div className="shrink sm:ml-1 sm:mb-4">
             <Environment />
           </div>
         </div>
@@ -36,7 +36,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
           <DropdownMenuTrigger asChild>
             <Button
               variant="outlineBrand"
-              className="text-brand bg-transparent border-brand focus:bg-[#2D2D2D] hover:bg-[#2D2D2D] hover:text-brand focus-visible:shadow-none  mr-4 px-3 h-[32px]"
+              className="max-sm:hidden text-brand bg-transparent border-brand focus:bg-[#2D2D2D] hover:bg-[#2D2D2D] hover:text-brand focus-visible:shadow-none  mr-4 px-3 h-[32px]"
             >
               <a
                 target="_blank"
@@ -99,8 +99,10 @@ const Environment = () => {
     env = "beta";
   }
 
+  env = "beta";
+
   return (
-    <Badge className="px-2 py-0.3 bg-brand text-[10px] max-sm:text-[9px] text-black whitespace-nowrap hover:bg-brand">
+    <Badge className="px-2 py-[0.5px] sm:py-1 bg-brand text-[10px] max-sm:text-[7px] text-black whitespace-nowrap hover:bg-brand">
       {env}
     </Badge>
   );
