@@ -44,6 +44,7 @@
     "path-browserify": "^1.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-dropzone": "^14.3.8",
     "react-intersection-observer": "^9.13.1",
     "react-katex": "^3.0.1",
     "react-number-format": "^5.4.2",
