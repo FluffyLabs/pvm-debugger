@@ -4,7 +4,7 @@ import { INPUT_STYLES } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
-import { Edit3, Check, ArrowUp, ArrowDown, Trash } from "lucide-react";
+import { EllipsisVertical } from "lucide-react";
 import { loadMemoryRangeAllWorkers, selectMemoryRangesForFirstWorker } from "@/store/workers/workersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { AddressInput, MemoryCell } from "./MemoryInfinite";
@@ -13,6 +13,12 @@ import { FindMemoryForWorkerType, getMemoryInterpretations } from "./utils";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import classNames from "classnames";
 import { valueToNumeralSystem } from "../Instructions/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
 
 const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType => {
   return (worker, address) => {
@@ -80,7 +86,7 @@ export function LengthInput({ value, onChange, placeholder, id }: LengthInputPro
     <>
       <input
         id={id}
-        className={classNames(INPUT_STYLES.replace("focus-visible:ring-ring", ""), "w-full", {
+        className={classNames(INPUT_STYLES.replace("focus-visible:ring-ring", ""), "w-full font-inconsolata", {
           "ring-2 ring-red-500": !isValid,
           "focus-visible:ring-ring": isValid,
           "focus-visible:ring-red-500": !isValid,
@@ -143,10 +149,10 @@ function MemoryRangeRow({
   const interpretResult = getMemoryInterpretations(new Uint8Array(flatData), numeralSystem);
 
   return (
-    <Card className="p-3 border-0 border-b-2 rounded-none">
-      <div className="flex items-center gap-3">
+    <Card className="p-3 border rounded m-3">
+      <div className="flex items-end gap-3 ml-3">
         {!isInputsVisible ? (
-          <span className="font-inconsolata">
+          <span className="font-inconsolata font-bold text-foreground">
             {valueToNumeralSystem(start, numeralSystem)}...+{valueToNumeralSystem(length, numeralSystem)}
           </span>
         ) : (
@@ -175,37 +181,55 @@ function MemoryRangeRow({
 
         <div className="ml-auto flex items-center gap-1">
           {isLast ? (
-            <Button variant="outline" size="icon" onClick={handleAddConfirm}>
-              <Check className="h-4 w-4" />
-            </Button>
+            <Button onClick={handleAddConfirm}>Add</Button>
           ) : (
-            <>
-              <Button variant="outline" size="icon" onClick={onMoveUp} disabled={index === 0}>
-                <ArrowUp className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" onClick={onMoveDown} disabled={index === totalCount - 2}>
-                <ArrowDown className="h-4 w-4" />
-              </Button>
-              {!isEditing ? (
-                <>
-                  <Button variant="outline" size="icon" onClick={onEditToggle}>
-                    <Edit3 className="h-4 w-4" />
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="ghost">
+                  <EllipsisVertical />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-secondary p-3 z-50">
+                <DropdownMenuItem>
+                  <Button variant="ghost" onClick={onMoveUp} disabled={index === 0}>
+                    Up
                   </Button>
-                  <Button variant="outline" size="icon" onClick={onRemove}>
-                    <Trash className="h-4 w-4" />
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Button variant="ghost" onClick={onMoveDown} disabled={index === totalCount - 2}>
+                    Down
                   </Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="outline" size="icon" onClick={handleSave}>
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={onRemove}>
-                    <Trash className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </>
+                </DropdownMenuItem>
+
+                {!isEditing ? (
+                  <>
+                    <DropdownMenuItem>
+                      <Button variant="ghost" onClick={onEditToggle}>
+                        Edit
+                      </Button>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Button variant="ghost" onClick={onRemove}>
+                        Remove
+                      </Button>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem>
+                      <Button variant="ghost" onClick={handleSave}>
+                        Confirm
+                      </Button>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Button variant="ghost" onClick={onRemove}>
+                        Remove
+                      </Button>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
@@ -305,7 +329,7 @@ export function MemoryRanges() {
   }
 
   return (
-    <div className="max-h-[65vh] overflow-y-auto [&>*:nth-child(even)]:bg-secondary">
+    <div className="max-h-[65vh] overflow-y-auto">
       {ranges.map((r, i) => {
         const isLast = i === ranges.length - 1;
         return (

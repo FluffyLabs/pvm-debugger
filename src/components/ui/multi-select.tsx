@@ -336,8 +336,8 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                     >
                       <div
                         className={cn(
-                          "mr-2 flex h-4 w-4 p-0.5 items-center justify-center rounded-sm border-[#3B4040] bg-[#323232]",
-                          isSelected ? "bg-brand text-[#1C1B1F]" : "opacity-50 [&_svg]:invisible",
+                          "mr-2 flex h-4 w-4 p-0.5 items-center justify-center rounded-sm border border-[#3B4040] bg-[#323232]",
+                          isSelected ? "bg-brand text-[#1C1B1F] border-brand" : "opacity-50 [&_svg]:invisible",
                         )}
                       >
                         <CheckIcon className="h-3 w-3" />

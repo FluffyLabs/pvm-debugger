@@ -15,7 +15,7 @@ const EndSlot = () => {
     <div className="text-white flex w-full justify-end">
       <NumeralSystemSwitch className="hidden md:flex ml-7 mr-4" />
 
-      <div className="w-full md:max-w-[350px] ml-3">
+      <div className="w-full md:max-w-[350px] flex items-center ml-3">
         <PvmSelect />
       </div>
 
@@ -49,7 +49,7 @@ const MobileMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open
             <EllipsisVertical />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56 bg-[#242424] border-none text-white">
+        <DropdownMenuContent className="w-[315px] bg-[#242424] border-none text-white">
           <DropdownMenuItem
             className=" p-3 flex items-center"
             onSelect={(e) => {
@@ -69,7 +69,7 @@ const MobileMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open
             className="pl-3 pt-3"
           >
             <div className="flex flex-col">
-              <span className="text-sm font-medium leading-none">Report an issue or suggestion</span>
+              <span className="text-sm font-medium leading-none pb-1 pt-2">Report an issue or suggestion</span>
               <span className="text-xs text-muted-foreground">Go to the issue creation page</span>
             </div>
           </DropdownMenuItem>
@@ -79,7 +79,7 @@ const MobileMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open
             className="pl-3 pt-3"
           >
             <div className="flex flex-col">
-              <span className="text-sm font-medium leading-none">Star us on Github to show support</span>
+              <span className="text-sm font-medium leading-none pb-1 pt-3">Star us on Github to show support</span>
               <span className="text-xs text-muted-foreground">Visit our Github</span>
             </div>
           </DropdownMenuItem>
@@ -89,7 +89,7 @@ const MobileMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open
             className="pl-3 py-3"
           >
             <div className="flex flex-col">
-              <span className="text-sm font-medium leading-none">Fork & contribute</span>
+              <span className="text-sm font-medium leading-none pb-1 pt-3">Fork & contribute</span>
               <span className="text-xs text-muted-foreground pt-1">Opens the fork creation page</span>
             </div>
           </DropdownMenuItem>

@@ -141,7 +141,7 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
       >
         <div className="flex items-center space-x-6">
           <UploadCloud className="text-title-secondary-foreground" width="30px" height="30px" />
-          <p className="text-[10px] text-title-secondary-foreground">Select a file or drag and drop here</p>
+          <p className="text-[10px] text-title-secondary-foreground">Select a file or drag and drop</p>
         </div>
         <Button className="text-[10px] py-1 h-9" variant="outlineBrand" onClick={open}>
           Select file
