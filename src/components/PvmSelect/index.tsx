@@ -211,7 +211,7 @@ export const PvmSelect = () => {
     <div
       className={classNames(
         {
-          "flex text-[#858585] rounded-lg border": true,
+          "flex w-full text-[#858585] rounded-lg border": true,
         },
         !!error || selectedPvms.length === 0 ? "border-destructive" : "border-[#3B4040]",
       )}
@@ -232,16 +232,16 @@ export const PvmSelect = () => {
           dispatch(setPvmOptions(pvmsWithPayload.filter((pvm) => pvm.id !== value)));
         }}
       >
-        <span className="cursor-pointer text-white" onClick={handlePvmUrlOption}>
+        <span className="cursor-pointer text-white text-[11px]" onClick={handlePvmUrlOption}>
           Load custom PVM from URL as a WASM file
         </span>
-        <span className="cursor-pointer text-white" onClick={handlePvmFileOption}>
+        <span className="cursor-pointer text-white text-[11px]" onClick={handlePvmFileOption}>
           Upload custom PVM from a file as a WASM
         </span>
-        <span className="cursor-pointer text-white" onClick={handlePvmWsOptions}>
+        <span className="cursor-pointer text-white text-[11px]" onClick={handlePvmWsOptions}>
           Connect to a WebSocket PVM at ws://localhost:8765
         </span>
-        <span className="text-white">
+        <span className="text-white text-[11px]">
           Learn to add your PVM implementation here{" "}
           <a href="https://github.com/FluffyLabs/pvm-debugger/issues/81" target="_blank" className="text-brand">
             <ExternalLink className="inline w-4 mb-1" />

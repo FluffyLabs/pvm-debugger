@@ -63,7 +63,7 @@ export const MemoryCell = ({
     <span
       key={index}
       className={classNames(
-        "relative mr-[1px]",
+        "relative mr-[1px] font-inconsolata text-[15px]",
         {
           "font-bold": value !== 0,
         },
@@ -71,7 +71,7 @@ export const MemoryCell = ({
       )}
     >
       <span
-        className={classNames({
+        className={classNames("px-0.5", {
           "bg-brand": isNumber(selectedAddress) && selectedAddress === address + index,
         })}
       >
@@ -452,7 +452,7 @@ export function AddressInput({ value, onChange, placeholder, id, classes }: Addr
     <Search
       id={id}
       className={classNames(
-        "w-full",
+        "w-full rounded font-inconsolata",
         {
           "ring-2 ring-red-500": !isValid,
           "focus-visible:ring-ring": isValid,

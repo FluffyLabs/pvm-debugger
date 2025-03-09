@@ -9,7 +9,7 @@ import { ProgramRow } from "./InstructionsTable";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 
 const getWorkerValueFromState = (
@@ -93,7 +93,7 @@ export const InstructionItem = forwardRef(
       return (
         <TableRow
           ref={ref}
-          className={classNames("hover:bg-gray-300", { "opacity-50": isLast }, "overflow-hidden")}
+          className={classNames({ "opacity-50": isLast }, "overflow-hidden")}
           test-id="instruction-item"
           style={{
             backgroundColor,
@@ -220,27 +220,31 @@ export const InstructionItem = forwardRef(
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
-          <TooltipContent side="left">
-            {workersWithCurrentPc.map((worker, index) => (
-              <div key={index}>
-                <span>{worker.id} - PC:</span>
-                <span className="pl-3">
-                  <span>
-                    {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState", "pc"), numeralSystem)}
+          <TooltipPortal>
+            <TooltipContent side="left">
+              {workersWithCurrentPc.map((worker, index) => (
+                <div key={index}>
+                  <span>{worker.id} - PC:</span>
+                  <span className="pl-3">
+                    <span>
+                      {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState", "pc"), numeralSystem)}
+                    </span>
                   </span>
-                </span>
-              </div>
-            ))}
-          </TooltipContent>
+                </div>
+              ))}
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
     ) : (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
-          <TooltipContent side="bottom" className="m-0 p-0">
-            {renderTooltipContentInstructionInfo()}
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent side="bottom" className="m-0 p-0">
+              {renderTooltipContentInstructionInfo()}
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
     );
