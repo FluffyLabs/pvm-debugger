@@ -11,6 +11,7 @@ import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
+import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
 
 const getWorkerValueFromState = (
   worker: WorkerState,
@@ -80,6 +81,8 @@ export const InstructionItem = forwardRef(
   ) => {
     const { numeralSystem } = useContext(NumeralSystemContext);
     const isDarkMode = useIsDarkMode();
+    const program = useAppSelector(selectProgram);
+
     const workers = useAppSelector(selectWorkers);
     const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
 
@@ -140,8 +143,9 @@ export const InstructionItem = forwardRef(
                     <span
                       dangerouslySetInnerHTML={{
                         __html:
-                          mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)
-                            ?.map((instruction) => instruction.value)
+                          mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)
+                            ?.filter((instruction) => !instruction.hidden)
+                            ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
                             .join(", ") ?? "",
                       }}
                     />
@@ -171,7 +175,7 @@ export const InstructionItem = forwardRef(
             </div>
 
             {"args" in programRow &&
-              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)?.map(
+              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)?.map(
                 (instruction, index) => (
                   <div key={index}>
                     <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1 lowercase">
@@ -181,7 +185,11 @@ export const InstructionItem = forwardRef(
                       className={classNames(
                         "border-r-2",
                         { "border-violet-400": instruction.type === argType.REGISTER },
-                        { "border-green-300": instruction.type !== argType.REGISTER },
+                        { "border-gray-400": instruction.type === argType.IMMEDIATE_LENGTH },
+                        {
+                          "border-green-300":
+                            instruction.type !== argType.REGISTER && instruction.type !== argType.IMMEDIATE_LENGTH,
+                        },
                       )}
                     >
                       <div
@@ -190,13 +198,14 @@ export const InstructionItem = forwardRef(
                           {
                             "bg-violet-200": instruction.type === argType.REGISTER,
                           },
-                          { "bg-green-100": instruction.type !== argType.REGISTER },
+                          { "bg-gray-200": instruction.type === argType.IMMEDIATE_LENGTH },
+                          {
+                            "bg-green-100":
+                              instruction.type !== argType.REGISTER && instruction.type !== argType.IMMEDIATE_LENGTH,
+                          },
                         )}
                       >
-                        {valueToBinary(
-                          instruction.value,
-                          instruction.type === argType.EXTENDED_WIDTH_IMMEDIATE ? 16 : 8,
-                        )}
+                        {valueToBinary(instruction.value, instruction.argumentBitLength)}
                       </div>
                       <div
                         className={classNames("text-xs p-1", {
@@ -204,7 +213,7 @@ export const InstructionItem = forwardRef(
                           "font-inconsolata": instruction.type !== argType.REGISTER,
                         })}
                         dangerouslySetInnerHTML={{
-                          __html: instruction.value,
+                          __html: instruction.valueFormatted ?? instruction.value,
                         }}
                       />
                     </div>
