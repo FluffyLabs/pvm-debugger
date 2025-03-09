@@ -37,7 +37,7 @@ export const MobileRegisters = ({
         )}
       </div>
 
-      <div className="col-span-2 font-semibold text-right" style={{ color: getStatusColor(currentState.status || 0) }}>
+      <div className={"col-span-2 font-semibold text-right " + getStatusColor(currentState.status || 0)}>
         {currentState.status !== undefined ? Status[currentState.status] : Status[0]}
       </div>
       {changedRegisterIndex !== -1 && (

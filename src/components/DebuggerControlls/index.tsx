@@ -90,7 +90,7 @@ export const DebuggerControlls = () => {
   };
 
   return (
-    <div className="flex align-middle max-sm:justify-between mb-3 bg-gray-100 p-2 rounded-xl border border-gray-200">
+    <div className="flex align-middle h-full max-sm:justify-between bg-secondary p-2 w-full">
       <div className="md:mr-3">
         <ProgramLoader
           initialState={initialState}
@@ -102,7 +102,7 @@ export const DebuggerControlls = () => {
       </div>
       <Button
         className="md:mr-3"
-        variant="ghost"
+        variant="secondary"
         onClick={() => {
           debuggerActions.restartProgram(initialState);
           setError(undefined);
@@ -121,7 +121,7 @@ export const DebuggerControlls = () => {
       ) : (
         <Button
           className="md:mr-3"
-          variant="ghost"
+          variant="secondary"
           onClick={handleRunProgram}
           disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
         >
@@ -131,7 +131,7 @@ export const DebuggerControlls = () => {
       )}
       <Button
         className="md:mr-3"
-        variant="ghost"
+        variant="secondary"
         onClick={onNext}
         disabled={
           (!isDebugFinished && isRunMode) ||
@@ -149,7 +149,8 @@ export const DebuggerControlls = () => {
         )}
         <span className="hidden md:block">Step</span>
       </Button>
-      {error && <ErrorWarningTooltip msg={error} />}
+      {/* TODO fix dark mode */}
+      {error && <ErrorWarningTooltip variant="light" msg={error} />}
     </div>
   );
 };

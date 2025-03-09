@@ -1,11 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button.tsx";
 import { useState } from "react";
 import { InitialState } from "@/types/pvm";
@@ -26,15 +19,11 @@ export const ProgramLoader = (props: { initialState: InitialState; program: numb
       }}
     >
       <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-        <Button>
-          <Upload size="12px" className="mr-2" /> Load
+        <Button variant="secondary">
+          <Upload size="12px" /> <span className="max-sm:hidden ml-2">Load</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="min-h-[500px] max-h-[85vh] flex flex-col overflow-auto">
-        <DialogHeader>
-          <DialogTitle></DialogTitle>
-          <DialogDescription></DialogDescription>
-        </DialogHeader>
+      <DialogContent className="flex flex-col overflow-auto m-0 p-0 border-0">
         <Loader {...props} setIsDialogOpen={setIsDialogOpen} />
       </DialogContent>
     </Dialog>

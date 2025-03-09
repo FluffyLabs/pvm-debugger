@@ -4,26 +4,26 @@ import { MemoryRanges } from "./MemoryRanges";
 
 export const MemoryPreview = () => {
   return (
-    <div className="border-2 rounded-md min-h-64 h-full max-h-[70vh]">
+    <div className="border-2 rounded-md h-full bg-card">
       <Tabs defaultValue="pages" className="h-full flex flex-col">
-        <TabsList className="bg-transparent m-1">
+        <TabsList className="bg-transparent m-2 mb-0 max-sm:hidden border dark:border-brand p-0">
           <TabsTrigger
-            className="w-1/2 bg-gray-100 data-[state=active]:bg-black data-[state=active]:text-white"
+            className="text-xs w-1/2 h-full bg-title text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background rounded-se-none rounded-ee-none"
             value="pages"
           >
             Infinite
           </TabsTrigger>
           <TabsTrigger
-            className="w-1/2 bg-gray-100 data-[state=active]:bg-black data-[state=active]:text-white"
+            className="text-xs w-1/2 h-full bg-title dark:bg-transparent dark:text-brand text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background rounded-ss-none rounded-es-none"
             value="ranges"
           >
             Ranges
           </TabsTrigger>
         </TabsList>
-        <TabsContent className="m-3 h-auto" value="pages">
+        <TabsContent className="m-3 mt-0 h-full overflow-hidden" value="pages">
           <MemoryInfinite />
         </TabsContent>
-        <TabsContent className="" value="ranges">
+        <TabsContent value="ranges">
           <MemoryRanges />
         </TabsContent>
       </Tabs>

@@ -1,10 +1,58 @@
 import { Button } from "@/components/ui/button";
-import { isDarkMode, toggleColorMode } from "./utils";
+import { Moon, Sun } from "lucide-react";
+import { useIsDarkMode, useToggleColorMode } from "./utils";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export const ToggleDarkMode = () => {
-  const isDark = isDarkMode();
+  const isDark = useIsDarkMode();
+  const toggleColorMode = useToggleColorMode();
+  const onCLick = (val: string) => {
+    if ((isDark && val === "light") || (!isDark && val === "dark")) {
+      toggleColorMode();
+    }
+  };
 
-  const onCLick = () => toggleColorMode();
+  return (
+    <Select onValueChange={onCLick} defaultValue={isDark ? "dark" : "light"}>
+      <SelectTrigger
+        onClick={(e) => {
+          e.currentTarget.blur();
+          document.body.focus();
 
-  return <Button onClick={onCLick}>{isDark ? "Use light" : "Use dark"}</Button>;
+          e.stopPropagation();
+          // document.querySelector('[role="dialog"]')?.removeAttribute("aria-hidden");
+        }}
+        className="w-[106px]"
+      >
+        <SelectValue
+          onClick={(e) => {
+            e.currentTarget.blur();
+            document.body.focus();
+          }}
+        />
+      </SelectTrigger>
+      <SelectContent
+        onClick={(e) => {
+          e.currentTarget.blur();
+          document.body.focus();
+          e.stopPropagation();
+        }}
+      >
+        <SelectItem value="light">Light</SelectItem>
+        <SelectItem value="dark">Dark</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+};
+
+export const ToggleDarkModeIcon = () => {
+  const isDark = useIsDarkMode();
+  const toggleColorMode = useToggleColorMode();
+  const onCLick = toggleColorMode;
+
+  return (
+    <Button onClick={onCLick} className="text-title-foreground p-2 border rounded" variant="ghost">
+      {isDark ? <Sun width="30px" /> : <Moon width="30px" />}
+    </Button>
+  );
 };

@@ -22,22 +22,19 @@ import { isArray } from "lodash";
  * Variants for the multi-select component to handle different styles.
  * Uses class-variance-authority (cva) to define different styles based on "variant" prop.
  */
-const multiSelectVariants = cva(
-  "m-1 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300",
-  {
-    variants: {
-      variant: {
-        default: "border-foreground/10 text-foreground bg-card hover:bg-card/80",
-        secondary: "border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        inverted: "inverted",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
+const multiSelectVariants = cva("transition ease-in-out delay-150 duration-300", {
+  variants: {
+    variant: {
+      default: "border-foreground/10 text-foreground bg-card hover:bg-card/80",
+      primary: "border-primary bg-[#242424] text-primary-foreground",
+      secondary: "border-foreground/10 bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
     },
   },
-);
+  defaultVariants: {
+    variant: "primary",
+  },
+});
 
 /**
  * Props for MultiSelect component
@@ -218,68 +215,71 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
             onClick={handleTogglePopover}
             className={cn(
               "flex w-full p-1 rounded-md border min-h-10 h-auto items-center justify-between bg-inherit hover:bg-inherit",
-              required && !selectedValues.length ? "border-destructive" : "border-foreground/10",
+              required && !selectedValues.length ? "border-destructive" : "",
               className,
             )}
           >
             {selectedValues.length > 0 ? (
               <div className="flex justify-between items-center w-full">
-                <div className="flex flex-wrap items-center">
-                  {!showOptionsAsTags &&
-                    selectedValues.length <= maxCount &&
-                    selectedValues.slice(0, maxCount).map((value) => {
-                      const option = options.find((o) => o.value === value);
-                      return (
-                        <span key={value} className="text-gray-500 px-2">
-                          {option?.label}
-                        </span>
-                      );
-                    })}
-                  {!showOptionsAsTags && selectedValues.length > maxCount && (
-                    <span className="text-gray-500 px-2">{selectedValues.length} PVMs in parallel</span>
-                  )}
-                  {showOptionsAsTags &&
-                    selectedValues.slice(0, maxCount).map((value) => {
-                      const option = options.find((o) => o.value === value);
-                      const IconComponent = option?.icon;
-                      return (
-                        <Badge
-                          key={value}
-                          className={cn(isAnimating ? "animate-bounce" : "", multiSelectVariants({ variant }))}
-                          style={{ animationDuration: `${animation}s` }}
-                        >
-                          {IconComponent && <IconComponent className="h-4 w-4 mr-2" />}
-                          {option?.label}
-                          <XCircle
-                            className="ml-2 h-4 w-4 cursor-pointer"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              toggleOption(value);
-                            }}
-                          />
-                        </Badge>
-                      );
-                    })}
-                  {showOptionsAsTags && selectedValues.length > maxCount && (
-                    <Badge
-                      className={cn(
-                        "bg-transparent text-foreground border-foreground/1 hover:bg-transparent",
-                        isAnimating ? "animate-bounce" : "",
-                        multiSelectVariants({ variant }),
-                      )}
-                      style={{ animationDuration: `${animation}s` }}
-                    >
-                      {`+ ${selectedValues.length - maxCount} more`}
-                      <XCircle
-                        className="ml-2 h-4 w-4 cursor-pointer"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          clearExtraOptions();
-                        }}
-                      />
-                    </Badge>
-                  )}
+                <div className="w-0 flex-1 overflow-hidden">
+                  <div className="flex flex-wrap items-center truncate">
+                    {!showOptionsAsTags &&
+                      selectedValues.length <= maxCount &&
+                      selectedValues.slice(0, maxCount).map((value) => {
+                        const option = options.find((o) => o.value === value);
+                        return (
+                          <span key={value} className="text-[#858585] px-2">
+                            {option?.label}
+                          </span>
+                        );
+                      })}
+                    {!showOptionsAsTags && selectedValues.length > maxCount && (
+                      <span className="text-[#858585] px-2">{selectedValues.length} PVMs in parallel</span>
+                    )}
+                    {showOptionsAsTags &&
+                      selectedValues.slice(0, maxCount).map((value) => {
+                        const option = options.find((o) => o.value === value);
+                        const IconComponent = option?.icon;
+                        return (
+                          <Badge
+                            key={value}
+                            className={cn(isAnimating ? "animate-bounce" : "", multiSelectVariants({ variant }))}
+                            style={{ animationDuration: `${animation}s` }}
+                          >
+                            {IconComponent && <IconComponent className="h-4 w-4 mr-2" />}
+                            {option?.label}
+                            <XCircle
+                              className="ml-2 h-4 w-4 cursor-pointer"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                toggleOption(value);
+                              }}
+                            />
+                          </Badge>
+                        );
+                      })}
+                    {showOptionsAsTags && selectedValues.length > maxCount && (
+                      <Badge
+                        className={cn(
+                          "bg-transparent text-foreground border-foreground/1 hover:bg-transparent",
+                          isAnimating ? "animate-bounce" : "",
+                          multiSelectVariants({ variant }),
+                        )}
+                        style={{ animationDuration: `${animation}s` }}
+                      >
+                        {`+ ${selectedValues.length - maxCount} more`}
+                        <XCircle
+                          className="ml-2 h-4 w-4 cursor-pointer"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            clearExtraOptions();
+                          }}
+                        />
+                      </Badge>
+                    )}
+                  </div>
                 </div>
+
                 <div className="flex items-center justify-between">
                   {showClearAll && (
                     <XIcon
@@ -301,8 +301,12 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start" onEscapeKeyDown={() => setIsPopoverOpen(false)}>
-          <Command>
+        <PopoverContent
+          className="w-auto p-2 bg-[#242424] border-[#444444] rounded-lg"
+          align="start"
+          onEscapeKeyDown={() => setIsPopoverOpen(false)}
+        >
+          <Command className="bg-transparent">
             {showSearch && <CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} />}
             <CommandList className={cn("bg-gray-900", multiSelectVariants({ variant }))}>
               <CommandEmpty>No results found.</CommandEmpty>
@@ -311,9 +315,9 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                   <CommandItem key="all" onSelect={toggleAll} className="cursor-pointer">
                     <div
                       className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm",
                         selectedValues.length === options.length
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-[#242424] text-primary-foreground"
                           : "opacity-50 [&_svg]:invisible",
                       )}
                     >
@@ -328,12 +332,12 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
                     <CommandItem
                       key={option.value}
                       onSelect={() => toggleOption(option.value)}
-                      className="cursor-pointer"
+                      className={cn("cursor-pointer", isSelected ? "text-white" : "text-[#848484]")}
                     >
                       <div
                         className={cn(
-                          "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                          isSelected ? "bg-primary text-primary-foreground" : "opacity-50 [&_svg]:invisible",
+                          "mr-2 flex h-5 w-5 p-0.5 items-center justify-center rounded-sm border-[#3B4040] bg-[#323232]",
+                          isSelected ? "bg-brand text-[#1C1B1F]" : "opacity-50 [&_svg]:invisible",
                         )}
                       >
                         <CheckIcon className="h-4 w-4" />
@@ -379,7 +383,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
               )}
               {children && (
                 <>
-                  <CommandSeparator />
+                  <CommandSeparator className="bg-secondary-foreground mt-2" />
                   <CommandGroup>
                     {isArray(children) ? (
                       children.map((child, id) => <CommandItem key={id}>{child}</CommandItem>)

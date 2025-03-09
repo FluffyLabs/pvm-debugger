@@ -12,15 +12,29 @@ export default {
       screens: {
         "2xl": "1400px",
       },
+      colors: {},
     },
     extend: {
       colors: {
-        brand: "#61EDE2",
+        "title-secondary-foreground": "hsl(var(--title-secondary-foreground))",
+        title: {
+          DEFAULT: "hsl(var(--title))",
+          foreground: "hsl(var(--title-foreground))",
+        },
+        brand: {
+          DEFAULT: "hsl(var(--brand))",
+          dark: "hsl(var(--brand-dark))",
+          light: "hsl(var(--brand-light))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar))",
+          foreground: "hsl(var(--sidebar-foreground))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -68,6 +82,11 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif", "system-ui"], // Replace with your preferred font
+        inconsolata: ["Inconsolata", "monospace"],
       },
     },
   },

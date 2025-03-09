@@ -11,18 +11,29 @@ import { ChangeEvent, useCallback, useContext, useEffect, useRef, useState } fro
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import classNames from "classnames";
-import { INPUT_STYLES } from "../ui/input";
 import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "@/store/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useInView } from "react-intersection-observer";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from "@/components/ui/tooltip.tsx";
 import React from "react";
 import { addressFormatter, findMemoryForWorker, FindMemoryForWorkerType } from "./utils";
+import { Search } from "../SearchInput";
 
 const MAX_ADDRESS = Math.pow(2, 32);
 const ITEM_SIZE = 24;
 const PAGE_SIZE = 4096;
-const BG_COLOR = "#22cccc";
+
+const getCellTextColor = (value: number, index: number, isEqualAcrossWorkers: boolean) => {
+  if (!isEqualAcrossWorkers) {
+    return "text-red-500";
+  }
+
+  if (value !== 0) {
+    return "text-brand-dark";
+  }
+
+  return (index + 1) % 2 === 0 ? "text-title-secondary-foreground" : "text-title-foreground";
+};
 
 export const MemoryCell = ({
   value,
@@ -51,19 +62,17 @@ export const MemoryCell = ({
   return (
     <span
       key={index}
-      className={classNames("relative mr-[1px]", {
-        "text-gray-700": (index + 1) % 2 === 0,
-        "text-gray-950": (index + 1) % 2 === 1,
-        "font-bold text-brand": value !== 0,
-        "opacity-50": isEqualAcrossWorkers && value === 0,
-      })}
+      className={classNames(
+        "relative mr-[1px]",
+        {
+          "font-bold": value !== 0,
+        },
+        getCellTextColor(value, index, isEqualAcrossWorkers),
+      )}
     >
       <span
-        style={{
-          backgroundColor: isNumber(selectedAddress) && selectedAddress === address + index ? BG_COLOR : "initial",
-        }}
         className={classNames({
-          "text-red-500": !isEqualAcrossWorkers,
+          "bg-brand": isNumber(selectedAddress) && selectedAddress === address + index,
         })}
       >
         {isEqualAcrossWorkers ? (
@@ -75,7 +84,7 @@ export const MemoryCell = ({
 
               <TooltipPortal>
                 <TooltipContent>
-                  <div className="font-mono grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                  <div className="font-poppins grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
                     Page={Math.floor(address / PAGE_SIZE)}
                   </div>
                 </TooltipContent>
@@ -87,7 +96,7 @@ export const MemoryCell = ({
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <span
-                  className="font-mono"
+                  className="font-inconsolata"
                   dangerouslySetInnerHTML={{
                     __html: numeralSystem
                       ? "&quest;&#8288;&quest;&#8288;"
@@ -99,7 +108,7 @@ export const MemoryCell = ({
 
               <TooltipPortal>
                 <TooltipContent>
-                  <div className="font-mono grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                  <div className="font-inconsolata grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
                     {workers.map((worker) => (
                       <React.Fragment key={worker.id}>
                         <div>
@@ -150,7 +159,7 @@ export const MemoryRow = ({
   return (
     <>
       <div
-        className="opacity-40"
+        className="opacity-40 font-inconsolata"
         style={{
           fontVariantNumeric: "tabular-nums",
           width: `${addressLength}ch`,
@@ -158,7 +167,7 @@ export const MemoryRow = ({
       >
         {displayAddress}
       </div>
-      <div className="font-mono font-medium pl-2 flex justify-around w-full">
+      <div className="font-inconsolata font-medium pl-2 flex justify-around w-full">
         {bytes.map((byte, index) => (
           <MemoryCell
             findMemoryForWorker={findMemoryForWorker}
@@ -251,7 +260,7 @@ export const MemoryTable = ({
   }
 
   return (
-    <div className={classNames("mt-4 grow h-full overflow-auto", { "opacity-20": hasError })} ref={parentRef}>
+    <div className={classNames("overflow-auto relative h-[70vh]", { "opacity-20": hasError })} ref={parentRef}>
       {hasPrevPage && (
         <div className="text-center w-full" ref={beforeInView.ref}>
           ...
@@ -259,7 +268,6 @@ export const MemoryTable = ({
       )}
       <div
         ref={memoryInView.ref}
-        className="w-full relative"
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
         }}
@@ -385,22 +393,28 @@ export const MemoryInfinite = () => {
   };
 
   return (
-    <div className="overflow-auto p-1 h-[62vh] flex flex-col">
-      <AddressInput
-        value={selectedAddress !== null ? selectedAddress.toString() : ""}
-        onChange={async (address: number | null) => {
-          if (address === null) {
-            setSelectedAddress(address);
-            return;
-          }
-
-          await jumpToAddress(address);
-          setSelectedAddress(address);
-        }}
-        placeholder="Jump to address"
-      />
-      <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
+    <div className="overflow-hidden p-1 pt-3 flex flex-col h-full">
+      {/* Wrapping MemoryTable in a flex-1 container ensures it fills the available height */}
+      <div className="flex-1 overflow-auto">
+        <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
+      </div>
       {error && <div className="text-red-500 mt-3">{error}</div>}
+      <div className="mt-3">
+        <AddressInput
+          value={selectedAddress !== null ? selectedAddress.toString() : ""}
+          onChange={async (address: number | null) => {
+            if (address === null) {
+              setSelectedAddress(address);
+              return;
+            }
+
+            await jumpToAddress(address);
+            setSelectedAddress(address);
+          }}
+          placeholder="Jump to address"
+          classes="bg-muted text-muted-foreground mx-auto text-center rounded-[5px]"
+        />
+      </div>
     </div>
   );
 };
@@ -410,8 +424,9 @@ type AddressInputProps = {
   id?: string;
   placeholder?: string;
   onChange: (v: number | null) => void;
+  classes?: string;
 };
-export function AddressInput({ value, onChange, placeholder, id }: AddressInputProps) {
+export function AddressInput({ value, onChange, placeholder, id, classes }: AddressInputProps) {
   const [input, setInput] = useState(value);
   const [isValid, setIsValid] = useState(true);
 
@@ -434,18 +449,20 @@ export function AddressInput({ value, onChange, placeholder, id }: AddressInputP
   );
 
   return (
-    <>
-      <input
-        id={id}
-        className={classNames(INPUT_STYLES.replace("focus-visible:ring-ring", ""), "w-full", {
+    <Search
+      id={id}
+      className={classNames(
+        "w-full",
+        {
           "ring-2 ring-red-500": !isValid,
           "focus-visible:ring-ring": isValid,
           "focus-visible:ring-red-500": !isValid,
-        })}
-        placeholder={placeholder}
-        value={input}
-        onChange={changeValue}
-      />
-    </>
+        },
+        classes,
+      )}
+      placeholder={placeholder}
+      value={input}
+      onChange={changeValue}
+    />
   );
 }

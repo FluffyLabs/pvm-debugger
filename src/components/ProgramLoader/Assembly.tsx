@@ -6,6 +6,7 @@ import { compile_assembly, disassemble } from "@typeberry/spectool-wasm";
 import { mapUploadFileInputToOutput } from "./utils";
 import CodeMirror from "@uiw/react-codemirror";
 import { ProgramEdit } from "../ProgramEdit";
+import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 
 const DEFAULT_ASSEMBLY = `pre: a0 = 9
 pre: ra = 0xffff0000
@@ -167,7 +168,7 @@ export const Assembly = ({
 
   const [error, setError] = useState<string>();
   const [assembly, setAssembly] = useState(defaultAssembly);
-
+  const isDark = useIsDarkMode();
   const isError = !!error;
 
   return (
@@ -188,14 +189,15 @@ export const Assembly = ({
         }
       />
       <div
-        className={classNames("flex-auto gap-1 font-mono overflow-auto", {
+        className={classNames("flex-auto gap-1 font-poppins overflow-auto", {
           "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
           "border-red-500": isError,
         })}
       >
         <CodeMirror
+          theme={isDark ? "dark" : "light"}
           autoFocus
-          className="h-full"
+          className="h-full bg-card"
           height="100%"
           placeholder="Try writing some PolkaVM assembly code."
           value={assembly}
@@ -203,7 +205,14 @@ export const Assembly = ({
         />
       </div>
       <div>
-        <p className={classNames(isError ? "text-red-500" : "text-green-500", "pt-4")}>
+        <p
+          className={classNames(
+            isError
+              ? "text-[#D34D4B] bg-[#FFF4F4] dark:bg-[#D34D4B]/10"
+              : "text-[#5FC18C] bg-[#F4FFF9] dark:bg-brand-dark/20",
+            "p-2",
+          )}
+        >
           {error ?? "Compilation successful"}
         </p>
       </div>

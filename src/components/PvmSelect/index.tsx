@@ -209,15 +209,17 @@ export const PvmSelect = () => {
 
   return (
     <div
-      className={classNames({
-        "flex text-gray-500 border rounded-lg border-gray-500": true,
-        "border-red-500": !!error,
-      })}
+      className={classNames(
+        {
+          "flex text-[#858585] rounded-lg border": true,
+        },
+        !!error || selectedPvms.length === 0 ? "border-destructive" : "border-[#3B4040]",
+      )}
     >
-      {error && <ErrorWarningTooltip msg={error} />}
+      {error && <ErrorWarningTooltip variant="dark" classNames="ml-3" msg={error} />}
       <MultiSelect
+        className="border-none text-red-400 min-h-0 h-[32px] text-xs"
         test-id="pvm-select"
-        variant="inverted"
         maxCount={1}
         required
         options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label, removable: pvm.removable }))}
@@ -230,19 +232,19 @@ export const PvmSelect = () => {
           dispatch(setPvmOptions(pvmsWithPayload.filter((pvm) => pvm.id !== value)));
         }}
       >
-        <span className="cursor-pointer" onClick={handlePvmUrlOption}>
+        <span className="cursor-pointer text-white" onClick={handlePvmUrlOption}>
           Load custom PVM from URL as a WASM file
         </span>
-        <span className="cursor-pointer" onClick={handlePvmFileOption}>
+        <span className="cursor-pointer text-white" onClick={handlePvmFileOption}>
           Upload custom PVM from a file as a WASM
         </span>
-        <span className="cursor-pointer" onClick={handlePvmWsOptions}>
+        <span className="cursor-pointer text-white" onClick={handlePvmWsOptions}>
           Connect to a WebSocket PVM at ws://localhost:8765
         </span>
-        <span>
+        <span className="text-white">
           Learn to add your PVM implementation here{" "}
-          <a href="https://github.com/FluffyLabs/pvm-debugger/issues/81" target="_blank">
-            <ExternalLink className="inline w-4 mb-1 text-blue-600" />
+          <a href="https://github.com/FluffyLabs/pvm-debugger/issues/81" target="_blank" className="text-brand">
+            <ExternalLink className="inline w-4 mb-1" />
           </a>
         </span>
       </MultiSelect>

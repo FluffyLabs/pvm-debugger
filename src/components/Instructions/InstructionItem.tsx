@@ -1,6 +1,5 @@
 import { argType, mapInstructionsArgsByType, valueToBinary, valueToNumeralSystem } from "./utils";
 import classNames from "classnames";
-import { getStatusColor } from "../Registers/utils";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
 import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
@@ -11,6 +10,7 @@ import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { hexToRgb } from "@/lib/utils.ts";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
 
 const getWorkerValueFromState = (
@@ -20,26 +20,25 @@ const getWorkerValueFromState = (
   propNameIndex?: number,
 ) =>
   propNameIndex !== undefined
-    ? (worker[state][propName] as RegistersArray)[propNameIndex]
+    ? (worker[state][propName] as RegistersArray)?.[propNameIndex]
     : (worker[state][propName] as number);
 
 const AddressCell = ({
   breakpointAddresses,
   programRow,
   onAddressClick,
-  style,
+  className,
 }: {
   breakpointAddresses: (number | undefined)[];
   programRow: ProgramRow;
   onAddressClick: (address: number) => void;
-  style: React.CSSProperties;
+  className?: string;
 }) => {
   const [isHover, setIsHover] = useState(false);
 
   return (
     <TableCell
-      className="p-1.5 border-transparent cursor-pointer relative"
-      style={style}
+      className={"p-1.5 cursor-pointer relative font-inconsolata " + className}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
@@ -65,6 +64,7 @@ export const InstructionItem = forwardRef(
       onAddressClick,
       breakpointAddresses,
       style,
+      index,
     }: {
       status?: Status;
       isLast: boolean;
@@ -74,11 +74,13 @@ export const InstructionItem = forwardRef(
       onClick: (r: ProgramRow) => void;
       onAddressClick: (address: number) => void;
       breakpointAddresses: (number | undefined)[];
+      index: number;
       style: React.CSSProperties;
     },
     ref: ForwardedRef<HTMLTableRowElement>,
   ) => {
     const { numeralSystem } = useContext(NumeralSystemContext);
+    const isDarkMode = useIsDarkMode();
     const program = useAppSelector(selectProgram);
 
     const workers = useAppSelector(selectWorkers);
@@ -88,34 +90,32 @@ export const InstructionItem = forwardRef(
       onClick(programRow);
     }, [programRow, onClick]);
 
-    const { backgroundColor, hasOpacity } = getHighlightStatus(workers, programRow, status);
+    const { backgroundColor, hasOpacity } = getHighlightStatus(workers, programRow, status, isDarkMode);
 
     const renderContent = () => {
       return (
         <TableRow
           ref={ref}
-          className={classNames("hover:bg-gray-300", { "opacity-50": isLast })}
+          className={classNames("hover:bg-gray-300", { "opacity-50": isLast }, "overflow-hidden")}
           test-id="instruction-item"
           style={{
             backgroundColor,
             ...style,
           }}
+          data-index={index}
           title={programRow.block.name}
         >
           {instructionMode === InstructionMode.BYTECODE && (
             <>
               <AddressCell
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
+                className="border-b"
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
               />
-              <TableCell
-                className="p-1.5"
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
-              >
+              <TableCell className="p-1.5 border-b">
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
-                  <span className="text-gray-500">
+                  <span className="text-title-foreground">
                     {[...programRow.instructionBytes]
                       ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
                       .join(" ")}
@@ -127,23 +127,17 @@ export const InstructionItem = forwardRef(
           {instructionMode === InstructionMode.ASM && (
             <>
               <AddressCell
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
+                className="border-b"
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
               />
-              <TableCell
-                className="p-1.5"
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
-              >
+              <TableCell className="p-1.5 border-b">
                 <a onClick={fillSearch} className="cursor-pointer">
-                  <span className="uppercase font-bold">{programRow.name}</span>
+                  <span className="uppercase">{programRow.name}</span>
                 </a>
               </TableCell>
-              <TableCell
-                className="p-1.5 whitespace-nowrap"
-                style={{ borderTop: programRow.block.isStart ? "2px solid #bbb" : undefined }}
-              >
+              <TableCell className="p-1.5 whitespace-nowrap border-b font-inconsolata">
                 <span className="">
                   {"args" in programRow && (
                     <span
@@ -167,14 +161,14 @@ export const InstructionItem = forwardRef(
     const renderTooltipContentInstructionInfo = () => {
       return (
         <div>
-          <div className="flex flex-row bg-white">
+          <div className="flex flex-row bg-title p-3">
             <div>
-              <div className="font-mono text-xs text-gray-500 pl-1 pb-1">opcode</div>
+              <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1">opcode</div>
               <div className="border-r-2 border-red-400 ">
-                <div className="font-mono text-md tracking-[0.2rem] bg-red-200 pl-1 text-right">
+                <div className="font-inconsolata text-md tracking-[0.2rem] bg-red-200 pl-1 text-right">
                   {valueToBinary(programRow.instructionCode, 8)}
                 </div>
-                <div className="font-mono text-xs p-1 font-bold">
+                <div className="font-inconsolata text-xs p-1 font-bold">
                   {valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
                 </div>
               </div>
@@ -184,7 +178,9 @@ export const InstructionItem = forwardRef(
               mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)?.map(
                 (instruction, index) => (
                   <div key={index}>
-                    <div className="font-mono text-xs text-gray-500 pl-1 pb-1 lowercase">{instruction.type}</div>
+                    <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1 lowercase">
+                      {instruction.type}
+                    </div>
                     <div
                       className={classNames(
                         "border-r-2",
@@ -198,7 +194,7 @@ export const InstructionItem = forwardRef(
                     >
                       <div
                         className={classNames(
-                          "font-mono text-md tracking-[0.2rem] pl-1",
+                          "font-inconsolata text-md tracking-[0.2rem] pl-1",
                           {
                             "bg-violet-200": instruction.type === argType.REGISTER,
                           },
@@ -214,7 +210,7 @@ export const InstructionItem = forwardRef(
                       <div
                         className={classNames("text-xs p-1", {
                           "font-sans": instruction.type === argType.REGISTER,
-                          "font-mono": instruction.type !== argType.REGISTER,
+                          "font-inconsolata": instruction.type !== argType.REGISTER,
                         })}
                         dangerouslySetInnerHTML={{
                           __html: instruction.valueFormatted ?? instruction.value,
@@ -251,14 +247,16 @@ export const InstructionItem = forwardRef(
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
-          <TooltipContent side="bottom">{renderTooltipContentInstructionInfo()}</TooltipContent>
+          <TooltipContent side="bottom" className="m-0 p-0">
+            {renderTooltipContentInstructionInfo()}
+          </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
   },
 );
 
-function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status) {
+function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, status?: Status, isDarkMode?: boolean) {
   const pcInAllWorkers = (state: "currentState" | "previousState") =>
     workers.map((worker) => getWorkerValueFromState(worker, state, "pc"));
 
@@ -267,13 +265,20 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
   };
 
   const isHighlighted = isActive(programRow);
-  const bgColor = getBackgroundForStatus(status, isHighlighted).toUpperCase();
+  const bgColor = getBackgroundForStatus(status, isHighlighted, isDarkMode).toUpperCase();
 
   const bgOpacity =
     pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
     pcInAllWorkers("currentState").length;
 
-  const blockBackground = programRow.block.number % 2 === 0 ? "#fff" : "#efefef";
+  const blockBackground = isDarkMode
+    ? programRow.block.number % 2 === 0
+      ? "#242424"
+      : "#2D2D2D"
+    : programRow.block.number % 2 === 0
+      ? "#fff"
+      : "#F8F8F8";
+
   const backgroundColor = isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : blockBackground;
 
   return {
@@ -282,10 +287,36 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
   };
 }
 
-function getBackgroundForStatus(status: Status | undefined, isHighlighted: boolean) {
+function getBackgroundForStatus(status: Status | undefined, isHighlighted: boolean, isDarkMode?: boolean) {
   if (status === Status.OK && isHighlighted) {
-    return getStatusColor();
+    return isDarkMode ? getDarkStatusColor() : getStatusColor();
   }
 
-  return getStatusColor(status);
+  return isDarkMode ? getDarkStatusColor(status) : getStatusColor(status);
 }
+
+const getStatusColor = (status?: Status) => {
+  if (status === Status.OK || status === Status.HALT) {
+    return "#4caf50";
+  }
+
+  if (status === Status.PANIC) {
+    return "#f44336";
+  }
+
+  // Highlight color
+  return "#E4FFFD";
+};
+
+const getDarkStatusColor = (status?: Status) => {
+  if (status === Status.OK || status === Status.HALT) {
+    return "#124b14";
+  }
+
+  if (status === Status.PANIC) {
+    return "#f44336";
+  }
+
+  // Highlight color
+  return "#00413B";
+};

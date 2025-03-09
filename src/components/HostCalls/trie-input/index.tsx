@@ -5,7 +5,7 @@ import { hasPVMGeneratedStorage } from "@/store/debugger/debuggerSlice";
 import { useAppSelector } from "@/store/hooks";
 import { bytes, hash } from "@typeberry/jam-host-calls";
 import { cloneDeep } from "lodash";
-import { PlusIcon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export interface StorageRow {
@@ -38,13 +38,12 @@ type StorageItemProps = {
 
 const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValueChange }: StorageItemProps) => {
   const isDisabled = useAppSelector(hasPVMGeneratedStorage);
-  const backgroundClass = index % 2 === 0 ? "bg-white" : "bg-gray-100";
 
   // Cover PVM generated hash
   const isKeySameAsHash = (row.key && row.key === row.keyHash) || (!row.key && row.keyHash);
 
   return (
-    <div className={`p-3 flex ${backgroundClass}`}>
+    <div className={`p-3 flex border rounded-lg`}>
       <div className="flex-col w-full">
         <div className="flex items-start">
           <div className="flex flex-col w-full">
@@ -55,7 +54,7 @@ const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValue
               disabled={isDisabled}
             />
             <span className="text-xs py-1 ml-2">
-              Key Hash: {isKeySameAsHash ? "--- key is already a hash ---" : row.keyHash}
+              (Key Hash:) {isKeySameAsHash ? "--- key is already a hash ---" : row.keyHash}
             </span>
           </div>
 
@@ -69,7 +68,7 @@ const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValue
             placeholder="Raw value or hex array"
             value={row.value}
             onChange={(e) => handleValueChange(index, e.target.value)}
-            className="flex-1 mt-1"
+            className="flex-1 mt-1 text-brand-dark dark:text-brand"
             disabled={isDisabled}
           />
         </div>
@@ -160,8 +159,8 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
           />
         );
       })}
-      <Button className="mt-3 ml-3" variant="secondary" onClick={() => handleInsertRow()} disabled={isDisabled}>
-        <PlusIcon className="w-4 h-4" /> Add new
+      <Button className="mt-3" variant="outlineBrand" onClick={() => handleInsertRow()} disabled={isDisabled}>
+        New item
       </Button>
     </div>
   );

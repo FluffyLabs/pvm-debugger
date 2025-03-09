@@ -5,6 +5,7 @@ import { bytes } from "@typeberry/block";
 import { logger } from "@/utils/loggerService";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
+import { ProgramEdit } from "../ProgramEdit";
 
 const parseArrayLikeString = (input: string): (number | string)[] => {
   // Remove the brackets and split the string by commas
@@ -15,7 +16,7 @@ const parseArrayLikeString = (input: string): (number | string)[] => {
 
   // Process each item
   return items.map((item) => {
-    if (/^(?:0x)?[0-9a-fA-F]+$/i.test(item)) {
+    if (/^0x[0-9a-fA-F]+$/i.test(item)) {
       return parseInt(item, 16);
     } else if (!isNaN(Number(item))) {
       return Number(item);
@@ -72,7 +73,6 @@ export const ProgramTextLoader = ({
         const parseTest = newInput.replace(/0x([a-fA-F0-9]+)/g, '"0x$1"');
         // Parse it just to check if it's a valid JSON
         JSON.parse(parseTest);
-
         const parsedJson = parseArrayLikeString(newInput);
         const programArray = parsedJson.filter((item) => typeof item === "number") as number[];
 
@@ -93,14 +93,12 @@ export const ProgramTextLoader = ({
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
+      <ProgramEdit startSlot={<small>Edit program code bytes</small>} />
       <div className={classNames("h-full flex-auto flex gap-1 flex-col")}>
-        <p className="pb-2 mb-1">
-          <small>Edit program code bytes</small>
-        </p>
         <Textarea
           autoFocus
-          className={classNames("w-full flex-auto font-mono text-base border-2 rounded-md", {
+          className={classNames("w-full flex-auto font-inconsolata text-base border-2 rounded-md", {
             "focus-visible:ring-3 focus-visible:outline-none active:outline-none border-red-500": isProgramInvalid,
           })}
           id="program"

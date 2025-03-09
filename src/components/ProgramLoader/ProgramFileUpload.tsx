@@ -1,6 +1,5 @@
-import { ExternalLink } from "lucide-react";
-import { Input } from "../ui/input";
-import { ProgramUploadFileOutput } from "./types";
+import { useDropzone } from "react-dropzone";
+import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
 import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
@@ -8,8 +7,19 @@ import { SafeParseReturnType, z } from "zod";
 import { useAppSelector } from "@/store/hooks";
 import { selectInitialState } from "@/store/debugger/debuggerSlice";
 import { getAsChunks, getAsPageMap } from "@/lib/utils.ts";
+import { TriangleAlert, UploadCloud } from "lucide-react";
+import { Button } from "../ui/button";
+import { useState } from "react";
 
-const validateJsonTestCaseSchema = (json: unknown) => {
+type ProgramFileUploadProps = {
+  onFileUpload: (val: ProgramUploadFileOutput) => void;
+  close?: () => void;
+};
+
+type RawProgramUploadFileInput = unknown;
+type ValidationResult = SafeParseReturnType<RawProgramUploadFileInput, ProgramUploadFileInput>;
+
+const validateJsonTestCaseSchema = (json: RawProgramUploadFileInput): ValidationResult => {
   const pageMapSchema = z.object({
     address: z.number(),
     length: z.number(),
@@ -39,10 +49,8 @@ const validateJsonTestCaseSchema = (json: unknown) => {
   return schema.safeParse(json);
 };
 
-const generateErrorMessageFromZodValidation = (result: SafeParseReturnType<unknown, unknown>) => {
-  if (!result.error) {
-    return false;
-  }
+const generateErrorMessageFromZodValidation = (result: ValidationResult): string => {
+  if (!result.error) return "Unknown error occurred";
 
   const formattedErrors = result.error.errors.map((err) => {
     const path = err.path.join(" > ") || "root";
@@ -52,18 +60,9 @@ const generateErrorMessageFromZodValidation = (result: SafeParseReturnType<unkno
   return `File validation failed with the following errors:\n\n${formattedErrors.join("\n")}`;
 };
 
-export const ProgramFileUpload = ({
-  onFileUpload,
-  onParseError,
-  close,
-}: {
-  onFileUpload: (val: ProgramUploadFileOutput) => void;
-  onParseError: (error: string) => void;
-  close?: () => void;
-}) => {
+export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUpload, close }) => {
   const initialState = useAppSelector(selectInitialState);
-
-  let fileReader: FileReader;
+  const [error, setError] = useState<string>();
 
   const handleFileRead = (e: ProgressEvent<FileReader>) => {
     const arrayBuffer = e.target?.result;
@@ -79,7 +78,7 @@ export const ProgramFileUpload = ({
 
         if (!result.success) {
           const errorMessage = generateErrorMessageFromZodValidation(result);
-          onParseError(errorMessage || "");
+          setError(errorMessage || "");
         } else {
           onFileUpload(mapUploadFileInputToOutput(jsonFile));
         }
@@ -113,70 +112,48 @@ export const ProgramFileUpload = ({
           });
         }
       }
+    } else {
+      setError("Failed to read the file");
     }
   };
 
-  const handleProgramUpload = (file: Blob) => {
-    fileReader = new FileReader();
-    fileReader.onloadend = handleFileRead;
-    fileReader.readAsArrayBuffer(file);
+  const onDrop = (acceptedFiles: File[]) => {
+    if (acceptedFiles.length) {
+      const file = acceptedFiles[0];
+      const fileReader = new FileReader();
+      fileReader.onloadend = handleFileRead;
+      fileReader.readAsArrayBuffer(file);
+      close?.();
+    }
   };
 
-  return (
-    <div className="block pb-5">
-      <h2 className="text-lg">Or load a file in one of the following formats:</h2>
-      <ul className="list-disc p-4">
-        <li>
-          <p>JSON test file compatible with JAM TestVectors JSON</p>
-          <p>
-            <small>
-              Examples can be found in <a href="https://github.com/w3f/jamtestvectors">wf3/jamtestvectors</a> Github
-              repo&nbsp;
-              <a href="https://github.com/w3f/jamtestvectors/pull/3/files" target="_blank">
-                <ExternalLink className="inline w-4 mb-1 text-blue-600" />
-              </a>
-            </small>
-          </p>
-        </li>
-        <li>
-          <p>JAM SPI program</p>
-          <p>
-            <small>
-              SPI program definition can be found in
-              <a href="https://graypaper.fluffylabs.dev/#/5b732de/2a7e022a7e02" target="_blank">
-                &nbsp;a GrayPaper&nbsp;
-                <ExternalLink className="inline w-4 mb-1 text-blue-600" />
-              </a>
-            </small>
-          </p>
-        </li>
-        <li>
-          <p>Generic PVM program</p>
-          <p>
-            <small>
-              Generic program definition can be found in
-              <a href="https://graypaper.fluffylabs.dev/#/5b732de/23c60023c600" target="_blank">
-                &nbsp;a GrayPaper&nbsp;
-                <ExternalLink className="inline w-4 mb-1 text-blue-600" />
-              </a>
-            </small>
-          </p>
-        </li>
-      </ul>
+  const { getRootProps, getInputProps, open } = useDropzone({
+    onDrop,
+    accept: { "application/octet-stream": [".bin", ".pvm"], "application/json": [".json"] },
+    noClick: true,
+  });
 
-      <Input
-        className="mt-5 mr-3"
-        id="test-file"
-        type="file"
-        accept=".bin,.pvm,.json"
-        onClick={(e) => e.stopPropagation()}
-        onChange={(e) => {
-          if (e.target.files?.length) {
-            handleProgramUpload(e.target.files[0]);
-            close?.();
-          }
-        }}
-      />
+  return (
+    <div>
+      <div
+        {...getRootProps()}
+        className="flex items-center justify-between border-dashed border-2 py-3 px-4 rounded-lg w-full mx-auto"
+      >
+        <div className="flex items-center space-x-6">
+          <UploadCloud className="text-title-secondary-foreground" width="30px" height="30px" />
+          <p className="text-[10px] text-title-secondary-foreground">Select a file or drag and drop here</p>
+        </div>
+        <Button className="text-[10px] py-1 h-9" variant="outlineBrand" onClick={open}>
+          Select file
+        </Button>
+        <input {...getInputProps()} className="hidden" />
+      </div>
+
+      {error && (
+        <p className="flex items-center text-destructive-foreground mt-3 text-[11px] whitespace-pre-line">
+          <TriangleAlert className="mr-2" height="18px" /> {error}
+        </p>
+      )}
     </div>
   );
 };

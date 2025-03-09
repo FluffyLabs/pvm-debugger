@@ -89,15 +89,16 @@ export const InstructionsTable = ({
   }
 
   return (
-    <div ref={parentRef} className="font-mono overflow-auto h-[calc(70vh-52px)] relative">
+    <div ref={parentRef} className="font-poppins overflow-auto relative h-[calc(100%-48px)]">
       <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-        <table className="w-full caption-bottom text-sm border-separate border-spacing-0">
+        <table className="w-full caption-bottom text-sm border-separate border-spacing-x-0 border-spacing-y-1">
           <tbody>
             {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
               const row = programRows[virtualRow.index];
 
               return (
                 <InstructionItem
+                  index={virtualRow.index}
                   key={virtualRow.key}
                   ref={rowVirtualizer.measureElement}
                   status={status}

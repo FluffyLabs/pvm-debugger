@@ -30,10 +30,11 @@ const ComputedValue = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
-  const getWorkerValueFromState = (worker: WorkerState, state: "currentState" | "previousState") =>
-    propNameIndex !== undefined
-      ? (worker[state][propName] as RegistersArray)[propNameIndex]
+  const getWorkerValueFromState = (worker: WorkerState, state: "currentState" | "previousState") => {
+    return propNameIndex !== undefined
+      ? (worker[state][propName] as RegistersArray)?.[propNameIndex]
       : (worker[state][propName] as number);
+  };
 
   const valuesInAllWorkers = (state: "currentState" | "previousState") =>
     workers.map((worker) => getWorkerValueFromState(worker, state));
@@ -62,7 +63,7 @@ const ComputedValue = ({
     return (
       <p
         className={classNames({
-          "pl-2": true,
+          "font-inconsolata text-base": true,
           "opacity-60": value === 0 || value === 0n || value === "0",
         })}
       >
@@ -75,7 +76,7 @@ const ComputedValue = ({
     <div className="pl-2">
       <div
         className={classNames({
-          "text-blue-500": value !== previousValue,
+          "text-brand-dark dark:text-brand": value !== previousValue,
           "text-red-500": !isEqualAcrossWorkers,
         })}
       >
@@ -119,7 +120,7 @@ const EditableField = ({
 
   return (
     <Input
-      className="m-auto w-20 h-6 py-0 px-[4px] text-md border-white hover:border-input"
+      className="m-auto w-20 h-6 py-0 px-[4px] text-brand-dark dark:text-brand text-base font-inconsolata border-transparent hover:border-input"
       onChange={onChange}
       onKeyUp={(e) => {
         if (e.key === "Enter") {
@@ -150,27 +151,30 @@ export const Registers = ({
   const workers = useAppSelector(selectWorkers);
 
   return (
-    <div className="border-2 rounded-md h-[70vh] overflow-auto">
-      <div className="font-mono flex flex-col items-start text-xs">
+    <div className="border-2 rounded-md overflow-auto bg-card h-full">
+      <div className="font-poppins flex flex-col items-start text-xs">
         {/* Summary */}
         <table className="w-full table-fixed  text-center">
-          <thead>
+          <thead className="">
             <tr>
-              <th className="border border-gray-200 py-3 bg-gray-100">Status</th>
-              <th className="border border-gray-200 bg-gray-100">PC</th>
-              <th className="border border-gray-200 bg-gray-100">Gas</th>
+              <th className="border border-l-0 border-t-0 py-3 bg-title text-title-foreground rounded-ss">Status</th>
+              <th className="border border-t-0 bg-title text-title-foreground">PC</th>
+              <th className="border border-r-0 border-t-0 rounded-se bg-title text-title-foreground">Gas</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-gray-200">
+              <td className="border border-l-0">
                 {currentState.status !== undefined && previousState.status !== undefined && (
                   <ComputedValue
                     value={currentState.status}
                     previousValue={previousState.status}
                     propName="status"
                     formatter={(value) => (
-                      <span style={{ color: getStatusColor(Number(value)) }} test-id="program-status">
+                      <span
+                        className={"py-1 px-4 rounded-xl lowercase " + getStatusColor(Number(value))}
+                        test-id="program-status"
+                      >
                         {Status[Number(value)] ?? `Invalid(${value})`}
                       </span>
                     )}
@@ -178,7 +182,7 @@ export const Registers = ({
                   />
                 )}
               </td>
-              <td className="border border-gray-200 py-2 text-center">
+              <td className="border py-2 text-center">
                 {allowEditingPc ? (
                   <EditableField
                     onChange={(e) => {
@@ -200,7 +204,7 @@ export const Registers = ({
                   />
                 )}
               </td>
-              <td className="border border-gray-200">
+              <td className="border border-r-0">
                 {allowEditingGas ? (
                   <EditableField
                     onChange={(e) => {
@@ -227,48 +231,50 @@ export const Registers = ({
         </table>
 
         {/* Registers */}
-        <table className="table-fixed m-3">
-          {currentState.regs?.map((_: unknown, regNo: number) => (
-            <tr key={regNo} className="h-[30px]">
-              <td className="pr-6">
-                ω<sub>{regNo}</sub>
-              </td>
-              {allowEditingRegisters ? (
-                <td className="">
-                  <Input
-                    className="w-20 m-0 p-0"
-                    onChange={(e) => {
-                      const value = e.target?.value;
-                      const newValue = stringToNumber(value, BigInt);
-                      onCurrentStateChange({
-                        ...currentState,
-                        regs: currentState.regs?.map((val: bigint, index: number) =>
-                          index === regNo ? newValue : val,
-                        ) as InitialState["regs"],
-                      });
-                    }}
-                    onKeyUp={(e) => {
-                      if (e.key === "Enter") {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
-                  />
+        <table className="table-fixed mx-5 mt-3">
+          <tbody>
+            {currentState.regs?.map((_: unknown, regNo: number) => (
+              <tr key={regNo} className="h-[30px]">
+                <td className="pr-6">
+                  ω<sub>{regNo}</sub>
                 </td>
-              ) : (
-                <td>
-                  <ComputedValue
-                    value={currentState.regs?.[regNo]}
-                    previousValue={previousState.regs?.[regNo]}
-                    propName="regs"
-                    propNameIndex={regNo}
-                    workers={workers}
-                    padStartVal={numeralSystem ? 16 : 0}
-                  />
-                </td>
-              )}
-            </tr>
-          ))}
+                {allowEditingRegisters ? (
+                  <td className="">
+                    <Input
+                      className="w-20 m-0 p-0"
+                      onChange={(e) => {
+                        const value = e.target?.value;
+                        const newValue = stringToNumber(value, BigInt);
+                        onCurrentStateChange({
+                          ...currentState,
+                          regs: currentState.regs?.map((val: bigint, index: number) =>
+                            index === regNo ? newValue : val,
+                          ) as InitialState["regs"],
+                        });
+                      }}
+                      onKeyUp={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      value={valueToNumeralSystem(currentState.regs?.[regNo] ?? 0, numeralSystem)}
+                    />
+                  </td>
+                ) : (
+                  <td>
+                    <ComputedValue
+                      value={currentState.regs?.[regNo]}
+                      previousValue={previousState.regs?.[regNo]}
+                      propName="regs"
+                      propNameIndex={regNo}
+                      workers={workers}
+                      padStartVal={numeralSystem ? 16 : 0}
+                    />
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </div>
