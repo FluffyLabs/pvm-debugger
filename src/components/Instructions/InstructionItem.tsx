@@ -150,6 +150,7 @@ export const InstructionItem = forwardRef(
                       dangerouslySetInnerHTML={{
                         __html:
                           mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)
+                            ?.filter((instruction) => !instruction.hidden)
                             ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
                             .join(", ") ?? "",
                       }}
@@ -188,7 +189,11 @@ export const InstructionItem = forwardRef(
                       className={classNames(
                         "border-r-2",
                         { "border-violet-400": instruction.type === argType.REGISTER },
-                        { "border-green-300": instruction.type !== argType.REGISTER },
+                        { "border-gray-400": instruction.type === argType.IMMEDIATE_LENGTH },
+                        {
+                          "border-green-300":
+                            instruction.type !== argType.REGISTER && instruction.type !== argType.IMMEDIATE_LENGTH,
+                        },
                       )}
                     >
                       <div
@@ -197,7 +202,11 @@ export const InstructionItem = forwardRef(
                           {
                             "bg-violet-200": instruction.type === argType.REGISTER,
                           },
-                          { "bg-green-100": instruction.type !== argType.REGISTER },
+                          { "bg-gray-200": instruction.type === argType.IMMEDIATE_LENGTH },
+                          {
+                            "bg-green-100":
+                              instruction.type !== argType.REGISTER && instruction.type !== argType.IMMEDIATE_LENGTH,
+                          },
                         )}
                       >
                         {valueToBinary(instruction.value, instruction.argumentBitLength)}

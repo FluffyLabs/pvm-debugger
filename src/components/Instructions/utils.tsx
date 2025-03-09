@@ -22,6 +22,7 @@ export const valueToBinary = (value?: number | bigint | string, padStartVal: num
 
 export enum argType {
   IMMEDIATE = "IMMEDIATE",
+  IMMEDIATE_LENGTH = "IMMEDIATE_LENGTH",
   OFFSET = "OFFSET",
   REGISTER = "REGISTER",
   EXTENDED_WIDTH_IMMEDIATE = "EXTENDED_WIDTH_IMMEDIATE",
@@ -46,6 +47,7 @@ export const mapInstructionsArgsByType = (
       value: string | number;
       valueFormatted?: string | number;
       argumentBitLength?: number;
+      hidden?: boolean;
     }[]
   | null => {
   if (!args) return null;
@@ -76,6 +78,12 @@ export const mapInstructionsArgsByType = (
       ];
     case ArgumentType.TWO_IMMEDIATES:
       return [
+        {
+          type: argType.IMMEDIATE_LENGTH,
+          value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          argumentBitLength: bitLengths?.firstImmediateLengthBits,
+          hidden: true,
+        },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
@@ -118,6 +126,12 @@ export const mapInstructionsArgsByType = (
           argumentBitLength: bitLengths?.registerIndexBits || 4,
         },
         {
+          type: argType.IMMEDIATE_LENGTH,
+          value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          argumentBitLength: bitLengths?.firstImmediateLengthBits,
+          hidden: true,
+        },
+        {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.firstImmediateDecoderBits,
@@ -135,6 +149,12 @@ export const mapInstructionsArgsByType = (
           value: args?.registerIndex,
           valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
           argumentBitLength: bitLengths?.registerIndexBits || 4,
+        },
+        {
+          type: argType.IMMEDIATE_LENGTH,
+          value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          argumentBitLength: bitLengths?.firstImmediateLengthBits,
+          hidden: true,
         },
         {
           type: argType.IMMEDIATE,
@@ -229,6 +249,12 @@ export const mapInstructionsArgsByType = (
           value: args?.secondRegisterIndex,
           valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.secondRegisterIndexBits || 4,
+        },
+        {
+          type: argType.IMMEDIATE_LENGTH,
+          value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          argumentBitLength: bitLengths?.firstImmediateLengthBits,
+          hidden: true,
         },
         {
           type: argType.IMMEDIATE,
