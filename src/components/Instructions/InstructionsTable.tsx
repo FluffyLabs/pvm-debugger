@@ -39,13 +39,13 @@ export const InstructionsTable = ({
 
       return (
         <div>
-          {isHex && <span className="opacity-20">0x</span>}
+          {isHex && <span className="text-muted-foreground">0x</span>}
           {[...Array(8 - (isHex ? 2 : 0) - valInNumeralSystem.length)].map((_, idx) => (
-            <span key={idx} className="opacity-20">
+            <span key={idx} className="text-muted-foreground">
               0
             </span>
           ))}
-          <span>{valInNumeralSystem}</span>
+          <span className="text-inherit">{valInNumeralSystem}</span>
         </div>
       );
     };

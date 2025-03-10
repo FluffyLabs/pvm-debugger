@@ -27,14 +27,25 @@ const AddressCell = ({
   programRow,
   onAddressClick,
   className,
+  colors,
 }: {
   breakpointAddresses: (number | undefined)[];
   programRow: ProgramRow;
   onAddressClick: (address: number) => void;
   className?: string;
+  colors:
+    | {
+        color: string;
+        border: string;
+      }
+    | {
+        color: string;
+        border: string;
+      };
 }) => {
   const [isHover, setIsHover] = useState(false);
-
+  const backgroundClass =
+    (breakpointAddresses.includes(programRow.counter) && "bg-red-600") || (isHover && "bg-red-400");
   return (
     <TableCell
       className={"p-1.5 cursor-pointer relative font-inconsolata " + className}
@@ -42,12 +53,12 @@ const AddressCell = ({
       onMouseLeave={() => setIsHover(false)}
     >
       <div
-        className={classNames("w-[4px] absolute h-[100%] left-0 top-0", {
-          "bg-red-600": breakpointAddresses.includes(programRow.counter),
-          "bg-red-400": isHover,
-        })}
+        style={{ backgroundColor: backgroundClass ? undefined : colors.border }}
+        className={classNames("w-[3px] absolute h-[100%] left-0 top-0", backgroundClass)}
       ></div>
-      <span onClick={() => onAddressClick(programRow.counter)}>{programRow.addressEl}</span>
+      <span style={{ color: colors.color }} onClick={() => onAddressClick(programRow.counter)}>
+        {programRow.addressEl}
+      </span>
     </TableCell>
   );
 };
@@ -87,7 +98,7 @@ export const InstructionItem = forwardRef(
       onClick(programRow);
     }, [programRow, onClick]);
 
-    const { backgroundColor, hasOpacity } = getHighlightStatus(workers, programRow, status, isDarkMode);
+    const { backgroundColor, color, border, hasOpacity } = getHighlightStatus(workers, programRow, status, isDarkMode);
 
     const renderContent = () => {
       return (
@@ -97,6 +108,7 @@ export const InstructionItem = forwardRef(
           test-id="instruction-item"
           style={{
             backgroundColor,
+            color,
             ...style,
           }}
           data-index={index}
@@ -109,6 +121,10 @@ export const InstructionItem = forwardRef(
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
+                colors={{
+                  color,
+                  border,
+                }}
               />
               <TableCell className="p-1.5 border-b">
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
@@ -128,6 +144,10 @@ export const InstructionItem = forwardRef(
                 breakpointAddresses={breakpointAddresses}
                 programRow={programRow}
                 onAddressClick={onAddressClick}
+                colors={{
+                  color,
+                  border,
+                }}
               />
               <TableCell className="p-1.5 border-b">
                 <a onClick={fillSearch} className="cursor-pointer">
@@ -260,7 +280,7 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
   };
 
   const isHighlighted = isActive(programRow);
-  const bgColor = getBackgroundForStatus(status, isHighlighted, isDarkMode).toUpperCase();
+  const colors = getBackgroundForStatus(status, isHighlighted, isDarkMode);
 
   const bgOpacity =
     pcInAllWorkers("currentState").filter((pc) => pc === programRow.address).length /
@@ -274,10 +294,15 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
       ? "#fff"
       : "#F8F8F8";
 
-  const backgroundColor = isHighlighted ? `rgba(${hexToRgb(bgColor)}, ${bgOpacity})` : blockBackground;
-
+  const backgroundColor = isHighlighted
+    ? `rgba(${hexToRgb(colors.background.toUpperCase())}, ${bgOpacity})`
+    : blockBackground;
+  const color = isHighlighted ? colors.color : isDarkMode ? "#B3B3B3" : "#14181F";
+  const border = isHighlighted ? colors.border : isDarkMode ? "#444444" : "#EBEBEB";
   return {
     backgroundColor,
+    color,
+    border,
     hasOpacity: bgOpacity > 0 && bgOpacity < 1,
   };
 }
@@ -292,26 +317,50 @@ function getBackgroundForStatus(status: Status | undefined, isHighlighted: boole
 
 const getStatusColor = (status?: Status) => {
   if (status === Status.OK || status === Status.HALT) {
-    return "#4caf50";
+    return {
+      background: "#4caf50",
+      color: "#367f39",
+      border: "#4caf50",
+    };
   }
 
   if (status === Status.PANIC) {
-    return "#f44336";
+    return {
+      background: "#f44336",
+      color: "#b32d23",
+      border: "#f44336",
+    };
   }
 
   // Highlight color
-  return "#E4FFFD";
+  return {
+    background: "#E4FFFD",
+    color: "#17AFA3",
+    border: "#61EDE2",
+  };
 };
 
 const getDarkStatusColor = (status?: Status) => {
   if (status === Status.OK || status === Status.HALT) {
-    return "#124b14";
+    return {
+      background: "#124b14",
+      color: "#4caf50",
+      border: "#4caf50",
+    };
   }
 
   if (status === Status.PANIC) {
-    return "#f44336";
+    return {
+      background: "#f44336",
+      color: "#b32d23",
+      border: "#b32d23",
+    };
   }
 
   // Highlight color
-  return "#00413B";
+  return {
+    background: "#00413B",
+    color: "#00FFEB",
+    border: "#61EDE2",
+  };
 };
