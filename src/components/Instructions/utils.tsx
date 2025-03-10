@@ -48,6 +48,7 @@ export const mapInstructionsArgsByType = (
       valueFormatted?: string | number;
       argumentBitLength?: number;
       hidden?: boolean;
+      hiddenFromDetails?: boolean;
     }[]
   | null => {
   if (!args) return null;
@@ -74,6 +75,7 @@ export const mapInstructionsArgsByType = (
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.immediateDecoderBits,
+          hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
     case ArgumentType.TWO_IMMEDIATES:
@@ -88,11 +90,13 @@ export const mapInstructionsArgsByType = (
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.firstImmediateDecoderBits,
+          hiddenFromDetails: bitLengths?.firstImmediateDecoderBits === 0,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.secondImmediateDecoderBits,
+          hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
       ];
     case ArgumentType.ONE_OFFSET:
@@ -101,6 +105,7 @@ export const mapInstructionsArgsByType = (
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
           argumentBitLength: bitLengths?.offsetBits,
+          hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
       ];
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
@@ -115,6 +120,7 @@ export const mapInstructionsArgsByType = (
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.immediateDecoderBits,
+          hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
     case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES:
@@ -135,11 +141,13 @@ export const mapInstructionsArgsByType = (
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.firstImmediateDecoderBits,
+          hiddenFromDetails: bitLengths?.firstImmediateDecoderBits === 0,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.secondImmediateDecoderBits,
+          hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
       ];
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
@@ -160,11 +168,13 @@ export const mapInstructionsArgsByType = (
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.immediateDecoderBits,
+          hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
         {
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
           argumentBitLength: bitLengths?.offsetBits,
+          hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
       ];
     case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
@@ -179,6 +189,7 @@ export const mapInstructionsArgsByType = (
           type: argType.EXTENDED_WIDTH_IMMEDIATE,
           value: valueToNumeralSystem(args?.immediateDecoder.getValue(), numeralSystem),
           argumentBitLength: bitLengths?.immediateDecoderBits,
+          hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
     case ArgumentType.TWO_REGISTERS:
@@ -214,6 +225,7 @@ export const mapInstructionsArgsByType = (
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.immediateDecoderBits,
+          hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
     case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
@@ -234,6 +246,7 @@ export const mapInstructionsArgsByType = (
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
           argumentBitLength: bitLengths?.offsetBits,
+          hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
       ];
     case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES:
@@ -260,11 +273,13 @@ export const mapInstructionsArgsByType = (
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.firstImmediateDecoderBits,
+          hiddenFromDetails: bitLengths?.firstImmediateDecoderBits === 0,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
           argumentBitLength: bitLengths?.secondImmediateDecoderBits,
+          hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
       ];
     case ArgumentType.THREE_REGISTERS:

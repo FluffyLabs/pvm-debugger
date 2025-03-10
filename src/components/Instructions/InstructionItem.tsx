@@ -175,8 +175,9 @@ export const InstructionItem = forwardRef(
             </div>
 
             {"args" in programRow &&
-              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)?.map(
-                (instruction, index) => (
+              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)
+                ?.filter((instruction) => !instruction.hiddenFromDetails)
+                .map((instruction, index) => (
                   <div key={index}>
                     <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1 lowercase">
                       {instruction.type}
@@ -218,8 +219,7 @@ export const InstructionItem = forwardRef(
                       />
                     </div>
                   </div>
-                ),
-              )}
+                ))}
           </div>
         </div>
       );
