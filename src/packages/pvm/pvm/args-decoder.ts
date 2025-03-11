@@ -1,7 +1,5 @@
 import { ArgumentType, Mask } from "@typeberry/pvm-debugger-adapter";
-import { ExtendedWitdthImmediateDecoder } from "@/packages/pvm/decoders/extended-with-immediate-decoder.ts";
-import { ImmediateDecoder } from "../decoders/immediate-decoder";
-import { NibblesDecoder } from "../decoders/nibbles-decoder";
+import { ImmediateDecoder, ExtendedWitdthImmediateDecoder, NibblesDecoder } from "@typeberry/pvm-debugger-adapter";
 
 const IMMEDIATE_AND_OFFSET_MAX_LENGTH = 4;
 const BITS_PER_BYTE = 8;
