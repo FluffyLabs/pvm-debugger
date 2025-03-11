@@ -39,6 +39,7 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "framer-motion": "^12.4.10",
     "lodash": "^4.17.21",
     "lucide-react": "^0.408.0",
     "path-browserify": "^1.0.1",

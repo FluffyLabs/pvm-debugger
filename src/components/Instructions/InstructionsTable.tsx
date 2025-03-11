@@ -14,6 +14,26 @@ export type ProgramRow = CurrentInstruction & {
   // Possibly other fields, e.g., block?
 };
 
+export const AddressEl = ({ address }: { address: number }) => {
+  const { numeralSystem } = useContext(NumeralSystemContext);
+  const isHex = numeralSystem === NumeralSystem.HEXADECIMAL;
+  const counter = address;
+
+  const valInNumeralSystem = isHex ? (counter >>> 0).toString(16) : counter.toString();
+
+  return (
+    <div>
+      {isHex && <span className="text-muted-foreground">0x</span>}
+      {[...Array(8 - (isHex ? 2 : 0) - valInNumeralSystem.length)].map((_, idx) => (
+        <span key={idx} className="text-muted-foreground">
+          0
+        </span>
+      ))}
+      <span className="text-inherit">{valInNumeralSystem}</span>
+    </div>
+  );
+};
+
 export const InstructionsTable = ({
   status,
   programPreviewResult,
@@ -23,7 +43,6 @@ export const InstructionsTable = ({
   onAddressClick,
   breakpointAddresses,
 }: InstructionsProps) => {
-  const { numeralSystem } = useContext(NumeralSystemContext);
   const workers = useAppSelector(selectWorkers);
 
   // We'll calculate the maximum PC across all workers
@@ -33,29 +52,12 @@ export const InstructionsTable = ({
   const programRows = useMemo<ProgramRow[] | undefined>(() => {
     if (!programPreviewResult) return;
 
-    const isHex = numeralSystem === NumeralSystem.HEXADECIMAL;
-    const getAddressEl = (counter: number) => {
-      const valInNumeralSystem = isHex ? (counter >>> 0).toString(16) : counter.toString();
-
-      return (
-        <div>
-          {isHex && <span className="text-muted-foreground">0x</span>}
-          {[...Array(8 - (isHex ? 2 : 0) - valInNumeralSystem.length)].map((_, idx) => (
-            <span key={idx} className="text-muted-foreground">
-              0
-            </span>
-          ))}
-          <span className="text-inherit">{valInNumeralSystem}</span>
-        </div>
-      );
-    };
-
     return programPreviewResult.map((item) => ({
       ...item,
-      addressEl: getAddressEl(item.address),
+      addressEl: <AddressEl address={item.address} />,
       counter: item.address,
     }));
-  }, [programPreviewResult, numeralSystem]);
+  }, [programPreviewResult]);
 
   const parentRef = useRef<HTMLDivElement>(null);
 

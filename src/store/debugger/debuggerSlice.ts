@@ -29,6 +29,7 @@ export interface DebuggerState {
   storage: DebuggerEcalliStorage | null;
   userProvidedStorage: DebuggerEcalliStorage | null;
   serviceId: number | null;
+  activeMobileTab: "program" | "status" | "memory";
 }
 
 const initialState: DebuggerState = {
@@ -80,6 +81,7 @@ const initialState: DebuggerState = {
   storage: null,
   userProvidedStorage: null,
   serviceId: parseInt("0x30303030", 16),
+  activeMobileTab: "program",
 };
 
 const debuggerSlice = createSlice({
@@ -144,6 +146,9 @@ const debuggerSlice = createSlice({
     setSelectedPvms(state, action) {
       state.pvmOptions.selectedPvm = action.payload;
     },
+    setActiveMobileTab(state, action) {
+      state.activeMobileTab = action.payload;
+    },
   },
 });
 
@@ -166,6 +171,7 @@ export const {
   setServiceId,
   setPvmOptions,
   setSelectedPvms,
+  setActiveMobileTab,
 } = debuggerSlice.actions;
 
 export const debuggerSliceListenerMiddleware = createListenerMiddleware();

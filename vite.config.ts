@@ -13,6 +13,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    allowedHosts: ["decd-85-221-148-245.ngrok-free.app"],
+  },
   define: {
     "import.meta.env.TYPEBERRY_PVM_VERSION": JSON.stringify(
       packageJson.dependencies["@typeberry/pvm-debugger-adapter"],
