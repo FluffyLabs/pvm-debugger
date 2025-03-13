@@ -19,6 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
+import { useDrag, useDrop, DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 const findMemoryForWorkerRange = (rangeAddress: number): FindMemoryForWorkerType => {
   return (worker, address) => {
@@ -49,8 +51,7 @@ interface MemoryRangeRowProps extends RangeRow {
   onAddNew: (start: number, length: number, rowId: string) => void; // Called when last row is confirmed
   onEditToggle: () => void;
   onRemove: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
+  onMove: (dragIndex: number, hoverIndex: number) => void;
 }
 
 type LengthInputProps = {
@@ -102,7 +103,6 @@ export function LengthInput({ value, onChange, placeholder, id }: LengthInputPro
 function MemoryRangeRow({
   id,
   index,
-  totalCount,
   start,
   length,
   isEditing,
@@ -111,13 +111,31 @@ function MemoryRangeRow({
   onAddNew,
   onEditToggle,
   onRemove,
-  onMoveUp,
-  onMoveDown,
+  onMove,
 }: MemoryRangeRowProps) {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const dispatch = useAppDispatch();
   const [draftStart, setDraftStart] = useState(start);
   const [draftLength, setDraftLength] = useState(length);
+
+  const [, ref] = useDrag({
+    type: "MEMORY_ROW",
+    item: { index },
+    canDrag: !isLast,
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop({
+    accept: "MEMORY_ROW",
+    hover: (draggedItem: { index: number }) => {
+      if (draggedItem.index !== index) {
+        onMove(draggedItem.index, index);
+        draggedItem.index = index;
+      }
+    },
+  });
 
   useEffect(() => {
     if (draftLength > 0 && draftStart >= 0) {
@@ -149,7 +167,12 @@ function MemoryRangeRow({
   const interpretResult = getMemoryInterpretations(new Uint8Array(flatData), numeralSystem);
 
   return (
-    <Card className="p-3 border rounded m-3">
+    <Card
+      ref={(node) => !isLast && ref(drop(node))}
+      className={classNames("p-3 border rounded m-3", {
+        "cursor-move": !isLast,
+      })}
+    >
       <div className="flex items-end gap-3 ml-3">
         {!isInputsVisible ? (
           <span className="font-inconsolata font-bold text-foreground">
@@ -182,7 +205,7 @@ function MemoryRangeRow({
         <div className="ml-auto flex items-center gap-1">
           {isLast ? (
             <Button onClick={handleAddConfirm}>Add</Button>
-          ) : (
+          ) : !isEditing ? (
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <Button variant="ghost">
@@ -190,46 +213,24 @@ function MemoryRangeRow({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-secondary p-3 z-50">
-                <DropdownMenuItem>
-                  <Button variant="ghost" onClick={onMoveUp} disabled={index === 0}>
-                    Up
-                  </Button>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Button variant="ghost" onClick={onMoveDown} disabled={index === totalCount - 2}>
-                    Down
-                  </Button>
-                </DropdownMenuItem>
-
-                {!isEditing ? (
-                  <>
-                    <DropdownMenuItem>
-                      <Button variant="ghost" onClick={onEditToggle}>
-                        Edit
-                      </Button>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Button variant="ghost" onClick={onRemove}>
-                        Remove
-                      </Button>
-                    </DropdownMenuItem>
-                  </>
-                ) : (
-                  <>
-                    <DropdownMenuItem>
-                      <Button variant="ghost" onClick={handleSave}>
-                        Confirm
-                      </Button>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Button variant="ghost" onClick={onRemove}>
-                        Remove
-                      </Button>
-                    </DropdownMenuItem>
-                  </>
-                )}
+                <>
+                  <DropdownMenuItem>
+                    <Button variant="ghost" onClick={onEditToggle}>
+                      Edit
+                    </Button>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Button variant="ghost" onClick={onRemove}>
+                      Remove
+                    </Button>
+                  </DropdownMenuItem>
+                </>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : (
+            <Button variant="default" onClick={handleSave}>
+              Save
+            </Button>
           )}
         </div>
       </div>
@@ -240,7 +241,7 @@ function MemoryRangeRow({
             <div>(no data)</div>
           ) : (
             flatData.map((byte, idx) => (
-              <Popover>
+              <Popover key={idx}>
                 <PopoverTrigger>
                   <MemoryCell
                     index={idx}
@@ -318,36 +319,36 @@ export function MemoryRanges() {
       return copy;
     });
   }
-
-  function moveRange(fromIndex: number, toIndex: number) {
+  function handleMove(dragIndex: number, hoverIndex: number) {
     setRanges((prev) => {
       const newArr = [...prev];
-      const [item] = newArr.splice(fromIndex, 1);
-      newArr.splice(toIndex, 0, item);
+      const [movedRow] = newArr.splice(dragIndex, 1);
+      newArr.splice(hoverIndex, 0, movedRow);
       return newArr;
     });
   }
 
   return (
-    <div className="max-h-[65vh] overflow-y-auto">
-      {ranges.map((r, i) => {
-        const isLast = i === ranges.length - 1;
-        return (
-          <MemoryRangeRow
-            key={r.id}
-            {...r}
-            index={i}
-            totalCount={ranges.length}
-            isLast={isLast}
-            onChange={(start, length) => handleChange(i, start, length)}
-            onAddNew={(start, length, rowId) => handleAddNewRow(i, start, length, rowId)}
-            onEditToggle={() => handleEditToggle(i)}
-            onRemove={() => handleRemove(i)}
-            onMoveUp={() => moveRange(i, i - 1)}
-            onMoveDown={() => moveRange(i, i + 1)}
-          />
-        );
-      })}
-    </div>
+    <DndProvider backend={HTML5Backend}>
+      <div className="max-h-[65vh] overflow-y-auto">
+        {ranges.map((r, i) => {
+          const isLast = i === ranges.length - 1;
+          return (
+            <MemoryRangeRow
+              key={r.id}
+              {...r}
+              index={i}
+              totalCount={ranges.length}
+              isLast={isLast}
+              onChange={(start, length) => handleChange(i, start, length)}
+              onAddNew={(start, length, rowId) => handleAddNewRow(i, start, length, rowId)}
+              onEditToggle={() => handleEditToggle(i)}
+              onRemove={() => handleRemove(i)}
+              onMove={handleMove}
+            />
+          );
+        })}
+      </div>
+    </DndProvider>
   );
 }

@@ -22,7 +22,6 @@ const Search = React.forwardRef<HTMLInputElement, InputProps & { inputClassName?
             inputClassName,
           )}
           {...props}
-          type="search"
           ref={ref}
         />
       </div>
