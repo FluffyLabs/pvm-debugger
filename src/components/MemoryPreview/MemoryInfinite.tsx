@@ -412,7 +412,7 @@ export const MemoryInfinite = () => {
             setSelectedAddress(address);
           }}
           placeholder="Jump to address"
-          classes="bg-muted text-muted-foreground mx-auto text-center rounded-[5px]"
+          classes="bg-muted dark:bg-title text-muted-foreground mx-auto text-center rounded-[5px]"
         />
       </div>
     </div>
