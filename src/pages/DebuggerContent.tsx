@@ -113,7 +113,7 @@ const DebuggerContent = () => {
       <div className="grow h-full overflow-hidden grid grid-rows grid-cols-12 gap-3">
         <div
           className={classNames(
-            "md:col-span-6 max-sm:min-h-[330px] h-full overflow-hidden",
+            "md:col-span-5 max-sm:min-h-[330px] h-full overflow-hidden",
             activeMobileTab === "program" ? "max-sm:col-span-12" : "max-sm:hidden",
           )}
         >
@@ -210,7 +210,7 @@ const DebuggerContent = () => {
 
         <div
           className={classNames(
-            "md:col-span-3 h-full max-sm:min-h-[330px] overflow-hidden",
+            "md:col-span-4 h-full max-sm:min-h-[330px] overflow-hidden",
             activeMobileTab === "memory" ? "col-span-12" : "max-sm:hidden",
           )}
         >

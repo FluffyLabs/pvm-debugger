@@ -65,7 +65,7 @@ const MobileMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open
           <DropdownMenuLabel className="px-3 pt-3">Github</DropdownMenuLabel>
 
           <DropdownMenuItem
-            onSelect={() => window.open("https://github.com/your-repo/issues/new", "_blank")}
+            onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger/issues/new", "_blank")}
             className="pl-3 pt-3"
           >
             <div className="flex flex-col">
@@ -75,7 +75,7 @@ const MobileMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            onSelect={() => window.open("https://github.com/your-repo", "_blank")}
+            onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger", "_blank")}
             className="pl-3 pt-3"
           >
             <div className="flex flex-col">
@@ -85,7 +85,7 @@ const MobileMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open
           </DropdownMenuItem>
 
           <DropdownMenuItem
-            onSelect={() => window.open("https://github.com/your-repo/fork", "_blank")}
+            onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger/fork", "_blank")}
             className="pl-3 py-3"
           >
             <div className="flex flex-col">

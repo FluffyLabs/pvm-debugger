@@ -169,8 +169,9 @@ function MemoryRangeRow({
   return (
     <Card
       ref={(node) => !isLast && ref(drop(node))}
-      className={classNames("p-3 border rounded m-3", {
-        "cursor-move": !isLast,
+      className={classNames("border rounded m-3 px-2", {
+        "cursor-move py-2": !isLast,
+        "py-4": isLast,
       })}
     >
       <div className="flex items-end gap-3 ml-3">
@@ -236,7 +237,7 @@ function MemoryRangeRow({
       </div>
 
       <div className="mt-4 mb-2 mx-2 text-sm font-poppins">
-        <div style={{ maxHeight: "100px", overflowY: "auto" }}>
+        <div style={{ maxHeight: "60px", overflowY: "auto" }}>
           {flatData.length === 0 ? (
             <div>(no data)</div>
           ) : (

@@ -52,7 +52,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
 
           <DropdownMenuContent className="bg-[#242424] mt-1 p-4 border-none text-white min-w-[315px]">
             <DropdownMenuItem
-              onSelect={() => window.open("https://github.com/your-repo/issues/new", "_blank")}
+              onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger/issues/new", "_blank")}
               className="pl-3 py-3 flex items-start justify-between hover:bg-[#2D2D2D] focus:bg-[#2D2D2D] focus:text-white"
             >
               <div className="flex flex-col">
@@ -63,7 +63,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onSelect={() => window.open("https://github.com/your-repo", "_blank")}
+              onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger", "_blank")}
               className="pl-3 py-3 flex items-start justify-between hover:bg-[#2D2D2D] focus:bg-[#2D2D2D] focus:text-whit"
             >
               <div className="flex flex-col">
@@ -74,7 +74,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onSelect={() => window.open("https://github.com/your-repo/fork", "_blank")}
+              onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger/fork", "_blank")}
               className="pl-3 py-3 flex items-start justify-between hover:bg-[#2D2D2D] focus:bg-[#2D2D2D] focus:text-whit"
             >
               <div className="flex flex-col">
