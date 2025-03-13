@@ -206,7 +206,7 @@ export const InstructionItem = forwardRef(
                           },
                         )}
                       >
-                        {valueToBinary(instruction.value, instruction.argumentBitLength)}
+                        {valueToBinary(instruction.valueDecimal, instruction.argumentBitLength)}
                       </div>
                       <div
                         className={classNames("text-xs p-1", {

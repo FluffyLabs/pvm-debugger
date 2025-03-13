@@ -45,6 +45,7 @@ export const mapInstructionsArgsByType = (
   | {
       type: argType;
       value: string | number;
+      valueDecimal?: string | number;
       valueFormatted?: string | number;
       argumentBitLength?: number;
       hidden?: boolean;
@@ -74,6 +75,7 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem),
+          valueDecimal: Number(args.immediateDecoder.getI64()),
           argumentBitLength: bitLengths?.immediateDecoderBits,
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
@@ -83,18 +85,21 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.IMMEDIATE_LENGTH,
           value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          valueDecimal: bitLengths?.firstImmediateLength,
           argumentBitLength: bitLengths?.firstImmediateLengthBits,
           hidden: true,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.firstImmediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.firstImmediateDecoderBits,
           hiddenFromDetails: bitLengths?.firstImmediateDecoderBits === 0,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.secondImmediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.secondImmediateDecoderBits,
           hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
@@ -104,6 +109,7 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
+          valueDecimal: args?.nextPc - counter,
           argumentBitLength: bitLengths?.offsetBits,
           hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
@@ -113,12 +119,14 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.registerIndex,
+          valueDecimal: args?.registerIndex,
           valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
           argumentBitLength: bitLengths?.registerIndexBits || 4,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args.immediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args.immediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.immediateDecoderBits,
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
@@ -128,24 +136,28 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.registerIndex,
+          valueDecimal: args?.registerIndex,
           valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
           argumentBitLength: bitLengths?.registerIndexBits || 4,
         },
         {
           type: argType.IMMEDIATE_LENGTH,
           value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          valueDecimal: bitLengths?.firstImmediateLength,
           argumentBitLength: bitLengths?.firstImmediateLengthBits,
           hidden: true,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.firstImmediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.firstImmediateDecoderBits,
           hiddenFromDetails: bitLengths?.firstImmediateDecoderBits === 0,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.secondImmediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.secondImmediateDecoderBits,
           hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
@@ -155,24 +167,28 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.registerIndex,
+          valueDecimal: args?.registerIndex,
           valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
           argumentBitLength: bitLengths?.registerIndexBits || 4,
         },
         {
           type: argType.IMMEDIATE_LENGTH,
           value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          valueDecimal: bitLengths?.firstImmediateLength,
           argumentBitLength: bitLengths?.firstImmediateLengthBits,
           hidden: true,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.immediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.immediateDecoderBits,
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
         {
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
+          valueDecimal: args?.nextPc - counter,
           argumentBitLength: bitLengths?.offsetBits,
           hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
@@ -182,12 +198,14 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.registerIndex,
+          valueDecimal: args?.registerIndex,
           valueFormatted: `ω<sub>${args?.registerIndex}</sub>`,
           argumentBitLength: bitLengths?.registerIndexBits || 4,
         },
         {
           type: argType.EXTENDED_WIDTH_IMMEDIATE,
           value: valueToNumeralSystem(args?.immediateDecoder.getValue(), numeralSystem),
+          valueDecimal: args?.immediateDecoder.getValue()?.toString(),
           argumentBitLength: bitLengths?.immediateDecoderBits,
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
@@ -197,12 +215,14 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.firstRegisterIndex,
+          valueDecimal: args?.firstRegisterIndex,
           valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.firstRegisterIndexBits || 4,
         },
         {
           type: argType.REGISTER,
           value: args?.secondRegisterIndex,
+          valueDecimal: args?.secondRegisterIndex,
           valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.secondRegisterIndexBits || 4,
         },
@@ -212,18 +232,21 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.firstRegisterIndex,
+          valueDecimal: args?.firstRegisterIndex,
           valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.firstRegisterIndexBits || 4,
         },
         {
           type: argType.REGISTER,
           value: args?.secondRegisterIndex,
+          valueDecimal: args?.secondRegisterIndex,
           valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.secondRegisterIndexBits || 4,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.immediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.immediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.immediateDecoderBits,
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
@@ -233,18 +256,21 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.firstRegisterIndex,
+          valueDecimal: args?.firstRegisterIndex,
           valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.firstRegisterIndexBits || 4,
         },
         {
           type: argType.REGISTER,
           value: args?.secondRegisterIndex,
+          valueDecimal: args?.secondRegisterIndex,
           valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.secondRegisterIndexBits || 4,
         },
         {
           type: argType.OFFSET,
           value: valueToNumeralSystem(args?.nextPc - counter, numeralSystem),
+          valueDecimal: args?.nextPc - counter,
           argumentBitLength: bitLengths?.offsetBits,
           hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
@@ -254,30 +280,35 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.firstRegisterIndex,
+          valueDecimal: args?.firstRegisterIndex,
           valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.firstRegisterIndexBits || 4,
         },
         {
           type: argType.REGISTER,
           value: args?.secondRegisterIndex,
+          valueDecimal: args?.secondRegisterIndex,
           valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.secondRegisterIndexBits || 4,
         },
         {
           type: argType.IMMEDIATE_LENGTH,
           value: valueToNumeralSystem(bitLengths?.firstImmediateLength, numeralSystem),
+          valueDecimal: bitLengths?.firstImmediateLength,
           argumentBitLength: bitLengths?.firstImmediateLengthBits,
           hidden: true,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.firstImmediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.firstImmediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.firstImmediateDecoderBits,
           hiddenFromDetails: bitLengths?.firstImmediateDecoderBits === 0,
         },
         {
           type: argType.IMMEDIATE,
           value: valueToNumeralSystem(args?.secondImmediateDecoder.getI64(), numeralSystem),
+          valueDecimal: args?.secondImmediateDecoder.getI64()?.toString(),
           argumentBitLength: bitLengths?.secondImmediateDecoderBits,
           hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
@@ -287,18 +318,21 @@ export const mapInstructionsArgsByType = (
         {
           type: argType.REGISTER,
           value: args?.firstRegisterIndex,
+          valueDecimal: args?.firstRegisterIndex,
           valueFormatted: `ω<sub>${args?.firstRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.firstRegisterIndexBits || 4,
         },
         {
           type: argType.REGISTER,
           value: args?.secondRegisterIndex,
+          valueDecimal: args?.secondRegisterIndex,
           valueFormatted: `ω<sub>${args?.secondRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.secondRegisterIndexBits || 4,
         },
         {
           type: argType.REGISTER,
           value: args?.thirdRegisterIndex,
+          valueDecimal: args?.thirdRegisterIndex,
           valueFormatted: `ω<sub>${args?.thirdRegisterIndex}</sub>`,
           argumentBitLength: bitLengths?.thirdRegisterIndexBits || 4,
         },
