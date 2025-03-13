@@ -51,10 +51,10 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
   return (
     <div className="flex flex-col w-full h-full bg-card pb-3">
-      <h2 className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 py-2 sm:rounded-ss-lg sm:rounded-se-lg">
+      <h2 className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 py-2">
         Start with an example program or upload your file
       </h2>
-      <div className="flex flex-col p-7 pt-[50px] h-full">
+      <div className="flex flex-col px-7 pt-[30px] h-full">
         <Examples
           onProgramLoad={(val) => {
             setProgramLoad(val);
@@ -79,10 +79,10 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
           </p>
         )}
       </div>
-      <div className="px-5">
+      <div className="px-5 mt-[30px]">
         <Separator />
       </div>
-      <div className="m-6 mb-9 flex justify-end">
+      <div className="m-6 mb-7 flex justify-end">
         <Button className="mt-3 min-w-[92px]" id="load-button" type="button" onClick={() => handleLoad()}>
           Load
         </Button>

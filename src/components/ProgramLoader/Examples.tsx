@@ -99,7 +99,7 @@ const programs: {
 
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
   return (
-    <div className="sm:mb-5">
+    <div>
       {Object.keys(programs).map((key) => {
         return (
           <Badge
