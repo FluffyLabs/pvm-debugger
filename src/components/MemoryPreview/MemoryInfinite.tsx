@@ -167,7 +167,7 @@ export const MemoryRow = ({
       >
         {displayAddress}
       </div>
-      <div className="font-inconsolata font-medium pl-2 flex justify-around w-full">
+      <div className="font-inconsolata max-w-[250px] font-medium pl-2 flex justify-around w-full">
         {bytes.map((byte, index) => (
           <MemoryCell
             findMemoryForWorker={findMemoryForWorker}
@@ -297,7 +297,7 @@ export const MemoryTable = ({
           return (
             <div
               style={style}
-              className="top-0 left-0 flex absolute w-full"
+              className="top-0 left-0 flex justify-around absolute w-full"
               data-index={index}
               ref={rowVirtualizer.measureElement}
               key={virtualRow.key}
