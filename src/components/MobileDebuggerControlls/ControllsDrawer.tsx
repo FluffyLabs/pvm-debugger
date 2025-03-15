@@ -162,7 +162,7 @@ export const ControllsDrawer = (props: {
 
   return (
     <motion.div
-      className="absolute bottom-full left-0 w-full max-w-screen border-t"
+      className="absolute bottom-full left-0 w-full max-w-screen border-t bg-background"
       initial={{ height: minHeight }}
       animate={{ height: isOpen ? maxHeight : minHeight }}
       dragControls={dragControls}
