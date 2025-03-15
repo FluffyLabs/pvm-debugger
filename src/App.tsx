@@ -17,14 +17,14 @@ function App() {
   return (
     <>
       <Header />
-      <div className="flex h-full max-h-[calc(100dvh-82px)] grow">
+      <div className="flex h-full max-h-[calc(100dvh-75px)] sm:max-h-[calc(100dvh-82px)] grow">
         <AppsSidebar />
 
         <div className="flex justify-center grow overflow-auto">
           <div className="flex flex-col sm:gap-5 max-sm:w-full">
             {pvmInitialized ? (
               <div className="mt-5 flex justify-center max-sm:hidden">
-                <div className="rounded-xl border">
+                <div className="rounded-xl border overflow-hidden">
                   <DebuggerControlls />
                 </div>
               </div>

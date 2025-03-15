@@ -16,20 +16,20 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
   return (
     <div className="bg-[#242424] w-full flex flex-row items-center justify-between py-[18px] text-xs overflow-hidden border-b border-b-secondary-foreground dark:border-b-brand">
-      <div className="flex items-center gap-5 w-full">
+      <div className="flex items-center gap-5 sm:w-full">
         <div className="flex items-center pl-4">
           <img src={Logo} alt="FluffyLabs logo" className="h-[40px] max-w-fit" />
           <img src={Brand} alt="FluffyLabs brand" className="hidden md:inline ml-4 h-[28px]" />
         </div>
-        <Separator className="bg-gray-600 w-[1px] h-[50px]" orientation="vertical" />
-        <div className="flex max-sm:flex-col-reverse items-end md:items-center h-[50px]">
+        <Separator className="bg-gray-600 w-[1px] h-[40px] sm:h-[50px]" orientation="vertical" />
+        <div className="flex max-sm:flex-col-reverse max-sm:hidden items-end md:items-center h-[50px]">
           <img src={ToolName} alt="FluffyLabs brand" className="h-[40px]" />
           <div className="shrink sm:ml-1 sm:mb-4">
             <Environment />
           </div>
         </div>
       </div>
-      <div className="flex w-full">
+      <div className="flex w-full items-center max-sm:ml-2">
         {endSlot}
 
         <DropdownMenu>
@@ -52,7 +52,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
 
           <DropdownMenuContent className="bg-[#242424] mt-1 p-4 border-none text-white min-w-[315px]">
             <DropdownMenuItem
-              onSelect={() => window.open("https://github.com/your-repo/issues/new", "_blank")}
+              onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger/issues/new", "_blank")}
               className="pl-3 py-3 flex items-start justify-between hover:bg-[#2D2D2D] focus:bg-[#2D2D2D] focus:text-white"
             >
               <div className="flex flex-col">
@@ -63,7 +63,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onSelect={() => window.open("https://github.com/your-repo", "_blank")}
+              onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger", "_blank")}
               className="pl-3 py-3 flex items-start justify-between hover:bg-[#2D2D2D] focus:bg-[#2D2D2D] focus:text-whit"
             >
               <div className="flex flex-col">
@@ -74,7 +74,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              onSelect={() => window.open("https://github.com/your-repo/fork", "_blank")}
+              onSelect={() => window.open("https://github.com/FluffyLabs/pvm-debugger/fork", "_blank")}
               className="pl-3 py-3 flex items-start justify-between hover:bg-[#2D2D2D] focus:bg-[#2D2D2D] focus:text-whit"
             >
               <div className="flex flex-col">

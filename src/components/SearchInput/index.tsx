@@ -18,11 +18,10 @@ const Search = React.forwardRef<HTMLInputElement, InputProps & { inputClassName?
         <SearchIcon className="h-[16px] w-[16px]" />
         <input
           className={cn(
-            "w-full p-2 placeholder:text-muted-foreground bg-transparent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            "w-full p-2 placeholder:text-muted-foreground bg-transparent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-5 font-poppins",
             inputClassName,
           )}
           {...props}
-          type="search"
           ref={ref}
         />
       </div>

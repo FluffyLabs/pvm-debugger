@@ -36,10 +36,10 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
   }, [searchText]);
 
   return (
-    <div className="border-2 rounded-md overflow-auto max-sm:hidden">
+    <div className="border-2 rounded-md max-sm:hidden">
       <Accordion type="single" collapsible className="overflow-hidden h-full">
         <AccordionItem value="item-1" className="overflow-hidden h-full">
-          <AccordionTrigger className="mb-2">
+          <AccordionTrigger className="">
             <div className="flex w-full items-center justify-between">
               <span className="ml-4 text-title-foreground">I found {filteredInstructions.length} results</span>
               <Search
@@ -55,7 +55,7 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <div className="h-[200px] overflow-auto relative">
+            <div className="h-[160px] pb-3 overflow-auto relative">
               <div className="divide-y overflow-auto  flex flex-wrap gap-3 mx-4">
                 {filteredInstructions.map((instruction, i) => {
                   const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find(

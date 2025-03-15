@@ -12,7 +12,10 @@ export const NumeralSystemSwitch = ({ className }: { className: string }) => {
     <div className={`flex items-center space-x-2 ${className}`}>
       <Label
         htmlFor="numerical-system-mode"
-        className={cn("text-xs", !numeralSystem ? "text-white" : "text-[#858585]")}
+        className={cn(
+          "text-xs",
+          !numeralSystem ? "dark:text-[#F6F7F9] sm:text-white" : "text-[#5C5C5C] sm:text-[#858585]",
+        )}
       >
         Dec
       </Label>
@@ -22,7 +25,13 @@ export const NumeralSystemSwitch = ({ className }: { className: string }) => {
         checked={numeralSystem === NumeralSystem.HEXADECIMAL}
         onCheckedChange={(checked) => setNumeralSystem(checked ? NumeralSystem.HEXADECIMAL : NumeralSystem.DECIMAL)}
       />
-      <Label htmlFor="numerical-system-mode" className={cn("text-xs", numeralSystem ? "text-white" : "text-[#858585]")}>
+      <Label
+        htmlFor="numerical-system-mode"
+        className={cn(
+          "text-xs",
+          numeralSystem ? "dark:text-[#F6F7F9] sm:text-white" : "text-[#5C5C5C] sm:text-[#858585]",
+        )}
+      >
         Hex
       </Label>
     </div>

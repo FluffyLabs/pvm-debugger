@@ -1,8 +1,8 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { CurrentInstruction, RegistersArray } from "@/types/pvm.ts";
-import { setClickedInstruction, setIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
+import { setActiveMobileTab, setClickedInstruction, setIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { Assembly } from "@/components/ProgramLoader/Assembly.tsx";
@@ -17,11 +17,13 @@ import classNames from "classnames";
 import { Program } from "@typeberry/pvm-debugger-adapter";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 
-const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
-  const [activeTab, setActiveTab] = useState("program");
+const MobileTabs = () => {
+  const dispatch = useAppDispatch();
+
+  const { activeMobileTab } = useAppSelector((state) => state.debugger);
+
   const onTabClick = (tab: string) => {
-    setActiveTab(tab);
-    tabChange(tab);
+    dispatch(setActiveMobileTab(tab));
   };
 
   return (
@@ -30,7 +32,9 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
         onClick={() => onTabClick("program")}
         className={classNames(
           "py-2 rounded-ss rounded-es",
-          activeTab === "program" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
+          activeMobileTab === "program"
+            ? "bg-primary text-primary-foreground"
+            : "bg-secondary text-secondary-foreground",
         )}
       >
         Program
@@ -39,7 +43,9 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
         onClick={() => onTabClick("status")}
         className={classNames(
           "py-2",
-          activeTab === "status" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
+          activeMobileTab === "status"
+            ? "bg-primary text-primary-foreground"
+            : "bg-secondary text-secondary-foreground",
         )}
       >
         Status
@@ -48,7 +54,9 @@ const MobileTabs = ({ tabChange }: { tabChange: (val: string) => void }) => {
         onClick={() => onTabClick("memory")}
         className={classNames(
           "py-2 rounded-ee rounded-se",
-          activeTab === "memory" ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground",
+          activeMobileTab === "memory"
+            ? "bg-primary text-primary-foreground"
+            : "bg-secondary text-secondary-foreground",
         )}
       >
         Memory
@@ -71,9 +79,9 @@ const DebuggerContent = () => {
     isDebugFinished,
     isRunMode,
     isStepMode,
+    activeMobileTab,
   } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
-  const [activeTab, setActiveTab] = useState("program");
   const { currentState, previousState, currentInstruction } = workers[0] || {
     currentInstruction: null,
     currentState: initialState,
@@ -100,13 +108,13 @@ const DebuggerContent = () => {
   return (
     <div className="w-full h-full p-3 pt-0 flex flex-col gap-4 overflow-hidden">
       <div className="w-full col-span-12 mt-3 sm:hidden">
-        <MobileTabs tabChange={setActiveTab} />
+        <MobileTabs />
       </div>
       <div className="grow h-full overflow-hidden grid grid-rows grid-cols-12 gap-3">
         <div
           className={classNames(
-            "md:col-span-6 max-sm:min-h-[330px] h-full overflow-hidden",
-            activeTab === "program" ? "max-sm:col-span-12" : "max-sm:hidden",
+            "md:col-span-5 max-sm:min-h-[330px] h-full overflow-hidden",
+            activeMobileTab === "program" ? "max-sm:col-span-12" : "max-sm:hidden",
           )}
         >
           <HostCalls />
@@ -185,7 +193,7 @@ const DebuggerContent = () => {
         <div
           className={classNames(
             "md:col-span-3 max-sm:min-h-[330px] h-full overflow-hidden",
-            activeTab === "status" ? "col-span-12" : "max-sm:hidden",
+            activeMobileTab === "status" ? "col-span-12" : "max-sm:hidden",
           )}
         >
           <Registers
@@ -202,8 +210,8 @@ const DebuggerContent = () => {
 
         <div
           className={classNames(
-            "md:col-span-3 h-full max-sm:min-h-[330px] overflow-hidden",
-            activeTab === "memory" ? "col-span-12" : "max-sm:hidden",
+            "md:col-span-4 h-full max-sm:min-h-[330px] overflow-hidden",
+            activeMobileTab === "memory" ? "col-span-12" : "max-sm:hidden",
           )}
         >
           <div className="h-full overflow-auto">
