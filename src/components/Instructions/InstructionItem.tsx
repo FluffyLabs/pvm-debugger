@@ -179,12 +179,12 @@ export const InstructionItem = forwardRef(
         <div>
           <div className="flex flex-row bg-title p-3">
             <div>
-              <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1">opcode</div>
-              <div className="border-r-2 border-red-400 ">
-                <div className="font-inconsolata text-md tracking-[0.2rem] bg-red-200 pl-1 text-right">
+              <div className="font-inconsolata text-xs text-[#8F8F8F] dark:text-brand pl-1 pb-1">opcode</div>
+              <div className="border-r-2 border-[#F16764] dark:border-[#C287B3]">
+                <div className="font-inconsolata text-md tracking-[0.2rem] bg-[#FDD3D0] dark:bg-[#8B537D] text-[#5A5A5A] dark:text-[#FF8FEA] pl-1 text-right">
                   {valueToBinary(programRow.instructionCode, 8)}
                 </div>
-                <div className="font-inconsolata text-xs p-1 font-bold">
+                <div className="font-inconsolata text-xs p-1 font-bold text-title-foreground dark:text-brand ">
                   {valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
                 </div>
               </div>
@@ -194,23 +194,27 @@ export const InstructionItem = forwardRef(
               mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter)?.map(
                 (instruction, index) => (
                   <div key={index}>
-                    <div className="font-inconsolata text-xs text-title-foreground pl-1 pb-1 lowercase">
+                    <div className="font-inconsolata text-xs text-[#8F8F8F] dark:text-foreground pl-1 pb-1 lowercase">
                       {instruction.type}
                     </div>
                     <div
                       className={classNames(
                         "border-r-2",
-                        { "border-violet-400": instruction.type === argType.REGISTER },
-                        { "border-green-300": instruction.type !== argType.REGISTER },
+                        { "border-[#A6B3D7] dark:border-[#61EDE2]": instruction.type === argType.REGISTER },
+                        { "border-green-300 dark:border-green-600": instruction.type !== argType.REGISTER },
                       )}
                     >
                       <div
                         className={classNames(
-                          "font-inconsolata text-md tracking-[0.2rem] pl-1",
+                          "font-inconsolata text-md tracking-[0.2rem] pl-1 text-[#8F8F8F] dark:text-foreground",
                           {
-                            "bg-violet-200": instruction.type === argType.REGISTER,
+                            "bg-[#E8EEFF] dark:bg-[#016960] text-[#5A5A5A] dark:text-[#15C9BB]":
+                              instruction.type === argType.REGISTER,
                           },
-                          { "bg-green-100": instruction.type !== argType.REGISTER },
+                          {
+                            "bg-[#EBFFEE] dark:bg-[#114028] text-[#5A5A5A] dark:text-[#13A657]":
+                              instruction.type !== argType.REGISTER,
+                          },
                         )}
                       >
                         {valueToBinary(

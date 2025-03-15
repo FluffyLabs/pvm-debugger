@@ -112,7 +112,7 @@ export const DebuggerControlls = () => {
         <RefreshCcw className="w-3.5 md:mr-1.5" />
         <span className="hidden md:block">Reset</span>
       </Button>
-      <Separator className="h-full" orientation="vertical" />
+      <Separator className="h-[36px] sm:h-full" orientation="vertical" />
       {!isDebugFinished && isRunMode ? (
         <Button className="md:mr-3" variant="ghost" onClick={handlePauseProgram}>
           <Pause className="w-3.5 md:mr-1.5" />

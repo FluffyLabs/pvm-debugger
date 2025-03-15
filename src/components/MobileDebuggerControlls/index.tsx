@@ -25,8 +25,8 @@ export const MobileDebuggerControls = () => {
       {/* Main Controls */}
       <div className="absolute bottom-0 border-t w-full flex items-center bg-secondary p-2">
         <DebuggerControlls />
-        <Separator className="w-1" orientation="vertical" />
-        <NumeralSystemSwitch className="" />
+        <Separator className="h-[36px] mr-4" orientation="vertical" />
+        <NumeralSystemSwitch className="mr-4" />
       </div>
     </div>
   );

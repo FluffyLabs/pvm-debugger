@@ -167,7 +167,7 @@ export const MemoryRow = ({
       >
         {displayAddress}
       </div>
-      <div className="font-inconsolata max-w-[250px] font-medium pl-2 flex justify-around w-full">
+      <div className="font-inconsolata max-w-[320px] font-medium pl-2 flex justify-around w-full">
         {bytes.map((byte, index) => (
           <MemoryCell
             findMemoryForWorker={findMemoryForWorker}
