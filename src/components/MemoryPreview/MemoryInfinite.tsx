@@ -63,7 +63,7 @@ export const MemoryCell = ({
     <span
       key={index}
       className={classNames(
-        "relative mr-[1px]",
+        "relative mr-[1px] font-inconsolata text-[15px]",
         {
           "font-bold": value !== 0,
         },
@@ -71,7 +71,7 @@ export const MemoryCell = ({
       )}
     >
       <span
-        className={classNames({
+        className={classNames("px-0.5", {
           "bg-brand": isNumber(selectedAddress) && selectedAddress === address + index,
         })}
       >
@@ -167,7 +167,7 @@ export const MemoryRow = ({
       >
         {displayAddress}
       </div>
-      <div className="font-inconsolata font-medium pl-2 flex justify-around w-full">
+      <div className="font-inconsolata max-w-[320px] font-medium pl-2 flex justify-around w-full">
         {bytes.map((byte, index) => (
           <MemoryCell
             findMemoryForWorker={findMemoryForWorker}
@@ -297,7 +297,7 @@ export const MemoryTable = ({
           return (
             <div
               style={style}
-              className="top-0 left-0 flex absolute w-full"
+              className="top-0 left-0 flex justify-around absolute w-full"
               data-index={index}
               ref={rowVirtualizer.measureElement}
               key={virtualRow.key}
@@ -412,7 +412,7 @@ export const MemoryInfinite = () => {
             setSelectedAddress(address);
           }}
           placeholder="Jump to address"
-          classes="bg-muted text-muted-foreground mx-auto text-center rounded-[5px]"
+          classes="bg-muted dark:bg-title text-muted-foreground mx-auto text-center rounded-[5px]"
         />
       </div>
     </div>
@@ -452,7 +452,7 @@ export function AddressInput({ value, onChange, placeholder, id, classes }: Addr
     <Search
       id={id}
       className={classNames(
-        "w-full",
+        "w-full rounded font-inconsolata",
         {
           "ring-2 ring-red-500": !isValid,
           "focus-visible:ring-ring": isValid,

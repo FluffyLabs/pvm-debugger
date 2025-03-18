@@ -8,7 +8,7 @@ export const MemoryPreview = () => {
       <Tabs defaultValue="pages" className="h-full flex flex-col">
         <TabsList className="bg-transparent m-2 mb-0 max-sm:hidden border dark:border-brand p-0">
           <TabsTrigger
-            className="text-xs w-1/2 h-full bg-title text-secondary-foreground data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background rounded-se-none rounded-ee-none"
+            className="text-xs w-1/2 h-full bg-title text-secondary-foreground dark:text-brand data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background rounded-se-none rounded-ee-none"
             value="pages"
           >
             Infinite
