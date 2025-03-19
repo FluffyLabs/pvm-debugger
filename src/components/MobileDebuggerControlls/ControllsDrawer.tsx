@@ -7,6 +7,7 @@ import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useContext } from "react";
 import { useAppSelector } from "@/store/hooks";
 import { AddressEl } from "../Instructions/InstructionsTable";
+import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
 
 const InstructionDisplay = ({
   currentInstructionEnriched,
@@ -16,6 +17,7 @@ const InstructionDisplay = ({
   prevInstructionEnriched: CurrentInstruction | null;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
+  const program = useAppSelector(selectProgram);
 
   if (!("args" in currentInstructionEnriched)) {
     return;
@@ -32,7 +34,7 @@ const InstructionDisplay = ({
           <span
             dangerouslySetInnerHTML={{
               __html:
-                mapInstructionsArgsByType(currentInstructionEnriched.args, numeralSystem, 0)
+                mapInstructionsArgsByType(currentInstructionEnriched.args, numeralSystem, 0, program)
                   ?.map((instruction) => instruction.value)
                   .join(", ") ?? "",
             }}
@@ -50,7 +52,7 @@ const InstructionDisplay = ({
             <span
               dangerouslySetInnerHTML={{
                 __html:
-                  mapInstructionsArgsByType(prevInstructionEnriched.args, numeralSystem, 0)
+                  mapInstructionsArgsByType(prevInstructionEnriched.args, numeralSystem, 0, program)
                     ?.map((instruction) => instruction.value)
                     .join(", ") ?? "",
               }}
