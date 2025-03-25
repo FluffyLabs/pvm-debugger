@@ -152,7 +152,7 @@ export const Registers = ({
   const workers = useAppSelector(selectWorkers);
 
   return (
-    <div className="border-2 rounded-md overflow-auto bg-card h-full">
+    <div className="border-[1px] rounded-md overflow-auto bg-card h-full">
       <div className="font-poppins flex flex-col items-start text-xs">
         {/* Summary */}
         <table className="w-full table-fixed  text-center">

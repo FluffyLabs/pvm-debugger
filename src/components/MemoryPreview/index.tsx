@@ -4,7 +4,7 @@ import { MemoryRanges } from "./MemoryRanges";
 
 export const MemoryPreview = () => {
   return (
-    <div className="border-2 rounded-md h-full bg-card">
+    <div className="border-[1px] rounded-md h-full bg-card">
       <Tabs defaultValue="pages" className="h-full flex flex-col">
         <TabsList className="bg-transparent m-2 mb-0 max-sm:hidden border dark:border-brand p-0">
           <TabsTrigger

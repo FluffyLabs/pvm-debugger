@@ -123,7 +123,7 @@ const DebuggerContent = () => {
           {!!program.length && (
             <>
               {isProgramEditMode && (
-                <div className="border-2 rounded-md h-full">
+                <div className="border-[1px] rounded-md h-full">
                   {instructionMode === InstructionMode.ASM ? (
                     <Assembly
                       program={program}

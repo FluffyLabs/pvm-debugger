@@ -16,7 +16,7 @@ export const HostCalls = () => {
         }
       }}
     >
-      <DialogContent className="min-w-[680px] h-full sm:h-[75vh] p-0" hideClose>
+      <DialogContent className="max-h-lvh min-w-[680px] h-full sm:h-[75vh] p-0" hideClose>
         <HostCallsContent onSetStorage={() => setHasHostCallOpen(false)} />
       </DialogContent>
     </Dialog>

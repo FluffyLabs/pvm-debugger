@@ -3,17 +3,17 @@ import { Moon, Sun } from "lucide-react";
 import { useIsDarkMode, useToggleColorMode } from "./utils";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
-export const ToggleDarkMode = () => {
+export const ToggleDarkMode = ({ className }: { className: string }) => {
   const isDark = useIsDarkMode();
   const toggleColorMode = useToggleColorMode();
-  const onCLick = (val: string) => {
+  const onClick = (val: string) => {
     if ((isDark && val === "light") || (!isDark && val === "dark")) {
       toggleColorMode();
     }
   };
 
   return (
-    <Select onValueChange={onCLick} defaultValue={isDark ? "dark" : "light"}>
+    <Select onValueChange={onClick} defaultValue={isDark ? "dark" : "light"}>
       <SelectTrigger
         onClick={(e) => {
           e.currentTarget.blur();
@@ -22,7 +22,7 @@ export const ToggleDarkMode = () => {
           e.stopPropagation();
           // document.querySelector('[role="dialog"]')?.removeAttribute("aria-hidden");
         }}
-        className="w-[106px]"
+        className={className}
       >
         <SelectValue
           onClick={(e) => {

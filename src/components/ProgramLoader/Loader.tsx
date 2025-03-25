@@ -51,9 +51,9 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
   return (
     <div className="flex flex-col w-full h-full bg-card pb-3">
-      <h2 className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 py-2">
+      <p className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 pt-3 pb-2">
         Start with an example program or upload your file
-      </h2>
+      </p>
       <div className="flex flex-col px-7 pt-[30px] h-full">
         <Examples
           onProgramLoad={(val) => {
