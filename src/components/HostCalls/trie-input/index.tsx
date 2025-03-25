@@ -48,7 +48,7 @@ const StorageItem = ({
   const isDisabled = useAppSelector(hasPVMGeneratedStorage);
 
   return (
-    <div className="p-3 pr-0 flex border rounded-lg">
+    <div className="my-3 p-3 pr-0 flex border rounded-lg">
       <div className="flex flex-col flex-1 gap-3">
         <Input
           placeholder="Key"
@@ -71,7 +71,7 @@ const StorageItem = ({
           disabled={isDisabled}
         />
       </div>
-      <Button className="mx-3 p-3" variant="ghost" onClick={() => handleRemoveRow(index)} disabled={isDisabled}>
+      <Button className="mx-2 p-2" variant="ghost" onClick={() => handleRemoveRow(index)} disabled={isDisabled}>
         <XIcon className="w-4 h-4" />
       </Button>
     </div>

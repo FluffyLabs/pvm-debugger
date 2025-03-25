@@ -7,9 +7,11 @@ import { debounce } from "lodash";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Search } from "../SearchInput";
 
+const OPEN_VALUE = "item-1";
 export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: CurrentInstruction | undefined }) => {
   const [filteredInstructions, setFilteredInstructions] = useState<InstructionKnowledgeBaseEntry[]>([]);
   const [searchText, setSearchText] = useState<string>("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const setSearchLater = useMemo(() => {
     return debounce(
@@ -37,32 +39,42 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
 
   return (
     <div className="border-2 rounded-md max-sm:hidden">
-      <Accordion type="single" collapsible className="overflow-hidden h-full">
-        <AccordionItem value="item-1" className="overflow-hidden h-full">
-          <AccordionTrigger className="">
-            <div className="flex w-full items-center justify-between">
-              <span className="ml-4 text-title-foreground">I found {filteredInstructions.length} results</span>
-              <Search
-                className="w-[300px] border-none text-foreground"
-                inputClassName="text-title-foreground"
-                type="text"
-                placeholder="Search for instructions..."
-                value={searchText}
-                onChange={(e) => {
-                  setSearchText(e.target.value);
-                }}
-              />
-            </div>
+      <Accordion
+        type="single"
+        collapsible
+        className="overflow-hidden h-full"
+        value={isOpen ? OPEN_VALUE : ""}
+        onValueChange={(value) => setIsOpen(value === OPEN_VALUE)}
+      >
+        <AccordionItem value={OPEN_VALUE} className="overflow-hidden h-full">
+          <AccordionTrigger isOpen={isOpen}>
+            <Search
+              className="border-none text-foreground px-4"
+              inputClassName="text-title-foreground"
+              type="text"
+              placeholder="Search for instructions..."
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value);
+              }}
+              onFocus={() => setIsOpen(true)}
+              onBlur={() => setIsOpen(searchText === "" ? false : isOpen)}
+            />
           </AccordionTrigger>
           <AccordionContent>
             <div className="h-[160px] pb-3 overflow-auto relative">
-              <div className="divide-y overflow-auto  flex flex-wrap gap-3 mx-4">
+              <div className="overflow-auto  flex flex-wrap gap-3 mx-4">
+                {filteredInstructions.length === 0 && (
+                  <div className="text-center m-6 flex-1">
+                    <p className="font-poppins font-bold uppercase">no instructions found</p>
+                  </div>
+                )}
                 {filteredInstructions.map((instruction, i) => {
                   const currentInstructionFromKnowledgeBase = instructionsKnowledgeBase.find(
                     (instructionFromKB) => instructionFromKB.name?.toUpperCase() === instruction.name?.toUpperCase(),
                   );
                   return (
-                    <div className="border p-3 rounded w-[285px] max-h-[250px] overflow-auto" key={i}>
+                    <div className="border p-3 rounded w-[355px] max-h-[275px] overflow-auto" key={i}>
                       <div className="flex justify-between">
                         <p className="font-poppins font-bold uppercase">{instruction?.name}</p>
 
