@@ -54,14 +54,14 @@ export const HostCallsContent = ({ onSetStorage }: { onSetStorage: () => void })
 
   return (
     <>
-      <div className="flex flex-col">
-        <DialogHeader className="py-3 px-4 bg-title text-title-foreground rounded-t-lg border-b">
-          <DialogTitle>Define ecalli data</DialogTitle>
+      <div className="flex flex-col flex-1 overflow-y-hidden">
+        <DialogHeader className="py-3 px-6 bg-title text-title-foreground rounded-t-lg border-b">
+          <DialogTitle className="text-base">Define ecalli data</DialogTitle>
         </DialogHeader>
         {!isOnEcalli && (
           <>
             <div className="flex items-center my-4">
-              <Button variant="ghost" onClick={() => onSetStorage()}>
+              <Button className="p-1 mx-3" variant="ghost" onClick={() => onSetStorage()}>
                 <ChevronLeft className="text-brand-dark dark:text-brand" />
               </Button>
               Settings
@@ -71,7 +71,7 @@ export const HostCallsContent = ({ onSetStorage }: { onSetStorage: () => void })
           </>
         )}
 
-        <div className="mt-6 px-6">
+        <div className="mt-6 px-6 overflow-y-auto">
           <span className="text-md text-foreground font-bold mb-2 flex">
             Storage{" "}
             <TooltipProvider>
@@ -85,13 +85,13 @@ export const HostCallsContent = ({ onSetStorage }: { onSetStorage: () => void })
               </Tooltip>
             </TooltipProvider>
           </span>
-          <div className="pt-1 mt-2 h-full sm:h-[370px] overflow-y-auto">
+          <div className="pt-1 mt-2">
             <TrieInput onChange={(v) => setNewStorage(v)} initialRows={storage} />
           </div>
         </div>
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </div>
-      <div className="flex mr-6  ml-auto items-end pb-5">
+      <div className="flex px-6 justify-end pb-5">
         <Button type="submit" onClick={onSubmit} className="w-[150px]">
           Confirm
         </Button>

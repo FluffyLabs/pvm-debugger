@@ -42,8 +42,8 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
 
   return (
     <>
-      <DialogHeader className="py-3 px-4 bg-title text-title-foreground rounded-t-lg border-b">
-        <DialogTitle>Settings</DialogTitle>
+      <DialogHeader className="py-3 px-6 bg-title text-title-foreground rounded-t-lg border-b">
+        <DialogTitle className="text-base">Settings</DialogTitle>
       </DialogHeader>
       <DialogDescription asChild>
         <div className="text-left px-4 text-secondary-foreground h-full mb-6">
