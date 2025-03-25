@@ -19,7 +19,7 @@ const InstructionDisplay = ({
   const { numeralSystem } = useContext(NumeralSystemContext);
   const program = useAppSelector(selectProgram);
 
-  if (!("args" in currentInstructionEnriched)) {
+  if (currentInstructionEnriched === undefined || !("args" in currentInstructionEnriched)) {
     return;
   }
 

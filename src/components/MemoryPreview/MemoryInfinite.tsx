@@ -63,76 +63,67 @@ export const MemoryCell = ({
     <span
       key={index}
       className={classNames(
-        "relative mr-[1px] font-inconsolata text-[15px]",
+        "relative mr-[1px] pr-0.5 font-inconsolata text-[15px]",
         {
+          "bg-brand": isNumber(selectedAddress) && selectedAddress === address + index,
           "font-bold": value !== 0,
         },
         getCellTextColor(value, index, isEqualAcrossWorkers),
       )}
     >
-      <span
-        className={classNames("px-0.5", {
-          "bg-brand": isNumber(selectedAddress) && selectedAddress === address + index,
-        })}
-      >
-        {isEqualAcrossWorkers ? (
-          <TooltipProvider>
-            <Tooltip delayDuration={100} open={isPageTooltipDisabled ? false : undefined}>
-              <TooltipTrigger>
-                {valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}
-              </TooltipTrigger>
+      {isEqualAcrossWorkers ? (
+        <TooltipProvider>
+          <Tooltip delayDuration={100} open={isPageTooltipDisabled ? false : undefined}>
+            <TooltipTrigger>{valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}</TooltipTrigger>
 
-              <TooltipPortal>
-                <TooltipContent>
-                  <div className="font-poppins grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
-                    Page={Math.floor(address / PAGE_SIZE)}
-                  </div>
-                </TooltipContent>
-              </TooltipPortal>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <span
-                  className="font-inconsolata"
-                  dangerouslySetInnerHTML={{
-                    __html: numeralSystem
-                      ? "&quest;&#8288;&quest;&#8288;"
-                      : "&quest;&#8288;&quest;&#8288;&quest;&#8288;",
-                    // This is a fix for ?? : ??? because ? adds a break after which causes the whole line to break into two lines
-                  }}
-                />
-              </TooltipTrigger>
+            <TooltipPortal>
+              <TooltipContent>
+                <div className="font-poppins grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                  Page={Math.floor(address / PAGE_SIZE)}
+                </div>
+              </TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        <TooltipProvider>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <span
+                className="font-inconsolata"
+                dangerouslySetInnerHTML={{
+                  __html: numeralSystem ? "&quest;&#8288;&quest;&#8288;" : "&quest;&#8288;&quest;&#8288;&quest;&#8288;",
+                  // This is a fix for ?? : ??? because ? adds a break after which causes the whole line to break into two lines
+                }}
+              />
+            </TooltipTrigger>
 
-              <TooltipPortal>
-                <TooltipContent>
-                  <div className="font-inconsolata grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
-                    {workers.map((worker) => (
-                      <React.Fragment key={worker.id}>
-                        <div>
-                          <span>{worker.id}</span>
-                        </div>
-                        <div className="pl-3">
-                          <span>
-                            {valueToNumeralSystem(
-                              findMemoryForWorker(worker, address)?.bytes[index],
-                              numeralSystem,
-                              numeralSystem ? 2 : 3,
-                              false,
-                            )}
-                          </span>
-                        </div>
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </TooltipPortal>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </span>
+            <TooltipPortal>
+              <TooltipContent>
+                <div className="font-inconsolata grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                  {workers.map((worker) => (
+                    <React.Fragment key={worker.id}>
+                      <div>
+                        <span>{worker.id}</span>
+                      </div>
+                      <div className="pl-3">
+                        <span>
+                          {valueToNumeralSystem(
+                            findMemoryForWorker(worker, address)?.bytes[index],
+                            numeralSystem,
+                            numeralSystem ? 2 : 3,
+                            false,
+                          )}
+                        </span>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </TooltipContent>
+            </TooltipPortal>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </span>
   );
 };
@@ -260,7 +251,7 @@ export const MemoryTable = ({
   }
 
   return (
-    <div className={classNames("overflow-auto relative h-[70vh]", { "opacity-20": hasError })} ref={parentRef}>
+    <div className={classNames("overflow-auto relative h-full", { "opacity-20": hasError })} ref={parentRef}>
       {hasPrevPage && (
         <div className="text-center w-full" ref={beforeInView.ref}>
           ...
@@ -393,13 +384,9 @@ export const MemoryInfinite = () => {
   };
 
   return (
-    <div className="overflow-hidden p-1 pt-3 flex flex-col h-full">
+    <div className="flex flex-col mt-2 m-3 p-1 pt-0 h-full min-h-screen">
       {/* Wrapping MemoryTable in a flex-1 container ensures it fills the available height */}
-      <div className="flex-1 overflow-auto">
-        <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
-      </div>
-      {error && <div className="text-red-500 mt-3">{error}</div>}
-      <div className="mt-3">
+      <div className="mb-3">
         <AddressInput
           value={selectedAddress !== null ? selectedAddress.toString() : ""}
           onChange={async (address: number | null) => {
@@ -412,9 +399,11 @@ export const MemoryInfinite = () => {
             setSelectedAddress(address);
           }}
           placeholder="Jump to address"
-          classes="bg-muted dark:bg-title text-muted-foreground mx-auto text-center rounded-[5px]"
+          classes="dark:bg-title text-muted-foreground mx-auto text-center rounded-[5px]"
         />
       </div>
+      <MemoryTable selectedAddress={selectedAddress} hasError={!!error} loadMoreItems={loadMoreItems} />
+      {error && <div className="text-red-500 mt-3">{error}</div>}
     </div>
   );
 };

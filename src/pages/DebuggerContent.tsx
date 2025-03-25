@@ -214,9 +214,7 @@ const DebuggerContent = () => {
             activeMobileTab === "memory" ? "col-span-12" : "max-sm:hidden",
           )}
         >
-          <div className="h-full overflow-auto">
-            <MemoryPreview />
-          </div>
+          <MemoryPreview />
         </div>
         {/* <div className="md:hidden col-span-12 order-last" ref={mobileView}>
         <MobileKnowledgeBase
