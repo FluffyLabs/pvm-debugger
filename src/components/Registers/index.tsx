@@ -59,11 +59,14 @@ const ComputedValue = ({
     return formatter ? formatter(value) : value;
   };
 
+  const sharedStyles = {
+    "font-inconsolata text-base h-[1.5rem]": true,
+  };
+
   if (isEqualAcrossWorkers && wasEqualAcrossWorkers && previousValue === value) {
     return (
       <p
-        className={classNames({
-          "font-inconsolata text-base": true,
+        className={classNames(sharedStyles, {
           "opacity-60": value === 0 || value === 0n || value === "0",
         })}
       >
@@ -73,38 +76,36 @@ const ComputedValue = ({
   }
 
   return (
-    <div className="pl-2">
-      <div
-        className={classNames({
-          "text-brand-dark dark:text-brand": value !== previousValue,
-          "text-red-500": !isEqualAcrossWorkers,
-        })}
-      >
-        <TooltipProvider>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
-            </TooltipTrigger>
+    <div
+      className={classNames(sharedStyles, {
+        "text-brand-dark dark:text-brand": value !== previousValue,
+        "text-red-500": !isEqualAcrossWorkers,
+      })}
+    >
+      <TooltipProvider>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
+          </TooltipTrigger>
 
-            <TooltipContent>
-              <div className="grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
-                {workers.map((worker, index) => (
-                  <React.Fragment key={index}>
-                    <div>
-                      <span>{worker.id}</span>
-                    </div>
-                    <div className="pl-3">
-                      <span>{formatValueToDisplay(getWorkerValueFromState(worker, "previousState"))}</span>
-                      <span> → </span>
-                      <span>{formatValueToDisplay(getWorkerValueFromState(worker, "currentState"))}</span>
-                    </div>
-                  </React.Fragment>
-                ))}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+          <TooltipContent>
+            <div className="grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+              {workers.map((worker, index) => (
+                <React.Fragment key={index}>
+                  <div>
+                    <span>{worker.id}</span>
+                  </div>
+                  <div className="pl-3">
+                    <span>{formatValueToDisplay(getWorkerValueFromState(worker, "previousState"))}</span>
+                    <span> → </span>
+                    <span>{formatValueToDisplay(getWorkerValueFromState(worker, "currentState"))}</span>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };
@@ -120,7 +121,7 @@ const EditableField = ({
 
   return (
     <Input
-      className="m-auto w-20 h-6 py-0 px-[4px] text-brand-dark dark:text-brand text-base font-inconsolata border-transparent hover:border-input"
+      className="h-[1.5rem] mt-[-1px] font-inconsolata text-base text-center m-auto w-20 h-6 pt-0 pb-[1px] px-[4px] text-brand-dark dark:text-brand border-transparent hover:border-input align-top"
       onChange={onChange}
       onKeyUp={(e) => {
         if (e.key === "Enter") {
