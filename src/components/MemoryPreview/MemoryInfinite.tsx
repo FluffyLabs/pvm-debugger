@@ -247,7 +247,7 @@ export const MemoryTable = ({
   }, [selectedAddress]);
 
   if (!memory?.data) {
-    return <div className="text-center m-6">Memory not initialized.</div>;
+    return <div className="text-center m-6 min-h-screen">Memory not initialized.</div>;
   }
 
   return (
@@ -384,7 +384,7 @@ export const MemoryInfinite = () => {
   };
 
   return (
-    <div className="flex flex-col mt-2 m-3 p-1 pt-0 h-full min-h-screen">
+    <div className="flex flex-col mt-2 m-3 p-1 pt-0 h-full">
       {/* Wrapping MemoryTable in a flex-1 container ensures it fills the available height */}
       <div className="mb-3">
         <AddressInput

@@ -53,7 +53,7 @@ export function MemoryRanges({ ranges, setRanges }: MemoryRangesProps) {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen">
+      <div className="min-h-screen max-h-full">
         {ranges.map((r, i) => {
           const isLast = i === ranges.length - 1;
           return (

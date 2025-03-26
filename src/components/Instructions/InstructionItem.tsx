@@ -8,7 +8,7 @@ import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from "./InstructionsTable";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
-import { hexToRgb } from "@/lib/utils.ts";
+import { cn, hexToRgb } from "@/lib/utils.ts";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
@@ -182,101 +182,51 @@ export const InstructionItem = forwardRef(
       return (
         <div>
           <div className="flex flex-row bg-title p-3">
-            <div>
-              <div className="font-inconsolata text-xs text-[#8F8F8F] dark:text-brand pl-1 pb-1">opcode</div>
-              <div className="border-r-2 border-[#F16764] dark:border-[#C287B3]">
-                <div className="font-inconsolata text-md tracking-[0.2rem] bg-[#FDD3D0] dark:bg-[#8B537D] text-[#5A5A5A] dark:text-[#FF8FEA] pl-1 text-right">
-                  {valueToBinary(programRow.instructionCode, 8)}
-                </div>
-                <div className="font-inconsolata text-xs p-1 font-bold text-title-foreground dark:text-brand ">
-                  {valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
-                </div>
-              </div>
-            </div>
+            <DetailsColumn
+              kind="opcode"
+              bits={valueToBinary(programRow.instructionCode, 8)}
+              value={valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
+            />
 
             {"args" in programRow &&
               mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)
                 ?.filter((instruction) => !instruction.hiddenFromDetails)
                 .map((instruction, index) => (
-                  <div key={index}>
-                    <div className="font-inconsolata text-xs text-[#8F8F8F] dark:text-foreground pl-1 pb-1 lowercase">
-                      {instruction.type}
-                    </div>
-                    <div
-                      className={classNames(
-                        "border-r-2",
-                        { "border-[#A6B3D7] dark:border-[#61EDE2]": instruction.type === argType.REGISTER },
-                        { "border-gray-400": instruction.type === argType.IMMEDIATE_LENGTH },
-                        {
-                          "border-green-300 dark:border-green-600":
-                            instruction.type !== argType.REGISTER && instruction.type !== argType.IMMEDIATE_LENGTH,
-                        },
-                      )}
-                    >
-                      <div
-                        className={classNames(
-                          "font-inconsolata text-md tracking-[0.2rem] pl-1 text-[#8F8F8F] dark:text-foreground",
-                          {
-                            "bg-[#E8EEFF] dark:bg-[#016960] text-[#5A5A5A] dark:text-[#15C9BB]":
-                              instruction.type === argType.REGISTER,
-                          },
-                          {
-                            "bg-[#EBFFEE] dark:bg-[#114028] text-[#5A5A5A] dark:text-[#13A657]":
-                              instruction.type === argType.IMMEDIATE_LENGTH,
-                          },
-                          {
-                            "bg-[#EBFFEE] dark:bg-[#114028] text-[#5A5A5A] dark:text-[#13A657]":
-                              instruction.type !== argType.REGISTER && instruction.type !== argType.IMMEDIATE_LENGTH,
-                          },
-                        )}
-                      >
-                        {valueToBinary(instruction.valueDecimal, instruction.argumentBitLength)}
-                      </div>
-                      <div
-                        className={classNames("text-xs p-1", {
-                          "font-sans": instruction.type === argType.REGISTER,
-                          "font-inconsolata": instruction.type !== argType.REGISTER,
-                        })}
-                        dangerouslySetInnerHTML={{
-                          __html: instruction.valueFormatted ?? instruction.value,
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <DetailsColumn
+                    key={index}
+                    kind={instruction.type}
+                    bits={valueToBinary(instruction.valueDecimal, instruction.argumentBitLength)}
+                    value={`${instruction.valueFormatted ?? instruction.value}`}
+                  />
                 ))}
           </div>
         </div>
       );
     };
 
-    return hasOpacity ? (
+    return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
           <TooltipPortal>
-            <TooltipContent side="left">
-              {workersWithCurrentPc.map((worker, index) => (
-                <div key={index}>
-                  <span>{worker.id} - PC:</span>
-                  <span className="pl-3">
-                    <span>
-                      {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState", "pc"), numeralSystem)}
+            {hasOpacity ? (
+              <TooltipContent side="left">
+                {workersWithCurrentPc.map((worker, index) => (
+                  <div key={index}>
+                    <span>{worker.id} - PC:</span>
+                    <span className="pl-3">
+                      <span>
+                        {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState", "pc"), numeralSystem)}
+                      </span>
                     </span>
-                  </span>
-                </div>
-              ))}
-            </TooltipContent>
-          </TooltipPortal>
-        </Tooltip>
-      </TooltipProvider>
-    ) : (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
-          <TooltipPortal>
-            <TooltipContent side="bottom" className="m-0 p-0">
-              {renderTooltipContentInstructionInfo()}
-            </TooltipContent>
+                  </div>
+                ))}
+              </TooltipContent>
+            ) : (
+              <TooltipContent side="bottom" className="m-0 p-0">
+                {renderTooltipContentInstructionInfo()}
+              </TooltipContent>
+            )}
           </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
@@ -377,3 +327,50 @@ const getDarkStatusColor = (status?: Status) => {
     border: "#61EDE2",
   };
 };
+
+type DetailsColumnProps = {
+  kind: "opcode" | argType;
+  bits: string;
+  value: string;
+};
+
+function DetailsColumn({ kind, bits, value }: DetailsColumnProps) {
+  const isImmediate = kind === argType.IMMEDIATE || kind === argType.EXTENDED_WIDTH_IMMEDIATE;
+  const isRegister = kind === argType.REGISTER || kind === argType.IMMEDIATE_LENGTH;
+  const isOffset = kind === argType.OFFSET;
+  return (
+    <div>
+      <div className="font-inconsolata text-xs text-[#8F8F8F] dark:text-brand pl-3 pb-1 lowercase">{kind}</div>
+      <div
+        className={cn("border-r-2", {
+          "border-[#F4B4FF] dark:border-[#C287B3]": kind === "opcode",
+          "border-[#9FAEDB] dark:border-[#9FAEDB]": isRegister,
+          "border-[#A6D7D4] dark:border-[#61EDE2]": isOffset,
+          "border-[#A6D7D4] dark:border-[#61EDA2]": isImmediate,
+        })}
+      >
+        <div
+          className={cn("font-inconsolata text-md tracking-[0.2rem] px-3", {
+            "bg-[#FCEBFF] dark:bg-[#8B537D] text-[#444444] dark:text-[#FF8FEA]": kind === "opcode",
+            "bg-[#E8EEFF] dark:bg-[#5F6988] text-[#444444] dark:text-[#AABFFF]": isRegister,
+            "bg-[#E8FFFE] dark:bg-[#016960] text-[#444444] dark:text-[#15C9BB]": isOffset,
+            "bg-[#EBFFEE] dark:bg-[#114028] text-[#444444] dark:text-[#13A657]": isImmediate,
+          })}
+        >
+          {bits}
+        </div>
+        <div className="text-xs p-1 pl-3 font-inconsolata">
+          {kind === argType.REGISTER ? (
+            <span
+              dangerouslySetInnerHTML={{
+                __html: value,
+              }}
+            />
+          ) : (
+            value
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
