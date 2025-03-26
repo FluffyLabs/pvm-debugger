@@ -249,6 +249,7 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
   };
 
   const isHighlighted = isActive(programRow);
+  // TODO [ToDr] The status should be coming from a particular worker and should not be shared!
   const colors = getBackgroundForStatus(status, isHighlighted, isDarkMode);
 
   const bgOpacity =

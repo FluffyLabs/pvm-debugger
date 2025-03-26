@@ -29,7 +29,7 @@ const getCellTextColor = (value: number, index: number, isEqualAcrossWorkers: bo
   }
 
   if (value !== 0) {
-    return "text-brand-dark";
+    return "dark:text-brand text-brand-dark";
   }
 
   return (index + 1) % 2 === 0 ? "text-title-secondary-foreground" : "text-title-foreground";
