@@ -40,16 +40,18 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
     }
   };
 
+  const commonClass = "w-[160px]";
+
   return (
     <>
-      <DialogHeader className="py-3 px-4 bg-title text-title-foreground rounded-t-lg border-b">
-        <DialogTitle>Settings</DialogTitle>
+      <DialogHeader className="py-3 px-6 bg-title text-title-foreground rounded-t-lg border-b">
+        <DialogTitle className="text-base">Settings</DialogTitle>
       </DialogHeader>
       <DialogDescription asChild>
         <div className="text-left px-4 text-secondary-foreground h-full mb-6">
           <div className="p-4 mt-4 flex justify-between items-center">
             <span className="block text-xs font-bold">Mode</span>
-            <ToggleDarkMode />
+            <ToggleDarkMode className={commonClass} />
           </div>
 
           <Separator />
@@ -69,7 +71,7 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
               </TooltipProvider>
             </span>
             <Input
-              className="w-[106px]"
+              className={commonClass}
               onChange={(e) => {
                 const value = e.target?.value;
                 const parsedValue = stringToNumber(value, Number);
@@ -97,7 +99,7 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
               </TooltipProvider>
             </span>
             <Input
-              className="w-[106px]"
+              className={commonClass}
               type="number"
               step={1}
               min={1}
@@ -128,7 +130,7 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
             </span>
 
             <div className="flex">
-              <Button variant="outlineBrand" onClick={() => openStorage()} className="w-[106px]">
+              <Button variant="outlineBrand" onClick={() => openStorage()} className={commonClass}>
                 Set storage
               </Button>
 

@@ -4,7 +4,7 @@ export type ProgramUploadFileOutput = {
   name: string;
   initial: InitialState;
   program: number[];
-  // expected: ExpectedState;
+  exampleName?: string;
 };
 
 export type ProgramUploadFileInput = {

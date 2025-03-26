@@ -94,13 +94,16 @@ export const ProgramTextLoader = ({
 
   return (
     <div className="h-full flex flex-col">
-      <ProgramEdit startSlot={<small>Edit program code bytes</small>} />
-      <div className={classNames("h-full flex-auto flex gap-1 flex-col")}>
+      <ProgramEdit startSlot={<small>Generic PVM program bytes</small>} />
+      <div className={classNames("h-full flex-auto flex flex-col")}>
         <Textarea
           autoFocus
-          className={classNames("w-full flex-auto font-inconsolata text-base border-2 rounded-md", {
-            "focus-visible:ring-3 focus-visible:outline-none active:outline-none border-red-500": isProgramInvalid,
-          })}
+          className={classNames(
+            "w-full flex-auto font-inconsolata text-base border-2 rounded-md focus-visible:ring-offset-0",
+            {
+              "focus-visible:ring-1 focus-visible:outline-none active:outline-none border-red-500": isProgramInvalid,
+            },
+          )}
           id="program"
           placeholder="Paste the program as an array of numbers or hex string"
           value={programInput}

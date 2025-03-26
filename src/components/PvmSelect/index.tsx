@@ -52,11 +52,10 @@ const fetchWasmMetadata = async (url: string): Promise<WasmMetadata | undefined>
       }
       return response.json();
     } else {
-      alert("Invalid URL");
+      alert("Unable to fetch wasm metadata. Invalid URL.");
     }
   } catch (error) {
-    console.error(error);
-    alert("Invalid URL");
+    console.error(`Unable to fetch WASM metadata from ${url}`, error);
   }
   return;
 };
@@ -120,6 +119,7 @@ export const PvmSelect = () => {
       const wasmMetadata = await fetchWasmMetadata(url);
 
       if (!wasmMetadata) {
+        alert("The metadata under given URL is invalid.");
         throw new Error("Invalid metadata");
       }
 

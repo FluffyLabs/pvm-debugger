@@ -14,7 +14,15 @@ export function postTypedMessage(msg: WorkerResponseParams) {
   postMessage(msg);
 }
 
-onmessage = async (e: MessageEvent<WorkerRequestParams>) => {
+onmessage = async (ev: MessageEvent<WorkerRequestParams>) => {
+  try {
+    await rawOnMessage(ev);
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const rawOnMessage = async (e: MessageEvent<WorkerRequestParams>) => {
   if (!e.data?.command) {
     return;
   }

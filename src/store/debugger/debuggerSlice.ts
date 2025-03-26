@@ -22,9 +22,12 @@ export interface DebuggerState {
   isProgramEditMode: boolean;
   isRunMode: boolean;
   isStepMode: boolean;
+  exampleName: string | null;
+  programName: string;
   program: number[];
   programPreviewResult: CurrentInstruction[];
   pvmInitialized: boolean;
+  pvmLoaded: boolean;
   stepsToPerform: number;
   storage: DebuggerEcalliStorage | null;
   userProvidedStorage: DebuggerEcalliStorage | null;
@@ -57,6 +60,9 @@ const initialState: DebuggerState = {
     ],
     selectedPvm: [AvailablePvms.TYPEBERRY],
   },
+  // set only if an example is loaded
+  exampleName: null,
+  programName: "<empty>",
   program: [],
   initialState: {
     regs: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
@@ -77,6 +83,7 @@ const initialState: DebuggerState = {
   instructionMode: InstructionMode.ASM,
   isDebugFinished: false,
   pvmInitialized: false,
+  pvmLoaded: false,
   stepsToPerform: 1,
   storage: null,
   userProvidedStorage: null,
@@ -89,7 +96,10 @@ const debuggerSlice = createSlice({
   initialState,
   reducers: {
     setProgram(state, action) {
-      state.program = action.payload;
+      const { program, programName, exampleName } = action.payload;
+      state.program = program;
+      state.programName = programName;
+      state.exampleName = exampleName;
     },
     setInitialState(state, action) {
       state.initialState = action.payload;
@@ -123,6 +133,9 @@ const debuggerSlice = createSlice({
     },
     setPvmInitialized(state, action) {
       state.pvmInitialized = action.payload;
+    },
+    setPvmLoaded(state, action) {
+      state.pvmLoaded = action.payload;
     },
     setStepsToPerform(state, action) {
       state.stepsToPerform = action.payload;
@@ -166,6 +179,7 @@ export const {
   setProgram,
   setProgramPreviewResult,
   setPvmInitialized,
+  setPvmLoaded,
   setStepsToPerform,
   setStorage,
   setServiceId,
@@ -175,27 +189,31 @@ export const {
 } = debuggerSlice.actions;
 
 export const debuggerSliceListenerMiddleware = createListenerMiddleware();
-
 debuggerSliceListenerMiddleware.startListening({
   actionCreator: setProgram,
   effect: async (action) => {
-    const value = action.payload;
+    const { program, exampleName } = action.payload;
 
     // Update the URL with the new program converted to a hex string
-    const hexProgram = value.map((x: number) => x.toString(16).padStart(2, "0")).join("");
+    const hexProgram = program.map((x: number) => x.toString(16).padStart(2, "0")).join("");
 
     // MAX_URL_LENGTH is an arbitrary limit so there may be a better value for this purpose
     const MAX_URL_LENGTH = 2 ** 13;
 
+    const params = new URLSearchParams(window.location.search);
     // If the program is less than MAX_URL_LENGTH, update the URL, otherwise do nothing as it will probably crash the browser or make it very slow
     if (hexProgram?.length < MAX_URL_LENGTH) {
-      const params = new URLSearchParams(window.location.search);
       params.set("program", `0x${hexProgram}`);
-
-      window.history.pushState({}, "", `?${params.toString()}`);
     } else {
       logger.warn("Program is too large to be stored in the URL");
     }
+    if (exampleName) {
+      params.set("example", exampleName);
+    } else {
+      params.delete("example");
+    }
+
+    window.history.pushState({}, "", `?${params.toString()}`);
   },
 });
 

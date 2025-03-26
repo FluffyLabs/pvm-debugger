@@ -30,7 +30,7 @@ export const DebuggerSettings = ({
             e.preventDefault();
           }
         }}
-        className="p-0 pb-4  h-full sm:h-[700px] flex flex-col md:min-w-[680px]"
+        className="p-0 pb-4  h-full sm:h-[700px] flex flex-col md:min-w-[680px] max-h-lvh"
       >
         {isStorageSettings ? (
           <HostCallsContent onSetStorage={() => setIsStorageSettings(false)} />

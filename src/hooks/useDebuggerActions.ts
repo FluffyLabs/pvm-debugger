@@ -13,6 +13,7 @@ import {
   setProgramPreviewResult,
   setPvmInitialized,
   setIsStepMode,
+  setPvmLoaded,
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -62,9 +63,9 @@ export const useDebuggerActions = () => {
   );
 
   const startProgram = useCallback(
-    async (initialState: ExpectedState, newProgram: number[]) => {
+    async (initialState: ExpectedState, newProgram: number[], programName: string, exampleName?: string) => {
       dispatch(setInitialState(initialState));
-      dispatch(setProgram(newProgram));
+      dispatch(setProgram({ program: newProgram, programName, exampleName }));
       const currentState = {
         pc: initialState.pc ?? 0,
         regs: initialState.regs,
@@ -90,7 +91,12 @@ export const useDebuggerActions = () => {
   const handleProgramLoad = useCallback(
     async (data?: ProgramUploadFileOutput) => {
       if (data) {
-        const response = await startProgram({ ...data.initial, status: Status.OK }, data.program);
+        const response = await startProgram(
+          { ...data.initial, status: Status.OK },
+          data.program,
+          data.name,
+          data.exampleName,
+        );
         if (
           (
             response as unknown as {
@@ -123,7 +129,7 @@ export const useDebuggerActions = () => {
 
       await Promise.all(
         workers.map((worker: WorkerState) => {
-          dispatch(destroyWorker(worker.id)).unwrap();
+          return dispatch(destroyWorker(worker.id)).unwrap();
         }),
       );
 
@@ -200,6 +206,7 @@ export const useDebuggerActions = () => {
       await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
       await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
       await restartProgram(initialState);
+      dispatch(setPvmLoaded(true));
     },
     [dispatch, initialState, restartProgram, workers],
   );

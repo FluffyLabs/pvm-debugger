@@ -31,48 +31,49 @@ const unescapeString = (str: string) => {
 type StorageItemProps = {
   row: StorageRow;
   index: number;
+  lastIndex: number;
   handleRemoveRow: (index: number) => void;
   handleKeyChange: (index: number, value: string) => void;
   handleValueChange: (index: number, value: string) => void;
 };
 
-const StorageItem = ({ row, index, handleRemoveRow, handleKeyChange, handleValueChange }: StorageItemProps) => {
+const StorageItem = ({
+  row,
+  index,
+  lastIndex,
+  handleRemoveRow,
+  handleKeyChange,
+  handleValueChange,
+}: StorageItemProps) => {
   const isDisabled = useAppSelector(hasPVMGeneratedStorage);
 
-  // Cover PVM generated hash
-  const isKeySameAsHash = (row.key && row.key === row.keyHash) || (!row.key && row.keyHash);
-
   return (
-    <div className={`p-3 flex border rounded-lg`}>
-      <div className="flex-col w-full">
-        <div className="flex items-start">
-          <div className="flex flex-col w-full">
-            <Input
-              placeholder="Key"
-              value={row.key || row.keyHash}
-              onChange={(e) => handleKeyChange(index, e.target.value)}
-              disabled={isDisabled}
-            />
-            <span className="text-xs py-1 ml-2">
-              (Key Hash:) {isKeySameAsHash ? "--- key is already a hash ---" : row.keyHash}
-            </span>
-          </div>
-
-          <Button variant="ghost" onClick={() => handleRemoveRow(index)} disabled={isDisabled}>
-            <XIcon className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="flex items-center">
-          <Textarea
-            placeholder="Raw value or hex array"
-            value={row.value}
-            onChange={(e) => handleValueChange(index, e.target.value)}
-            className="flex-1 mt-1 text-brand-dark dark:text-brand"
-            disabled={isDisabled}
-          />
-        </div>
+    <div className="my-3 p-3 pr-0 flex border rounded-lg">
+      <div className="flex flex-col flex-1 gap-3">
+        <Input
+          placeholder="Key"
+          value={row.key || row.keyHash}
+          onChange={(e) => handleKeyChange(index, e.target.value)}
+          disabled={isDisabled}
+        />
+        <Input
+          placeholder="Key Hash"
+          value={row.keyHash}
+          onChange={(e) => handleKeyChange(index, e.target.value)}
+          disabled={true}
+        />
+        <Textarea
+          autoFocus={index === lastIndex}
+          placeholder="Raw value or hex array"
+          value={row.value}
+          onChange={(e) => handleValueChange(index, e.target.value)}
+          className="flex-1 mt-1 text-brand-dark dark:text-brand"
+          disabled={isDisabled}
+        />
       </div>
+      <Button className="mx-2 p-2" variant="ghost" onClick={() => handleRemoveRow(index)} disabled={isDisabled}>
+        <XIcon className="w-4 h-4" />
+      </Button>
     </div>
   );
 };
@@ -151,6 +152,7 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
         return (
           <StorageItem
             index={i}
+            lastIndex={rows.length - 1}
             key={i}
             row={row}
             handleKeyChange={handleKeyChange}
@@ -159,7 +161,7 @@ export const TrieInput = ({ onChange, initialRows }: TrieInputProps) => {
           />
         );
       })}
-      <Button className="mt-3" variant="outlineBrand" onClick={() => handleInsertRow()} disabled={isDisabled}>
+      <Button className="mt-3 w-full" variant="outlineBrand" onClick={() => handleInsertRow()} disabled={isDisabled}>
         New item
       </Button>
     </div>

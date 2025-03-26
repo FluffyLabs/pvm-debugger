@@ -98,10 +98,12 @@ function assemblyFromInputProgram(initialState: InitialState, program: number[])
 }
 
 export const Assembly = ({
+  programName,
   initialState,
   onProgramLoad,
   program,
 }: {
+  programName: string;
   initialState: InitialState;
   onProgramLoad: (val?: ProgramUploadFileOutput) => void;
   program: number[];
@@ -117,6 +119,7 @@ export const Assembly = ({
         const programJson = compile_assembly(input);
         const newProgram = JSON.parse(programJson);
         const output = mapUploadFileInputToOutput(newProgram);
+        output.name = programName;
         // avoid re-rendering when the code & state is the same.
         if (isArrayEqual(program, output.program)) {
           output.program = program;
@@ -163,7 +166,7 @@ export const Assembly = ({
         setError(`${e}`);
       }
     },
-    [onProgramLoad, program, initialState],
+    [onProgramLoad, program, initialState, programName],
   );
 
   const [error, setError] = useState<string>();
@@ -173,21 +176,7 @@ export const Assembly = ({
 
   return (
     <div className="h-full flex flex-col">
-      <ProgramEdit
-        startSlot={
-          <small>
-            Experimental assembler format as defined in{" "}
-            <a
-              target="_blank"
-              href="https://github.com/koute/polkavm/blob/master/crates/polkavm-common/src/assembler.rs"
-              className="underline"
-            >
-              koute/polkavm
-            </a>
-            .
-          </small>
-        }
-      />
+      <ProgramEdit startSlot={<small>{programName}</small>} />
       <div
         className={classNames("flex-auto gap-1 font-poppins overflow-auto", {
           "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
@@ -197,7 +186,7 @@ export const Assembly = ({
         <CodeMirror
           theme={isDark ? "dark" : "light"}
           autoFocus
-          className="h-full bg-card"
+          className="h-full"
           height="100%"
           placeholder="Try writing some PolkaVM assembly code."
           value={assembly}
@@ -210,10 +199,21 @@ export const Assembly = ({
             isError
               ? "text-[#D34D4B] bg-[#FFF4F4] dark:bg-[#D34D4B]/10"
               : "text-[#5FC18C] bg-[#F4FFF9] dark:bg-brand-dark/20",
-            "p-2",
+            "text-sm p-2",
           )}
         >
           {error ?? "Compilation successful"}
+        </p>
+        <p className="text-xs p-2">
+          Experimental assembler format as defined in{" "}
+          <a
+            target="_blank"
+            href="https://github.com/koute/polkavm/blob/master/crates/polkavm-common/src/assembler.rs"
+            className="underline"
+          >
+            koute/polkavm
+          </a>
+          .
         </p>
       </div>
     </div>

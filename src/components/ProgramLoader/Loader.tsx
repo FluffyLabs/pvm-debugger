@@ -37,7 +37,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       try {
         await debuggerActions.handleProgramLoad(program || programLoad);
         setIsDialogOpen?.(false);
-        navigate("/");
+        navigate("/", { replace: true });
       } catch (error) {
         if (error instanceof Error || isSerializedError(error)) {
           setError(error.message);
@@ -49,12 +49,14 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
     [dispatch, programLoad, debuggerActions, setIsDialogOpen, navigate],
   );
 
+  const isProgramLoaded = programLoad !== undefined;
+
   return (
     <div className="flex flex-col w-full h-full bg-card pb-3">
-      <h2 className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 py-2">
+      <p className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 pt-3 pb-2">
         Start with an example program or upload your file
-      </h2>
-      <div className="flex flex-col px-7 pt-[30px] h-full">
+      </p>
+      <div className="flex flex-col px-7 pt-[30px] h-full overflow-auto">
         <Examples
           onProgramLoad={(val) => {
             setProgramLoad(val);
@@ -83,7 +85,13 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         <Separator />
       </div>
       <div className="m-6 mb-7 flex justify-end">
-        <Button className="mt-3 min-w-[92px]" id="load-button" type="button" onClick={() => handleLoad()}>
+        <Button
+          className="mt-3 min-w-[92px]"
+          id="load-button"
+          type="button"
+          disabled={!isProgramLoaded}
+          onClick={() => handleLoad()}
+        >
           Load
         </Button>
       </div>

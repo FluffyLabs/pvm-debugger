@@ -10,7 +10,7 @@ import cs from "classnames";
 export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element; classNames?: string }) => {
   const dispatch = useAppDispatch();
   const debuggerActions = useDebuggerActions();
-  const { program, initialState, isProgramEditMode, isProgramInvalid, instructionMode } = useAppSelector(
+  const { program, programName, initialState, isProgramEditMode, isProgramInvalid, instructionMode } = useAppSelector(
     (state) => state.debugger,
   );
 
@@ -20,14 +20,14 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element;
       <div className="flex text-xs">
         <button
           className={cs([
-            "flex text-secondary-foreground items-center mr-3",
+            "flex text-secondary-foreground items-center mr-6",
             !program.length ? "invisible" : "visible",
           ])}
           disabled={!program.length || isProgramInvalid}
           title="Edit the code"
           onClick={() => {
             if (isProgramEditMode) {
-              debuggerActions.startProgram(initialState, program);
+              debuggerActions.startProgram(initialState, program, programName);
               dispatch(setIsProgramEditMode(false));
             } else {
               debuggerActions.restartProgram(initialState);
