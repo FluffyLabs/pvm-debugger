@@ -20,7 +20,7 @@ export const MemoryPreview = () => {
             Ranges
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="pages" className="mb-4">
+        <TabsContent value="pages" className="mb-4 overflow-y-hidden">
           <MemoryInfinite />
         </TabsContent>
         <TabsContent value="ranges" className="mb-4">

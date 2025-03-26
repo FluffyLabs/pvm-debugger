@@ -50,7 +50,7 @@ const AddressCell = ({
     (breakpointAddresses.includes(programRow.counter) && "bg-red-600") || (isHover && "bg-red-400");
   return (
     <TableCell
-      className={"p-1.5 cursor-pointer relative font-inconsolata " + className}
+      className={classNames("p-1.5 cursor-pointer relative font-inconsolata w-[20%]", className)}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
@@ -58,9 +58,9 @@ const AddressCell = ({
         style={{ backgroundColor: backgroundClass ? undefined : colors.border }}
         className={classNames("w-[3px] absolute h-[100%] left-0 top-0", backgroundClass)}
       ></div>
-      <span style={{ color: colors.color }} onClick={() => onAddressClick(programRow.counter)}>
+      <div style={{ color: colors.color }} onClick={() => onAddressClick(programRow.counter)}>
         {programRow.addressEl}
-      </span>
+      </div>
     </TableCell>
   );
 };
@@ -135,7 +135,7 @@ export const InstructionItem = forwardRef(
                   border,
                 }}
               />
-              <TableCell className="p-1.5 border-b">
+              <TableCell className="p-1.5 border-b w-[40%]">
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
                   <span className="text-title-foreground">
                     {[...programRow.instructionBytes]
@@ -158,7 +158,7 @@ export const InstructionItem = forwardRef(
                   border,
                 }}
               />
-              <TableCell className="p-1.5 border-b">
+              <TableCell className="p-1.5 border-b w-[40%] min-w-[170px]">
                 <a onClick={fillSearch} className="cursor-pointer">
                   <span className="uppercase">{programRow.name}</span>
                 </a>
