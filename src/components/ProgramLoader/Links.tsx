@@ -32,12 +32,12 @@ export const Links = () => {
             <p className=""> JAM SPI program </p>
             <p className="inline text-secondary-foreground">
               <small>
-                SPI program definition can be found in{" "}
+                SPI program definition can be found in the{" "}
                 <a
                   className="text-brand-dark dark:text-brand underline"
                   href="https://graypaper.fluffylabs.dev/#/5b732de/2a7e022a7e02"
                 >
-                  a GrayPaper
+                  GrayPaper
                 </a>
               </small>
             </p>
@@ -53,12 +53,12 @@ export const Links = () => {
             <p className="">JSON test file compatible with JAM TestVectors JSON</p>
             <p className="inline text-secondary-foreground">
               <small>
-                Generic program definition can be found in{" "}
+                Generic program definition can be found in the{" "}
                 <a
                   className="text-brand-dark dark:text-brand underline"
                   href="https://graypaper.fluffylabs.dev/#/5b732de/23c60023c600"
                 >
-                  a GrayPaper
+                  GrayPaper
                 </a>
               </small>
             </p>
