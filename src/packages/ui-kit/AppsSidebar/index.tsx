@@ -41,7 +41,7 @@ function SidebarLink({ name, href, icon, active = false }: SidebarLinkProps) {
   return (
     <WithTooltip tooltip={name}>
       <a
-        target="_blank"
+        target={active === false ? "_blank" : undefined}
         href={href}
         className={cn(
           "p-2 border rounded-full my-3",
