@@ -22,7 +22,7 @@ export const asyncWorkerPostMessage = <C extends Commands>(
   return new Promise<Extract<WorkerResponseParams, { command: C }>>((resolve, reject) => {
     const messageId = getMessageId();
     const timeoutId = setTimeout(() => {
-      reject(`PVM ${id} reached max timeout ${RESPONSE_WAIT_TIMEOUT}ms.`);
+      reject(`PVM ${id} reached max timeout ${RESPONSE_WAIT_TIMEOUT}ms for ${messageId}`);
     }, RESPONSE_WAIT_TIMEOUT);
 
     const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {

@@ -106,8 +106,8 @@ const ControllsContent = ({
       <div className="shrink overflow-auto">
         <div className="flex flex-col px-4 py-3">
           {activeMobileTab === "program" ? (
-            changedRegisters?.map((val) => (
-              <div className="flex">
+            changedRegisters?.map((val, idx) => (
+              <div className="flex" key={idx}>
                 <div className="col-span-2">ω{val.changedRegisterIndex}</div>
                 <div className="col-span-8 flex">
                   {/* {valueToNumeralSystem(val.previousState, numeralSystem)}

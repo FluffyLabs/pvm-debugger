@@ -80,7 +80,7 @@ const ComputedValue = ({
     <div
       className={classNames(sharedStyles, {
         "text-brand-dark dark:text-brand": value !== previousValue,
-        "text-red-500": !isEqualAcrossWorkers,
+        "text-red-500 dark:text-red-500": !isEqualAcrossWorkers,
       })}
     >
       <TooltipProvider>

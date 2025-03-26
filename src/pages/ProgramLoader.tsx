@@ -1,5 +1,5 @@
 import { Loader } from "@/components/ProgramLoader/Loader.tsx";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { bytes } from "@typeberry/block";
 import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
@@ -8,21 +8,57 @@ import { useAppSelector } from "@/store/hooks.ts";
 import { selectInitialState } from "@/store/debugger/debuggerSlice.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
 import { getAsChunks, getAsPageMap } from "@/lib/utils.ts";
+import { programs } from "@/components/ProgramLoader/examplePrograms";
 
 const ProgramLoader = () => {
   const initialState = useAppSelector(selectInitialState);
   const debuggerActions = useDebuggerActions();
   const navigate = useNavigate();
-  const { pvmInitialized } = useAppSelector((state) => state.debugger);
+  const pvmLoaded = useAppSelector((state) => state.debugger.pvmLoaded);
+  const isLoadedFromUrl = useRef(false);
 
   useEffect(() => {
     const loadProgramFromUrl = async () => {
+      // we wait for the pvm to be loaded first.
+      if (!pvmLoaded) {
+        return;
+      }
+      // but we never load from url twice
+      if (isLoadedFromUrl.current) {
+        return;
+      }
+
+      isLoadedFromUrl.current = true;
       const searchParams = new URLSearchParams(window.location.search);
-      const programFromSearchParams = searchParams.get("program");
 
-      if (!pvmInitialized && programFromSearchParams) {
-        const program = programFromSearchParams;
+      const example = searchParams.get("example");
+      if (example) {
+        const program = programs[example];
+        if (!program) {
+          console.warn("Unknown example", example);
+          navigate("/load", { replace: true });
+          return;
+        }
 
+        await debuggerActions.handleProgramLoad({
+          program: program.program,
+          name: program.name,
+          initial: {
+            regs: program.regs.map((x) => BigInt(x)) as RegistersArray,
+            pc: program.pc,
+            pageMap: program.pageMap,
+            memory: program.memory,
+            gas: program.gas,
+          },
+          exampleName: example,
+        });
+
+        navigate("/", { replace: true });
+        return;
+      }
+
+      const program = searchParams.get("program");
+      if (program) {
         try {
           // Add 0x prefix if it's not there - we're assuming it's the hex program either way
           const hexProgram = program?.startsWith("0x") ? program : `0x${program}`;
@@ -48,7 +84,7 @@ const ProgramLoader = () => {
                 },
               });
 
-              navigate("/");
+              navigate("/", { replace: true });
             } catch (e) {
               console.warn("Could not load the program from URL", e);
             }
@@ -59,17 +95,17 @@ const ProgramLoader = () => {
               initial: initialState,
             });
 
-            navigate("/");
+            navigate("/", { replace: true });
           }
         } catch (e) {
           console.warn("Could not parse the program from URL", e);
+          navigate("/load", { replace: true });
         }
       }
     };
 
     loadProgramFromUrl();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [pvmLoaded, isLoadedFromUrl, debuggerActions, navigate, initialState]);
 
   return (
     <div className="sm:max-w-[50vw] sm:my-auto 2xl:my-[100px] sm:mr-[72px] max-sm:h-full sm:rounded-lg sm:border-[1px] overflow-hidden">

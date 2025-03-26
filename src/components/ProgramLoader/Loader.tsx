@@ -37,7 +37,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       try {
         await debuggerActions.handleProgramLoad(program || programLoad);
         setIsDialogOpen?.(false);
-        navigate("/");
+        navigate("/", { replace: true });
       } catch (error) {
         if (error instanceof Error || isSerializedError(error)) {
           setError(error.message);
@@ -56,7 +56,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       <p className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 pt-3 pb-2">
         Start with an example program or upload your file
       </p>
-      <div className="flex flex-col px-7 pt-[30px] h-full">
+      <div className="flex flex-col px-7 pt-[30px] h-full overflow-auto">
         <Examples
           onProgramLoad={(val) => {
             setProgramLoad(val);
