@@ -38,7 +38,7 @@ const ProgramLoader = () => {
 
               await debuggerActions.handleProgramLoad({
                 program: Array.from(code),
-                name: "custom",
+                name: "loaded-from-url [SPI]",
                 initial: {
                   regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
                   pc: 0,
@@ -55,7 +55,7 @@ const ProgramLoader = () => {
           } else {
             await debuggerActions.handleProgramLoad({
               program: parsedBlobArray,
-              name: "custom",
+              name: "loaded-from-url [generic]",
               initial: initialState,
             });
 
@@ -72,7 +72,7 @@ const ProgramLoader = () => {
   }, []);
 
   return (
-    <div className="sm:max-w-[505px] sm:my-auto 2xl:my-[100px] sm:mr-[72px] max-sm:h-full sm:rounded-lg sm:border-[1px] overflow-hidden">
+    <div className="sm:max-w-[50vw] sm:my-auto 2xl:my-[100px] sm:mr-[72px] max-sm:h-full sm:rounded-lg sm:border-[1px] overflow-hidden">
       <Loader />
     </div>
   );

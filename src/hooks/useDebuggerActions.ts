@@ -10,6 +10,7 @@ import {
   setIsDebugFinished,
   setIsRunMode,
   setProgram,
+  setProgramName,
   setProgramPreviewResult,
   setPvmInitialized,
   setIsStepMode,
@@ -62,8 +63,9 @@ export const useDebuggerActions = () => {
   );
 
   const startProgram = useCallback(
-    async (initialState: ExpectedState, newProgram: number[]) => {
+    async (initialState: ExpectedState, newProgram: number[], programName: string) => {
       dispatch(setInitialState(initialState));
+      dispatch(setProgramName(programName));
       dispatch(setProgram(newProgram));
       const currentState = {
         pc: initialState.pc ?? 0,
@@ -90,7 +92,7 @@ export const useDebuggerActions = () => {
   const handleProgramLoad = useCallback(
     async (data?: ProgramUploadFileOutput) => {
       if (data) {
-        const response = await startProgram({ ...data.initial, status: Status.OK }, data.program);
+        const response = await startProgram({ ...data.initial, status: Status.OK }, data.program, data.name);
         if (
           (
             response as unknown as {

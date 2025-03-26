@@ -10,8 +10,6 @@ import { ProgramTextLoader } from "@/components/ProgramTextLoader";
 import { Instructions } from "@/components/Instructions";
 import { Registers } from "@/components/Registers";
 import { MemoryPreview } from "@/components/MemoryPreview";
-// import { KnowledgeBase } from "@/components/KnowledgeBase";
-// import { MobileKnowledgeBase } from "@/components/KnowledgeBase/Mobile.tsx";
 import { HostCalls } from "@/components/HostCalls";
 import classNames from "classnames";
 import { Program } from "@typeberry/pvm-debugger-adapter";
@@ -69,6 +67,7 @@ const DebuggerContent = () => {
   const dispatch = useAppDispatch();
   const debuggerActions = useDebuggerActions();
   const {
+    programName,
     program,
     initialState,
     isProgramEditMode,
@@ -92,8 +91,6 @@ const DebuggerContent = () => {
     (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
   );
 
-  // const mobileView = useRef<HTMLDivElement | null>(null);
-
   const onInstructionClick = useCallback(
     (row: CurrentInstruction) => {
       dispatch(setClickedInstruction(row));
@@ -101,9 +98,10 @@ const DebuggerContent = () => {
     [dispatch],
   );
 
-  // const isMobileViewActive = () => {
-  //   return mobileView?.current?.offsetParent !== null;
-  // };
+  const programNameWithoutSuffix = programName.substring(
+    0,
+    programName.includes("(") ? programName.indexOf("(") : undefined,
+  );
 
   return (
     <div className="w-full h-full p-3 pt-0 flex flex-col gap-4 overflow-hidden">
@@ -119,13 +117,15 @@ const DebuggerContent = () => {
         >
           <HostCalls />
 
-          {!program.length && <InitialLoadProgramCTA />}
-          {!!program.length && (
+          {!program.length ? (
+            <InitialLoadProgramCTA />
+          ) : (
             <>
               {isProgramEditMode && (
                 <div className="border-[1px] rounded-md h-full">
                   {instructionMode === InstructionMode.ASM ? (
                     <Assembly
+                      programName={`${programNameWithoutSuffix} (edited)`}
                       program={program}
                       onProgramLoad={debuggerActions.handleProgramLoad}
                       initialState={initialState}
@@ -148,7 +148,7 @@ const DebuggerContent = () => {
                             return {
                               program: Array.from(code) || [],
                               initial: { ...initialState, regs, mem: memory },
-                              name: "custom",
+                              name: `${programNameWithoutSuffix} (SPI)`,
                             };
                           } catch {
                             return null;
@@ -163,7 +163,7 @@ const DebuggerContent = () => {
                             debuggerActions.handleProgramLoad({
                               initial: initialState,
                               program: program || [],
-                              name: "custom",
+                              name: `${programName} (generic)`,
                             });
                           }
                         }
@@ -176,6 +176,7 @@ const DebuggerContent = () => {
               {!isProgramEditMode && (
                 <>
                   <Instructions
+                    programName={programName}
                     status={currentState.status}
                     currentState={currentState}
                     programPreviewResult={programPreviewResult}
@@ -216,13 +217,6 @@ const DebuggerContent = () => {
         >
           <MemoryPreview />
         </div>
-        {/* <div className="md:hidden col-span-12 order-last" ref={mobileView}>
-        <MobileKnowledgeBase
-          currentInstruction={clickedInstruction ?? currentInstructionEnriched}
-          open={clickedInstruction !== null && isMobileViewActive()}
-          onClose={() => setClickedInstruction(null)}
-        />
-      </div> */}
       </div>
 
       <KnowledgeBase currentInstruction={clickedInstruction ?? currentInstructionEnriched} />

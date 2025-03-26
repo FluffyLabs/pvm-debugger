@@ -1,7 +1,7 @@
 import { useDropzone } from "react-dropzone";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
-import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
+import { decodeStandardProgram, ProgramDecoder } from "@typeberry/pvm-debugger-adapter";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { SafeParseReturnType, z } from "zod";
 import { useAppSelector } from "@/store/hooks";
@@ -63,63 +63,89 @@ const generateErrorMessageFromZodValidation = (result: ValidationResult): string
 export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUpload, close }) => {
   const initialState = useAppSelector(selectInitialState);
   const [error, setError] = useState<string>();
+  const [loadedFileName, setLoadedFileName] = useState<string | undefined>(undefined);
 
   const handleFileRead = (e: ProgressEvent<FileReader>) => {
+    setError(undefined);
     const arrayBuffer = e.target?.result;
 
-    if (arrayBuffer instanceof ArrayBuffer) {
-      // Try to parse file as a JSON first
-      try {
-        const stringContent = new TextDecoder("utf-8").decode(arrayBuffer);
-
-        const jsonFile = JSON.parse(stringContent);
-
-        const result = validateJsonTestCaseSchema(jsonFile);
-
-        if (!result.success) {
-          const errorMessage = generateErrorMessageFromZodValidation(result);
-          setError(errorMessage || "");
-        } else {
-          onFileUpload(mapUploadFileInputToOutput(jsonFile));
-        }
-      } catch (e) {
-        const uint8Array = new Uint8Array(arrayBuffer);
-
-        // Try to decode the program as an SPI
-        try {
-          const { code, memory, registers } = decodeStandardProgram(uint8Array, new Uint8Array());
-
-          const pageMap: PageMapItem[] = getAsPageMap(memory);
-          const chunks: MemoryChunkItem[] = getAsChunks(memory);
-
-          onFileUpload({
-            program: Array.from(code),
-            name: "custom",
-            initial: {
-              regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
-              pc: 0,
-              pageMap,
-              memory: chunks,
-              gas: 10000n,
-            },
-          });
-        } catch (e) {
-          // Try to load program as a Generic
-          onFileUpload({
-            program: Array.from(uint8Array),
-            name: "custom",
-            initial: initialState,
-          });
-        }
-      }
-    } else {
+    if (!(arrayBuffer instanceof ArrayBuffer)) {
       setError("Failed to read the file");
+      return;
+    }
+
+    // Try to parse file as a JSON first
+    let jsonFile = null;
+    try {
+      const stringContent = new TextDecoder("utf-8").decode(arrayBuffer);
+      jsonFile = JSON.parse(stringContent);
+    } catch (e) {
+      console.warn("not a JSON", e);
+    }
+
+    if (jsonFile !== null) {
+      const result = validateJsonTestCaseSchema(jsonFile);
+      if (!result.success) {
+        console.warn("not a valid JSON", result.error);
+        const errorMessage = generateErrorMessageFromZodValidation(result);
+        setError(errorMessage || "");
+        return;
+      }
+
+      onFileUpload(mapUploadFileInputToOutput(jsonFile));
+      return;
+    }
+
+    // Try to decode the program as an SPI
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let spi = null;
+    try {
+      spi = decodeStandardProgram(uint8Array, new Uint8Array());
+    } catch (e) {
+      console.warn("not an SPI blob", e);
+    }
+    if (spi !== null) {
+      const { code, memory, registers } = spi;
+      const pageMap: PageMapItem[] = getAsPageMap(memory);
+      const chunks: MemoryChunkItem[] = getAsChunks(memory);
+
+      onFileUpload({
+        program: Array.from(code),
+        name: `${loadedFileName} [spi]`,
+        initial: {
+          regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
+          pc: 0,
+          pageMap,
+          memory: chunks,
+          gas: 10000n,
+        },
+      });
+      return;
+    }
+
+    // Finally try to load program as a Generic
+    let program = null;
+    try {
+      program = new ProgramDecoder(uint8Array);
+    } catch (e) {
+      console.warn("not a generic PVM", e);
+    }
+
+    if (program !== null) {
+      onFileUpload({
+        program: Array.from(uint8Array),
+        name: `${loadedFileName} [generic]`,
+        initial: initialState,
+      });
+    } else {
+      setError("Unrecognized program format (see console).");
     }
   };
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length) {
       const file = acceptedFiles[0];
+      setLoadedFileName(file.name);
       const fileReader = new FileReader();
       fileReader.onloadend = handleFileRead;
       fileReader.readAsArrayBuffer(file);
@@ -133,6 +159,8 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
     noClick: true,
   });
 
+  const isLoaded = loadedFileName !== undefined;
+
   return (
     <div>
       <div
@@ -141,10 +169,12 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
       >
         <div className="flex items-center space-x-6">
           <UploadCloud className="text-title-secondary-foreground" width="30px" height="30px" />
-          <p className="text-[10px] text-title-secondary-foreground">Select a file or drag and drop</p>
+          <p className="text-[10px] text-title-secondary-foreground">
+            {isLoaded ? loadedFileName : "Select a file or drag and drop"}
+          </p>
         </div>
         <Button className="text-[10px] py-1 h-9" variant="outlineBrand" onClick={open}>
-          Select file
+          {isLoaded ? "Change file" : "Select file"}
         </Button>
         <input {...getInputProps()} className="hidden" />
       </div>

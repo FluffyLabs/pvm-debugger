@@ -22,6 +22,7 @@ export interface DebuggerState {
   isProgramEditMode: boolean;
   isRunMode: boolean;
   isStepMode: boolean;
+  programName: string;
   program: number[];
   programPreviewResult: CurrentInstruction[];
   pvmInitialized: boolean;
@@ -57,6 +58,7 @@ const initialState: DebuggerState = {
     ],
     selectedPvm: [AvailablePvms.TYPEBERRY],
   },
+  programName: "<empty>",
   program: [],
   initialState: {
     regs: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
@@ -88,6 +90,9 @@ const debuggerSlice = createSlice({
   name: "debugger",
   initialState,
   reducers: {
+    setProgramName(state, action) {
+      state.programName = action.payload;
+    },
     setProgram(state, action) {
       state.program = action.payload;
     },
@@ -164,6 +169,7 @@ export const {
   setIsRunMode,
   setIsStepMode,
   setProgram,
+  setProgramName,
   setProgramPreviewResult,
   setPvmInitialized,
   setStepsToPerform,

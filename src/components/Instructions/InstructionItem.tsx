@@ -102,7 +102,12 @@ export const InstructionItem = forwardRef(
       onClick(programRow);
     }, [programRow, onClick]);
 
-    const { backgroundColor, color, border, hasOpacity } = getHighlightStatus(workers, programRow, status, isDarkMode);
+    const { backgroundColor, color, border, pvmsDiverged } = getHighlightStatus(
+      workers,
+      programRow,
+      status,
+      isDarkMode,
+    );
 
     const renderContent = () => {
       return (
@@ -210,7 +215,7 @@ export const InstructionItem = forwardRef(
         <Tooltip>
           <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
           <TooltipPortal>
-            {hasOpacity ? (
+            {pvmsDiverged ? (
               <TooltipContent side="left">
                 {workersWithCurrentPc.map((worker, index) => (
                   <div key={index}>
@@ -267,7 +272,7 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
     backgroundColor,
     color,
     border,
-    hasOpacity: bgOpacity > 0 && bgOpacity < 1,
+    pvmsDiverged: bgOpacity > 0 && bgOpacity < 1,
   };
 }
 

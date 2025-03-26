@@ -49,6 +49,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
     [dispatch, programLoad, debuggerActions, setIsDialogOpen, navigate],
   );
 
+  const isProgramLoaded = programLoad !== undefined;
+
   return (
     <div className="flex flex-col w-full h-full bg-card pb-3">
       <p className="sm:mb-4 bg-brand-dark dark:bg-brand/65 text-white text-xs font-light px-3 pt-3 pb-2">
@@ -83,7 +85,13 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         <Separator />
       </div>
       <div className="m-6 mb-7 flex justify-end">
-        <Button className="mt-3 min-w-[92px]" id="load-button" type="button" onClick={() => handleLoad()}>
+        <Button
+          className="mt-3 min-w-[92px]"
+          id="load-button"
+          type="button"
+          disabled={!isProgramLoaded}
+          onClick={() => handleLoad()}
+        >
           Load
         </Button>
       </div>
