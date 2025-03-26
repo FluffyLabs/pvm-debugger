@@ -1,6 +1,6 @@
 export const Brick = () => {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="27" viewBox="0 0 32 33" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="27" viewBox="0 -1 32 33" fill="none">
       <path d="M29.7136 11.1652H28.1836V21.8352H29.7136V11.1652Z" fill="currentColor" />
       <path d="M28.1841 21.8352H26.6641V23.3552H28.1841V21.8352Z" fill="currentColor" />
       <path d="M28.1841 9.64514H26.6641V11.1651H28.1841V9.64514Z" fill="currentColor" />
