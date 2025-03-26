@@ -104,7 +104,7 @@ const DebuggerContent = () => {
   );
 
   return (
-    <div className="w-full h-full p-3 pt-0 flex flex-col gap-4 overflow-hidden">
+    <div className="w-full h-full p-3 pt-0 flex flex-col gap-4 overflow-hidden max-sm:mb-3">
       <div className="w-full col-span-12 mt-3 sm:hidden">
         <MobileTabs />
       </div>
