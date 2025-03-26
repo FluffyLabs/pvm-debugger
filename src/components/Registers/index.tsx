@@ -9,7 +9,8 @@ import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import React from "react";
 import { isNumber } from "lodash";
-import { getStatusColor } from "@/components/Registers/utils.ts";
+import { getStatusColor } from "@/utils/colors";
+import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 
 const ComputedValue = ({
   propName,
@@ -150,6 +151,7 @@ export const Registers = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const workers = useAppSelector(selectWorkers);
+  const isDarkMode = useIsDarkMode();
 
   return (
     <div className="border-[1px] rounded-md overflow-auto bg-card h-full">
@@ -173,7 +175,8 @@ export const Registers = ({
                     propName="status"
                     formatter={(value) => (
                       <span
-                        className={"py-1 px-4 rounded-xl lowercase " + getStatusColor(Number(value))}
+                        className={"py-1 px-4 rounded-xl lowercase border"}
+                        style={getStatusStyles(isDarkMode, Number(value))}
                         test-id="program-status"
                       >
                         {Status[Number(value)] ?? `Invalid(${value})`}
@@ -281,6 +284,15 @@ export const Registers = ({
     </div>
   );
 };
+
+function getStatusStyles(isDarkMode?: boolean, status?: Status) {
+  const { background, color, border } = getStatusColor(isDarkMode, status);
+  return {
+    backgroundColor: background,
+    color,
+    borderColor: border,
+  };
+}
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {

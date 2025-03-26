@@ -12,6 +12,7 @@ import { cn, hexToRgb } from "@/lib/utils.ts";
 import { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
+import { getStatusColor } from "@/utils/colors";
 
 const getWorkerValueFromState = (
   worker: WorkerState,
@@ -272,61 +273,11 @@ function getHighlightStatus(workers: WorkerState[], programRow: ProgramRow, stat
 
 function getBackgroundForStatus(status: Status | undefined, isHighlighted: boolean, isDarkMode?: boolean) {
   if (status === Status.OK && isHighlighted) {
-    return isDarkMode ? getDarkStatusColor() : getStatusColor();
+    return getStatusColor(isDarkMode);
   }
 
-  return isDarkMode ? getDarkStatusColor(status) : getStatusColor(status);
+  return getStatusColor(isDarkMode, status);
 }
-
-const getStatusColor = (status?: Status) => {
-  if (status === Status.OK || status === Status.HALT) {
-    return {
-      background: "#4caf50",
-      color: "#367f39",
-      border: "#4caf50",
-    };
-  }
-
-  if (status === Status.PANIC) {
-    return {
-      background: "#f44336",
-      color: "#b32d23",
-      border: "#f44336",
-    };
-  }
-
-  // Highlight color
-  return {
-    background: "#E4FFFD",
-    color: "#17AFA3",
-    border: "#61EDE2",
-  };
-};
-
-const getDarkStatusColor = (status?: Status) => {
-  if (status === Status.OK || status === Status.HALT) {
-    return {
-      background: "#124b14",
-      color: "#4caf50",
-      border: "#4caf50",
-    };
-  }
-
-  if (status === Status.PANIC) {
-    return {
-      background: "#f44336",
-      color: "#b32d23",
-      border: "#b32d23",
-    };
-  }
-
-  // Highlight color
-  return {
-    background: "#00413B",
-    color: "#00FFEB",
-    border: "#61EDE2",
-  };
-};
 
 type DetailsColumnProps = {
   kind: "opcode" | argType;
