@@ -5,7 +5,7 @@ import { Computers } from "./icons/Computers";
 import { Chip } from "./icons/Chip";
 import { Logo } from "./icons/Logo";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ReactNode } from "react";
 
 export const AppsSidebar = () => {
@@ -64,11 +64,9 @@ function SidebarLink({ name, href, icon, active = false }: SidebarLinkProps) {
 
 function WithTooltip({ tooltip, children }: { tooltip: string; children: ReactNode }) {
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={0}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent side="right">{tooltip}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="right">{tooltip}</TooltipContent>
+    </Tooltip>
   );
 }

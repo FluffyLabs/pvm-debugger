@@ -6,13 +6,14 @@ import { setServiceId, setStepsToPerform } from "@/store/debugger/debuggerSlice"
 import { Button } from "../ui/button";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { useContext, useState } from "react";
+import { ReactNode, useContext, useState } from "react";
 import { setAllWorkersServiceId } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { logger } from "@/utils/loggerService";
 import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
 import { Separator } from "../ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { Popover, PopoverContent } from "../ui/popover";
+import { PopoverTrigger } from "@radix-ui/react-popover";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -58,17 +59,7 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
 
           <div className="p-4 mt-2 flex justify-between items-center mb-4">
             <span className="block text-xs font-bold">
-              Service id{" "}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Provide storage service id </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <WithHelp help="JAM Service Id of executing code">Service ID</WithHelp>
             </span>
             <Input
               className={commonClass}
@@ -83,20 +74,15 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
 
           <div className="p-4 flex justify-between items-center mb-4">
             <span className="block text-xs font-bold">
-              Number of batched steps{" "}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      To speed up execution PVMs can run multiple steps internally after clicking "Run". This may lead
-                      to inaccurate stops in case the execution diverges between them.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <WithHelp
+                help={`To speed up execution PVMs can run multiple steps internally
+                 after clicking "Run". This may lead to inaccurate stops in case
+                 the execution diverges between them.
+                `}
+              >
+                <span className="max-sm:hidden">Number of batched steps</span>
+                <span className="sm:hidden">Batched steps</span>
+              </WithHelp>
             </span>
             <Input
               className={commonClass}
@@ -113,32 +99,24 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
           </div>
           <div className="p-4 flex justify-between items-center mb-2">
             <span className="block text-xs font-bold">
-              Storage Value{" "}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      Set storage for read & write host calls. Confirm empty, if you want to process. Storage can be
-                      modified by running program.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <WithHelp
+                help={`Configure storage for read & write host calls.
+                 Confirm empty, if you want to process.
+                 Storage can be modified by the program execution.`}
+              >
+                Service Storage
+              </WithHelp>
             </span>
 
             <div className="flex">
-              <Button variant="outlineBrand" onClick={() => openStorage()} className={commonClass}>
-                Set storage
-              </Button>
-
               {debuggerState.storage !== null && (
                 <span className="flex items-center ml-3">
-                  <CheckCircle color="green" className="mr-2" /> Storage provided
+                  <CheckCircle color="green" className="mr-2" />
                 </span>
               )}
+              <Button variant="outlineBrand" onClick={() => openStorage()} className={commonClass}>
+                {debuggerState.storage !== null ? "Modify Storage" : "Configure Storage"}
+              </Button>
             </div>
           </div>
 
@@ -148,3 +126,19 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
     </>
   );
 };
+
+function WithHelp({ help, children }: { help: string; children: ReactNode }) {
+  return (
+    <>
+      {children}{" "}
+      <Popover>
+        <PopoverTrigger className="h-5 p-0.5 align-bottom cursor-pointer hover:bg-brand/20 rounded-xl" tabIndex={1}>
+          <InfoIcon className="inline-block text-brand-dark dark:text-brand" height="100%" />
+        </PopoverTrigger>
+        <PopoverContent className="max-w-[300px]">
+          <p className="text-justify text-xs">{help}</p>
+        </PopoverContent>
+      </Popover>
+    </>
+  );
+}
