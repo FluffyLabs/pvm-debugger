@@ -1,7 +1,5 @@
 name: Playwright Tests
 on:
-  pull_request:
-    branches: []
 jobs:
   test:
     timeout-minutes: 60
