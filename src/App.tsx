@@ -21,7 +21,7 @@ function App() {
         <AppsSidebar />
 
         <div className="flex justify-center grow overflow-auto">
-          <div className="flex flex-col sm:gap-5 max-sm:w-full">
+          <div className="flex flex-col sm:gap-5 w-full">
             {pvmInitialized ? (
               <div className="mt-5 flex justify-center max-sm:hidden">
                 <div className="rounded-xl border overflow-hidden">
