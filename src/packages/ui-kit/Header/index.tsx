@@ -17,10 +17,10 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
   return (
     <div className="bg-[#242424] w-full flex flex-row items-center justify-between py-[18px] text-xs overflow-hidden border-b border-b-secondary-foreground dark:border-b-brand">
       <div className="flex items-center gap-5 sm:w-full">
-        <div className="flex items-center pl-4">
+        <a href="/" className="flex items-center pl-4">
           <img src={Logo} alt="FluffyLabs logo" className="h-[40px] max-w-fit" />
           <img src={Brand} alt="FluffyLabs brand" className="hidden md:inline ml-4 h-[28px]" />
-        </div>
+        </a>
         <Separator className="bg-gray-600 w-[1px] h-[40px] sm:h-[50px]" orientation="vertical" />
         <div className="flex max-sm:flex-col-reverse max-sm:hidden items-end md:items-center h-[50px]">
           <img src={ToolName} alt="FluffyLabs brand" className="h-[40px]" />
