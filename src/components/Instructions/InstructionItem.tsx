@@ -9,7 +9,7 @@ import { ProgramRow } from "./InstructionsTable";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
 import { cn, hexToRgb } from "@/lib/utils.ts";
-import { Tooltip, TooltipContent, TooltipPortal, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/components/ui/tooltip.tsx";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
 import { getStatusColor } from "@/utils/colors";
@@ -211,31 +211,29 @@ export const InstructionItem = forwardRef(
     };
 
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
-          <TooltipPortal>
-            {pvmsDiverged ? (
-              <TooltipContent side="left">
-                {workersWithCurrentPc.map((worker, index) => (
-                  <div key={index}>
-                    <span>{worker.id} - PC:</span>
-                    <span className="pl-3">
-                      <span>
-                        {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState", "pc"), numeralSystem)}
-                      </span>
+      <Tooltip>
+        <TooltipTrigger asChild>{renderContent()}</TooltipTrigger>
+        <TooltipPortal>
+          {pvmsDiverged ? (
+            <TooltipContent side="left">
+              {workersWithCurrentPc.map((worker, index) => (
+                <div key={index}>
+                  <span>{worker.id} - PC:</span>
+                  <span className="pl-3">
+                    <span>
+                      {valueToNumeralSystem(getWorkerValueFromState(worker, "currentState", "pc"), numeralSystem)}
                     </span>
-                  </div>
-                ))}
-              </TooltipContent>
-            ) : (
-              <TooltipContent side="bottom" className="m-0 p-0">
-                {renderTooltipContentInstructionInfo()}
-              </TooltipContent>
-            )}
-          </TooltipPortal>
-        </Tooltip>
-      </TooltipProvider>
+                  </span>
+                </div>
+              ))}
+            </TooltipContent>
+          ) : (
+            <TooltipContent side="bottom" className="m-0 p-0">
+              {renderTooltipContentInstructionInfo()}
+            </TooltipContent>
+          )}
+        </TooltipPortal>
+      </Tooltip>
     );
   },
 );

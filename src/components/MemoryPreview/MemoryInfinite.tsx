@@ -14,7 +14,7 @@ import classNames from "classnames";
 import { isSerializedError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "@/store/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useInView } from "react-intersection-observer";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipPortal } from "@/components/ui/tooltip.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipPortal } from "@/components/ui/tooltip.tsx";
 import React from "react";
 import { addressFormatter, findMemoryForWorker, FindMemoryForWorkerType } from "./utils";
 import { Search } from "../SearchInput";
@@ -72,57 +72,53 @@ export const MemoryCell = ({
       )}
     >
       {isEqualAcrossWorkers ? (
-        <TooltipProvider>
-          <Tooltip delayDuration={100} open={isPageTooltipDisabled ? false : undefined}>
-            <TooltipTrigger>{valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}</TooltipTrigger>
+        <Tooltip delayDuration={100} open={isPageTooltipDisabled ? false : undefined}>
+          <TooltipTrigger>{valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}</TooltipTrigger>
 
-            <TooltipPortal>
-              <TooltipContent>
-                <div className="font-poppins grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
-                  Page={Math.floor(address / PAGE_SIZE)}
-                </div>
-              </TooltipContent>
-            </TooltipPortal>
-          </Tooltip>
-        </TooltipProvider>
+          <TooltipPortal>
+            <TooltipContent>
+              <div className="font-poppins grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                Page={Math.floor(address / PAGE_SIZE)}
+              </div>
+            </TooltipContent>
+          </TooltipPortal>
+        </Tooltip>
       ) : (
-        <TooltipProvider>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <span
-                className="font-inconsolata"
-                dangerouslySetInnerHTML={{
-                  __html: numeralSystem ? "&quest;&#8288;&quest;&#8288;" : "&quest;&#8288;&quest;&#8288;&quest;&#8288;",
-                  // This is a fix for ?? : ??? because ? adds a break after which causes the whole line to break into two lines
-                }}
-              />
-            </TooltipTrigger>
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <span
+              className="font-inconsolata"
+              dangerouslySetInnerHTML={{
+                __html: numeralSystem ? "&quest;&#8288;&quest;&#8288;" : "&quest;&#8288;&quest;&#8288;&quest;&#8288;",
+                // This is a fix for ?? : ??? because ? adds a break after which causes the whole line to break into two lines
+              }}
+            />
+          </TooltipTrigger>
 
-            <TooltipPortal>
-              <TooltipContent>
-                <div className="font-inconsolata grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
-                  {workers.map((worker) => (
-                    <React.Fragment key={worker.id}>
-                      <div>
-                        <span>{worker.id}</span>
-                      </div>
-                      <div className="pl-3">
-                        <span>
-                          {valueToNumeralSystem(
-                            findMemoryForWorker(worker, address)?.bytes[index],
-                            numeralSystem,
-                            numeralSystem ? 2 : 3,
-                            false,
-                          )}
-                        </span>
-                      </div>
-                    </React.Fragment>
-                  ))}
-                </div>
-              </TooltipContent>
-            </TooltipPortal>
-          </Tooltip>
-        </TooltipProvider>
+          <TooltipPortal>
+            <TooltipContent>
+              <div className="font-inconsolata grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+                {workers.map((worker) => (
+                  <React.Fragment key={worker.id}>
+                    <div>
+                      <span>{worker.id}</span>
+                    </div>
+                    <div className="pl-3">
+                      <span>
+                        {valueToNumeralSystem(
+                          findMemoryForWorker(worker, address)?.bytes[index],
+                          numeralSystem,
+                          numeralSystem ? 2 : 3,
+                          false,
+                        )}
+                      </span>
+                    </div>
+                  </React.Fragment>
+                ))}
+              </div>
+            </TooltipContent>
+          </TooltipPortal>
+        </Tooltip>
       )}
     </span>
   );

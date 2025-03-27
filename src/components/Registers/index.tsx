@@ -3,7 +3,7 @@ import { ReactNode, useContext } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "@/components/Instructions/utils.tsx";
 import classNames from "classnames";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input.tsx";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectWorkers, WorkerState } from "@/store/workers/workersSlice.ts";
@@ -83,30 +83,28 @@ const ComputedValue = ({
         "text-red-500 dark:text-red-500": !isEqualAcrossWorkers,
       })}
     >
-      <TooltipProvider>
-        <Tooltip delayDuration={0}>
-          <TooltipTrigger asChild>
-            <span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
-          </TooltipTrigger>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
+          <span>{formatValueToDisplay(value, isEqualAcrossWorkers)}</span>
+        </TooltipTrigger>
 
-          <TooltipContent>
-            <div className="grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
-              {workers.map((worker, index) => (
-                <React.Fragment key={index}>
-                  <div>
-                    <span>{worker.id}</span>
-                  </div>
-                  <div className="pl-3">
-                    <span>{formatValueToDisplay(getWorkerValueFromState(worker, "previousState"))}</span>
-                    <span> → </span>
-                    <span>{formatValueToDisplay(getWorkerValueFromState(worker, "currentState"))}</span>
-                  </div>
-                </React.Fragment>
-              ))}
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+        <TooltipContent>
+          <div className="grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+            {workers.map((worker, index) => (
+              <React.Fragment key={index}>
+                <div>
+                  <span>{worker.id}</span>
+                </div>
+                <div className="pl-3">
+                  <span>{formatValueToDisplay(getWorkerValueFromState(worker, "previousState"))}</span>
+                  <span> → </span>
+                  <span>{formatValueToDisplay(getWorkerValueFromState(worker, "currentState"))}</span>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        </TooltipContent>
+      </Tooltip>
     </div>
   );
 };

@@ -8,6 +8,7 @@ import { persistor, store } from "./store";
 import { HashRouter } from "react-router";
 import { PersistGate } from "redux-persist/integration/react";
 import { isDarkMode, setColorMode } from "./packages/ui-kit/DarkMode/utils.ts";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 
 setColorMode(isDarkMode());
 
@@ -17,9 +18,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
       <NumeralSystemProvider>
-        <HashRouter>
-          <App />
-        </HashRouter>
+        <TooltipProvider>
+          <HashRouter>
+            <App />
+          </HashRouter>
+        </TooltipProvider>
       </NumeralSystemProvider>
     </PersistGate>
   </Provider>,
