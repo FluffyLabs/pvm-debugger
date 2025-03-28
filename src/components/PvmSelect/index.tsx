@@ -243,7 +243,11 @@ export const PvmSelect = () => {
         </span>
         <span className="text-white text-[11px]">
           Learn to add your PVM implementation here{" "}
-          <a href="https://github.com/FluffyLabs/pvm-debugger/issues/81" target="_blank" className="text-brand">
+          <a
+            href="https://github.com/FluffyLabs/pvm-debugger?tab=readme-ov-file#pvms-support"
+            target="_blank"
+            className="text-brand"
+          >
             <ExternalLink className="inline w-4 mb-1" />
           </a>
         </span>
