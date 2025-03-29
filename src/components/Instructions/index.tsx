@@ -5,6 +5,7 @@ import { ProgramEdit } from "../ProgramEdit";
 
 export interface InstructionsProps {
   programName: string;
+  program: number[];
   status?: Status;
   programPreviewResult?: CurrentInstruction[];
   currentState: ExpectedState;

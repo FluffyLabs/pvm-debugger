@@ -7,6 +7,7 @@ import { useAppSelector } from "@/store/hooks";
 import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction } from "@/types/pvm";
 import { InstructionsProps } from ".";
+import { mapInstructionsArgsByType } from "./utils";
 
 export type ProgramRow = CurrentInstruction & {
   addressEl: ReactNode;
@@ -36,6 +37,7 @@ export const AddressEl = ({ address }: { address: number }) => {
 
 export const InstructionsTable = ({
   status,
+  program,
   programPreviewResult,
   currentState,
   instructionMode,
@@ -60,6 +62,30 @@ export const InstructionsTable = ({
   }, [programPreviewResult]);
 
   const parentRef = useRef<HTMLDivElement>(null);
+
+  const widestItem = useMemo(
+    () =>
+      programRows?.reduce<{ widestItem: ProgramRow | null; maxWidth: number }>(
+        (acc, item) => {
+          const { widestItem, maxWidth } = acc;
+          if (!("args" in item)) {
+            return { widestItem: null, maxWidth: 0 };
+          }
+          const addressWidth =
+            mapInstructionsArgsByType(item.args, NumeralSystem.HEXADECIMAL, 0, program)
+              ?.map((x) => x.value)
+              .join("").length ?? 0;
+
+          if (addressWidth > maxWidth) {
+            return { widestItem: item, maxWidth: addressWidth };
+          } else {
+            return { widestItem, maxWidth };
+          }
+        },
+        { widestItem: null, maxWidth: 0 },
+      ).widestItem,
+    [programRows, program],
+  );
 
   const rowVirtualizer = useVirtualizer({
     count: programRows?.length ?? 0,
@@ -118,6 +144,26 @@ export const InstructionsTable = ({
                 />
               );
             })}
+
+            {
+              // an additional hidden item that prevents column resizing when table is scrolled
+              widestItem && (
+                <InstructionItem
+                  index={0}
+                  status={status}
+                  isLast={false}
+                  onClick={() => {}}
+                  instructionMode={instructionMode}
+                  programRow={widestItem}
+                  currentPc={currentState.pc}
+                  onAddressClick={() => {}}
+                  breakpointAddresses={[]}
+                  style={{
+                    visibility: "hidden",
+                  }}
+                />
+              )
+            }
           </tbody>
         </table>
       </div>
