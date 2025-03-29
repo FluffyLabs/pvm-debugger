@@ -108,7 +108,7 @@ const ProgramLoader = () => {
   }, [pvmLoaded, isLoadedFromUrl, debuggerActions, navigate, initialState]);
 
   return (
-    <div className="w-full h-full flex flex-col items-center bg-[#f8f8f8] dark:bg-background">
+    <div className="w-full h-full flex flex-col items-center bg-accent dark:bg-background">
       <div className="sm:max-w-[50vw] sm:my-auto 2xl:my-[100px] sm:mr-[72px] max-sm:h-full sm:rounded-lg sm:border-[1px] overflow-hidden">
         <Loader />
       </div>
