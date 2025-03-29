@@ -37,8 +37,8 @@
     /*  */
     --muted: 220 20% 97%;
     --muted-foreground: 0 0% 72%;
-    --accent: var(--background);
-    --accent-foreground: var(--foreground);
+    --accent: 0 0 97%;
+    --accent-foreground: 175.26 100% 25.82%;
     /* Defaults */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 1 61% 56%;

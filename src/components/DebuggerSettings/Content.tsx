@@ -1,19 +1,18 @@
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle, InfoIcon } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setServiceId, setStepsToPerform } from "@/store/debugger/debuggerSlice";
 import { Button } from "../ui/button";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { ReactNode, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { setAllWorkersServiceId } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { logger } from "@/utils/loggerService";
 import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
 import { Separator } from "../ui/separator";
-import { Popover, PopoverContent } from "../ui/popover";
-import { PopoverTrigger } from "@radix-ui/react-popover";
+import { WithHelp } from "../WithHelp/WithHelp";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -126,19 +125,3 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
     </>
   );
 };
-
-function WithHelp({ help, children }: { help: string; children: ReactNode }) {
-  return (
-    <>
-      {children}{" "}
-      <Popover>
-        <PopoverTrigger className="h-5 p-0.5 align-bottom cursor-pointer hover:bg-brand/20 rounded-xl" tabIndex={1}>
-          <InfoIcon className="inline-block text-brand-dark dark:text-brand" height="100%" />
-        </PopoverTrigger>
-        <PopoverContent className="max-w-[300px]">
-          <p className="text-justify text-xs">{help}</p>
-        </PopoverContent>
-      </Popover>
-    </>
-  );
-}
