@@ -177,6 +177,7 @@ const DebuggerContent = () => {
                 <>
                   <Instructions
                     programName={programName}
+                    program={program}
                     status={currentState.status}
                     currentState={currentState}
                     programPreviewResult={programPreviewResult}
