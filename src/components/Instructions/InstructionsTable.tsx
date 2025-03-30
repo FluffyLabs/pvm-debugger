@@ -67,9 +67,9 @@ export const InstructionsTable = ({
     () =>
       programRows?.reduce<{ widestItem: ProgramRow | null; maxWidth: number }>(
         (acc, item) => {
-          const { widestItem, maxWidth } = acc;
+          const { maxWidth } = acc;
           if (!("args" in item)) {
-            return { widestItem: null, maxWidth: 0 };
+            return acc;
           }
           const addressWidth =
             mapInstructionsArgsByType(item.args, NumeralSystem.HEXADECIMAL, 0, program)
@@ -79,7 +79,7 @@ export const InstructionsTable = ({
           if (addressWidth > maxWidth) {
             return { widestItem: item, maxWidth: addressWidth };
           } else {
-            return { widestItem, maxWidth };
+            return acc;
           }
         },
         { widestItem: null, maxWidth: 0 },
