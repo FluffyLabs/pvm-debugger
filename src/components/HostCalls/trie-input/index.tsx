@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { hasPVMGeneratedStorage } from "@/store/debugger/debuggerSlice";
 import { useAppSelector } from "@/store/hooks";
 import { bytes, hash } from "@typeberry/jam-host-calls";
@@ -47,14 +48,18 @@ const StorageItem = ({
 }: StorageItemProps) => {
   const isDisabled = useAppSelector(hasPVMGeneratedStorage);
 
+  const value = row.key || row.keyHash;
   return (
     <div className="my-3 p-3 pr-0 flex border rounded-lg">
       <div className="flex flex-col flex-1 gap-3">
         <Input
           placeholder="Key"
-          value={row.key || row.keyHash}
+          value={value}
           onChange={(e) => handleKeyChange(index, e.target.value)}
           disabled={isDisabled}
+          className={cn({
+            "focus-visible:ring-red-500 ring-red-500 ring-2": !value,
+          })}
         />
         <Input
           placeholder="Key Hash"
@@ -67,7 +72,7 @@ const StorageItem = ({
           placeholder="Raw value or hex array"
           value={row.value}
           onChange={(e) => handleValueChange(index, e.target.value)}
-          className="flex-1 mt-1 text-brand-dark dark:text-brand"
+          className="flex-1 mt-1"
           disabled={isDisabled}
         />
       </div>

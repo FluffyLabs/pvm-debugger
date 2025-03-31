@@ -7,9 +7,9 @@ import { setStorage } from "@/store/debugger/debuggerSlice";
 import { useEffect, useState } from "react";
 import { DebuggerEcalliStorage } from "@/types/pvm";
 import { isSerializedError } from "@/store/utils";
-import { ChevronLeft, InfoIcon } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Separator } from "../ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { WithHelp } from "../WithHelp/WithHelp";
 
 const isEcalliWriteOrRead = (exitArg?: number) => {
   return exitArg === 2 || exitArg === 3;
@@ -56,7 +56,7 @@ export const HostCallsContent = ({ onSetStorage }: { onSetStorage: () => void })
     <>
       <div className="flex flex-col flex-1 overflow-y-hidden">
         <DialogHeader className="py-3 px-6 bg-title text-title-foreground rounded-t-lg border-b">
-          <DialogTitle className="text-base">Define ecalli data</DialogTitle>
+          <DialogTitle className="text-base">READ Host Call Storage</DialogTitle>
         </DialogHeader>
         {!isOnEcalli && (
           <>
@@ -73,15 +73,9 @@ export const HostCallsContent = ({ onSetStorage }: { onSetStorage: () => void })
 
         <div className="mt-6 px-6 overflow-y-auto">
           <span className="text-md text-foreground font-bold mb-2 flex">
-            Storage{" "}
-            <Tooltip>
-              <TooltipTrigger>
-                <InfoIcon className="ml-2 text-brand-dark dark:text-brand" height="18px" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Please provide JSON storage or confirm empty</p>
-              </TooltipContent>
-            </Tooltip>
+            <WithHelp help="Configure initial storage for READ host calls. Note the storage might be modified by the running program.">
+              Service storage entries
+            </WithHelp>
           </span>
           <div className="pt-1 mt-2">
             <TrieInput onChange={(v) => setNewStorage(v)} initialRows={storage} />
@@ -90,7 +84,12 @@ export const HostCallsContent = ({ onSetStorage }: { onSetStorage: () => void })
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       </div>
       <div className="flex px-6 justify-end pb-5">
-        <Button type="submit" onClick={onSubmit} className="w-[150px]">
+        <Button
+          disabled={newStorage === null || newStorage?.some((x) => x.key === "")}
+          type="submit"
+          onClick={onSubmit}
+          className="w-[150px]"
+        >
           Confirm
         </Button>
       </div>
