@@ -9,21 +9,15 @@ test("Should modify memory ranges", async ({ page }) => {
   await page.getByRole("tab", { name: "Ranges" }).click();
   await page.getByLabel("Start").click();
   await page.getByLabel("Start").fill("131072");
-  await page
-    .locator("div")
-    .filter({ hasText: /^StartLength$/ })
-    .getByRole("button")
-    .click();
+  await page.getByRole("button", { name: "Add" }).click();
 
-  await expect(page.locator("span > button").first()).toContainText("00");
-  await expect(page.locator("button:nth-child(2) > .relative > span > button").first()).toContainText("00");
+  await expect(page.locator("[data-test-id='memory-cell']").first()).toContainText("00", { timeout: 2000 });
+  await expect(page.locator("[data-test-id='memory-cell']").nth(1)).toContainText("00", { timeout: 2000 });
 
   await step(page);
 
-  await expect(page.locator("span > button").first()).toContainText("78", { timeout: 2000 });
-  await expect(page.locator("button:nth-child(2) > .relative > span > button").first()).toContainText("56", {
-    timeout: 20000,
-  });
+  await expect(page.locator("[data-test-id='memory-cell']").first()).toContainText("78", { timeout: 2000 });
+  await expect(page.locator("[data-test-id='memory-cell']").nth(1)).toContainText("56", { timeout: 2000 });
 });
 
 test("Should show interpretations", async ({ page }) => {
@@ -34,11 +28,7 @@ test("Should show interpretations", async ({ page }) => {
   await page.getByRole("tab", { name: "Ranges" }).click();
   await page.getByLabel("Start").click();
   await page.getByLabel("Start").fill("131072");
-  await page
-    .locator("div")
-    .filter({ hasText: /^StartLength$/ })
-    .getByRole("button")
-    .click();
+  await page.getByRole("button", { name: "Add" }).click();
 
   await step(page);
 
@@ -58,11 +48,7 @@ test("Should not show interpretations for longer memory chunks", async ({ page }
   await page.getByLabel("Length").click();
   await page.getByLabel("Length").fill("40");
 
-  await page
-    .locator("div")
-    .filter({ hasText: /^StartLength$/ })
-    .getByRole("button")
-    .click();
+  await page.getByRole("button", { name: "Add" }).click();
 
   await step(page);
 
@@ -81,11 +67,7 @@ test("Should show diffs between PVMs", async ({ page }) => {
   await page.getByLabel("Length").click();
   await page.getByLabel("Length").fill("40");
 
-  await page
-    .locator("div")
-    .filter({ hasText: /^StartLength$/ })
-    .getByRole("button")
-    .click();
+  await page.getByRole("button", { name: "Add" }).click();
 
   await step(page);
 
