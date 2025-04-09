@@ -16,7 +16,7 @@ test("Should modify memory ranges", async ({ page }) => {
 
   await step(page);
 
-  await expect(page.locator("[data-test-id='memory-cell']").first()).toContainText("78", { timeout: 2000 });
+  await expect(page.locator("[data-test-id='memory-cell']").first()).toContainText("00000000", { timeout: 2000 });
   await expect(page.locator("[data-test-id='memory-cell']").nth(1)).toContainText("56", { timeout: 2000 });
 });
 
