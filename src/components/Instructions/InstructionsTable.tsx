@@ -71,13 +71,13 @@ export const InstructionsTable = ({
           if (!("args" in item)) {
             return acc;
           }
-          const addressWidth =
+          const argsLength =
             mapInstructionsArgsByType(item.args, NumeralSystem.HEXADECIMAL, 0, program)
               ?.map((x) => x.value)
               .join("").length ?? 0;
 
-          if (addressWidth > maxWidth) {
-            return { widestItem: item, maxWidth: addressWidth };
+          if (argsLength > maxWidth) {
+            return { widestItem: item, maxWidth: argsLength };
           } else {
             return acc;
           }
