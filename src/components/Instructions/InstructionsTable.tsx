@@ -8,6 +8,7 @@ import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction } from "@/types/pvm";
 import { InstructionsProps } from ".";
 import { mapInstructionsArgsByType } from "./utils";
+import { selectProgram } from "@/store/debugger/debuggerSlice";
 
 export type ProgramRow = CurrentInstruction & {
   addressEl: ReactNode;
@@ -37,7 +38,6 @@ export const AddressEl = ({ address }: { address: number }) => {
 
 export const InstructionsTable = ({
   status,
-  program,
   programPreviewResult,
   currentState,
   instructionMode,
@@ -62,6 +62,7 @@ export const InstructionsTable = ({
   }, [programPreviewResult]);
 
   const parentRef = useRef<HTMLDivElement>(null);
+  const program = useAppSelector(selectProgram);
 
   const widestItem = useMemo(
     () =>
