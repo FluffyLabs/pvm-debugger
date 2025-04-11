@@ -148,11 +148,6 @@ export const InstructionsTable = ({
                 />
               );
             })}
-
-            {
-              // an additional hidden item that prevents column resizing when table is scrolled
-            }
-            {/* <WidestInstructionItem programRows={programRows} instructionMode={instructionMode} /> */}
           </tbody>
         </table>
       </div>
