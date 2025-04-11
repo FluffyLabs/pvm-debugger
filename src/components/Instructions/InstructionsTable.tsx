@@ -1,12 +1,14 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { InstructionItem, WidestInstructionItem } from "./InstructionItem";
+import { InstructionItem } from "./InstructionItem";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useAppSelector } from "@/store/hooks";
 import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction } from "@/types/pvm";
 import { InstructionsProps } from ".";
+import { mapInstructionsArgsByType } from "./utils";
+import { selectProgram } from "@/store/debugger/debuggerSlice";
 
 export type ProgramRow = CurrentInstruction & {
   addressEl: ReactNode;
@@ -44,6 +46,8 @@ export const InstructionsTable = ({
   breakpointAddresses,
 }: InstructionsProps) => {
   const workers = useAppSelector(selectWorkers);
+  const program = useAppSelector(selectProgram);
+  const { numeralSystem } = useContext(NumeralSystemContext);
 
   // We'll calculate the maximum PC across all workers
   const maxPc = workers.reduce((acc, worker) => Math.max(acc, worker.currentState.pc ?? 0), 0);
@@ -86,6 +90,31 @@ export const InstructionsTable = ({
     }
   }, [maxPc, programRows, scrollToIndex]);
 
+  const widestItemValue = useMemo(
+    () =>
+      programRows?.reduce<string>((acc, item) => {
+        if (!("args" in item)) {
+          return acc;
+        }
+        const valueNoHtml = mapInstructionsArgsByType(item.args, numeralSystem, 0, program)
+          ?.map((x) => x.valueFormatted || x.value)
+          .map((x) => {
+            return x
+              ?.toString()
+              .replace(/<sub>/g, "")
+              .replace(/<\/sub>/g, "");
+          })
+          .join(", ");
+
+        if ((valueNoHtml?.length || 0) > acc.length) {
+          return valueNoHtml || "";
+        } else {
+          return acc;
+        }
+      }, "") || "",
+    [programRows, program, numeralSystem],
+  );
+
   if (!programRows) {
     return <div>No instructions to display</div>;
   }
@@ -107,6 +136,7 @@ export const InstructionsTable = ({
                   isLast={virtualRow.index === programRows.length - 1}
                   onClick={onInstructionClick}
                   instructionMode={instructionMode}
+                  widestItemValueLength={widestItemValue.length}
                   programRow={row}
                   currentPc={currentState.pc}
                   onAddressClick={onAddressClick}
@@ -122,7 +152,7 @@ export const InstructionsTable = ({
             {
               // an additional hidden item that prevents column resizing when table is scrolled
             }
-            <WidestInstructionItem programRows={programRows} instructionMode={instructionMode} />
+            {/* <WidestInstructionItem programRows={programRows} instructionMode={instructionMode} /> */}
           </tbody>
         </table>
       </div>
