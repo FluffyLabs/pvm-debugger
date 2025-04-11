@@ -134,13 +134,11 @@ export const MemoryRow = ({
   address,
   bytes,
   selectedAddress,
-  addressLength,
   findMemoryForWorker,
 }: {
   address: number;
   bytes: number[];
   selectedAddress: number | null;
-  addressLength: number;
   findMemoryForWorker: FindMemoryForWorkerType;
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
@@ -152,7 +150,8 @@ export const MemoryRow = ({
         className="opacity-40 font-inconsolata"
         style={{
           fontVariantNumeric: "tabular-nums",
-          width: `${addressLength}ch`,
+          // (2^32).length = 10
+          width: `10ch`,
         }}
       >
         {displayAddress}
@@ -189,7 +188,6 @@ export const MemoryTable = ({
   const [isLoading, setIsLoading] = useState(false);
   const memory = useSelector(selectMemoryForFirstWorker);
   const parentRef = useRef<HTMLDivElement>(null);
-  const { numeralSystem } = useContext(NumeralSystemContext);
   const hasPrevPage = !!memory && (memory.startAddress || 0) > 0;
   const hasNextPage = !!memory && (memory.stopAddress || 0) < MAX_ADDRESS;
   // Virtualizer setup
@@ -262,7 +260,7 @@ export const MemoryTable = ({
           height: `${rowVirtualizer.getTotalSize()}px`,
         }}
       >
-        {rowVirtualizer.getVirtualItems().map((virtualRow, _, virtualRows) => {
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const index = virtualRow.index;
           const style: React.CSSProperties = {
             height: `${virtualRow.size}px`,
@@ -279,10 +277,6 @@ export const MemoryTable = ({
           }
 
           const { address, bytes } = memory.data[index];
-          const lastAddressLength = addressFormatter(
-            memory.data[virtualRows[virtualRows.length - 1].index].address,
-            numeralSystem,
-          ).length;
 
           return (
             <div
@@ -296,7 +290,6 @@ export const MemoryTable = ({
                 address={address}
                 bytes={bytes}
                 selectedAddress={selectedAddress}
-                addressLength={lastAddressLength}
                 findMemoryForWorker={findMemoryForWorker}
               />
             </div>
