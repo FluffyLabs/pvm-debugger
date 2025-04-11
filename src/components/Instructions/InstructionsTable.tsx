@@ -1,14 +1,12 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { InstructionItem } from "./InstructionItem";
+import { InstructionItem, WidestInstructionItem } from "./InstructionItem";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useAppSelector } from "@/store/hooks";
 import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction } from "@/types/pvm";
 import { InstructionsProps } from ".";
-import { mapInstructionsArgsByType } from "./utils";
-import { selectProgram } from "@/store/debugger/debuggerSlice";
 
 export type ProgramRow = CurrentInstruction & {
   addressEl: ReactNode;
@@ -62,31 +60,6 @@ export const InstructionsTable = ({
   }, [programPreviewResult]);
 
   const parentRef = useRef<HTMLDivElement>(null);
-  const program = useAppSelector(selectProgram);
-
-  const widestItem = useMemo(
-    () =>
-      programRows?.reduce<{ widestItem: ProgramRow | null; maxWidth: number }>(
-        (acc, item) => {
-          const { maxWidth } = acc;
-          if (!("args" in item)) {
-            return acc;
-          }
-          const argsLength =
-            mapInstructionsArgsByType(item.args, NumeralSystem.HEXADECIMAL, 0, program)
-              ?.map((x) => x.value)
-              .join("").length ?? 0;
-
-          if (argsLength > maxWidth) {
-            return { widestItem: item, maxWidth: argsLength };
-          } else {
-            return acc;
-          }
-        },
-        { widestItem: null, maxWidth: 0 },
-      ).widestItem,
-    [programRows, program],
-  );
 
   const rowVirtualizer = useVirtualizer({
     count: programRows?.length ?? 0,
@@ -148,23 +121,8 @@ export const InstructionsTable = ({
 
             {
               // an additional hidden item that prevents column resizing when table is scrolled
-              widestItem && (
-                <InstructionItem
-                  index={0}
-                  status={status}
-                  isLast={false}
-                  onClick={() => {}}
-                  instructionMode={instructionMode}
-                  programRow={widestItem}
-                  currentPc={currentState.pc}
-                  onAddressClick={() => {}}
-                  breakpointAddresses={[]}
-                  style={{
-                    visibility: "hidden",
-                  }}
-                />
-              )
             }
+            <WidestInstructionItem programRows={programRows} instructionMode={instructionMode} />
           </tbody>
         </table>
       </div>
