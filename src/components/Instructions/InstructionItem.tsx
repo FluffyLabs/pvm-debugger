@@ -1,4 +1,10 @@
-import { argType, mapInstructionsArgsByType, valueToBinary, valueToNumeralSystem } from "./utils";
+import {
+  argType,
+  getASMInstructionValueHtml,
+  mapInstructionsArgsByType,
+  valueToBinary,
+  valueToNumeralSystem,
+} from "./utils";
 import classNames from "classnames";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
@@ -173,11 +179,7 @@ export const InstructionItem = forwardRef(
                   {"args" in programRow && (
                     <span
                       dangerouslySetInnerHTML={{
-                        __html:
-                          mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)
-                            ?.filter((instruction) => !instruction.hidden)
-                            ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
-                            .join(", ") ?? "",
+                        __html: getASMInstructionValueHtml(programRow.args, numeralSystem, programRow.counter, program),
                       }}
                     />
                   )}

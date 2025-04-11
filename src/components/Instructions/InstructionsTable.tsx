@@ -7,8 +7,8 @@ import { useAppSelector } from "@/store/hooks";
 import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction } from "@/types/pvm";
 import { InstructionsProps } from ".";
-import { mapInstructionsArgsByType } from "./utils";
 import { selectProgram } from "@/store/debugger/debuggerSlice";
+import { getASMInstructionValueHtml } from "./utils";
 
 export type ProgramRow = CurrentInstruction & {
   addressEl: ReactNode;
@@ -96,15 +96,9 @@ export const InstructionsTable = ({
         if (!("args" in item)) {
           return acc;
         }
-        const valueNoHtml = mapInstructionsArgsByType(item.args, numeralSystem, 0, program)
-          ?.map((x) => x.valueFormatted || x.value)
-          .map((x) => {
-            return x
-              ?.toString()
-              .replace(/<sub>/g, "")
-              .replace(/<\/sub>/g, "");
-          })
-          .join(", ");
+        const valueNoHtml = getASMInstructionValueHtml(item.args, numeralSystem, 0, program)
+          .replace(/<sub>/g, "")
+          .replace(/<\/sub>/g, "");
 
         if ((valueNoHtml?.length || 0) > acc.length) {
           return valueNoHtml || "";
