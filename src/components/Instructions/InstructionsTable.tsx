@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { InstructionItem } from "./InstructionItem";
+import { InstructionItem, WidestInstructionItem } from "./InstructionItem";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useAppSelector } from "@/store/hooks";
@@ -142,6 +142,11 @@ export const InstructionsTable = ({
                 />
               );
             })}
+
+            {
+              // an additional hidden item that prevents column resizing when table is scrolled
+            }
+            <WidestInstructionItem programRows={programRows} instructionMode={instructionMode} />
           </tbody>
         </table>
       </div>
