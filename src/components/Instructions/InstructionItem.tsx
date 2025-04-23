@@ -174,8 +174,8 @@ export const InstructionItem = forwardRef(
               </TableCell>
               <TableCell className="p-1.5 whitespace-nowrap border-b font-inconsolata">
                 <span
-                  className=""
-                  style={{ width: `${widestItemValueLength}ch`, display: "block", overflow: "hidden" }}
+                  className="block overflow-hidden"
+                  style={{ width: `${widestItemValueLength}ch` }}
                 >
                   {"args" in programRow && (
                     /** Width of this cell is adjusted to the widest item by WidestInstructionItem component */
