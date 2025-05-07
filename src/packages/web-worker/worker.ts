@@ -14,15 +14,13 @@ export function postTypedMessage(msg: WorkerResponseParams) {
   postMessage(msg);
 }
 
-onmessage = async (ev: MessageEvent<WorkerRequestParams>) => {
-  try {
-    await rawOnMessage(ev);
-  } catch (e) {
+onmessage = (ev: MessageEvent<WorkerRequestParams>) => {
+  rawOnMessage(ev).catch((e) => {
     console.error(e);
-  }
+  });
 };
 
-const rawOnMessage = async (e: MessageEvent<WorkerRequestParams>) => {
+async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
   if (!e.data?.command) {
     return;
   }
@@ -150,4 +148,4 @@ const rawOnMessage = async (e: MessageEvent<WorkerRequestParams>) => {
       messageId: e.data.messageId,
     });
   }
-};
+}
