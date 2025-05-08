@@ -138,11 +138,12 @@ const DebuggerContent = () => {
                           dispatch(setIsProgramInvalid(true));
                         }
 
-                        function tryAsSpi(program: number[]) {
+                        function tryAsSpi(program: number[], withMetadata: boolean) {
                           try {
                             const { code, memory, registers } = Program.fromSpi(
                               new Uint8Array(program),
                               new Uint8Array(),
+                              withMetadata,
                             );
                             const regs = Array.from(registers.getAllU64()) as RegistersArray;
                             return {
@@ -156,7 +157,9 @@ const DebuggerContent = () => {
                         }
 
                         if (!error && program) {
-                          const maybeSpi = tryAsSpi(program.slice());
+                          const maybeSpiWithMetadata = tryAsSpi(program.slice(), true);
+                          const maybeSpiWithoutMetadata = tryAsSpi(program.slice(), false);
+                          const maybeSpi = maybeSpiWithMetadata || maybeSpiWithoutMetadata;
                           if (maybeSpi) {
                             debuggerActions.handleProgramLoad(maybeSpi);
                           } else {
