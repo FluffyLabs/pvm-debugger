@@ -40,27 +40,50 @@ export async function instantiate(module, imports = {}) {
           (values[(values.SPI = exports["InputKind.SPI"].valueOf())] = "SPI"),
           values
         ))({}),
-      disassemble(input, kind) {
-        // assembly/index/disassemble(~lib/array/Array<u8>, i32) => ~lib/string/String
-        input = __lowerArray(__setU8, 4, 0, input) || __notnull();
-        return __liftString(exports.disassemble(input, kind) >>> 0);
+      HasMetadata: ((values) =>
+        (
+          // assembly/index/HasMetadata
+          (values[(values.Yes = exports["HasMetadata.Yes"].valueOf())] = "Yes"),
+          (values[(values.No = exports["HasMetadata.No"].valueOf())] = "No"),
+          values
+        ))({}),
+      disassemble(input, kind, withMetadata) {
+        // assembly/index/disassemble(~lib/array/Array<u8>, i32, i32) => ~lib/string/String
+        input = __lowerArray(__setU8, 27, 0, input) || __notnull();
+        return __liftString(exports.disassemble(input, kind, withMetadata) >>> 0);
       },
-      runProgram(input, kind) {
-        // assembly/index/runProgram(~lib/array/Array<u8>, i32) => void
-        input = __lowerArray(__setU8, 4, 0, input) || __notnull();
-        exports.runProgram(input, kind);
+      runProgram(input, registers, kind) {
+        // assembly/index/runProgram(~lib/array/Array<u8>, ~lib/array/Array<u64>, i32) => assembly/api-generic/VmOutput
+        input = __retain(__lowerArray(__setU8, 27, 0, input) || __notnull());
+        registers = __lowerArray(__setU64, 43, 3, registers) || __notnull();
+        try {
+          return __liftRecord44(exports.runProgram(input, registers, kind) >>> 0);
+        } finally {
+          __release(input);
+        }
       },
-      runVm(input, logs) {
-        // assembly/api-generic/runVm(assembly/api-generic/VmInput, bool?) => assembly/api-generic/VmOutput
-        input = __lowerRecord39(input) || __notnull();
+      runVm(input, logs, useSbrkGas) {
+        // assembly/api-generic/runVm(assembly/api-generic/VmInput, bool?, bool?) => assembly/api-generic/VmOutput
+        input = __lowerRecord47(input) || __notnull();
         logs = logs ? 1 : 0;
+        useSbrkGas = useSbrkGas ? 1 : 0;
         exports.__setArgumentsLength(arguments.length);
-        return __liftRecord44(exports.runVm(input, logs) >>> 0);
+        return __liftRecord44(exports.runVm(input, logs, useSbrkGas) >>> 0);
+      },
+      getAssembly(p) {
+        // assembly/api-generic/getAssembly(assembly/program/Program) => ~lib/string/String
+        p = __lowerInternref(p) || __notnull();
+        return __liftString(exports.getAssembly(p) >>> 0);
+      },
+      wrapAsProgram(bytecode) {
+        // assembly/program-build/wrapAsProgram(~lib/typedarray/Uint8Array) => ~lib/typedarray/Uint8Array
+        bytecode = __lowerTypedArray(Uint8Array, 5, 0, bytecode) || __notnull();
+        return __liftTypedArray(Uint8Array, exports.wrapAsProgram(bytecode) >>> 0);
       },
       resetGeneric(program, flatRegisters, initialGas) {
-        // assembly/api/resetGeneric(~lib/array/Array<u8>, ~lib/array/Array<u8>, u64) => void
-        program = __retain(__lowerArray(__setU8, 4, 0, program) || __notnull());
-        flatRegisters = __lowerArray(__setU8, 4, 0, flatRegisters) || __notnull();
+        // assembly/api/resetGeneric(~lib/array/Array<u8>, ~lib/array/Array<u8>, i64) => void
+        program = __retain(__lowerArray(__setU8, 27, 0, program) || __notnull());
+        flatRegisters = __lowerArray(__setU8, 27, 0, flatRegisters) || __notnull();
         initialGas = initialGas || 0n;
         try {
           exports.resetGeneric(program, flatRegisters, initialGas);
@@ -69,9 +92,9 @@ export async function instantiate(module, imports = {}) {
         }
       },
       resetGenericWithMemory(program, flatRegisters, pageMap, chunks, initialGas) {
-        // assembly/api/resetGenericWithMemory(~lib/array/Array<u8>, ~lib/array/Array<u8>, ~lib/typedarray/Uint8Array, ~lib/typedarray/Uint8Array, u64) => void
-        program = __retain(__lowerArray(__setU8, 4, 0, program) || __notnull());
-        flatRegisters = __retain(__lowerArray(__setU8, 4, 0, flatRegisters) || __notnull());
+        // assembly/api/resetGenericWithMemory(~lib/array/Array<u8>, ~lib/array/Array<u8>, ~lib/typedarray/Uint8Array, ~lib/typedarray/Uint8Array, i64) => void
+        program = __retain(__lowerArray(__setU8, 27, 0, program) || __notnull());
+        flatRegisters = __retain(__lowerArray(__setU8, 27, 0, flatRegisters) || __notnull());
         pageMap = __retain(__lowerTypedArray(Uint8Array, 5, 0, pageMap) || __notnull());
         chunks = __lowerTypedArray(Uint8Array, 5, 0, chunks) || __notnull();
         initialGas = initialGas || 0n;
@@ -87,9 +110,9 @@ export async function instantiate(module, imports = {}) {
         // assembly/api/nextStep() => bool
         return exports.nextStep() != 0;
       },
-      run(steps) {
-        // assembly/api/run(u32) => bool
-        return exports.run(steps) != 0;
+      nSteps(steps) {
+        // assembly/api/nSteps(u32) => bool
+        return exports.nSteps(steps) != 0;
       },
       getProgramCounter() {
         // assembly/api/getProgramCounter() => u32
@@ -110,7 +133,7 @@ export async function instantiate(module, imports = {}) {
       },
       setRegisters(flatRegisters) {
         // assembly/api/setRegisters(~lib/array/Array<u8>) => void
-        flatRegisters = __lowerArray(__setU8, 4, 0, flatRegisters) || __notnull();
+        flatRegisters = __lowerArray(__setU8, 27, 0, flatRegisters) || __notnull();
         exports.setRegisters(flatRegisters);
       },
       getPageDump(index) {
@@ -125,62 +148,7 @@ export async function instantiate(module, imports = {}) {
     },
     exports,
   );
-  function __lowerRecord40(value) {
-    // assembly/api-generic/InitialPage
-    // Hint: Opt-out from lowering as a record by providing an empty constructor
-    if (value == null) return 0;
-    const pointer = exports.__pin(exports.__new(12, 40));
-    __setU32(pointer + 0, value.address);
-    __setU32(pointer + 4, value.length);
-    __setU32(pointer + 8, value.access);
-    exports.__unpin(pointer);
-    return pointer;
-  }
-  function __lowerRecord42(value) {
-    // assembly/api-generic/InitialChunk
-    // Hint: Opt-out from lowering as a record by providing an empty constructor
-    if (value == null) return 0;
-    const pointer = exports.__pin(exports.__new(8, 42));
-    __setU32(pointer + 0, value.address);
-    __setU32(pointer + 4, __lowerArray(__setU8, 4, 0, value.data) || __notnull());
-    exports.__unpin(pointer);
-    return pointer;
-  }
-  function __lowerRecord39(value) {
-    // assembly/api-generic/VmInput
-    // Hint: Opt-out from lowering as a record by providing an empty constructor
-    if (value == null) return 0;
-    const pointer = exports.__pin(exports.__new(28, 39));
-    __setU32(pointer + 0, __lowerArray(__setU32, 38, 2, value.registers) || __notnull());
-    __setU32(pointer + 4, value.pc);
-    __setU64(pointer + 8, value.gas || 0n);
-    __setU32(pointer + 16, __lowerArray(__setU8, 4, 0, value.program) || __notnull());
-    __setU32(
-      pointer + 20,
-      __lowerArray(
-        (pointer, value) => {
-          __setU32(pointer, __lowerRecord40(value) || __notnull());
-        },
-        41,
-        2,
-        value.pageMap,
-      ) || __notnull(),
-    );
-    __setU32(
-      pointer + 24,
-      __lowerArray(
-        (pointer, value) => {
-          __setU32(pointer, __lowerRecord42(value) || __notnull());
-        },
-        43,
-        2,
-        value.memory,
-      ) || __notnull(),
-    );
-    exports.__unpin(pointer);
-    return pointer;
-  }
-  function __liftRecord42(pointer) {
+  function __liftRecord45(pointer) {
     // assembly/api-generic/InitialChunk
     // Hint: Opt-out from lifting as a record by providing an empty constructor
     if (!pointer) return null;
@@ -195,11 +163,67 @@ export async function instantiate(module, imports = {}) {
     if (!pointer) return null;
     return {
       status: __getI32(pointer + 0),
-      registers: __liftArray((pointer) => __getU32(pointer) >>> 0, 2, __getU32(pointer + 4)),
+      registers: __liftArray((pointer) => BigInt.asUintN(64, __getU64(pointer)), 3, __getU32(pointer + 4)),
       pc: __getU32(pointer + 8),
-      memory: __liftArray((pointer) => __liftRecord42(__getU32(pointer)), 2, __getU32(pointer + 12)),
+      memory: __liftArray((pointer) => __liftRecord45(__getU32(pointer)), 2, __getU32(pointer + 12)),
       gas: __getI64(pointer + 16),
+      exitCode: __getU32(pointer + 24),
     };
+  }
+  function __lowerRecord48(value) {
+    // assembly/api-generic/InitialPage
+    // Hint: Opt-out from lowering as a record by providing an empty constructor
+    if (value == null) return 0;
+    const pointer = exports.__pin(exports.__new(12, 48));
+    __setU32(pointer + 0, value.address);
+    __setU32(pointer + 4, value.length);
+    __setU32(pointer + 8, value.access);
+    exports.__unpin(pointer);
+    return pointer;
+  }
+  function __lowerRecord45(value) {
+    // assembly/api-generic/InitialChunk
+    // Hint: Opt-out from lowering as a record by providing an empty constructor
+    if (value == null) return 0;
+    const pointer = exports.__pin(exports.__new(8, 45));
+    __setU32(pointer + 0, value.address);
+    __setU32(pointer + 4, __lowerArray(__setU8, 27, 0, value.data) || __notnull());
+    exports.__unpin(pointer);
+    return pointer;
+  }
+  function __lowerRecord47(value) {
+    // assembly/api-generic/VmInput
+    // Hint: Opt-out from lowering as a record by providing an empty constructor
+    if (value == null) return 0;
+    const pointer = exports.__pin(exports.__new(28, 47));
+    __setU32(pointer + 0, __lowerArray(__setU64, 43, 3, value.registers) || __notnull());
+    __setU32(pointer + 4, value.pc);
+    __setU64(pointer + 8, value.gas || 0n);
+    __setU32(pointer + 16, __lowerArray(__setU8, 27, 0, value.program) || __notnull());
+    __setU32(
+      pointer + 20,
+      __lowerArray(
+        (pointer, value) => {
+          __setU32(pointer, __lowerRecord48(value) || __notnull());
+        },
+        49,
+        2,
+        value.pageMap,
+      ) || __notnull(),
+    );
+    __setU32(
+      pointer + 24,
+      __lowerArray(
+        (pointer, value) => {
+          __setU32(pointer, __lowerRecord45(value) || __notnull());
+        },
+        46,
+        2,
+        value.memory,
+      ) || __notnull(),
+    );
+    exports.__unpin(pointer);
+    return pointer;
   }
   function __liftString(pointer) {
     if (!pointer) return null;
@@ -251,6 +275,12 @@ export async function instantiate(module, imports = {}) {
     new constructor(memory.buffer, buffer, length).set(values);
     exports.__unpin(buffer);
     return header;
+  }
+  class Internref extends Number {}
+  function __lowerInternref(value) {
+    if (value == null) return 0;
+    if (value instanceof Internref) return value.valueOf();
+    throw TypeError("internref expected");
   }
   const refcounts = new Map();
   function __retain(pointer) {
@@ -329,5 +359,44 @@ export async function instantiate(module, imports = {}) {
       return __dataview.getBigInt64(pointer, true);
     }
   }
+  function __getU64(pointer) {
+    try {
+      return __dataview.getBigUint64(pointer, true);
+    } catch {
+      __dataview = new DataView(memory.buffer);
+      return __dataview.getBigUint64(pointer, true);
+    }
+  }
   return adaptedExports;
 }
+// export const {
+//   memory,
+//   InputKind,
+//   HasMetadata,
+//   disassemble,
+//   runProgram,
+//   runVm,
+//   getAssembly,
+//   wrapAsProgram,
+//   resetGeneric,
+//   resetGenericWithMemory,
+//   nextStep,
+//   nSteps,
+//   getProgramCounter,
+//   setNextProgramCounter,
+//   getStatus,
+//   getExitArg,
+//   getGasLeft,
+//   setGasLeft,
+//   getRegisters,
+//   setRegisters,
+//   getPageDump,
+//   setMemory,
+// } = await (async url => instantiate(
+//   await (async () => {
+//     const isNodeOrBun = typeof process != "undefined" && process.versions != null && (process.versions.node != null || process.versions.bun != null);
+//     if (isNodeOrBun) { return globalThis.WebAssembly.compile(await (await import("node:fs/promises")).readFile(url)); }
+//     else { return await globalThis.WebAssembly.compileStreaming(globalThis.fetch(url)); }
+//   })(), {
+//   }
+// ))(new URL("release.wasm", import.meta.url));
