@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { InstructionItem, WidestInstructionItem } from "./InstructionItem";
+import { InstructionItem } from "./InstructionItem";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useAppSelector } from "@/store/hooks";
@@ -8,7 +8,8 @@ import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction } from "@/types/pvm";
 import { InstructionsProps } from ".";
 import { selectProgram } from "@/store/debugger/debuggerSlice";
-import { getASMInstructionValueHtml } from "./utils";
+import { getASMInstructionValueHtml, valueToNumeralSystem } from "./utils";
+import { InstructionMode } from "./types";
 
 export type ProgramRow = CurrentInstruction & {
   addressEl: ReactNode;
@@ -90,24 +91,41 @@ export const InstructionsTable = ({
     }
   }, [maxPc, programRows, scrollToIndex]);
 
-  const widestItemValue = useMemo(
-    () =>
-      programRows?.reduce<string>((acc, item) => {
-        if (!("args" in item)) {
-          return acc;
-        }
-        const valueNoHtml = getASMInstructionValueHtml(item.args, numeralSystem, 0, program)
-          .replace(/<sub>/g, "")
-          .replace(/<\/sub>/g, "");
+  const widestItemValue = useMemo(() => {
+    if (!programRows) return "";
 
-        if ((valueNoHtml?.length || 0) > acc.length) {
-          return valueNoHtml || "";
-        } else {
-          return acc;
-        }
-      }, "") || "",
-    [programRows, program, numeralSystem],
-  );
+    if (instructionMode === InstructionMode.ASM) {
+      return (
+        programRows.reduce<string>((acc, item) => {
+          if (!("args" in item)) {
+            return acc;
+          }
+          const valueNoHtml = getASMInstructionValueHtml(item.args, numeralSystem, 0, program)
+            .replace(/<sub>/g, "")
+            .replace(/<\/sub>/g, "");
+          if ((valueNoHtml?.length || 0) > acc.length) {
+            return valueNoHtml || "";
+          } else {
+            return acc;
+          }
+        }, "") || ""
+      );
+    }
+
+    if (instructionMode === InstructionMode.BYTECODE) {
+      const bytecodes = programRows.map((item) =>
+        "instructionBytes" in item
+          ? Array.from(item.instructionBytes)
+              .map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
+              .join(" ")
+          : "",
+      );
+      const longest = bytecodes.sort((a, b) => b.length - a.length)[0];
+      return longest;
+    }
+
+    return "";
+  }, [programRows, program, numeralSystem, instructionMode]);
 
   if (!programRows) {
     return <div>No instructions to display</div>;
@@ -142,11 +160,6 @@ export const InstructionsTable = ({
                 />
               );
             })}
-
-            {
-              // an additional hidden item that prevents column resizing when table is scrolled
-            }
-            <WidestInstructionItem programRows={programRows} instructionMode={instructionMode} />
           </tbody>
         </table>
       </div>

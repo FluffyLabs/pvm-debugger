@@ -8,7 +8,7 @@ import {
 import classNames from "classnames";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
-import { ForwardedRef, forwardRef, useCallback, useContext, useMemo, useState } from "react";
+import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from "./InstructionsTable";
@@ -19,7 +19,6 @@ import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from "@/compon
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 import { selectProgram } from "@/store/debugger/debuggerSlice.ts";
 import { getStatusColor } from "@/utils/colors";
-import { NumeralSystem } from "@/context/NumeralSystem";
 
 const getWorkerValueFromState = (
   worker: WorkerState,
@@ -146,10 +145,12 @@ export const InstructionItem = forwardRef(
               />
               <TableCell className="p-1.5 border-b w-[40%]">
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
-                  <span className="text-title-foreground">
-                    {[...programRow.instructionBytes]
-                      ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
-                      .join(" ")}
+                  <span className="block overflow-hidden" style={{ width: `${widestItemValueLength}ch` }}>
+                    <span className="text-title-foreground">
+                      {[...programRow.instructionBytes]
+                        ?.map((byte) => valueToNumeralSystem(byte, numeralSystem, numeralSystem ? 2 : 3))
+                        .join(" ")}
+                    </span>
                   </span>
                 )}
               </TableCell>
@@ -173,12 +174,8 @@ export const InstructionItem = forwardRef(
                 </a>
               </TableCell>
               <TableCell className="p-1.5 whitespace-nowrap border-b font-inconsolata">
-                <span
-                  className="block overflow-hidden"
-                  style={{ width: `${widestItemValueLength}ch` }}
-                >
+                <span className="block overflow-hidden" style={{ width: `${widestItemValueLength}ch` }}>
                   {"args" in programRow && (
-                    /** Width of this cell is adjusted to the widest item by WidestInstructionItem component */
                     <span
                       dangerouslySetInnerHTML={{
                         __html: getASMInstructionValueHtml(programRow.args, numeralSystem, programRow.counter, program),
@@ -335,61 +332,5 @@ function DetailsColumn({ kind, bits, value }: DetailsColumnProps) {
         </div>
       </div>
     </div>
-  );
-}
-
-/** A hiddent item of instruction table that ensures the table is adjusted to the widest instruction item */
-export function WidestInstructionItem({
-  instructionMode,
-  programRows,
-}: {
-  instructionMode: InstructionMode;
-  programRows: ProgramRow[] | undefined;
-}) {
-  const program = useAppSelector(selectProgram);
-
-  const widestItem = useMemo(
-    () =>
-      programRows?.reduce<{ widestItem: ProgramRow | null; maxWidth: number }>(
-        (acc, item) => {
-          const { maxWidth } = acc;
-          if (!("args" in item)) {
-            return acc;
-          }
-          const argsLength =
-            mapInstructionsArgsByType(item.args, NumeralSystem.HEXADECIMAL, 0, program)
-              ?.map((x) => x.value)
-              .join("").length ?? 0;
-
-          if (argsLength > maxWidth) {
-            return { widestItem: item, maxWidth: argsLength };
-          } else {
-            return acc;
-          }
-        },
-        { widestItem: null, maxWidth: 0 },
-      ).widestItem,
-    [programRows, program],
-  );
-
-  if (!widestItem) {
-    return null;
-  }
-
-  return (
-    <InstructionItem
-      index={0}
-      status={Status.OK}
-      isLast={false}
-      onClick={() => {}}
-      instructionMode={instructionMode}
-      programRow={widestItem}
-      currentPc={0}
-      onAddressClick={() => {}}
-      breakpointAddresses={[]}
-      style={{
-        visibility: "hidden",
-      }}
-    />
   );
 }
