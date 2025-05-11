@@ -159,7 +159,7 @@ const DebuggerContent = () => {
                         if (!error && program) {
                           const maybeSpiWithMetadata = tryAsSpi(program.slice(), true);
                           const maybeSpiWithoutMetadata = tryAsSpi(program.slice(), false);
-                          const maybeSpi = maybeSpiWithMetadata || maybeSpiWithoutMetadata;
+                          const maybeSpi = maybeSpiWithoutMetadata || maybeSpiWithMetadata;
                           if (maybeSpi) {
                             debuggerActions.handleProgramLoad(maybeSpi);
                           } else {
