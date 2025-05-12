@@ -34,6 +34,7 @@ const init = async ({ pvm, program, initialState }: InitParams) => {
         BigInt(gas),
       );
     } else if (pvm.resetGeneric) {
+      console.warn("Ignoring memory initialization, because there is no resetGenericWithMemory");
       pvm.resetGeneric(program, regsAsUint8(initialState.regs), BigInt(gas));
     }
     pvm.setNextProgramCounter && pvm.setNextProgramCounter(initialState.pc ?? 0);
