@@ -9,7 +9,7 @@ import {
 import { DebuggerEcalliStorage } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
 import { SerializedError } from "@reduxjs/toolkit";
-import { bytes } from "@typeberry/jam-host-calls";
+import { bytes } from "@typeberry/pvm-debugger-adapter";
 
 const RESPONSE_WAIT_TIMEOUT = 60000;
 const getMessageId = () => Math.random().toString(36).substring(7);

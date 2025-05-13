@@ -1,13 +1,28 @@
 import { HostCallIdentifiers } from "@/types/pvm";
 import { CommandStatus, PvmApiInterface, Storage } from "../types";
-import { read, Registers, write, Memory, gas } from "@typeberry/jam-host-calls";
+import {
+  read,
+  write,
+  gas,
+  HostCallRegisters,
+  Result,
+  interpreter,
+  numbers,
+  Registers,
+  IHostCallMemory,
+  IHostCallRegisters,
+  OK,
+  HostCallMemory,
+} from "@typeberry/pvm-debugger-adapter";
 import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
 import { ReadAccounts } from "@/packages/host-calls/read";
-import { tryAsServiceId } from "@typeberry/block";
-import { Gas, MemoryIndex, tryAsGas } from "@typeberry/pvm-debugger-adapter";
+import { block } from "@typeberry/pvm-debugger-adapter";
 import { WasmPvmShellInterface } from "../wasmBindgenShell";
 
+const { tryAsGas } = interpreter;
+const { tryAsU64 } = numbers;
+const { tryAsServiceId } = block;
 type HostCallParams = {
   pvm: PvmApiInterface | null;
   hostCallIdentifier: HostCallIdentifiers;
@@ -31,15 +46,15 @@ type HostCallResponse =
 class SimpleGas {
   pvm!: WasmPvmShellInterface;
 
-  get(): Gas {
+  get() {
     return tryAsGas(this.pvm.getGasLeft());
   }
-  set(gas: Gas) {
+  set(gas: interpreter.Gas) {
     if (this.pvm.setGasLeft) {
       this.pvm.setGasLeft(BigInt(gas));
     }
   }
-  sub(v: Gas) {
+  sub(v: interpreter.Gas) {
     const current = this.get();
     if (current > v) {
       this.set(tryAsGas(BigInt(current) - BigInt(v)));
@@ -61,76 +76,62 @@ const getGasCounter = (pvm: PvmApiInterface) => {
 
   return gas;
 };
-
-class SimpleRegisters implements Registers {
+class SimpleRegisters implements IHostCallRegisters {
   flatRegisters!: Uint8Array;
   pvm!: WasmPvmShellInterface;
 
-  getU32(registerIndex: number): number {
-    return Number(this.getU64(registerIndex) & 0xffff_ffffn);
+  get(registerIndex: number): numbers.U64 {
+    return tryAsU64(new BigUint64Array(this.flatRegisters.buffer)[registerIndex]);
   }
-  getI32(registerIndex: number): number {
-    return Number(this.getU32(registerIndex)) >> 0;
-  }
-  setU32(registerIndex: number, value: number): void {
-    this.setU64(registerIndex, BigInt(value));
-  }
-  setI32(registerIndex: number, value: number): void {
-    this.setI64(registerIndex, BigInt(value));
-  }
-  getU64(registerIndex: number): bigint {
-    return new BigUint64Array(this.flatRegisters.buffer)[registerIndex];
-  }
-  getI64(registerIndex: number): bigint {
-    return new BigInt64Array(this.flatRegisters.buffer)[registerIndex];
-  }
-  setU64(registerIndex: number, value: bigint): void {
+
+  set(registerIndex: number, value: numbers.U64): void {
     new BigUint64Array(this.flatRegisters.buffer)[registerIndex] = value;
-    this.pvm.setRegisters(this.flatRegisters);
-  }
-  setI64(registerIndex: number, value: bigint): void {
-    new BigInt64Array(this.flatRegisters.buffer)[registerIndex] = value;
     this.pvm.setRegisters(this.flatRegisters);
   }
 }
 
 const getRegisters = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
-    return pvm.getInterpreter().getRegisters();
+    const regs = pvm.getInterpreter().getRegisters();
+    return new HostCallRegisters(regs);
   }
 
   const registers = new SimpleRegisters();
+  const regs = new Registers();
+  const rawRegs = new BigUint64Array(pvm.getRegisters().buffer);
+  regs.copyFrom(rawRegs);
   registers.flatRegisters = pvm.getRegisters();
   registers.pvm = pvm;
 
   return registers;
 };
 
-class SimpleMemory implements Memory {
+class SimpleMemory implements IHostCallMemory {
   pvm!: WasmPvmShellInterface;
   memorySize: number = 4096;
 
-  loadInto(result: Uint8Array, startAddress: MemoryIndex) {
-    const memoryDump = this.pvm.getPageDump(startAddress / this.memorySize);
+  loadInto(result: Uint8Array, startAddress: numbers.U64) {
+    const memoryDump = this.pvm.getPageDump(Number(startAddress / tryAsU64(this.memorySize)));
     result.set(memoryDump.subarray(0, result.length));
 
-    return null;
-  }
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  isWriteable(_destinationStart: MemoryIndex, _length: number) {
-    return true;
+    return Result.ok(OK);
   }
 
-  storeFrom(address: MemoryIndex, bytes: Uint8Array) {
+  storeFrom(address: numbers.U64, bytes: Uint8Array) {
     // TODO [ToDr] Either change the API to require handling multi-page writes or change this code to split the write into multiple pages.
-    this.pvm.setMemory(address, bytes);
-    return null;
+    this.pvm.setMemory(Number(address), bytes);
+    return Result.ok(OK);
+  }
+
+  getMemory() {
+    // TODO [MaSi]: This function is used only by `peek` and `poke` host calls, so dummy implementation is okay for now.
+    return new interpreter.Memory();
   }
 }
 
 const getMemory = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
-    return pvm.getInterpreter().getMemory();
+    return new HostCallMemory(pvm.getInterpreter().getMemory());
   }
   const memory = new SimpleMemory();
   memory.pvm = pvm;
@@ -174,7 +175,7 @@ const hostCall = async ({
 
     return { hostCallIdentifier, storage, status: CommandStatus.SUCCESS };
   } else if (hostCallIdentifier === HostCallIdentifiers.GAS) {
-    const jamHostCall = new gas.Gas();
+    const jamHostCall = new gas.GasHostCall();
 
     await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm));
 

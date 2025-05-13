@@ -2,13 +2,15 @@ import { InitialState, Pvm as InternalPvm, Status } from "@/types/pvm";
 import {
   createResults,
   instructionArgumentTypeMap,
+  interpreter,
   ProgramDecoder,
-  tryAsMemoryIndex,
-  tryAsSbrkIndex,
 } from "@typeberry/pvm-debugger-adapter";
 import { ArgsDecoder, Registers } from "@typeberry/pvm-debugger-adapter";
 import { byteToOpCodeMap } from "../../packages/pvm/pvm/assemblify";
-import { Pvm as InternalPvmInstance, MemoryBuilder as InternalPvmMemoryBuilder } from "@typeberry/pvm-debugger-adapter";
+import { Pvm as InternalPvmInstance } from "@typeberry/pvm-debugger-adapter";
+
+const { tryAsMemoryIndex, tryAsSbrkIndex, MemoryBuilder: InternalPvmMemoryBuilder } = interpreter;
+
 export const initPvm = async (pvm: InternalPvmInstance, program: Uint8Array, initialState: InitialState) => {
   const initialMemory = initialState.memory ?? [];
   const pageMap = initialState.pageMap ?? [];
@@ -34,7 +36,7 @@ export const initPvm = async (pvm: InternalPvmInstance, program: Uint8Array, ini
   const pageSize = 2 ** 12;
   const maxAddressFromPageMap = Math.max(...pageMap.map((page) => page.address + page.length));
   const hasMemoryLayout = maxAddressFromPageMap >= 0;
-  const heapStartIndex = tryAsSbrkIndex(hasMemoryLayout ? maxAddressFromPageMap + pageSize : 0);
+  const heapStartIndex = tryAsMemoryIndex(hasMemoryLayout ? maxAddressFromPageMap + pageSize : 0);
   const heapEndIndex = tryAsSbrkIndex(2 ** 32 - 2 * 2 ** 16 - 2 ** 24);
 
   const memory = memoryBuilder.finalize(heapStartIndex, heapEndIndex);
