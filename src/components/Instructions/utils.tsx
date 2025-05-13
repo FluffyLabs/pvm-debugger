@@ -341,3 +341,9 @@ export const mapInstructionsArgsByType = (
       return null;
   }
 };
+
+export const getASMInstructionValueHtml = (args: Args, numeralSystem: number, counter: number, program: number[]) =>
+  mapInstructionsArgsByType(args, numeralSystem, counter, program)
+    ?.filter((instruction) => !instruction.hidden)
+    ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
+    .join(", ") ?? "";
