@@ -1,4 +1,4 @@
-import { write, hash, block, bytes } from "@typeberry/jam-host-calls";
+import { write, hash, block, bytes } from "@typeberry/pvm-debugger-adapter";
 import { Storage } from "../web-worker/types";
 
 export class WriteAccounts implements write.Accounts {

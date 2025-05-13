@@ -1,4 +1,4 @@
-import { block, bytes, hash, read } from "@typeberry/jam-host-calls";
+import { block, bytes, hash, read } from "@typeberry/pvm-debugger-adapter";
 import { Storage } from "../web-worker/types";
 
 export class ReadAccounts implements read.Accounts {

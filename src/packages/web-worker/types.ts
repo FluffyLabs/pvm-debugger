@@ -1,7 +1,7 @@
 import { CurrentInstruction, ExpectedState, HostCallIdentifiers, InitialState } from "@/types/pvm";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
-import { bytes } from "@typeberry/jam-host-calls";
+import { bytes } from "@typeberry/pvm-debugger-adapter";
 import { SerializedFile } from "@/lib/utils.ts";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };

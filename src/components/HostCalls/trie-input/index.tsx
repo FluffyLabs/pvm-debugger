@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { hasPVMGeneratedStorage } from "@/store/debugger/debuggerSlice";
 import { useAppSelector } from "@/store/hooks";
-import { bytes, hash } from "@typeberry/jam-host-calls";
+import { bytes, hash } from "@typeberry/pvm-debugger-adapter";
 import { cloneDeep } from "lodash";
 import { XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
