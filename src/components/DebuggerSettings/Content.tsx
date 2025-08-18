@@ -2,7 +2,7 @@ import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/di
 import { CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setServiceId, setStepsToPerform } from "@/store/debugger/debuggerSlice";
+import { setServiceId, setSpiArgs, setStepsToPerform } from "@/store/debugger/debuggerSlice";
 import { Button } from "../ui/button";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "../Instructions/utils";
@@ -117,6 +117,20 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
                 {debuggerState.storage !== null ? "Modify Storage" : "Configure Storage"}
               </Button>
             </div>
+          </div>
+
+          <div className="p-4 mt-2 flex justify-between items-center mb-4">
+            <span className="block text-xs font-bold">
+              <WithHelp help="JAM SPI program arguments">SPI Args</WithHelp>
+            </span>
+            <Input
+              className={commonClass}
+              onChange={(e) => {
+                const value = e.target?.value;
+                dispatch(setSpiArgs(value));
+              }}
+              value={debuggerState.spiArgs ?? ""}
+            />
           </div>
 
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}

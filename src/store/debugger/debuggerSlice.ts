@@ -32,6 +32,7 @@ export interface DebuggerState {
   storage: DebuggerEcalliStorage | null;
   userProvidedStorage: DebuggerEcalliStorage | null;
   serviceId: number | null;
+  spiArgs: string | null;
   activeMobileTab: "program" | "status" | "memory";
 }
 
@@ -153,6 +154,9 @@ const debuggerSlice = createSlice({
     setServiceId(state, action) {
       state.serviceId = action.payload;
     },
+    setSpiArgs(state, action) {
+      state.spiArgs = action.payload;
+    },
     setPvmOptions(state, action) {
       state.pvmOptions.allAvailablePvms = action.payload;
     },
@@ -183,6 +187,7 @@ export const {
   setStepsToPerform,
   setStorage,
   setServiceId,
+  setSpiArgs,
   setPvmOptions,
   setSelectedPvms,
   setActiveMobileTab,
