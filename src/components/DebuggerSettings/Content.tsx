@@ -1,9 +1,7 @@
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setServiceId, setSpiArgs, setStepsToPerform } from "@/store/debugger/debuggerSlice";
-import { Button } from "../ui/button";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "../Instructions/utils";
 import { useContext, useState } from "react";
@@ -22,7 +20,7 @@ function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   }
 }
 
-export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => void }) => {
+export const DebuggerSettingsContent = () => {
   const debuggerState = useAppSelector((state) => state.debugger);
   const dispatch = useAppDispatch();
   const { numeralSystem } = useContext(NumeralSystemContext);
@@ -103,25 +101,16 @@ export const DebuggerSettingsContent = ({ openStorage }: { openStorage: () => vo
                  Confirm empty, if you want to process.
                  Storage can be modified by the program execution.`}
               >
-                Service Storage
+                Host Calls Trace
               </WithHelp>
             </span>
 
-            <div className="flex">
-              {debuggerState.storage !== null && (
-                <span className="flex items-center ml-3">
-                  <CheckCircle color="green" className="mr-2" />
-                </span>
-              )}
-              <Button variant="outlineBrand" onClick={() => openStorage()} className={commonClass}>
-                {debuggerState.storage !== null ? "Modify Storage" : "Configure Storage"}
-              </Button>
-            </div>
+            <div className="flex">TODO</div>
           </div>
 
           <div className="p-4 mt-2 flex justify-between items-center mb-4">
             <span className="block text-xs font-bold">
-              <WithHelp help="JAM SPI program arguments">SPI Args</WithHelp>
+              <WithHelp help="Hex-encoded JAM SPI arguments written to the heap">JAM SPI arguments</WithHelp>
             </span>
             <Input
               className={commonClass}

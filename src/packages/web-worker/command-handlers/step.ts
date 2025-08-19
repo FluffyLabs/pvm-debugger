@@ -1,13 +1,12 @@
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { nextInstruction } from "../pvm";
 import { getState } from "../utils";
-import { CommandStatus, PvmApiInterface, Storage } from "../types";
+import { CommandStatus, PvmApiInterface } from "../types";
 
 export type StepParams = {
   program: Uint8Array;
   pvm: PvmApiInterface | null;
   stepsToPerform: number;
-  storage: Storage | null;
   serviceId: number | null;
 };
 export type StepResponse = {
@@ -34,18 +33,12 @@ const step = async ({ pvm, program, stepsToPerform }: StepParams) => {
 
   const result = nextInstruction(state.pc ?? 0, program) as unknown as CurrentInstruction;
 
-  return { result, state, isFinished, exitArg: await pvm.getExitArg() };
+  return { result, state, isFinished, exitArg: pvm.getExitArg() };
 };
 
-export const runStep = async ({
-  pvm,
-  program,
-  stepsToPerform,
-  storage,
-  serviceId,
-}: StepParams): Promise<StepResponse> => {
+export const runStep = async ({ pvm, program, stepsToPerform, serviceId }: StepParams): Promise<StepResponse> => {
   try {
-    const data = await step({ pvm, program, stepsToPerform, storage, serviceId });
+    const data = await step({ pvm, program, stepsToPerform, serviceId });
     return { status: CommandStatus.SUCCESS, ...data };
   } catch (error) {
     return { status: CommandStatus.ERROR, error, isFinished: true, result: {}, state: {}, exitArg: 0 };

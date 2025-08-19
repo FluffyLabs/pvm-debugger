@@ -10,12 +10,11 @@ import { ProgramTextLoader } from "@/components/ProgramTextLoader";
 import { Instructions } from "@/components/Instructions";
 import { Registers } from "@/components/Registers";
 import { MemoryPreview } from "@/components/MemoryPreview";
-import { HostCalls } from "@/components/HostCalls";
 import classNames from "classnames";
-import { decodeStandardProgram, extractCodeAndMetadata } from "@typeberry/pvm-debugger-adapter";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
 import { bytes } from "@typeberry/pvm-debugger-adapter";
 import { getAsChunks, getAsPageMap } from "@/lib/utils";
+import { decodeSpiWithMetadata } from "@/utils/spi";
 
 const MobileTabs = () => {
   const dispatch = useAppDispatch();
@@ -126,8 +125,6 @@ const DebuggerContent = () => {
             activeMobileTab === "program" ? "max-sm:col-span-12" : "max-sm:hidden",
           )}
         >
-          <HostCalls />
-
           {!program.length ? (
             <InitialLoadProgramCTA />
           ) : (
@@ -148,31 +145,19 @@ const DebuggerContent = () => {
                         if (error) {
                           dispatch(setIsProgramInvalid(true));
                         }
-
-                        function tryAsSpi(program: number[], withMetadata: boolean) {
-                          const blob = new Uint8Array(program);
-                          try {
-                            const { code: spiCode, metadata } = withMetadata
-                              ? extractCodeAndMetadata(blob)
-                              : { code: blob };
-                            const {
-                              code,
-                              memory: rawMemory,
-                              registers,
-                            } = decodeStandardProgram(spiCode, spiArgsAsBytes);
-
-                            return { code, rawMemory, registers, metadata };
-                          } catch {
-                            return null;
-                          }
+                        let maybeSpi;
+                        try {
+                          maybeSpi = decodeSpiWithMetadata(
+                            program === undefined ? new Uint8Array() : new Uint8Array(program),
+                            spiArgsAsBytes,
+                          );
+                        } catch {
+                          maybeSpi = null;
                         }
 
                         if (!error && program) {
-                          const maybeSpiWithMetadata = tryAsSpi(program.slice(), true);
-                          const maybeSpiWithoutMetadata = tryAsSpi(program.slice(), false);
-                          const maybeSpi = maybeSpiWithoutMetadata || maybeSpiWithMetadata;
                           if (maybeSpi) {
-                            const { code, rawMemory, registers } = maybeSpi;
+                            const { code, memory: rawMemory, registers } = maybeSpi;
                             const regs = Array.from(registers) as RegistersArray;
 
                             const pageMap = getAsPageMap(rawMemory);

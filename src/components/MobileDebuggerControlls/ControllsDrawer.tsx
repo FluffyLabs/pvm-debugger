@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, useDragControls } from "framer-motion";
 import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
 import { ArrowRight } from "lucide-react";
-import { mapInstructionsArgsByType, valueToNumeralSystem } from "../Instructions/utils";
+import { decodeAndGetArgsDecoder, mapInstructionsArgsByType, valueToNumeralSystem } from "../Instructions/utils";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { useContext } from "react";
 import { useAppSelector } from "@/store/hooks";
@@ -23,6 +23,9 @@ const InstructionDisplay = ({
 }) => {
   const { numeralSystem } = useContext(NumeralSystemContext);
   const program = useAppSelector(selectProgram);
+  const argsDecoder = useMemo(() => {
+    return decodeAndGetArgsDecoder(program);
+  }, [program]);
   const isDarkMode = useIsDarkMode();
 
   if (currentInstructionEnriched === undefined || !("args" in currentInstructionEnriched)) {
@@ -41,7 +44,7 @@ const InstructionDisplay = ({
             <span
               dangerouslySetInnerHTML={{
                 __html:
-                  mapInstructionsArgsByType(prevInstructionEnriched.args, numeralSystem, 0, program)
+                  mapInstructionsArgsByType(prevInstructionEnriched.args, numeralSystem, 0, argsDecoder)
                     ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
                     .join(", ") ?? "",
               }}
@@ -61,7 +64,7 @@ const InstructionDisplay = ({
           <span
             dangerouslySetInnerHTML={{
               __html:
-                mapInstructionsArgsByType(currentInstructionEnriched.args, numeralSystem, 0, program)
+                mapInstructionsArgsByType(currentInstructionEnriched.args, numeralSystem, 0, argsDecoder)
                   ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
                   .join(", ") ?? "",
             }}
