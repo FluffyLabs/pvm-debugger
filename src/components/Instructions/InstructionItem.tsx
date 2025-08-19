@@ -1,5 +1,6 @@
 import {
   argType,
+  decodeAndGetArgsDecoder,
   getASMInstructionValueHtml,
   mapInstructionsArgsByType,
   valueToBinary,
@@ -8,7 +9,7 @@ import {
 import classNames from "classnames";
 import { ExpectedState, RegistersArray, Status } from "@/types/pvm";
 import { InstructionMode } from "./types";
-import { ForwardedRef, forwardRef, useCallback, useContext, useState } from "react";
+import { ForwardedRef, forwardRef, useCallback, useContext, useMemo, useState } from "react";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { TableCell, TableRow } from "../ui/table";
 import { ProgramRow } from "./InstructionsTable";
@@ -102,6 +103,9 @@ export const InstructionItem = forwardRef(
     const { numeralSystem } = useContext(NumeralSystemContext);
     const isDarkMode = useIsDarkMode();
     const program = useAppSelector(selectProgram);
+    const argsDecoder = useMemo(() => {
+      return decodeAndGetArgsDecoder(program);
+    }, [program]);
 
     const workers = useAppSelector(selectWorkers);
     const workersWithCurrentPc = workers.filter((worker) => worker.currentState.pc === programRow.address);
@@ -178,7 +182,12 @@ export const InstructionItem = forwardRef(
                   {"args" in programRow && (
                     <span
                       dangerouslySetInnerHTML={{
-                        __html: getASMInstructionValueHtml(programRow.args, numeralSystem, programRow.counter, program),
+                        __html: getASMInstructionValueHtml(
+                          programRow.args,
+                          numeralSystem,
+                          programRow.counter,
+                          argsDecoder,
+                        ),
                       }}
                     />
                   )}
@@ -200,7 +209,7 @@ export const InstructionItem = forwardRef(
               value={valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
             />
             {"args" in programRow &&
-              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, program)
+              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, argsDecoder)
                 ?.filter((instruction) => !instruction.hiddenFromDetails)
                 .map((instruction, index) => (
                   <DetailsColumn

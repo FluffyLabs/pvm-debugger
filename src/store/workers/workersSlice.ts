@@ -1,26 +1,17 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, DebuggerEcalliStorage, ExpectedState, HostCallIdentifiers, Status } from "@/types/pvm.ts";
+import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
-  setHasHostCallOpen,
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
-  setStorage,
 } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
-import {
-  asyncWorkerPostMessage,
-  hasCommandStatusError,
-  LOAD_MEMORY_CHUNK_SIZE,
-  MEMORY_SPLIT_STEP,
-  mergePVMAndDebuggerEcalliStorage,
-  toPvmStorage,
-} from "../utils";
+import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
 import { isInstructionError } from "@/types/type-guards";
 import { nextInstruction } from "@/packages/web-worker/pvm.ts";
@@ -122,30 +113,6 @@ export const loadWorker = createAsyncThunk(
     }
   },
 );
-export const clearAllWorkersStorage = createAsyncThunk("workers/clearAllStorage", async (_, { getState, dispatch }) => {
-  const state = getState() as RootState;
-
-  dispatch(setStorage({ storage: state.debugger.userProvidedStorage, isUserProvided: true }));
-  await dispatch(setAllWorkersStorage({ storage: state.debugger.userProvidedStorage })).unwrap();
-});
-
-export const setAllWorkersStorage = createAsyncThunk(
-  "workers/setAllStorage",
-  async ({ storage }: { storage: DebuggerEcalliStorage | null }, { getState }) => {
-    const state = getState() as RootState;
-
-    return Promise.all(
-      await state.workers.map(async (worker) => {
-        await asyncWorkerPostMessage(worker.id, worker.worker, {
-          command: Commands.SET_STORAGE,
-          payload: {
-            storage: storage && toPvmStorage(storage),
-          },
-        });
-      }),
-    );
-  },
-);
 
 export const setAllWorkersServiceId = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
   const state = getState() as RootState;
@@ -157,7 +124,7 @@ export const setAllWorkersServiceId = createAsyncThunk("workers/setAllStorage", 
   }
 
   return Promise.all(
-    await state.workers.map(async (worker) => {
+    state.workers.map(async (worker) => {
       await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.SET_SERVICE_ID,
         payload: {
@@ -282,66 +249,57 @@ export const handleHostCall = createAsyncThunk(
   async ({ workerId }: { workerId?: string }, { getState, dispatch }) => {
     const state = getState() as RootState;
 
+    const previousInstruction = nextInstruction(
+      state.workers[0].previousState.pc ?? 0,
+      new Uint8Array(state.debugger.program),
+    );
+
+    const instructionEnriched = state.debugger.programPreviewResult.find(
+      (instruction) => instruction.instructionCode === previousInstruction?.instructionCode,
+    );
+
     if (
-      state.debugger.storage === null &&
-      state.workers.findIndex((worker: WorkerState) => worker.exitArg === HostCallIdentifiers.READ) !== -1
+      !instructionEnriched ||
+      isInstructionError(instructionEnriched)
+      // !isOneImmediateArgs(instructionEnriched.args)
     ) {
-      return dispatch(setHasHostCallOpen(true));
-    } else {
-      const previousInstruction = nextInstruction(
-        state.workers[0].previousState.pc ?? 0,
-        new Uint8Array(state.debugger.program),
-      );
-
-      const instructionEnriched = state.debugger.programPreviewResult.find(
-        (instruction) => instruction.instructionCode === previousInstruction?.instructionCode,
-      );
-
-      if (
-        !instructionEnriched ||
-        isInstructionError(instructionEnriched)
-        // !isOneImmediateArgs(instructionEnriched.args)
-      ) {
-        throw new Error("Invalid host call instruction");
-      }
-
-      await Promise.all(
-        state.workers
-          .filter(({ id }) => {
-            // Allow to call it for a single worker
-            return workerId ? workerId === id : true;
-          })
-          .map(async (worker) => {
-            const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-              command: Commands.HOST_CALL,
-              payload: { hostCallIdentifier: worker.exitArg as HostCallIdentifiers },
-            });
-            if (
-              resp.payload.hostCallIdentifier === HostCallIdentifiers.WRITE &&
-              resp.payload.storage &&
-              // Remove if we decide to make storage initialization optional
-              state.debugger.storage
-            ) {
-              const newStorage = mergePVMAndDebuggerEcalliStorage(resp.payload.storage, state.debugger.storage);
-              dispatch(setStorage({ storage: newStorage, isUserProvided: false }));
-            }
-
-            if ((getState() as RootState).debugger.isRunMode) {
-              dispatch(continueAllWorkers());
-            }
-
-            if (hasCommandStatusError(resp)) {
-              throw new Error(resp.error.message);
-            }
-          }),
-      );
-
-      if (selectShouldContinueRunning(state)) {
-        dispatch(continueAllWorkers());
-      }
-
-      return;
+      throw new Error("Invalid host call instruction");
     }
+
+    // we should request a traces in case there is none yet.
+    if (state.debugger.hostCallsTrace === null) {
+      throw new Error("Missing host call traces!");
+    }
+
+    await Promise.all(
+      state.workers
+        .filter(({ id }) => {
+          // Allow to call it for a single worker
+          return workerId ? workerId === id : true;
+        })
+        .map(async (worker) => {
+          const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+            command: Commands.HOST_CALL,
+            payload: { hostCallIdentifier: worker.exitArg ?? -1 },
+          });
+
+          // TODO [ToDr] Handle host call response?
+
+          if ((getState() as RootState).debugger.isRunMode) {
+            dispatch(continueAllWorkers());
+          }
+
+          if (hasCommandStatusError(resp)) {
+            throw new Error(resp.error.message);
+          }
+        }),
+    );
+
+    if (selectShouldContinueRunning(state)) {
+      dispatch(continueAllWorkers());
+    }
+
+    return;
   },
 );
 
@@ -436,7 +394,9 @@ export const stepAllWorkers = createAsyncThunk(
         }
 
         if (state.status === Status.HOST) {
-          if (debuggerState.storage === null) {
+          // break execution if host call trace is not provided
+          // and we the PVM stops.
+          if (debuggerState.hostCallsTrace === null) {
             dispatch(setIsRunMode(false));
           }
 

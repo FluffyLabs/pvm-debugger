@@ -1,4 +1,3 @@
-import { StorageRow } from "@/components/HostCalls/trie-input";
 import { Args } from "@typeberry/pvm-debugger-adapter";
 export { Pvm } from "@typeberry/pvm-debugger-adapter";
 
@@ -73,12 +72,3 @@ export enum AvailablePvms {
   WASM_FILE = "wasm-file",
   WASM_WS = "wasm-websocket",
 }
-
-export enum HostCallIdentifiers {
-  GAS = 0,
-  LOOKUP = 1,
-  READ = 2,
-  WRITE = 3,
-}
-
-export type DebuggerEcalliStorage = StorageRow[];

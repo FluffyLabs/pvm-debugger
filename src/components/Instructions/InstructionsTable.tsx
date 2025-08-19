@@ -8,7 +8,7 @@ import { selectWorkers } from "@/store/workers/workersSlice";
 import { CurrentInstruction } from "@/types/pvm";
 import { InstructionsProps } from ".";
 import { selectProgram } from "@/store/debugger/debuggerSlice";
-import { getASMInstructionValueHtml, valueToNumeralSystem } from "./utils";
+import { decodeAndGetArgsDecoder, getASMInstructionValueHtml, valueToNumeralSystem } from "./utils";
 import { InstructionMode } from "./types";
 
 export type ProgramRow = CurrentInstruction & {
@@ -49,6 +49,10 @@ export const InstructionsTable = ({
   const workers = useAppSelector(selectWorkers);
   const program = useAppSelector(selectProgram);
   const { numeralSystem } = useContext(NumeralSystemContext);
+
+  const argsDecoder = useMemo(() => {
+    return decodeAndGetArgsDecoder(program);
+  }, [program]);
 
   // We'll calculate the maximum PC across all workers
   const maxPc = workers.reduce((acc, worker) => Math.max(acc, worker.currentState.pc ?? 0), 0);
@@ -100,7 +104,7 @@ export const InstructionsTable = ({
           if (!("args" in item)) {
             return acc;
           }
-          const valueNoHtml = getASMInstructionValueHtml(item.args, numeralSystem, 0, program)
+          const valueNoHtml = getASMInstructionValueHtml(item.args, numeralSystem, 0, argsDecoder)
             .replace(/<sub>/g, "")
             .replace(/<\/sub>/g, "");
           if ((valueNoHtml?.length || 0) > acc.length) {
@@ -125,7 +129,7 @@ export const InstructionsTable = ({
     }
 
     return "";
-  }, [programRows, program, numeralSystem, instructionMode]);
+  }, [programRows, numeralSystem, instructionMode, argsDecoder]);
 
   if (!programRows) {
     return <div>No instructions to display</div>;
