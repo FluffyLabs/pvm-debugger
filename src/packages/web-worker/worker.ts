@@ -1,11 +1,10 @@
 import commandHandlers from "./command-handlers";
 import { logger } from "@/utils/loggerService";
-import { Commands, CommandStatus, PvmApiInterface, Storage, WorkerRequestParams, WorkerResponseParams } from "./types";
+import { Commands, CommandStatus, PvmApiInterface, WorkerRequestParams, WorkerResponseParams } from "./types";
 
 let pvm: PvmApiInterface | null = null;
 let memorySize: number | null = null;
 let isRunMode = false;
-let storage: Storage | null = null;
 // Set default serviceId to 0x30303030. This is the ASCII code for '0000'.
 let serviceId: number | null = parseInt("0x30303030", 16);
 let socket: WebSocket | undefined | null = null;
@@ -56,7 +55,6 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
       pvm,
       program: e.data.payload.program,
       stepsToPerform: e.data.payload.stepsToPerform,
-      storage,
       serviceId,
     });
     isRunMode = !isFinished;
@@ -105,21 +103,10 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
         memoryChunk: data.memoryChunk,
       },
     });
-  } else if (e.data.command === Commands.SET_STORAGE) {
-    storage = e.data.payload.storage;
-
-    postTypedMessage({
-      command: Commands.SET_STORAGE,
-      status: CommandStatus.SUCCESS,
-      error: null,
-      messageId: e.data.messageId,
-    });
   } else if (e.data.command === Commands.HOST_CALL) {
     const data = await commandHandlers.runHostCall({
       pvm,
       hostCallIdentifier: e.data.payload.hostCallIdentifier,
-      storage,
-      serviceId,
     });
 
     postTypedMessage({

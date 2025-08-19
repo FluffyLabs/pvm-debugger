@@ -1,7 +1,6 @@
 import { Loader } from "@/components/ProgramLoader/Loader.tsx";
 import { useEffect, useRef } from "react";
 import { bytes } from "@typeberry/pvm-debugger-adapter";
-import { decodeStandardProgram } from "@typeberry/pvm-debugger-adapter";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { useNavigate } from "react-router";
 import { useAppSelector } from "@/store/hooks.ts";
@@ -9,6 +8,7 @@ import { selectInitialState } from "@/store/debugger/debuggerSlice.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
 import { getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 import { programs } from "@/components/ProgramLoader/examplePrograms";
+import { decodeSpiWithMetadata } from "@/utils/spi";
 
 const ProgramLoader = () => {
   const initialState = useAppSelector(selectInitialState);
@@ -67,7 +67,7 @@ const ProgramLoader = () => {
 
           if (searchParams.get("flavour") === "jam") {
             try {
-              const { code, memory, registers } = decodeStandardProgram(parsedBlob.raw, new Uint8Array());
+              const { code, memory, registers } = decodeSpiWithMetadata(parsedBlob.raw, new Uint8Array());
 
               const pageMap: PageMapItem[] = getAsPageMap(memory);
               const chunks: MemoryChunkItem[] = getAsChunks(memory);

@@ -36,11 +36,23 @@ export const getArgumentBitLengths = (
   return argsDecoder.calculateArgumentBitLengths(pc, argType);
 };
 
+export const decodeAndGetArgsDecoder = (program: number[]) => {
+  // Create an instance of ArgsDecoder to calculate bit lengths
+  const programDecoder = new ProgramDecoder(new Uint8Array(program));
+  const code = programDecoder.getCode();
+  const mask = programDecoder.getMask();
+  const blocks = new BasicBlocks();
+  blocks.reset(code, mask);
+  const argsDecoder = new ArgsDecoder();
+  argsDecoder.reset(code, mask);
+  return argsDecoder;
+};
+
 export const mapInstructionsArgsByType = (
   args: Args | null,
   numeralSystem: NumeralSystem,
   counter: number,
-  program: number[],
+  argsDecoder: ArgsDecoder,
 ):
   | {
       type: argType;
@@ -53,15 +65,6 @@ export const mapInstructionsArgsByType = (
     }[]
   | null => {
   if (!args) return null;
-
-  // Create an instance of ArgsDecoder to calculate bit lengths
-  const programDecoder = new ProgramDecoder(new Uint8Array(program));
-  const code = programDecoder.getCode();
-  const mask = programDecoder.getMask();
-  const blocks = new BasicBlocks();
-  blocks.reset(code, mask);
-  const argsDecoder = new ArgsDecoder();
-  argsDecoder.reset(code, mask);
 
   // Calculate bit lengths for the current instruction
   const bitLengths =
@@ -342,8 +345,13 @@ export const mapInstructionsArgsByType = (
   }
 };
 
-export const getASMInstructionValueHtml = (args: Args, numeralSystem: number, counter: number, program: number[]) =>
-  mapInstructionsArgsByType(args, numeralSystem, counter, program)
+export const getASMInstructionValueHtml = (
+  args: Args,
+  numeralSystem: number,
+  counter: number,
+  argsDecoder: ArgsDecoder,
+) =>
+  mapInstructionsArgsByType(args, numeralSystem, counter, argsDecoder)
     ?.filter((instruction) => !instruction.hidden)
     ?.map((instruction) => instruction.valueFormatted ?? instruction.value)
     .join(", ") ?? "";

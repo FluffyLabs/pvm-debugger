@@ -1,9 +1,5 @@
-import { HostCallIdentifiers } from "@/types/pvm";
-import { CommandStatus, PvmApiInterface, Storage } from "../types";
+import { CommandStatus, PvmApiInterface } from "../types";
 import {
-  read,
-  write,
-  gas,
   HostCallRegisters,
   Result,
   interpreter,
@@ -14,68 +10,28 @@ import {
   OK,
   HostCallMemory,
 } from "@typeberry/pvm-debugger-adapter";
-import { WriteAccounts } from "@/packages/host-calls/write";
 import { isInternalPvm } from "../utils";
-import { ReadAccounts } from "@/packages/host-calls/read";
-import { block } from "@typeberry/pvm-debugger-adapter";
 import { WasmPvmShellInterface } from "../wasmBindgenShell";
 
-const { tryAsGas } = interpreter;
 const { tryAsU64 } = numbers;
-const { tryAsServiceId } = block;
+
 type HostCallParams = {
   pvm: PvmApiInterface | null;
-  hostCallIdentifier: HostCallIdentifiers;
-  storage: Storage | null;
-  serviceId: number | null;
+  hostCallIdentifier: number;
 };
 
 type HostCallResponse =
   | {
-      hostCallIdentifier: Exclude<HostCallIdentifiers, HostCallIdentifiers.WRITE>;
+      hostCallIdentifier: number;
       status: CommandStatus;
       error?: unknown;
     }
   | {
-      hostCallIdentifier: HostCallIdentifiers.WRITE;
-      storage?: Storage;
+      hostCallIdentifier: number;
       status: CommandStatus;
       error?: unknown;
     };
 
-class SimpleGas {
-  pvm!: WasmPvmShellInterface;
-
-  get() {
-    return tryAsGas(this.pvm.getGasLeft());
-  }
-  set(gas: interpreter.Gas) {
-    if (this.pvm.setGasLeft) {
-      this.pvm.setGasLeft(BigInt(gas));
-    }
-  }
-  sub(v: interpreter.Gas) {
-    const current = this.get();
-    if (current > v) {
-      this.set(tryAsGas(BigInt(current) - BigInt(v)));
-      return false;
-    }
-    // underflow
-    this.set(tryAsGas(0));
-    return true;
-  }
-}
-
-const getGasCounter = (pvm: PvmApiInterface) => {
-  if (isInternalPvm(pvm)) {
-    return pvm.getInterpreter().getGasCounter();
-  }
-
-  const gas = new SimpleGas();
-  gas.pvm = pvm;
-
-  return gas;
-};
 class SimpleRegisters implements IHostCallRegisters {
   flatRegisters!: Uint8Array;
   pvm!: WasmPvmShellInterface;
@@ -142,65 +98,24 @@ const getMemory = (pvm: PvmApiInterface) => {
 const hostCall = async ({
   pvm,
   hostCallIdentifier,
-  storage,
-  serviceId,
 }: {
   pvm: PvmApiInterface;
-  hostCallIdentifier: HostCallIdentifiers;
-  storage: Storage | null;
-  serviceId: number;
+  hostCallIdentifier: number;
 }): Promise<HostCallResponse> => {
-  if (hostCallIdentifier === HostCallIdentifiers.READ) {
-    if (storage === null) {
-      throw new Error("Storage is uninitialized.");
-    }
-
-    const readAccounts = new ReadAccounts(storage);
-    const jamHostCall = new read.Read(readAccounts);
-    // TODO the types are the same, but exported from different packages and lost track of the type
-    jamHostCall.currentServiceId = tryAsServiceId(serviceId) as unknown as typeof jamHostCall.currentServiceId;
-    const registers = getRegisters(pvm);
-    await jamHostCall.execute(getGasCounter(pvm), registers, getMemory(pvm));
-
-    return { hostCallIdentifier, status: CommandStatus.SUCCESS };
-  } else if (hostCallIdentifier === HostCallIdentifiers.WRITE) {
-    if (storage === null) {
-      throw new Error("Storage is uninitialized.");
-    }
-
-    const writeAccounts = new WriteAccounts(storage);
-    const jamHostCall = new write.Write(writeAccounts);
-
-    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm), getMemory(pvm));
-
-    return { hostCallIdentifier, storage, status: CommandStatus.SUCCESS };
-  } else if (hostCallIdentifier === HostCallIdentifiers.GAS) {
-    const jamHostCall = new gas.GasHostCall();
-
-    await jamHostCall.execute(getGasCounter(pvm), getRegisters(pvm));
-
-    return { hostCallIdentifier, status: CommandStatus.SUCCESS };
-  }
-
+  // TODO [ToDr] Introduce host calls handling via JSON trace.
+  getRegisters(pvm);
+  getMemory(pvm);
+  // return { hostCallIdentifier, status: CommandStatus.SUCCESS };
   return { hostCallIdentifier, status: CommandStatus.ERROR, error: new Error("Unknown host call identifier") };
 };
 
-export const runHostCall = async ({
-  pvm,
-  hostCallIdentifier,
-  storage,
-  serviceId,
-}: HostCallParams): Promise<HostCallResponse> => {
+export const runHostCall = async ({ pvm, hostCallIdentifier }: HostCallParams): Promise<HostCallResponse> => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
   }
 
-  if (serviceId === null) {
-    throw new Error("Service ID is uninitialized.");
-  }
-
   try {
-    return await hostCall({ pvm, hostCallIdentifier, storage, serviceId });
+    return await hostCall({ pvm, hostCallIdentifier });
   } catch (error) {
     return {
       hostCallIdentifier,

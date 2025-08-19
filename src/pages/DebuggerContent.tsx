@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { CurrentInstruction, RegistersArray } from "@/types/pvm.ts";
 import { setActiveMobileTab, setClickedInstruction, setIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
@@ -10,10 +10,11 @@ import { ProgramTextLoader } from "@/components/ProgramTextLoader";
 import { Instructions } from "@/components/Instructions";
 import { Registers } from "@/components/Registers";
 import { MemoryPreview } from "@/components/MemoryPreview";
-import { HostCalls } from "@/components/HostCalls";
 import classNames from "classnames";
-import { Program } from "@typeberry/pvm-debugger-adapter";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
+import { bytes } from "@typeberry/pvm-debugger-adapter";
+import { getAsChunks, getAsPageMap } from "@/lib/utils";
+import { decodeSpiWithMetadata } from "@/utils/spi";
 
 const MobileTabs = () => {
   const dispatch = useAppDispatch();
@@ -79,6 +80,7 @@ const DebuggerContent = () => {
     isRunMode,
     isStepMode,
     activeMobileTab,
+    spiArgs,
   } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
   const { currentState, previousState, currentInstruction } = workers[0] || {
@@ -103,6 +105,14 @@ const DebuggerContent = () => {
     programName.includes("(") ? programName.indexOf("(") : undefined,
   );
 
+  const spiArgsAsBytes = useMemo(() => {
+    try {
+      return bytes.BytesBlob.parseBlob(spiArgs ?? "0x").raw;
+    } catch {
+      return new Uint8Array();
+    }
+  }, [spiArgs]);
+
   return (
     <div className="w-full h-full p-3 pt-0 flex flex-col gap-4 overflow-hidden max-sm:mb-3">
       <div className="w-full col-span-12 mt-3 sm:hidden">
@@ -115,8 +125,6 @@ const DebuggerContent = () => {
             activeMobileTab === "program" ? "max-sm:col-span-12" : "max-sm:hidden",
           )}
         >
-          <HostCalls />
-
           {!program.length ? (
             <InitialLoadProgramCTA />
           ) : (
@@ -137,31 +145,30 @@ const DebuggerContent = () => {
                         if (error) {
                           dispatch(setIsProgramInvalid(true));
                         }
-
-                        function tryAsSpi(program: number[], withMetadata: boolean) {
-                          try {
-                            const { code, memory, registers } = Program.fromSpi(
-                              new Uint8Array(program),
-                              new Uint8Array(),
-                              withMetadata,
-                            );
-                            const regs = Array.from(registers.getAllU64()) as RegistersArray;
-                            return {
-                              program: Array.from(code) || [],
-                              initial: { ...initialState, regs, mem: memory },
-                              name: `${programNameWithoutSuffix} (SPI)`,
-                            };
-                          } catch {
-                            return null;
-                          }
+                        let maybeSpi;
+                        try {
+                          maybeSpi = decodeSpiWithMetadata(
+                            program === undefined ? new Uint8Array() : new Uint8Array(program),
+                            spiArgsAsBytes,
+                          );
+                        } catch {
+                          maybeSpi = null;
                         }
 
                         if (!error && program) {
-                          const maybeSpiWithMetadata = tryAsSpi(program.slice(), true);
-                          const maybeSpiWithoutMetadata = tryAsSpi(program.slice(), false);
-                          const maybeSpi = maybeSpiWithoutMetadata || maybeSpiWithMetadata;
                           if (maybeSpi) {
-                            debuggerActions.handleProgramLoad(maybeSpi);
+                            const { code, memory: rawMemory, registers } = maybeSpi;
+                            const regs = Array.from(registers) as RegistersArray;
+
+                            const pageMap = getAsPageMap(rawMemory);
+                            const memory = getAsChunks(rawMemory);
+
+                            const program = {
+                              program: Array.from(code) || [],
+                              initial: { ...initialState, regs, pageMap, memory },
+                              name: `${programNameWithoutSuffix} (SPI)`,
+                            };
+                            debuggerActions.handleProgramLoad(program);
                           } else {
                             debuggerActions.handleProgramLoad({
                               initial: initialState,

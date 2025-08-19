@@ -1,7 +1,6 @@
-import { CurrentInstruction, ExpectedState, HostCallIdentifiers, InitialState } from "@/types/pvm";
+import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
-import { bytes } from "@typeberry/pvm-debugger-adapter";
 import { SerializedFile } from "@/lib/utils.ts";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
@@ -29,15 +28,14 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
       }
     | { command: Commands.STOP; payload: { isRunMode: boolean } }
     | { command: Commands.MEMORY; payload: { memoryChunk: Uint8Array } }
-    | { command: Commands.SET_STORAGE }
     | {
         command: Commands.HOST_CALL;
         payload:
           | {
-              hostCallIdentifier: Exclude<HostCallIdentifiers, HostCallIdentifiers.WRITE>;
+              hostCallIdentifier: number;
             }
           | {
-              hostCallIdentifier: HostCallIdentifiers.WRITE;
+              hostCallIdentifier: number;
               storage?: Storage;
             };
       }
@@ -56,8 +54,7 @@ export type CommandWorkerRequestParams =
   | { command: Commands.RUN }
   | { command: Commands.STOP }
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
-  | { command: Commands.SET_STORAGE; payload: { storage: Storage | null } }
-  | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: HostCallIdentifiers } }
+  | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: number } }
   | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } }
   | { command: Commands.UNLOAD };
 
@@ -70,7 +67,6 @@ export enum Commands {
   RUN = "run",
   STOP = "stop",
   MEMORY = "memory",
-  SET_STORAGE = "set_storage",
   HOST_CALL = "host_call",
   SET_SERVICE_ID = "set_service_id",
   UNLOAD = "unload",
@@ -90,5 +86,3 @@ export enum CommandStatus {
 
 // TODO: unify the api
 export type PvmApiInterface = WasmPvmShellInterface | InternalPvm;
-
-export type Storage = Map<string, bytes.BytesBlob>;

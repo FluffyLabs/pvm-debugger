@@ -1,8 +1,6 @@
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Settings } from "lucide-react";
-import { useState } from "react";
 import { DebuggerSettingsContent } from "./Content";
-import { HostCallsContent } from "../HostCalls/HostCallsContent";
 
 export const DebuggerSettings = ({
   noTrigger,
@@ -13,8 +11,6 @@ export const DebuggerSettings = ({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) => {
-  const [isStorageSettings, setIsStorageSettings] = useState(false);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {noTrigger ? null : (
@@ -32,11 +28,7 @@ export const DebuggerSettings = ({
         }}
         className="p-0 pb-4  h-full sm:h-[700px] flex flex-col md:min-w-[680px] max-h-lvh"
       >
-        {isStorageSettings ? (
-          <HostCallsContent onSetStorage={() => setIsStorageSettings(false)} />
-        ) : (
-          <DebuggerSettingsContent openStorage={() => setIsStorageSettings(true)} />
-        )}
+        <DebuggerSettingsContent />
       </DialogContent>
     </Dialog>
   );

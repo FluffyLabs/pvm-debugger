@@ -1,8 +1,7 @@
 import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
-import { AvailablePvms, CurrentInstruction, DebuggerEcalliStorage, ExpectedState, Status } from "@/types/pvm.ts";
+import { AvailablePvms, CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
-import { isEqual } from "lodash";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
 import { logger } from "@/utils/loggerService.tsx";
@@ -29,9 +28,9 @@ export interface DebuggerState {
   pvmInitialized: boolean;
   pvmLoaded: boolean;
   stepsToPerform: number;
-  storage: DebuggerEcalliStorage | null;
-  userProvidedStorage: DebuggerEcalliStorage | null;
   serviceId: number | null;
+  hostCallsTrace: null;
+  spiArgs: string | null;
   activeMobileTab: "program" | "status" | "memory";
 }
 
@@ -85,8 +84,8 @@ const initialState: DebuggerState = {
   pvmInitialized: false,
   pvmLoaded: false,
   stepsToPerform: 1,
-  storage: null,
-  userProvidedStorage: null,
+  spiArgs: null,
+  hostCallsTrace: null,
   serviceId: parseInt("0x30303030", 16),
   activeMobileTab: "program",
 };
@@ -143,15 +142,11 @@ const debuggerSlice = createSlice({
     setHasHostCallOpen(state, action) {
       state.hasHostCallOpen = action.payload;
     },
-    setStorage(state, action) {
-      state.storage = action.payload.storage;
-
-      if (action.payload.isUserProvided) {
-        state.userProvidedStorage = action.payload.storage;
-      }
-    },
     setServiceId(state, action) {
       state.serviceId = action.payload;
+    },
+    setSpiArgs(state, action) {
+      state.spiArgs = action.payload;
     },
     setPvmOptions(state, action) {
       state.pvmOptions.allAvailablePvms = action.payload;
@@ -181,8 +176,8 @@ export const {
   setPvmInitialized,
   setPvmLoaded,
   setStepsToPerform,
-  setStorage,
   setServiceId,
+  setSpiArgs,
   setPvmOptions,
   setSelectedPvms,
   setActiveMobileTab,
@@ -228,8 +223,6 @@ export const selectClickedInstruction = (state: RootState) => state.debugger.cli
 export const selectInstructionMode = (state: RootState) => state.debugger.instructionMode;
 export const selectIsDebugFinished = (state: RootState) => state.debugger.isDebugFinished;
 export const selectPvmInitialized = (state: RootState) => state.debugger.pvmInitialized;
-export const hasPVMGeneratedStorage = (state: RootState) =>
-  state.debugger.storage !== null && !isEqual(state.debugger.storage, state.debugger.userProvidedStorage);
 export const selectAllAvailablePvms = (state: RootState) => state.debugger.pvmOptions.allAvailablePvms;
 export const selectSelectedPvms = (state: RootState) => state.debugger.pvmOptions.selectedPvm;
 
