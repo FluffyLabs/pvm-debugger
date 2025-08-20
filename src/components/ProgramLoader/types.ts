@@ -5,6 +5,8 @@ export type ProgramUploadFileOutput = {
   initial: InitialState;
   program: number[];
   exampleName?: string;
+  kind: string;
+  isSpi: boolean;
 };
 
 export type ProgramUploadFileInput = {

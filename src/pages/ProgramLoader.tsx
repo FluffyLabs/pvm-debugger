@@ -43,6 +43,8 @@ const ProgramLoader = () => {
         await debuggerActions.handleProgramLoad({
           program: program.program,
           name: program.name,
+          isSpi: false,
+          kind: "Example",
           initial: {
             regs: program.regs.map((x) => BigInt(x)) as RegistersArray,
             pc: program.pc,
@@ -75,6 +77,8 @@ const ProgramLoader = () => {
               await debuggerActions.handleProgramLoad({
                 program: Array.from(code),
                 name: "loaded-from-url [SPI]",
+                isSpi: true,
+                kind: "JAM SPI",
                 initial: {
                   regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
                   pc: 0,
@@ -93,6 +97,8 @@ const ProgramLoader = () => {
               program: parsedBlobArray,
               name: "loaded-from-url [generic]",
               initial: initialState,
+              isSpi: false,
+              kind: "Generic PVM",
             });
 
             navigate("/", { replace: true });

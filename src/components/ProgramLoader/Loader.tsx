@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { ProgramUploadFileOutput } from "./types";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
-import { setIsProgramEditMode } from "@/store/debugger/debuggerSlice.ts";
+import { setIsProgramEditMode, setSpiArgs } from "@/store/debugger/debuggerSlice.ts";
 import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { ProgramFileUpload } from "@/components/ProgramLoader/ProgramFileUpload.tsx";
@@ -12,14 +12,16 @@ import { useNavigate } from "react-router";
 import { Links } from "./Links";
 import { Separator } from "../ui/separator";
 import { TriangleAlert } from "lucide-react";
+import { WithHelp } from "../WithHelp/WithHelp";
+import { Input } from "../ui/input";
 
 export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
   const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
   const [error, setError] = useState<string>();
-  const [isSubmitted, setIsSubmitted] = useState(false);
   const debuggerActions = useDebuggerActions();
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
+  const debuggerState = useAppSelector((state) => state.debugger);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,8 +30,6 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
   const handleLoad = useCallback(
     async (program?: ProgramUploadFileOutput) => {
-      setIsSubmitted(true);
-
       if (!programLoad && !program) return;
 
       dispatch(setIsProgramEditMode(false));
@@ -60,26 +60,63 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         <Examples
           onProgramLoad={(val) => {
             setProgramLoad(val);
-            setIsSubmitted(false);
             handleLoad(val);
           }}
         />
 
         <div className="my-10">
-          <ProgramFileUpload
-            onFileUpload={(val) => {
-              setProgramLoad(val);
-              setIsSubmitted(false);
-              // handleLoad(val);
-            }}
-          />
+          <ProgramFileUpload onFileUpload={setProgramLoad} isError={error !== undefined} setError={setError} />
         </div>
-        <Links />
-        {error && isSubmitted && (
-          <p className="flex items-center text-destructive-foreground mt-10 text-[11px] whitespace-pre-line">
+        {error && (
+          <p className="flex items-top text-destructive-foreground h-[145px] overflow-auto text-[11px] whitespace-pre-line">
             <TriangleAlert className="mr-2" height="18px" /> {error}
           </p>
         )}
+        {!error && programLoad && (
+          <div className="h-[145px] overflow-auto text-xs">
+            <div className="mt-2 flex justify-between items-center">
+              <span className="block text-xs font-bold min-w-[150px]">Detected:</span>
+              <code className="flex-1 ml-2"> {programLoad.kind}</code>
+            </div>
+            <div className="mt-2 flex justify-between items-center">
+              <span className="block text-xs font-bold min-w-[150px]">Name:</span>
+              <code className="flex-1 ml-2">{programLoad.name}</code>
+            </div>
+            <div className="mt-2 flex items-center">
+              <span className="block text-xs font-bold min-w-[150px]">Initial state:</span>
+              <details open={false} className="flex-1 ml-2">
+                <summary>view</summary>
+                <pre>{JSON.stringify(programLoad.initial, null, 2)}</pre>
+              </details>
+            </div>
+            {programLoad.isSpi && (
+              <>
+                <div className="mt-2 flex justify-between items-center">
+                  <span className="block text-xs font-bold min-w-[150px]">
+                    <WithHelp help="Hex-encoded JAM SPI arguments written to the heap">Arguments</WithHelp>
+                  </span>
+                  <Input
+                    size={2}
+                    className="text-xs m-2"
+                    placeholder="0x-prefixed, encoded operands"
+                    onChange={(e) => {
+                      const value = e.target?.value;
+                      dispatch(setSpiArgs(value));
+                    }}
+                    value={debuggerState.spiArgs ?? ""}
+                  />
+                </div>
+                <div className="mt-2 flex justify-between items-center">
+                  <span className="block text-xs font-bold min-w-[150px]">
+                    <WithHelp help="JSON containing instructions how to handle host calls">Host Calls Trace</WithHelp>
+                  </span>
+                  <p className="flex-1 ml-2">(coming soon)</p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        {!error && !programLoad && <Links />}
       </div>
       <div className="px-5 mt-[30px]">
         <Separator />

@@ -23,6 +23,8 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
                   memory: program.memory,
                   gas: program.gas,
                 },
+                isSpi: false,
+                kind: "Example",
                 program: programs[key].program,
                 name: program.name,
                 exampleName: key,

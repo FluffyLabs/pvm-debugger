@@ -167,6 +167,8 @@ const DebuggerContent = () => {
                               program: Array.from(code) || [],
                               initial: { ...initialState, regs, pageMap, memory },
                               name: `${programNameWithoutSuffix} (SPI)`,
+                              isSpi: true,
+                              kind: "JAM SPI",
                             };
                             debuggerActions.handleProgramLoad(program);
                           } else {
@@ -174,6 +176,8 @@ const DebuggerContent = () => {
                               initial: initialState,
                               program: program || [],
                               name: `${programName} (generic)`,
+                              isSpi: false,
+                              kind: "Generic PVM",
                             });
                           }
                         }
