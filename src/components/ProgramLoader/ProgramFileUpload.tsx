@@ -1,9 +1,10 @@
 import { useDropzone } from "react-dropzone";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
-import { mapUploadFileInputToOutput } from "./utils";
+import { mapUploadFileInputToOutput, mapTracesFileToOutput } from "./utils";
 import { bytes, ProgramDecoder } from "@typeberry/pvm-debugger-adapter";
 import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
-import { SafeParseReturnType, z } from "zod";
+import { SafeParseReturnType, z, ZodError } from "zod";
+import { validateTracesFile } from "@/types/type-guards";
 import { useAppSelector } from "@/store/hooks";
 import { selectInitialState } from "@/store/debugger/debuggerSlice";
 import { cn, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
@@ -53,6 +54,10 @@ const validateJsonTestCaseSchema = (json: RawProgramUploadFileInput): Validation
   return schema.safeParse(json);
 };
 
+const validateTracesFileSchema = (json: unknown) => {
+  return validateTracesFile(json);
+};
+
 const generateErrorMessageFromZodValidation = (result: ValidationResult): string => {
   if (!result.error) return "Unknown error occurred";
 
@@ -62,6 +67,17 @@ const generateErrorMessageFromZodValidation = (result: ValidationResult): string
   });
 
   return `File validation failed with the following errors:\n\n${formattedErrors.join("\n")}`;
+};
+
+const generateErrorMessageFromTracesValidation = (error: ZodError): string => {
+  if (!error?.issues) return "Invalid traces file format";
+
+  const formattedErrors = error.issues.map((issue) => {
+    const path = issue.path.join(" > ") || "root";
+    return `Field: "${path}" - ${issue.message}`;
+  });
+
+  return `Traces file validation failed with the following errors:\n\n${formattedErrors.join("\n")}`;
 };
 
 function loadFileFromUint8Array(
@@ -101,15 +117,29 @@ function loadFileFromUint8Array(
   }
 
   if (jsonFile !== null) {
-    const result = validateJsonTestCaseSchema(jsonFile);
-    if (!result.success) {
-      console.warn("not a valid JSON", result.error);
-      const errorMessage = generateErrorMessageFromZodValidation(result);
-      setError(errorMessage || "");
+    // First try to validate as traces file
+    const tracesResult = validateTracesFileSchema(jsonFile);
+    if (tracesResult.success) {
+      onFileUpload(mapTracesFileToOutput(tracesResult.data, loadedFileName));
       return;
     }
 
-    onFileUpload(mapUploadFileInputToOutput(jsonFile, "JSON test"));
+    // Then try to validate as JSON test case
+    const result = validateJsonTestCaseSchema(jsonFile);
+    if (result.success) {
+      onFileUpload(mapUploadFileInputToOutput(jsonFile, "JSON test"));
+      return;
+    }
+
+    // If both validations fail, show the more relevant error
+    // Prioritize traces error if the file has traces-like structure
+    if (typeof jsonFile === "object" && jsonFile !== null && "host-calls-trace" in jsonFile) {
+      const errorMessage = generateErrorMessageFromTracesValidation(tracesResult.error);
+      setError(errorMessage || "Invalid traces file format");
+    } else {
+      const errorMessage = generateErrorMessageFromZodValidation(result);
+      setError(errorMessage || "Invalid JSON test case format");
+    }
     return;
   }
 
@@ -225,7 +255,11 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
 
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
-    accept: { "application/octet-stream": [".bin", ".pvm"], "application/json": [".json"] },
+    accept: {
+      "application/octet-stream": [".bin", ".pvm"],
+      "application/json": [".json"],
+      "text/json": [".json"],
+    },
     noClick: true,
   });
 

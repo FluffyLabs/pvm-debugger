@@ -208,7 +208,7 @@ export const useDebuggerActions = () => {
   );
 
   const handleTracesLoad = useCallback(
-    (tracesFile: TracesFile) => {
+    (tracesFile: TracesFile | null) => {
       dispatch(setHostCallsTrace(tracesFile));
     },
     [dispatch],

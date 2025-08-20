@@ -11,6 +11,8 @@ import { logger } from "@/utils/loggerService";
 import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
 import { Separator } from "../ui/separator";
 import { WithHelp } from "../WithHelp/WithHelp";
+import { TracesFileManager } from "../TracesFileManager";
+import { cn } from "@/lib/utils";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -105,7 +107,7 @@ export const DebuggerSettingsContent = () => {
               </WithHelp>
             </span>
 
-            <div className="flex">TODO</div>
+            <TracesFileManager />
           </div>
 
           <div className="p-4 mt-2 flex justify-between items-center mb-4">
@@ -113,7 +115,7 @@ export const DebuggerSettingsContent = () => {
               <WithHelp help="Hex-encoded JAM SPI arguments written to the heap">JAM SPI arguments</WithHelp>
             </span>
             <Input
-              className={commonClass}
+              className={cn("flex-1", commonClass)}
               placeholder="0x-prefixed, encoded operands"
               onChange={(e) => {
                 const value = e.target?.value;

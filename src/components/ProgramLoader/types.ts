@@ -1,4 +1,4 @@
-import { InitialState } from "@/types/pvm";
+import { InitialState, TracesFile } from "@/types/pvm";
 
 export type ProgramUploadFileOutput = {
   name: string;
@@ -7,6 +7,7 @@ export type ProgramUploadFileOutput = {
   exampleName?: string;
   kind: string;
   isSpi: boolean;
+  tracesFile?: TracesFile;
 };
 
 export type ProgramUploadFileInput = {
