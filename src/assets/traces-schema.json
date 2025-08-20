@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PVM Debugger Trace",
+  "description": "Schema for PVM debugger trace files",
+  "type": "object",
+  "required": [
+    "initial-pc",
+    "initial-gas",
+    "initial-args",
+    "host-calls-trace"
+  ],
+  "properties": {
+    "initial-pc": {
+      "type": "integer",
+      "description": "Initial program counter value"
+    },
+    "initial-gas": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]+$",
+      "description": "Initial gas amount as hexadecimal string (u64)"
+    },
+    "initial-args": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]+$",
+      "description": "Initial arguments as hexadecimal string (bytes)"
+    },
+    "expected-gas": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]+$",
+      "description": "Expected remaining gas as hexadecimal string (u64)"
+    },
+    "expected-status": {
+      "type": "string",
+      "enum": ["panic", "halt", "page-fault"],
+      "description": "Expected program execution status"
+    },
+    "spi-program": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]+$",
+      "description": "SPI program data as hexadecimal string (bytes)"
+    },
+    "host-calls-trace": {
+      "type": "array",
+      "description": "Array of host call trace entries",
+      "items": {
+        "type": "object",
+        "required": ["after"],
+        "properties": {
+          "ecalli": {
+            "type": "integer",
+            "description": "ECALLI instruction identifier"
+          },
+          "pc": {
+            "type": "integer",
+            "description": "Program counter value at the time of the call"
+          },
+          "before": {
+            "$ref": "#/definitions/vmState",
+            "description": "VM state before the host call"
+          },
+          "after": {
+            "$ref": "#/definitions/vmState",
+            "description": "VM state after the host call"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "vmState": {
+      "type": "object",
+      "required": ["gas", "regs", "memory"],
+      "properties": {
+        "gas": {
+          "type": "string",
+          "pattern": "^0x[0-9a-fA-F]+$",
+          "description": "Gas amount as hexadecimal string (u64)"
+        },
+        "regs": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "string",
+              "pattern": "^0x[0-9a-fA-F]+$",
+              "description": "Register value as hexadecimal string (u64)"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Register values indexed by register number"
+        },
+        "memory": {
+          "type": "array",
+          "description": "Memory contents at specific addresses",
+          "items": {
+            "type": "object",
+            "required": ["address", "contents"],
+            "properties": {
+              "address": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Memory address"
+              },
+              "contents": {
+                "type": "string",
+                "pattern": "^0x[0-9a-fA-F]+$",
+                "description": "Memory contents as hexadecimal string (bytes)"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
