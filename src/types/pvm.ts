@@ -72,3 +72,32 @@ export enum AvailablePvms {
   WASM_FILE = "wasm-file",
   WASM_WS = "wasm-websocket",
 }
+
+// Host calls trace types based on JSON schema
+export type TraceMemoryEntry = {
+  address: number;
+  contents: string; // hex string like "0x04"
+};
+
+export type TraceVmState = {
+  gas?: string; // hex string like "0x1234"
+  regs?: Record<string, string>; // register index -> hex value
+  memory: TraceMemoryEntry[];
+};
+
+export type HostCallTraceEntry = {
+  ecalli?: number;
+  pc?: number;
+  before?: TraceVmState;
+  after: TraceVmState;
+};
+
+export type TracesFile = {
+  "initial-pc": number;
+  "initial-gas": string; // hex string
+  "initial-args": string; // hex string
+  "expected-gas"?: string; // hex string
+  "expected-status"?: "panic" | "halt" | "page-fault";
+  "spi-program"?: string; // hex string
+  "host-calls-trace": HostCallTraceEntry[];
+};

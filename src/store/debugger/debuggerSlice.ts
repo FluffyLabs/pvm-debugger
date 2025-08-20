@@ -1,5 +1,5 @@
 import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
-import { AvailablePvms, CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
+import { AvailablePvms, CurrentInstruction, ExpectedState, Status, TracesFile } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
@@ -29,7 +29,8 @@ export interface DebuggerState {
   pvmLoaded: boolean;
   stepsToPerform: number;
   serviceId: number | null;
-  hostCallsTrace: null;
+  hostCallsTrace: TracesFile | null;
+  currentHostCallIndex: number;
   spiArgs: string | null;
   activeMobileTab: "program" | "status" | "memory";
 }
@@ -86,6 +87,7 @@ const initialState: DebuggerState = {
   stepsToPerform: 1,
   spiArgs: null,
   hostCallsTrace: null,
+  currentHostCallIndex: 0,
   serviceId: parseInt("0x30303030", 16),
   activeMobileTab: "program",
 };
@@ -157,6 +159,16 @@ const debuggerSlice = createSlice({
     setActiveMobileTab(state, action) {
       state.activeMobileTab = action.payload;
     },
+    setHostCallsTrace(state, action) {
+      state.hostCallsTrace = action.payload;
+      state.currentHostCallIndex = 0; // Reset index when setting new traces
+    },
+    setCurrentHostCallIndex(state, action) {
+      state.currentHostCallIndex = action.payload;
+    },
+    incrementHostCallIndex(state) {
+      state.currentHostCallIndex += 1;
+    },
   },
 });
 
@@ -181,6 +193,9 @@ export const {
   setPvmOptions,
   setSelectedPvms,
   setActiveMobileTab,
+  setHostCallsTrace,
+  setCurrentHostCallIndex,
+  incrementHostCallIndex,
 } = debuggerSlice.actions;
 
 export const debuggerSliceListenerMiddleware = createListenerMiddleware();
@@ -225,5 +240,7 @@ export const selectIsDebugFinished = (state: RootState) => state.debugger.isDebu
 export const selectPvmInitialized = (state: RootState) => state.debugger.pvmInitialized;
 export const selectAllAvailablePvms = (state: RootState) => state.debugger.pvmOptions.allAvailablePvms;
 export const selectSelectedPvms = (state: RootState) => state.debugger.pvmOptions.selectedPvm;
+export const selectHostCallsTrace = (state: RootState) => state.debugger.hostCallsTrace;
+export const selectCurrentHostCallIndex = (state: RootState) => state.debugger.currentHostCallIndex;
 
 export default debuggerSlice.reducer;

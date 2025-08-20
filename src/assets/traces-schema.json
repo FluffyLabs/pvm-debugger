@@ -3,12 +3,7 @@
   "title": "PVM Debugger Trace",
   "description": "Schema for PVM debugger trace files",
   "type": "object",
-  "required": [
-    "initial-pc",
-    "initial-gas",
-    "initial-args",
-    "host-calls-trace"
-  ],
+  "required": ["initial-pc", "initial-gas", "initial-args", "host-calls-trace"],
   "properties": {
     "initial-pc": {
       "type": "integer",

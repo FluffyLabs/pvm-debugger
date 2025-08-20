@@ -14,6 +14,9 @@ import {
   setPvmInitialized,
   setIsStepMode,
   setPvmLoaded,
+  setHostCallsTrace,
+  setCurrentHostCallIndex,
+  incrementHostCallIndex,
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -29,7 +32,7 @@ import {
   syncMemoryRangeAllWorkers,
   WorkerState,
 } from "@/store/workers/workersSlice";
-import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
+import { AvailablePvms, ExpectedState, Status, TracesFile } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
 import { useCallback } from "react";
 
@@ -204,11 +207,29 @@ export const useDebuggerActions = () => {
     [dispatch, initialState, restartProgram, workers],
   );
 
+  const handleTracesLoad = useCallback(
+    (tracesFile: TracesFile) => {
+      dispatch(setHostCallsTrace(tracesFile));
+    },
+    [dispatch],
+  );
+
+  const handleHostCallComplete = useCallback(() => {
+    dispatch(incrementHostCallIndex());
+  }, [dispatch]);
+
+  const resetHostCallIndex = useCallback(() => {
+    dispatch(setCurrentHostCallIndex(0));
+  }, [dispatch]);
+
   return {
     startProgram,
     restartProgram,
     handleProgramLoad,
     handleBreakpointClick,
     handlePvmTypeChange,
+    handleTracesLoad,
+    handleHostCallComplete,
+    resetHostCallIndex,
   };
 };
