@@ -118,7 +118,7 @@ export const Assembly = ({
       try {
         const programJson = compile_assembly(input);
         const newProgram = JSON.parse(programJson);
-        const output = mapUploadFileInputToOutput(newProgram);
+        const output = mapUploadFileInputToOutput(newProgram, "assembly");
         output.name = programName;
         // avoid re-rendering when the code & state is the same.
         if (isArrayEqual(program, output.program)) {

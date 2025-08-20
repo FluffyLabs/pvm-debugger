@@ -7,7 +7,7 @@ import { SafeParseReturnType, z } from "zod";
 import { useAppSelector } from "@/store/hooks";
 import { selectInitialState } from "@/store/debugger/debuggerSlice";
 import { cn, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
-import { TriangleAlert, UploadCloud } from "lucide-react";
+import { UploadCloud } from "lucide-react";
 import { Button } from "../ui/button";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Input } from "../ui/input";
@@ -15,6 +15,8 @@ import { decodeSpiWithMetadata } from "@/utils/spi";
 
 type ProgramFileUploadProps = {
   onFileUpload: (val: ProgramUploadFileOutput) => void;
+  setError: (e?: string) => void;
+  isError: boolean;
   close?: () => void;
 };
 
@@ -70,6 +72,9 @@ function loadFileFromUint8Array(
   onFileUpload: (d: ProgramUploadFileOutput) => void,
   initialState: ExpectedState,
 ) {
+  // reset error state
+  setError(undefined);
+
   // Try to parse file as a JSON first
   let jsonFile = null;
   let stringContent = "";
@@ -104,7 +109,7 @@ function loadFileFromUint8Array(
       return;
     }
 
-    onFileUpload(mapUploadFileInputToOutput(jsonFile));
+    onFileUpload(mapUploadFileInputToOutput(jsonFile, "JSON test"));
     return;
   }
 
@@ -123,6 +128,8 @@ function loadFileFromUint8Array(
     onFileUpload({
       program: Array.from(code),
       name: `${loadedFileName} [spi]`,
+      isSpi: true,
+      kind: "JAM SPI",
       initial: {
         regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
         pc: 0,
@@ -146,6 +153,8 @@ function loadFileFromUint8Array(
     onFileUpload({
       program: Array.from(uint8Array),
       name: `${loadedFileName} [generic]`,
+      isSpi: false,
+      kind: "Generic PVM",
       initial: initialState,
     });
   } else {
@@ -153,13 +162,12 @@ function loadFileFromUint8Array(
   }
 }
 
-export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUpload, close }) => {
+export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, onFileUpload, close, setError }) => {
   const initialState = useAppSelector(selectInitialState);
   const spiArgs = useAppSelector((state) => state.debugger.spiArgs);
 
   const [isUpload, setIsUpload] = useState(true);
   const [manualInput, setManualInput] = useState("");
-  const [error, setError] = useState<string>();
   const [loadedFileName, setLoadedFileName] = useState<string | undefined>(undefined);
 
   const spiArgsAsBytes = useMemo(() => {
@@ -173,10 +181,9 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
   useEffect(() => {
     // reset the state of upload
     if (isUpload) {
-      setLoadedFileName(undefined);
-      setError(undefined);
       return;
     }
+
     if (manualInput === "") {
       setError(undefined);
       return;
@@ -184,7 +191,7 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
 
     const buffer = new TextEncoder().encode(manualInput);
     loadFileFromUint8Array("pasted", buffer, spiArgsAsBytes, setError, onFileUpload, initialState);
-  }, [manualInput, isUpload, initialState, onFileUpload, spiArgsAsBytes]);
+  }, [manualInput, isUpload, initialState, onFileUpload, spiArgsAsBytes, setError]);
 
   const handleFileRead = (e: ProgressEvent<FileReader>) => {
     setError(undefined);
@@ -227,9 +234,11 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
     open();
   }, [open]);
 
-  const toggleUpload = useCallback(() => {
-    setIsUpload((upload) => !upload);
-  }, []);
+  const setNoUpload = useCallback(() => {
+    setIsUpload(false);
+    setLoadedFileName(undefined);
+    setError(undefined);
+  }, [setError]);
 
   const isLoaded = loadedFileName !== undefined;
 
@@ -253,14 +262,14 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
               className={cn("flex-auto text-xs", {
-                "focus-visible:ring-red-500 ring-red-500 ring-2": error,
+                "focus-visible:ring-red-500 ring-red-500 ring-2": isError,
               })}
             />
           )}
         </div>
         <div className="flex space-x-2">
           {isUpload && (
-            <Button className="text-[10px] py-1 h-9" variant="ghost" onClick={toggleUpload}>
+            <Button className="text-[10px] py-1 h-9" variant="ghost" onClick={setNoUpload}>
               Paste manually
             </Button>
           )}
@@ -270,12 +279,6 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ onFileUplo
         </div>
         <input {...getInputProps()} className="hidden" />
       </div>
-
-      {error && (
-        <p className="flex items-center text-destructive-foreground mt-3 text-[11px] whitespace-pre-line">
-          <TriangleAlert className="mr-2" height="18px" /> {error}
-        </p>
-      )}
     </div>
   );
 };

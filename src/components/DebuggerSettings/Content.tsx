@@ -114,6 +114,7 @@ export const DebuggerSettingsContent = () => {
             </span>
             <Input
               className={commonClass}
+              placeholder="0x-prefixed, encoded operands"
               onChange={(e) => {
                 const value = e.target?.value;
                 dispatch(setSpiArgs(value));
