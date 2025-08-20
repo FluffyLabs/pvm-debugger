@@ -726,8 +726,8 @@ const workers = createSlice({
         memory: {
           data: [],
           isLoading: false,
-          startAddress: 0,
-          stopAddress: LOAD_MEMORY_CHUNK_SIZE,
+          startAddress: 0x1000,
+          stopAddress: 0x1000 + LOAD_MEMORY_CHUNK_SIZE,
         },
         memoryRanges: [],
       });
