@@ -10,6 +10,8 @@
     "format": "prettier --write .",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prepare": "husky"
   },
   "dependencies": {
@@ -82,7 +84,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.4.7",
     "vite-plugin-top-level-await": "^1.4.4",
-    "vite-plugin-wasm": "^3.3.0"
+    "vite-plugin-wasm": "^3.3.0",
+    "vitest": "^2.0.0"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [
