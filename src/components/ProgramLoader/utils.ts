@@ -1,6 +1,6 @@
 import { mapKeys, camelCase, pickBy } from "lodash";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
-import { RegistersArray, TracesFile } from "@/types/pvm";
+import { InitialState, RegistersArray, TracesFile } from "@/types/pvm";
 import { bytes } from "@typeberry/pvm-debugger-adapter";
 
 export function mapUploadFileInputToOutput(data: ProgramUploadFileInput, kind: string): ProgramUploadFileOutput {
@@ -12,9 +12,7 @@ export function mapUploadFileInputToOutput(data: ProgramUploadFileInput, kind: s
   const result: ProgramUploadFileOutput = {
     name: data.name,
     initial: {
-      ...(mapKeys(initial, (_value: unknown, key) =>
-        camelCase(key.replace("initial", "")),
-      ) as ProgramUploadFileOutput["initial"]),
+      ...(mapKeys(initial, (_value: unknown, key) => camelCase(key.replace("initial", ""))) as InitialState),
       // TODO [ToDr] is this okay?
       pageMap: data["initial-page-map"].map((val) => ({
         address: val.address,

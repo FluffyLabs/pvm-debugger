@@ -1,4 +1,4 @@
-import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
+import { CurrentInstruction, ExpectedState, InitialState, TracesFile } from "@/types/pvm";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
 import { SerializedFile } from "@/lib/utils.ts";
@@ -54,7 +54,14 @@ export type CommandWorkerRequestParams =
   | { command: Commands.RUN }
   | { command: Commands.STOP }
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
-  | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: number } }
+  | {
+      command: Commands.HOST_CALL;
+      payload: {
+        hostCallIdentifier: number;
+        tracesFile?: TracesFile | null;
+        currentHostCallIndex?: number;
+      };
+    }
   | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } }
   | { command: Commands.UNLOAD };
 

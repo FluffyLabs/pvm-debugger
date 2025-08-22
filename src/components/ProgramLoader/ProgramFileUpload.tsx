@@ -166,6 +166,8 @@ function loadFileFromUint8Array(
         pageMap,
         memory: chunks,
         gas: 10000n,
+        heapStart: memory.sbrkIndex,
+        heapEnd: memory.heapEnd,
       },
     });
     return;

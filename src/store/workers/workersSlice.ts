@@ -6,6 +6,7 @@ import {
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
+  incrementHostCallIndex,
 } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
@@ -280,7 +281,11 @@ export const handleHostCall = createAsyncThunk(
         .map(async (worker) => {
           const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
             command: Commands.HOST_CALL,
-            payload: { hostCallIdentifier: worker.exitArg ?? -1 },
+            payload: {
+              hostCallIdentifier: worker.exitArg ?? -1,
+              tracesFile: state.debugger.hostCallsTrace,
+              currentHostCallIndex: state.debugger.currentHostCallIndex,
+            },
           });
 
           // TODO [ToDr] Handle host call response?
@@ -294,6 +299,9 @@ export const handleHostCall = createAsyncThunk(
           }
         }),
     );
+
+    // Increment host call index after successful processing
+    dispatch(incrementHostCallIndex());
 
     if (selectShouldContinueRunning(state)) {
       dispatch(continueAllWorkers());

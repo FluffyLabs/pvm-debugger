@@ -107,6 +107,8 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
     const data = await commandHandlers.runHostCall({
       pvm,
       hostCallIdentifier: e.data.payload.hostCallIdentifier,
+      tracesFile: e.data.payload.tracesFile,
+      currentHostCallIndex: e.data.payload.currentHostCallIndex,
     });
 
     postTypedMessage({

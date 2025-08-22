@@ -12,6 +12,8 @@ export type InitialState = {
   pageMap?: PageMapItem[];
   memory?: MemoryChunkItem[];
   gas?: bigint;
+  heapStart?: number;
+  heapEnd?: number;
 };
 
 export type MemoryChunkItem = {
