@@ -4,6 +4,7 @@ import { Debugger } from "./icons/Debugger";
 import { Computers } from "./icons/Computers";
 import { Chip } from "./icons/Chip";
 import { Logo } from "./icons/Logo";
+import { Search } from "./icons/Search";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ReactNode } from "react";
@@ -12,9 +13,10 @@ export const AppsSidebar = () => {
   return (
     <div className="flex flex-col gap-5 bg-sidebar max-sm:hidden">
       <div className="grow flex flex-col items-center justify-center px-3">
+        <SidebarLink name="JAM Search" href="https://search.fluffylabs.dev" icon={<Search />} />
         <SidebarLink name="Gray Paper Reader" href="https://graypaper.fluffylabs.dev" icon={<Stack />} />
         <SidebarLink name="PVM Debugger" href="/" icon={<Debugger />} active />
-        <SidebarLink name="Trie Visualiser" href="https://trie.fluffylabs.dev" icon={<Computers />} />
+        <SidebarLink name="State Viewer" href="https://state.fluffylabs.dev" icon={<Computers />} />
         {/*<SidebarLink
           name="??"
           href="#"
