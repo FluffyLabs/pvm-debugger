@@ -38,7 +38,7 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
       argsDecoder.fillArgs(i, args);
       address = i;
       i += args.noOfBytesToSkip ?? 0;
-    } catch (e) {
+    } catch {
       printableProgram.push({
         instructionCode: currentInstruction,
         name: "Error",

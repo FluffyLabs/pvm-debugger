@@ -1,6 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-/* eslint-disable */
 
 // NOTE: this file is a copy-paste of:
 // https://github.com/tomusdrw/polkavm/blob/gh-pages/pvm-shell/pkg/pvm_shell_bg.js
