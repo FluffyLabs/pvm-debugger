@@ -17,7 +17,7 @@ export const valueToNumeralSystem = (
 };
 
 export const valueToBinary = (value?: number | bigint | string, padStartVal: number = 0): string => {
-  return ((Number(value) ?? 0) >>> 0).toString(2).padStart(padStartVal, "0");
+  return (Number(value ?? 0) >>> 0).toString(2).padStart(padStartVal, "0");
 };
 
 export enum argType {
