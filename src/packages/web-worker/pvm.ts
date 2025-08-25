@@ -99,7 +99,7 @@ export const nextInstruction = (programCounter: number, program: Uint8Array) => 
       args,
     };
     return currentInstructionDebug;
-  } catch (e) {
+  } catch {
     // The last iteration goes here since there's no instruction to proces and we didn't check if there's a next operation
     return null;
   }

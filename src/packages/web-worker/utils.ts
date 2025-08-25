@@ -102,7 +102,7 @@ export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiI
       wasmPvmShell.__wbg_set_wasm(wasmInstance.exports);
       return wasmPvmShell;
     }
-  } catch (_) {
+  } catch {
     try {
       logger.info("AssemblyScript WASM module compiled", wasmModule);
       const wasmPvmShell = await createAssemblyScriptWasmPvmShell(wasmModule);
