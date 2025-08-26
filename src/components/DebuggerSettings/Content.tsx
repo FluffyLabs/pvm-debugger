@@ -15,7 +15,7 @@ import { WithHelp } from "../WithHelp/WithHelp";
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
     return cb(value);
-  } catch (_e) {
+  } catch {
     return cb("0");
   }
 }
