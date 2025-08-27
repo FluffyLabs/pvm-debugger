@@ -2,5 +2,6 @@ version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
+    auto-merge: true
     schedule:
       interval: "weekly"
