@@ -1,0 +1,39 @@
+{
+  "$schema": "./traces-schema.json",
+  "initial-pc": 5,
+  "initial-gas": "0x1234",
+  "initial-args": "0x1234",
+  "expected-gas": "0x0",
+  "expected-status": "halt",
+  "spi-program": "0x1234",
+  "host-calls-trace": [
+    {
+      "ecalli": 10,
+      "pc": 1234,
+      "before": {
+        "gas": "0x1234",
+        "regs": {
+          "7": "0x1234"
+        },
+        "memory": [
+          {
+            "address": 65539,
+            "contents": "0x04"
+          }
+        ]
+      },
+      "after": {
+        "gas": "0x1230",
+        "regs": {
+          "7": "0x1234"
+        },
+        "memory": [
+          {
+            "address": 65538,
+            "contents": "0x04"
+          }
+        ]
+      }
+    }
+  ]
+}

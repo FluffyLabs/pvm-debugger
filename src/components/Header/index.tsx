@@ -2,6 +2,7 @@ import { Header as FluffyHeader } from "@/packages/ui-kit/Header";
 import { DebuggerSettings } from "../DebuggerSettings";
 import { PvmSelect } from "../PvmSelect";
 import { NumeralSystemSwitch } from "../NumeralSystemSwitch";
+import { HostCallStatus } from "../HostCallStatus";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuSeparator } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { EllipsisVertical } from "lucide-react";
@@ -13,6 +14,10 @@ const EndSlot = () => {
 
   return (
     <div className="text-white flex w-full justify-end">
+      <div className="flex items-center mr-4">
+        <HostCallStatus />
+      </div>
+
       <NumeralSystemSwitch className="hidden md:flex ml-7 mr-4" />
 
       <div className="w-full md:max-w-[350px] flex items-center ml-3">

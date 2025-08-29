@@ -14,6 +14,7 @@ import { Separator } from "../ui/separator";
 import { TriangleAlert } from "lucide-react";
 import { WithHelp } from "../WithHelp/WithHelp";
 import { Input } from "../ui/input";
+import { TracesFileManager } from "../TracesFileManager";
 
 export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
@@ -22,6 +23,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   const debuggerActions = useDebuggerActions();
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
   const debuggerState = useAppSelector((state) => state.debugger);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +37,14 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       dispatch(setIsProgramEditMode(false));
 
       try {
-        await debuggerActions.handleProgramLoad(program || programLoad);
+        const loadedProgram = program || programLoad;
+
+        // Load traces file if present
+        if (loadedProgram?.tracesFile) {
+          debuggerActions.handleTracesLoad(loadedProgram.tracesFile);
+        }
+
+        await debuggerActions.handleProgramLoad(loadedProgram);
         setIsDialogOpen?.(false);
         navigate("/", { replace: true });
       } catch (error) {
@@ -110,8 +119,32 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
                   <span className="block text-xs font-bold min-w-[150px]">
                     <WithHelp help="JSON containing instructions how to handle host calls">Host Calls Trace</WithHelp>
                   </span>
-                  <p className="flex-1 ml-2">(coming soon)</p>
+                  <div className="flex-1 ml-2">
+                    {programLoad.tracesFile ? (
+                      <span className="text-xs">{programLoad.tracesFile["host-calls-trace"].length} host call(s)</span>
+                    ) : (
+                      <TracesFileManager compact inlineClear />
+                    )}
+                  </div>
                 </div>
+              </>
+            )}
+            {programLoad.tracesFile && (
+              <>
+                <div className="mt-2 flex justify-between items-center">
+                  <span className="block text-xs font-bold min-w-[150px]">Initial PC:</span>
+                  <code className="flex-1 ml-2">{programLoad.tracesFile["initial-pc"]}</code>
+                </div>
+                <div className="mt-2 flex justify-between items-center">
+                  <span className="block text-xs font-bold min-w-[150px]">Initial Gas:</span>
+                  <code className="flex-1 ml-2">{programLoad.tracesFile["initial-gas"]}</code>
+                </div>
+                {programLoad.tracesFile["expected-status"] && (
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="block text-xs font-bold min-w-[150px]">Expected Status:</span>
+                    <code className="flex-1 ml-2">{programLoad.tracesFile["expected-status"]}</code>
+                  </div>
+                )}
               </>
             )}
           </div>
