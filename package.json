@@ -51,7 +51,7 @@
     "react-katex": "^3.1.0",
     "react-redux": "^9.1.2",
     "react-router": "^7.0.2",
-    "react-toastify": "^10.0.6",
+    "react-toastify": "^11.0.5",
     "redux-persist": "^6.0.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
