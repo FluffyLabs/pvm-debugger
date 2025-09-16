@@ -57,7 +57,7 @@ const AddressCell = ({
     (breakpointAddresses.includes(programRow.counter) && "bg-red-600") || (isHover && "bg-red-400");
   return (
     <TableCell
-      className={classNames("p-1.5 cursor-pointer relative font-inconsolata w-[20%]", className)}
+      className={classNames("p-1.5 cursor-pointer relative w-[20%]", className)}
       onMouseEnter={() => setIsHover(true)}
       onMouseLeave={() => setIsHover(false)}
     >
@@ -77,6 +77,7 @@ export const InstructionItem = forwardRef(
     {
       status,
       isLast,
+      isSingleInBlock = true,
       instructionMode,
       programRow,
       onClick,
@@ -88,6 +89,7 @@ export const InstructionItem = forwardRef(
     }: {
       status?: Status;
       isLast: boolean;
+      isSingleInBlock?: boolean;
       programRow: ProgramRow;
       currentPc: number | undefined;
       instructionMode: InstructionMode;
@@ -172,12 +174,14 @@ export const InstructionItem = forwardRef(
                   border,
                 }}
               />
-              <TableCell className="p-1.5 border-b w-[40%] min-w-[170px]">
-                <a onClick={fillSearch} className="cursor-pointer">
-                  <span className="uppercase">{programRow.name}</span>
+              <TableCell className={cn("p-1.5 border-b w-[40%] min-w-[170px]", {
+                "border-l-4 border-l-bg": !isSingleInBlock
+              })}>
+                <a onClick={fillSearch} className="cursor-pointer uppercase">
+                  {programRow.name}
                 </a>
               </TableCell>
-              <TableCell className="p-1.5 whitespace-nowrap border-b font-inconsolata">
+              <TableCell className="p-1.5 whitespace-nowrap border-b">
                 <span className="block overflow-hidden" style={{ width: `${widestItemValueLength}ch` }}>
                   {"args" in programRow && (
                     <span
@@ -201,25 +205,23 @@ export const InstructionItem = forwardRef(
 
     const renderTooltipContentInstructionInfo = () => {
       return (
-        <div>
-          <div className="flex flex-row bg-title p-3">
-            <DetailsColumn
-              kind="opcode"
-              bits={valueToBinary(programRow.instructionCode, 8)}
-              value={valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
-            />
-            {"args" in programRow &&
-              mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, argsDecoder)
-                ?.filter((instruction) => !instruction.hiddenFromDetails)
-                .map((instruction, index) => (
-                  <DetailsColumn
-                    key={index}
-                    kind={instruction.type}
-                    bits={valueToBinary(instruction.valueDecimal, instruction.argumentBitLength)}
-                    value={`${instruction.valueFormatted ?? instruction.value}`}
-                  />
-                ))}
-          </div>
+        <div className="flex flex-row bg-title p-3 font-inconsolata font-light">
+          <DetailsColumn
+            kind="opcode"
+            bits={valueToBinary(programRow.instructionCode, 8)}
+            value={valueToNumeralSystem(programRow.instructionCode, numeralSystem)}
+          />
+          {"args" in programRow &&
+            mapInstructionsArgsByType(programRow.args, numeralSystem, programRow.counter, argsDecoder)
+              ?.filter((instruction) => !instruction.hiddenFromDetails)
+              .map((instruction, index) => (
+                <DetailsColumn
+                  key={index}
+                  kind={instruction.type}
+                  bits={valueToBinary(instruction.valueDecimal, instruction.argumentBitLength)}
+                  value={`${instruction.valueFormatted ?? instruction.value}`}
+                />
+              ))}
         </div>
       );
     };
@@ -308,8 +310,8 @@ function DetailsColumn({ kind, bits, value }: DetailsColumnProps) {
   const isRegister = kind === argType.REGISTER || kind === argType.IMMEDIATE_LENGTH;
   const isOffset = kind === argType.OFFSET;
   return (
-    <div>
-      <div className="font-inconsolata text-xs text-[#8F8F8F] dark:text-brand pl-3 pb-1 lowercase">{kind}</div>
+    <div className="text-xs">
+      <div className="text-[#8F8F8F] dark:text-brand pl-3 pb-1 lowercase">{kind}</div>
       <div
         className={cn("border-r-2", {
           "border-[#F4B4FF] dark:border-[#C287B3]": kind === "opcode",
@@ -319,7 +321,7 @@ function DetailsColumn({ kind, bits, value }: DetailsColumnProps) {
         })}
       >
         <div
-          className={cn("font-inconsolata text-md tracking-[0.2rem] px-3", {
+          className={cn("tracking-[0.2rem] px-3", {
             "bg-[#FCEBFF] dark:bg-[#8B537D] text-[#444444] dark:text-[#FF8FEA]": kind === "opcode",
             "bg-[#E8EEFF] dark:bg-[#5F6988] text-[#444444] dark:text-[#AABFFF]": isRegister,
             "bg-[#E8FFFE] dark:bg-[#016960] text-[#444444] dark:text-[#15C9BB]": isOffset,
@@ -328,7 +330,7 @@ function DetailsColumn({ kind, bits, value }: DetailsColumnProps) {
         >
           {bits}
         </div>
-        <div className="text-xs p-1 pl-3 font-inconsolata">
+        <div className="p-1 pl-3">
           {kind === argType.REGISTER ? (
             <span
               dangerouslySetInnerHTML={{
