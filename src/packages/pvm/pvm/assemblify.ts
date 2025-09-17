@@ -1,5 +1,5 @@
 import { Instruction } from "./instruction";
-import { Mask } from "@typeberry/pvm-debugger-adapter";
+import { pvm } from "@typeberry/lib";
 
 type Byte = number;
 type Gas = number;
@@ -205,7 +205,7 @@ export const byteToOpCodeMap = instructions.reduce((acc, instruction) => {
   return acc;
 }, {} as ByteToOpCodeMap);
 
-export function assemblify(program: Uint8Array, mask: Mask) {
+export function assemblify(program: Uint8Array, mask: pvm.Mask) {
   return program.reduce(
     (acc, byte, index) => {
       if (mask.isInstruction(index)) {

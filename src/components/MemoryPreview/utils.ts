@@ -1,9 +1,7 @@
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { WorkerState } from "@/store/workers/workersSlice";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { block } from "@typeberry/pvm-debugger-adapter";
-
-const codec = block.codec;
+import { codec } from "@typeberry/lib";
 
 export type FindMemoryForWorkerType = (
   worker: WorkerState,

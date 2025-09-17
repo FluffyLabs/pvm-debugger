@@ -1,5 +1,4 @@
-import { ArgumentType, Mask } from "@typeberry/pvm-debugger-adapter";
-import { NibblesDecoder, ArgsDecoder as TypeberryArgsDecoder } from "@typeberry/pvm-debugger-adapter";
+import { pvm } from "@typeberry/lib";
 
 const IMMEDIATE_AND_OFFSET_MAX_LENGTH = 4;
 const BITS_PER_BYTE = 8;
@@ -21,12 +20,12 @@ export interface ArgumentBitLengths {
 }
 
 export class ArgsDecoder {
-  private nibblesDecoder = new NibblesDecoder();
+  private nibblesDecoder = new pvm.NibblesDecoder();
   private code: Uint8Array = new Uint8Array();
-  private mask: Mask = Mask.empty();
-  private typeberryArgsDecoder = new TypeberryArgsDecoder();
+  private mask: pvm.Mask = pvm.Mask.empty();
+  private typeberryArgsDecoder = new pvm.ArgsDecoder();
 
-  reset(code: Uint8Array, mask: Mask) {
+  reset(code: Uint8Array, mask: pvm.Mask) {
     this.typeberryArgsDecoder.reset(code, mask);
     this.code = code;
     this.mask = mask;
@@ -36,15 +35,15 @@ export class ArgsDecoder {
     this.typeberryArgsDecoder.fillArgs(pc, result);
   };
 
-  calculateArgumentBitLengths(pc: number, argType: ArgumentType): ArgumentBitLengths {
+  calculateArgumentBitLengths(pc: number, argType: pvm.ArgumentType): ArgumentBitLengths {
     const nextInstructionDistance = 1 + this.mask.getNoOfBytesToNextInstruction(pc + 1);
     const totalBits = nextInstructionDistance * BITS_PER_BYTE;
 
     switch (argType) {
-      case ArgumentType.NO_ARGUMENTS:
+      case pvm.ArgumentType.NO_ARGUMENTS:
         return { totalBits };
 
-      case ArgumentType.ONE_IMMEDIATE: {
+      case pvm.ArgumentType.ONE_IMMEDIATE: {
         const immediateLength = Math.min(IMMEDIATE_AND_OFFSET_MAX_LENGTH, nextInstructionDistance - 1);
         return {
           immediateDecoderBits: immediateLength * BITS_PER_BYTE,
@@ -52,7 +51,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.THREE_REGISTERS: {
+      case pvm.ArgumentType.THREE_REGISTERS: {
         return {
           firstRegisterIndexBits: REGISTER_BITS_LENGTH,
           secondRegisterIndexBits: REGISTER_BITS_LENGTH,
@@ -61,7 +60,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE: {
+      case pvm.ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE: {
         const immediateLength = Math.min(IMMEDIATE_AND_OFFSET_MAX_LENGTH, Math.max(0, nextInstructionDistance - 2));
         return {
           firstRegisterIndexBits: REGISTER_BITS_LENGTH,
@@ -71,7 +70,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET: {
+      case pvm.ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET: {
         const firstByte = this.code[pc + 1];
         this.nibblesDecoder.setByte(firstByte);
         const immediateLength = this.nibblesDecoder.getHighNibbleAsLength();
@@ -91,7 +90,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.TWO_REGISTERS_ONE_OFFSET: {
+      case pvm.ArgumentType.TWO_REGISTERS_ONE_OFFSET: {
         const offsetLength = Math.min(IMMEDIATE_AND_OFFSET_MAX_LENGTH, Math.max(0, nextInstructionDistance - 2));
 
         return {
@@ -102,7 +101,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.TWO_REGISTERS: {
+      case pvm.ArgumentType.TWO_REGISTERS: {
         return {
           firstRegisterIndexBits: REGISTER_BITS_LENGTH,
           secondRegisterIndexBits: REGISTER_BITS_LENGTH,
@@ -110,7 +109,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.ONE_OFFSET: {
+      case pvm.ArgumentType.ONE_OFFSET: {
         const offsetLength = Math.min(IMMEDIATE_AND_OFFSET_MAX_LENGTH, nextInstructionDistance - 1);
 
         return {
@@ -119,7 +118,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE: {
+      case pvm.ArgumentType.ONE_REGISTER_ONE_IMMEDIATE: {
         const immediateLength = Math.min(IMMEDIATE_AND_OFFSET_MAX_LENGTH, Math.max(0, nextInstructionDistance - 2));
 
         return {
@@ -129,7 +128,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.TWO_IMMEDIATES: {
+      case pvm.ArgumentType.TWO_IMMEDIATES: {
         const firstByte = this.code[pc + 1];
         this.nibblesDecoder.setByte(firstByte);
         const firstImmediateLength = this.nibblesDecoder.getLowNibbleAsLength();
@@ -148,7 +147,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES: {
+      case pvm.ArgumentType.ONE_REGISTER_TWO_IMMEDIATES: {
         const firstByte = this.code[pc + 1];
         this.nibblesDecoder.setByte(firstByte);
         const firstImmediateLength = this.nibblesDecoder.getHighNibbleAsLength();
@@ -168,7 +167,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES: {
+      case pvm.ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES: {
         const secondByte = this.code[pc + 2];
         this.nibblesDecoder.setByte(secondByte);
         const firstImmediateLength = this.nibblesDecoder.getLowNibbleAsLength();
@@ -189,7 +188,7 @@ export class ArgsDecoder {
         };
       }
 
-      case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE: {
+      case pvm.ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE: {
         return {
           registerIndexBits: REGISTER_BITS_LENGTH,
           immediateDecoderBits: 8 * BITS_PER_BYTE, // 8 bytes for extended width immediate

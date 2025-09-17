@@ -1,5 +1,5 @@
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
-import { ArgumentType, Args, ProgramDecoder, BasicBlocks } from "@typeberry/pvm-debugger-adapter";
+import { pvm } from "@typeberry/lib";
 import { ArgumentBitLengths, ArgsDecoder } from "@/packages/pvm/pvm/args-decoder";
 
 export const valueToNumeralSystem = (
@@ -31,17 +31,17 @@ export enum argType {
 export const getArgumentBitLengths = (
   argsDecoder: ArgsDecoder,
   pc: number,
-  argType: ArgumentType,
+  argType: pvm.ArgumentType,
 ): ArgumentBitLengths => {
   return argsDecoder.calculateArgumentBitLengths(pc, argType);
 };
 
 export const decodeAndGetArgsDecoder = (program: number[]) => {
   // Create an instance of ArgsDecoder to calculate bit lengths
-  const programDecoder = new ProgramDecoder(new Uint8Array(program));
+  const programDecoder = new pvm.ProgramDecoder(new Uint8Array(program));
   const code = programDecoder.getCode();
   const mask = programDecoder.getMask();
-  const blocks = new BasicBlocks();
+  const blocks = new pvm.BasicBlocks();
   blocks.reset(code, mask);
   const argsDecoder = new ArgsDecoder();
   argsDecoder.reset(code, mask);
@@ -49,7 +49,7 @@ export const decodeAndGetArgsDecoder = (program: number[]) => {
 };
 
 export const mapInstructionsArgsByType = (
-  args: Args | null,
+  args: pvm.Args | null,
   numeralSystem: NumeralSystem,
   counter: number,
   argsDecoder: ArgsDecoder,
@@ -68,12 +68,12 @@ export const mapInstructionsArgsByType = (
 
   // Calculate bit lengths for the current instruction
   const bitLengths =
-    args.type !== ArgumentType.NO_ARGUMENTS ? getArgumentBitLengths(argsDecoder, counter, args.type) : undefined;
+    args.type !== pvm.ArgumentType.NO_ARGUMENTS ? getArgumentBitLengths(argsDecoder, counter, args.type) : undefined;
 
   switch (args.type) {
-    case ArgumentType.NO_ARGUMENTS:
+    case pvm.ArgumentType.NO_ARGUMENTS:
       return [];
-    case ArgumentType.ONE_IMMEDIATE:
+    case pvm.ArgumentType.ONE_IMMEDIATE:
       return [
         {
           type: argType.IMMEDIATE,
@@ -83,7 +83,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
-    case ArgumentType.TWO_IMMEDIATES:
+    case pvm.ArgumentType.TWO_IMMEDIATES:
       return [
         {
           type: argType.IMMEDIATE_LENGTH,
@@ -107,7 +107,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
       ];
-    case ArgumentType.ONE_OFFSET:
+    case pvm.ArgumentType.ONE_OFFSET:
       return [
         {
           type: argType.OFFSET,
@@ -117,7 +117,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
       ];
-    case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
+    case pvm.ArgumentType.ONE_REGISTER_ONE_IMMEDIATE:
       return [
         {
           type: argType.REGISTER,
@@ -134,7 +134,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
-    case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES:
+    case pvm.ArgumentType.ONE_REGISTER_TWO_IMMEDIATES:
       return [
         {
           type: argType.REGISTER,
@@ -165,7 +165,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
       ];
-    case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
+    case pvm.ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET:
       return [
         {
           type: argType.REGISTER,
@@ -196,7 +196,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
       ];
-    case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
+    case pvm.ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE:
       return [
         {
           type: argType.REGISTER,
@@ -213,7 +213,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
-    case ArgumentType.TWO_REGISTERS:
+    case pvm.ArgumentType.TWO_REGISTERS:
       return [
         {
           type: argType.REGISTER,
@@ -230,7 +230,7 @@ export const mapInstructionsArgsByType = (
           argumentBitLength: bitLengths?.secondRegisterIndexBits || 4,
         },
       ];
-    case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
+    case pvm.ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE:
       return [
         {
           type: argType.REGISTER,
@@ -254,7 +254,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.immediateDecoderBits === 0,
         },
       ];
-    case ArgumentType.TWO_REGISTERS_ONE_OFFSET:
+    case pvm.ArgumentType.TWO_REGISTERS_ONE_OFFSET:
       return [
         {
           type: argType.REGISTER,
@@ -278,7 +278,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.offsetBits === 0,
         },
       ];
-    case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES:
+    case pvm.ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES:
       return [
         {
           type: argType.REGISTER,
@@ -316,7 +316,7 @@ export const mapInstructionsArgsByType = (
           hiddenFromDetails: bitLengths?.secondImmediateDecoderBits === 0,
         },
       ];
-    case ArgumentType.THREE_REGISTERS:
+    case pvm.ArgumentType.THREE_REGISTERS:
       return [
         {
           type: argType.REGISTER,
@@ -346,7 +346,7 @@ export const mapInstructionsArgsByType = (
 };
 
 export const getASMInstructionValueHtml = (
-  args: Args,
+  args: pvm.Args,
   numeralSystem: number,
   counter: number,
   argsDecoder: ArgsDecoder,

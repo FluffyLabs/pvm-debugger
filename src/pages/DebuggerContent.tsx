@@ -12,7 +12,7 @@ import { Registers } from "@/components/Registers";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import classNames from "classnames";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
-import { bytes } from "@typeberry/pvm-debugger-adapter";
+import { bytes } from "@typeberry/lib";
 import { getAsChunks, getAsPageMap } from "@/lib/utils";
 import { decodeSpiWithMetadata } from "@/utils/spi";
 
