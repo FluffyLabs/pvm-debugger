@@ -7,6 +7,14 @@ import packageJson from "./package.json";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      treeshake: {
+        moduleSideEffects: false,
+        preset: "smallest",
+      },
+    },
+  },
   plugins: [react(), wasm(), topLevelAwait()],
   resolve: {
     alias: {
