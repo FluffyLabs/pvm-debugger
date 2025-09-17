@@ -16,11 +16,11 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element;
 
   return (
     <div className={"flex justify-between items-center px-2 py-3 bg-title " + classNames}>
-      <div>{startSlot}</div>
+      <div className="shrink overflow-hidden text-ellipsis whitespace-nowrap">{startSlot}</div>
       <div className="flex text-xs">
         <button
           className={cs([
-            "flex text-secondary-foreground items-center mr-6",
+            "flex text-secondary-foreground items-center mr-4",
             !program.length ? "invisible" : "visible",
           ])}
           disabled={!program.length || isProgramInvalid}
@@ -40,7 +40,7 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element;
           ) : (
             <span className="flex items-center">
               <Pencil height={15} />
-              Edit
+              <span className="sm:hidden lg:block">Edit</span>
             </span>
           )}
         </button>
@@ -52,11 +52,10 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element;
             )}
             htmlFor="instruction-mode"
           >
-            Asm
+            asm
           </Label>
           <Switch
             id="instruction-mode"
-            className="text-foreground"
             checked={instructionMode === InstructionMode.BYTECODE}
             onCheckedChange={(checked) =>
               dispatch(setInstructionMode(checked ? InstructionMode.BYTECODE : InstructionMode.ASM))
@@ -70,7 +69,7 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element;
             )}
             htmlFor="instruction-mode"
           >
-            Raw
+            raw
           </Label>
         </div>
       </div>

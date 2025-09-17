@@ -73,10 +73,7 @@ export function groupInstructionsByBlocks(instructions: CurrentInstruction[]): B
 /**
  * Calculates the visible instruction count based on expanded/collapsed state
  */
-export function getVisibleInstructionCount(
-  blocks: BasicBlockGroup[],
-  expandedBlocks: Set<number>
-): number {
+export function getVisibleInstructionCount(blocks: BasicBlockGroup[], expandedBlocks: Set<number>): number {
   return blocks.reduce((count, block) => {
     // Single instruction blocks don't have headers
     if (block.isSingleInstruction) {
@@ -93,13 +90,8 @@ export function getVisibleInstructionCount(
 /**
  * Finds the block containing a given program counter address
  */
-export function findBlockContainingAddress(
-  blocks: BasicBlockGroup[],
-  address: number
-): BasicBlockGroup | undefined {
-  return blocks.find(
-    block => address >= block.startAddress && address <= block.endAddress
-  );
+export function findBlockContainingAddress(blocks: BasicBlockGroup[], address: number): BasicBlockGroup | undefined {
+  return blocks.find((block) => address >= block.startAddress && address <= block.endAddress);
 }
 
 /**
@@ -108,7 +100,7 @@ export function findBlockContainingAddress(
 export function getVirtualIndexForAddress(
   blocks: BasicBlockGroup[],
   expandedBlocks: Set<number>,
-  address: number
+  address: number,
 ): number {
   let virtualIndex = 0;
 
@@ -125,9 +117,7 @@ export function getVirtualIndexForAddress(
 
       // If block is expanded, find the instruction index
       if (expandedBlocks.has(block.blockNumber)) {
-        const instructionIndex = block.instructions.findIndex(
-          inst => inst.address === address
-        );
+        const instructionIndex = block.instructions.findIndex((inst) => inst.address === address);
         if (instructionIndex >= 0) {
           virtualIndex += instructionIndex;
         }
@@ -155,7 +145,7 @@ export function getVirtualIndexForAddress(
 export function virtualIndexToBlockAndInstruction(
   blocks: BasicBlockGroup[],
   expandedBlocks: Set<number>,
-  virtualIndex: number
+  virtualIndex: number,
 ): { blockIndex: number; instructionIndex: number | null } | null {
   let currentVirtualIndex = 0;
 
@@ -194,10 +184,7 @@ export function virtualIndexToBlockAndInstruction(
 /**
  * Toggles the expanded state of a block
  */
-export function toggleBlockExpanded(
-  expandedBlocks: Set<number>,
-  blockNumber: number
-): Set<number> {
+export function toggleBlockExpanded(expandedBlocks: Set<number>, blockNumber: number): Set<number> {
   const newSet = new Set(expandedBlocks);
   if (newSet.has(blockNumber)) {
     newSet.delete(blockNumber);
@@ -211,7 +198,7 @@ export function toggleBlockExpanded(
  * Expands all blocks
  */
 export function expandAllBlocks(blocks: BasicBlockGroup[]): Set<number> {
-  return new Set(blocks.map(block => block.blockNumber));
+  return new Set(blocks.map((block) => block.blockNumber));
 }
 
 /**

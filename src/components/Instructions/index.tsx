@@ -26,18 +26,18 @@ export const Instructions = (props: InstructionsProps) => {
         classNames="rounded-ss rounded-se font-poppins"
         startSlot={
           <div className="flex items-center gap-2">
-            <small>{props.programName}</small>
-            <div className="flex items-center gap-1 ml-4">
+            <div className="shrink overflow-hidden text-ellipsis text-xs whitespace-nowrap">{props.programName}</div>
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => setUseBlockView(false)}
-                className={`p-1 rounded transition-colors ${!useBlockView ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`p-1 rounded transition-colors ${!useBlockView ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 title="List view"
               >
                 <List className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setUseBlockView(true)}
-                className={`p-1 rounded transition-colors ${useBlockView ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`p-1 rounded transition-colors ${useBlockView ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 title="Block view"
               >
                 <Layers className="h-4 w-4" />
@@ -46,11 +46,7 @@ export const Instructions = (props: InstructionsProps) => {
           </div>
         }
       />
-      {useBlockView ? (
-        <CollapsibleInstructionsTable {...props} />
-      ) : (
-        <InstructionsTable {...props} />
-      )}
+      {useBlockView ? <CollapsibleInstructionsTable {...props} /> : <InstructionsTable {...props} />}
     </div>
   );
 };

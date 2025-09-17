@@ -50,11 +50,12 @@ export const CollapsibleInstructionsTable = ({
   const maxPc = workers.reduce((acc, worker) => Math.max(acc, worker.currentState.pc ?? 0), 0);
 
   // Check if a block contains any breakpoints
-  const blockHasBreakpoint = useCallback((block: BasicBlockGroup) => {
-    return block.instructions.some(inst =>
-      breakpointAddresses.includes(inst.address)
-    );
-  }, [breakpointAddresses]);
+  const blockHasBreakpoint = useCallback(
+    (block: BasicBlockGroup) => {
+      return block.instructions.some((inst) => breakpointAddresses.includes(inst.address));
+    },
+    [breakpointAddresses],
+  );
 
   // Calculate total visible items for virtualization
   const visibleItemCount = useMemo(() => {
@@ -65,7 +66,14 @@ export const CollapsibleInstructionsTable = ({
 
   // Get item type and data for a virtual index
   const getItemForVirtualIndex = useCallback(
-    (virtualIndex: number): { type: 'header' | 'instruction'; block: BasicBlockGroup; instruction?: CurrentInstruction; instructionIndex?: number } | null => {
+    (
+      virtualIndex: number,
+    ): {
+      type: "header" | "instruction";
+      block: BasicBlockGroup;
+      instruction?: CurrentInstruction;
+      instructionIndex?: number;
+    } | null => {
       const result = virtualIndexToBlockAndInstruction(blocks, expandedBlocks, virtualIndex);
       if (!result) return null;
 
@@ -74,7 +82,7 @@ export const CollapsibleInstructionsTable = ({
       // For single instruction blocks, always return as instruction
       if (block.isSingleInstruction) {
         return {
-          type: 'instruction',
+          type: "instruction",
           block,
           instruction: block.instructions[0],
           instructionIndex: 0,
@@ -82,17 +90,17 @@ export const CollapsibleInstructionsTable = ({
       }
 
       if (result.instructionIndex === null) {
-        return { type: 'header', block };
+        return { type: "header", block };
       } else {
         return {
-          type: 'instruction',
+          type: "instruction",
           block,
           instruction: block.instructions[result.instructionIndex],
           instructionIndex: result.instructionIndex,
         };
       }
     },
-    [blocks, expandedBlocks]
+    [blocks, expandedBlocks],
   );
 
   const rowVirtualizer = useVirtualizer({
@@ -108,7 +116,7 @@ export const CollapsibleInstructionsTable = ({
     const scrollElement = parentRef.current;
     const scrollTop = scrollElement?.scrollTop ?? 0;
 
-    setExpandedBlocks(prev => {
+    setExpandedBlocks((prev) => {
       const newSet = toggleBlockExpanded(prev, blockNumber);
 
       // Restore scroll position after state update
@@ -160,8 +168,8 @@ export const CollapsibleInstructionsTable = ({
     const argsDecoder = decodeAndGetArgsDecoder(program);
     let widest = "";
 
-    blocks.forEach(block => {
-      block.instructions.forEach(item => {
+    blocks.forEach((block) => {
+      block.instructions.forEach((item) => {
         if (instructionMode === InstructionMode.ASM && "args" in item) {
           const valueNoHtml = getASMInstructionValueHtml(item.args, numeralSystem, 0, argsDecoder)
             .replace(/<sub>/g, "")
@@ -186,70 +194,71 @@ export const CollapsibleInstructionsTable = ({
   if (!blocks.length) {
     return <div>No instructions to display</div>;
   }
-  const lastInstructionAddress = programPreviewResult === undefined ? 0 : programPreviewResult[programPreviewResult.length - 1].address;
+  const lastInstructionAddress =
+    programPreviewResult === undefined ? 0 : programPreviewResult[programPreviewResult.length - 1].address;
 
   return (
-      <div ref={parentRef} className="overflow-auto relative h-[calc(100%-48px)] ml-2">
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-          <table className="w-full caption-bottom text-sm border-separate border-spacing-x-0 border-spacing-y-1">
-            <tbody>
-              {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
-                const item = getItemForVirtualIndex(virtualRow.index);
-                if (!item) return null;
+    <div ref={parentRef} className="overflow-auto relative h-[calc(100%-48px)] ml-2">
+      <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+        <table className="w-full caption-bottom text-sm border-separate border-spacing-x-0 border-spacing-y-1">
+          <tbody>
+            {rowVirtualizer.getVirtualItems().map((virtualRow, index) => {
+              const item = getItemForVirtualIndex(virtualRow.index);
+              if (!item) return null;
 
-                if (item.type === 'header') {
-                  return (
-                    <BasicBlockHeader
-                      key={virtualRow.key}
-                      ref={rowVirtualizer.measureElement}
-                      data-index={virtualRow.index}
-                      block={item.block}
-                      isExpanded={expandedBlocks.has(item.block.blockNumber)}
-                      onToggle={() => handleToggleBlock(item.block.blockNumber)}
-                      status={status}
-                      hasBreakpoint={blockHasBreakpoint(item.block)}
-                      widestItemValueLength={widestItemValue.length}
-                      style={{
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${virtualRow.start - index * virtualRow.size}px)`,
-                      }}
-                    />
-                  );
-                }
-
-                // It's an instruction
-                const programRow: ProgramRow = {
-                  ...item.instruction!,
-                  addressEl: <AddressEl address={item.instruction!.address} />,
-                  counter: item.instruction!.address,
-                };
-                const isLast = item.instruction?.address === lastInstructionAddress;
-
+              if (item.type === "header") {
                 return (
-                  <InstructionItem
-                    index={virtualRow.index}
+                  <BasicBlockHeader
                     key={virtualRow.key}
                     ref={rowVirtualizer.measureElement}
+                    data-index={virtualRow.index}
+                    block={item.block}
+                    isExpanded={expandedBlocks.has(item.block.blockNumber)}
+                    onToggle={() => handleToggleBlock(item.block.blockNumber)}
                     status={status}
-                    isLast={isLast}
-                    isSingleInBlock={item.block.instructionCount === 1}
-                    onClick={onInstructionClick}
-                    instructionMode={instructionMode}
+                    hasBreakpoint={blockHasBreakpoint(item.block)}
                     widestItemValueLength={widestItemValue.length}
-                    programRow={programRow}
-                    currentPc={currentState.pc}
-                    onAddressClick={onAddressClick}
-                    breakpointAddresses={breakpointAddresses}
                     style={{
                       height: `${virtualRow.size}px`,
                       transform: `translateY(${virtualRow.start - index * virtualRow.size}px)`,
                     }}
                   />
                 );
-              })}
-            </tbody>
-          </table>
-        </div>
+              }
+
+              // It's an instruction
+              const programRow: ProgramRow = {
+                ...item.instruction!,
+                addressEl: <AddressEl address={item.instruction!.address} />,
+                counter: item.instruction!.address,
+              };
+              const isLast = item.instruction?.address === lastInstructionAddress;
+
+              return (
+                <InstructionItem
+                  index={virtualRow.index}
+                  key={virtualRow.key}
+                  ref={rowVirtualizer.measureElement}
+                  status={status}
+                  isLast={isLast}
+                  isSingleInBlock={item.block.instructionCount === 1}
+                  onClick={onInstructionClick}
+                  instructionMode={instructionMode}
+                  widestItemValueLength={widestItemValue.length}
+                  programRow={programRow}
+                  currentPc={currentState.pc}
+                  onAddressClick={onAddressClick}
+                  breakpointAddresses={breakpointAddresses}
+                  style={{
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start - index * virtualRow.size}px)`,
+                  }}
+                />
+              );
+            })}
+          </tbody>
+        </table>
       </div>
+    </div>
   );
 };

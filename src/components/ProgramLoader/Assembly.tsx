@@ -176,7 +176,7 @@ export const Assembly = ({
 
   return (
     <div className="h-full flex flex-col">
-      <ProgramEdit startSlot={<small>{programName}</small>} />
+      <ProgramEdit startSlot={<span className="text-xs">{programName}</span>} />
       <div
         className={classNames("flex-auto gap-1 font-poppins overflow-auto", {
           "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
@@ -199,7 +199,7 @@ export const Assembly = ({
             isError
               ? "text-[#D34D4B] bg-[#FFF4F4] dark:bg-[#D34D4B]/10"
               : "text-[#5FC18C] bg-[#F4FFF9] dark:bg-brand-dark/20",
-            "text-sm p-2",
+            "text-xs p-2",
           )}
         >
           {error ?? "Compilation successful"}

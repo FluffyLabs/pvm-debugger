@@ -19,21 +19,12 @@ interface BasicBlockHeaderProps {
   hasBreakpoint?: boolean;
   style?: React.CSSProperties;
   className?: string;
-  widestItemValueLength: number,
-  'data-index'?: number;
+  widestItemValueLength: number;
+  "data-index"?: number;
 }
 
 export const BasicBlockHeader = forwardRef<HTMLTableRowElement, BasicBlockHeaderProps>((props, ref) => {
-  const {
-    block,
-    isExpanded,
-    onToggle,
-    status,
-    hasBreakpoint = false,
-    style,
-    className,
-    widestItemValueLength
-  } = props;
+  const { block, isExpanded, onToggle, status, hasBreakpoint = false, style, className, widestItemValueLength } = props;
   const { numeralSystem } = useContext(NumeralSystemContext);
   const isDarkMode = useIsDarkMode();
   const workers = useAppSelector(selectWorkers);
@@ -41,7 +32,7 @@ export const BasicBlockHeader = forwardRef<HTMLTableRowElement, BasicBlockHeader
 
   // Check if any worker's PC is in this block
   const workersInBlock = useMemo(() => {
-    return workers.filter(worker => {
+    return workers.filter((worker) => {
       const pc = worker.currentState.pc;
       return pc !== undefined && pc >= block.startAddress && pc <= block.endAddress;
     });
@@ -68,7 +59,9 @@ export const BasicBlockHeader = forwardRef<HTMLTableRowElement, BasicBlockHeader
       <div>
         {isHex && <span className="text-muted-foreground">0x</span>}
         {[...Array(Math.max(0, paddingLength))].map((_, idx) => (
-          <span key={idx} className="text-muted-foreground">0</span>
+          <span key={idx} className="text-muted-foreground">
+            0
+          </span>
         ))}
         <span className="text-inherit">{valInNumeralSystem}</span>
       </div>
@@ -88,18 +81,12 @@ export const BasicBlockHeader = forwardRef<HTMLTableRowElement, BasicBlockHeader
     : blockBackground;
 
   const textColor = isActive ? colors.color : isDarkMode ? "#B3B3B3" : "#14181F";
-  const borderColor = hasBreakpoint
-    ? "#EF4444"
-    : isActive
-      ? colors.border
-      : isDarkMode
-        ? "#444444"
-        : "#EBEBEB";
+  const borderColor = hasBreakpoint ? "#EF4444" : isActive ? colors.border : isDarkMode ? "#444444" : "#EBEBEB";
 
   return (
     <tr
       ref={ref}
-      data-index={props['data-index']}
+      data-index={props["data-index"]}
       className={classNames("cursor-pointer overflow-hidden opacity-75", className)}
       onClick={onToggle}
       style={{
@@ -110,19 +97,16 @@ export const BasicBlockHeader = forwardRef<HTMLTableRowElement, BasicBlockHeader
     >
       {/* Address Column with Expand/Collapse Icon */}
       <td className="p-1.5 cursor-pointer relative w-[20%] border-b">
-        <div
-          style={{ backgroundColor: borderColor }}
-          className="w-[3px] absolute h-[100%] left-0 top-0"
-        />
-        <div className="flex items-center gap-1">
-          {formatAddress(block.startAddress)}
-        </div>
+        <div style={{ backgroundColor: borderColor }} className="w-[3px] absolute h-[100%] left-0 top-0" />
+        <div className="flex items-center gap-1">{formatAddress(block.startAddress)}</div>
       </td>
 
       {/* Block Name Column */}
-      <td className={cn("p-1.5 border-b w-[40%] min-w-[170px] lowercase", {
-        "italic": isExpanded
-      })}>
+      <td
+        className={cn("p-1.5 border-b w-[35%] min-w-[160px] lowercase", {
+          italic: isExpanded,
+        })}
+      >
         {block.blockName}
         {isExpanded ? (
           <ChevronDown className="inline h-4 w-4 pb-1" />

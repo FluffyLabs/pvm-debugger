@@ -94,7 +94,7 @@ export const ProgramTextLoader = ({
 
   return (
     <div className="h-full flex flex-col">
-      <ProgramEdit startSlot={<small>Generic PVM program bytes</small>} />
+      <ProgramEdit startSlot={<span className="text-xs">Generic PVM program bytes</span>} />
       <div className={classNames("h-full flex-auto flex flex-col")}>
         <Textarea
           autoFocus

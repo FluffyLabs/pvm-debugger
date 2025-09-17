@@ -149,7 +149,7 @@ export const InstructionItem = forwardRef(
                   border,
                 }}
               />
-              <TableCell className="p-1.5 border-b w-[40%]">
+              <TableCell className="p-1.5 border-b w-[35%]" colSpan={2}>
                 {"instructionBytes" in programRow && programRow.instructionBytes && (
                   <span className="block overflow-hidden" style={{ width: `${widestItemValueLength}ch` }}>
                     <span className="text-title-foreground">
@@ -174,9 +174,11 @@ export const InstructionItem = forwardRef(
                   border,
                 }}
               />
-              <TableCell className={cn("p-1.5 border-b w-[40%] min-w-[170px]", {
-                "border-l-4 border-l-bg": !isSingleInBlock
-              })}>
+              <TableCell
+                className={cn("p-1.5 border-b w-[35%] min-w-[160px]", {
+                  "border-l-4 border-l-bg": !isSingleInBlock,
+                })}
+              >
                 <a onClick={fillSearch} className="cursor-pointer uppercase">
                   {programRow.name}
                 </a>
