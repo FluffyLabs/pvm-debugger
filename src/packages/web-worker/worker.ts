@@ -51,9 +51,8 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.STEP) {
-    const { result, state, isFinished, status, exitArg, error } = await commandHandlers.runStep({
+    const { currentPc, state, isFinished, status, exitArg, error } = await commandHandlers.runStep({
       pvm,
-      program: e.data.payload.program,
       stepsToPerform: e.data.payload.stepsToPerform,
       serviceId,
     });
@@ -63,7 +62,7 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
       command: Commands.STEP,
       status,
       error,
-      payload: { result, state, isFinished, isRunMode, exitArg },
+      payload: { currentPc, state, isFinished, isRunMode, exitArg },
       messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.RUN) {
@@ -74,6 +73,22 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
       payload: { isRunMode, isFinished: true, state: state ?? {} },
       messageId: e.data.messageId,
     });
+    let isFinished = false;
+    while (!isFinished && isRunMode) {
+      const res = await commandHandlers.runStep({
+        pvm,
+        stepsToPerform: e.data.payload.batchedSteps,
+        serviceId,
+      });
+      isFinished = res.isFinished;
+      postTypedMessage({
+        command: Commands.STEP,
+        status: res.status,
+        error: res.error,
+        payload: { currentPc: res.currentPc, state: res.state, isFinished, isRunMode, exitArg: res.exitArg },
+        messageId: e.data.messageId,
+      });
+    }
   } else if (e.data.command === Commands.STOP) {
     isRunMode = false;
     postTypedMessage({

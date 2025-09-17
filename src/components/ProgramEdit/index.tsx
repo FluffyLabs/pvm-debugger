@@ -15,7 +15,7 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element;
   );
 
   return (
-    <div className={"flex justify-between items-center px-2 py-3 bg-title " + classNames}>
+    <div className={"flex justify-between items-center px-2 py-2 bg-title " + classNames}>
       <div className="shrink overflow-hidden text-ellipsis whitespace-nowrap">{startSlot}</div>
       <div className="flex text-xs">
         <button

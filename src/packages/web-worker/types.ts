@@ -1,4 +1,4 @@
-import { CurrentInstruction, ExpectedState, InitialState } from "@/types/pvm";
+import { ExpectedState, InitialState } from "@/types/pvm";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { Pvm as InternalPvm } from "@/types/pvm";
 import { SerializedFile } from "@/lib/utils.ts";
@@ -16,7 +16,7 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
         command: Commands.STEP;
         payload: {
           state: ExpectedState;
-          result: CurrentInstruction | object;
+          currentPc: number;
           isFinished: boolean;
           isRunMode: boolean;
           exitArg: number;
@@ -50,8 +50,8 @@ export type CommandWorkerRequestParams =
       payload: { type: PvmTypes; params: { url?: string; file?: SerializedFile } };
     }
   | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
-  | { command: Commands.STEP; payload: { program: Uint8Array; stepsToPerform: number } }
-  | { command: Commands.RUN }
+  | { command: Commands.STEP; payload: { stepsToPerform: number } }
+  | { command: Commands.RUN; payload: { batchedSteps: number } }
   | { command: Commands.STOP }
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
   | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: number } }

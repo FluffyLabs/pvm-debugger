@@ -1,8 +1,8 @@
 import { CurrentInstruction } from "@/types/pvm";
 
-export const virtualTrapInstruction: CurrentInstruction = {
+export const virtualTrapInstruction = (address: number): CurrentInstruction => ({
   args: { type: 0, noOfBytesToSkip: 0 },
-  address: 0,
+  address,
   name: "TRAP",
   gas: 0,
   instructionCode: 0,
@@ -13,4 +13,4 @@ export const virtualTrapInstruction: CurrentInstruction = {
     name: "end of program",
     number: -1,
   },
-};
+});
