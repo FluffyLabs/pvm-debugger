@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Args } from "@typeberry/pvm-debugger-adapter";
+import { pvm } from "@typeberry/lib";
 import {
   groupInstructionsByBlocks,
   getVisibleInstructionCount,
@@ -26,7 +26,10 @@ function createMockInstruction(
     gas: 100,
     instructionCode: 1,
     instructionBytes: new Uint8Array([1, 2, 3]),
-    args: {} as Args,
+    args: {
+      type: pvm.ArgumentType.NO_ARGUMENTS,
+      noOfBytesToSkip: 3,
+    },
     block: {
       isStart,
       isEnd,
