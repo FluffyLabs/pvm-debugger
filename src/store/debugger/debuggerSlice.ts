@@ -6,6 +6,13 @@ import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
 import { logger } from "@/utils/loggerService.tsx";
 
+export type UiRefreshMode = "instructions" | "block";
+
+export interface UiRefreshRate {
+  mode: UiRefreshMode;
+  instructionCount: number;
+}
+
 export interface DebuggerState {
   pvmOptions: {
     allAvailablePvms: SelectedPvmWithPayload[];
@@ -29,6 +36,7 @@ export interface DebuggerState {
   pvmLoaded: boolean;
   stepsToPerform: number;
   useBlockStepping: boolean;
+  uiRefreshRate: UiRefreshRate;
   serviceId: number | null;
   hostCallsTrace: null;
   spiArgs: string | null;
@@ -86,6 +94,10 @@ const initialState: DebuggerState = {
   pvmLoaded: false,
   stepsToPerform: 1,
   useBlockStepping: true,
+  uiRefreshRate: {
+    mode: "block" as UiRefreshMode,
+    instructionCount: 1,
+  },
   spiArgs: null,
   hostCallsTrace: null,
   serviceId: parseInt("0x30303030", 16),
@@ -144,6 +156,11 @@ const debuggerSlice = createSlice({
     setUseBlockStepping(state, action) {
       state.useBlockStepping = action.payload;
     },
+    setUiRefreshRate(state, action) {
+      state.uiRefreshRate = action.payload;
+      state.stepsToPerform = action.payload.instructionCount;
+      state.useBlockStepping = action.payload.mode === "block";
+    },
     setHasHostCallOpen(state, action) {
       state.hasHostCallOpen = action.payload;
     },
@@ -182,6 +199,7 @@ export const {
   setPvmLoaded,
   setStepsToPerform,
   setUseBlockStepping,
+  setUiRefreshRate,
   setServiceId,
   setSpiArgs,
   setPvmOptions,
