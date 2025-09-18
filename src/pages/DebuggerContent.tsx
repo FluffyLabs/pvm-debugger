@@ -83,14 +83,13 @@ const DebuggerContent = () => {
     spiArgs,
   } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
-  const { currentState, previousState, currentInstruction } = workers[0] || {
-    currentInstruction: null,
+  const { currentState, previousState } = workers[0] || {
     currentState: initialState,
     previousState: initialState,
   };
 
   const currentInstructionEnriched = programPreviewResult.find(
-    (instruction) => instruction.instructionCode === currentInstruction?.instructionCode,
+    (instruction) => instruction.address === currentState.pc,
   );
 
   const onInstructionClick = useCallback(

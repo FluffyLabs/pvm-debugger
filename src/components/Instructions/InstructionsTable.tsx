@@ -136,7 +136,7 @@ export const InstructionsTable = ({
   }
 
   return (
-    <div ref={parentRef} className="font-poppins overflow-auto relative h-[calc(100%-48px)] ml-2">
+    <div ref={parentRef} className="overflow-auto relative h-[calc(100%-48px)] ml-2">
       <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
         <table className="w-full caption-bottom text-sm border-separate border-spacing-x-0 border-spacing-y-1">
           <tbody>

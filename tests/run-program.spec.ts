@@ -6,7 +6,7 @@ async function runProgramTest(page: Page, pvmType: string) {
   await selectPVM(page, pvmType);
   await openProgram(page, "fibonacci");
 
-  const jumpIndInstruction = page.locator('span:has-text("JUMP_IND")');
+  const jumpIndInstruction = page.locator('a:has-text("JUMP_IND")');
   await expect(jumpIndInstruction).toBeVisible();
 
   // Test the "Run" button functionality

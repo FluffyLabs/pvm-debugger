@@ -69,7 +69,7 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
 
     printableProgram.push(currentInstructionDebug);
   }
-  printableProgram.push({ ...virtualTrapInstruction, address: code.length });
+  printableProgram.push(virtualTrapInstruction(code.length));
 
   return printableProgram;
 }
