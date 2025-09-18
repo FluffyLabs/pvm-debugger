@@ -296,18 +296,31 @@ export const handleHostCall = createAsyncThunk(
   },
 );
 
+// Calculate steps based on whether we're using block stepping or not
+function getStepsToPerform(state: RootState) {
+  const { stepsToPerform, useBlockStepping } = state.debugger;
+  if (stepsToPerform === 1 && useBlockStepping) {
+    return calculateStepsToExitBlockForAllWorkers(state);
+  }
+  return stepsToPerform;
+}
+
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const stepAllWorkersAgain = async () => {
-    await dispatch(stepAllWorkers({})).unwrap();
+    const state = getState() as RootState;
+
+    const stepsToPerform = getStepsToPerform(state);
+
+    await dispatch(stepAllWorkers({ stepsToPerform })).unwrap();
     const allSame = selectHasAllSameState(getState() as RootState);
 
     if (!allSame) {
       dispatch(setIsRunMode(false));
     }
 
-    const state = getState() as RootState;
+    const newState = getState() as RootState;
 
-    if (selectShouldContinueRunning(state)) {
+    if (selectShouldContinueRunning(newState)) {
       await stepAllWorkersAgain();
     }
   };
@@ -318,12 +331,15 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
 
+  // Calculate initial steps based on whether we're using block stepping
+  const batchedSteps = getStepsToPerform(state);
+
   await Promise.all(
     state.workers.map(async (worker) => {
       const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.RUN,
         payload: {
-          batchedSteps: state.debugger.stepsToPerform,
+          batchedSteps,
         },
       });
 
@@ -502,6 +518,76 @@ export const loadMemoryRangeAllWorkers = createAsyncThunk(
     );
   },
 );
+
+// Utility function to calculate steps needed to exit the current block for a specific worker
+const calculateStepsToExitBlockForWorker = (
+  workerPc: number,
+  programPreviewResult: Array<{ address: number; block: { isEnd: boolean; number: number } }>,
+): number => {
+  if (!programPreviewResult || programPreviewResult.length === 0) {
+    return 1;
+  }
+
+  const currentInstruction = programPreviewResult.find((x) => x.address === workerPc);
+
+  if (!currentInstruction) {
+    return 1;
+  }
+
+  // If we're already at the end of a block, step once
+  if (currentInstruction.block.isEnd) {
+    return 1;
+  }
+
+  // Find the current instruction in the program preview result
+  const currentIndex = programPreviewResult.findIndex((inst) => inst.address === currentInstruction.address);
+  if (currentIndex === -1) {
+    return 1;
+  }
+
+  // Count instructions remaining in the current block
+  let stepsInBlock = 1; // Count the step from current instruction
+
+  for (let i = currentIndex + 1; i < programPreviewResult.length; i++) {
+    const instruction = programPreviewResult[i];
+
+    // If we encounter a different block or the end of current block, stop counting
+    if (instruction.block.number !== currentInstruction.block.number) {
+      break;
+    }
+
+    stepsInBlock++;
+
+    // If this instruction is the end of the block, we're done
+    if (instruction.block.isEnd) {
+      break;
+    }
+  }
+
+  return stepsInBlock;
+};
+
+// Utility function to calculate steps needed to exit current blocks for all workers
+const calculateStepsToExitBlockForAllWorkers = (state: RootState): number => {
+  const workers = state.workers;
+  const { programPreviewResult } = state.debugger;
+
+  if (!workers.length || !programPreviewResult) {
+    return 1;
+  }
+
+  // Calculate steps needed for each worker and take the maximum
+  // This ensures all workers step to their respective block boundaries
+  const stepsForWorkers = workers.map((worker: WorkerState) => {
+    const pc = worker.currentState.pc;
+    if (pc === undefined) {
+      return 1;
+    }
+    return calculateStepsToExitBlockForWorker(pc, programPreviewResult);
+  });
+
+  return Math.max(...stepsForWorkers);
+};
 
 export const selectMemoryRangesForFirstWorker = (state: RootState) => {
   return state.workers[0]?.memoryRanges ?? [];
