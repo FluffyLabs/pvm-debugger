@@ -23,7 +23,7 @@ import {
   loadWorker,
   refreshMemoryRangeAllWorkers,
   refreshPageAllWorkers,
-  setAllWorkersCurrentInstruction,
+  setAllWorkersCurrentPc,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
   syncMemoryRangeAllWorkers,
@@ -34,7 +34,7 @@ import { logger } from "@/utils/loggerService";
 import { useCallback } from "react";
 
 export const useDebuggerActions = () => {
-  const { programPreviewResult, breakpointAddresses, initialState } = useAppSelector((state) => state.debugger);
+  const { breakpointAddresses, initialState } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
   const dispatch = useAppDispatch();
 
@@ -49,10 +49,10 @@ export const useDebuggerActions = () => {
       await dispatch(initAllWorkers()).unwrap();
       await dispatch(refreshPageAllWorkers()).unwrap();
       await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
-      dispatch(setAllWorkersCurrentInstruction(programPreviewResult?.[0]));
+      dispatch(setAllWorkersCurrentPc(state.pc));
       dispatch(setClickedInstruction(null));
     },
-    [dispatch, programPreviewResult],
+    [dispatch],
   );
 
   const startProgram = useCallback(
@@ -75,7 +75,7 @@ export const useDebuggerActions = () => {
       const result = disassemblify(new Uint8Array(newProgram));
       logger.info("Disassembly result:", result);
       dispatch(setProgramPreviewResult(result));
-      dispatch(setAllWorkersCurrentInstruction(result?.[0]));
+      dispatch(setAllWorkersCurrentPc(initialState.pc ?? 0));
       dispatch(setPvmInitialized(true));
     },
     [dispatch],

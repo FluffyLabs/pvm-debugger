@@ -1,7 +1,7 @@
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setServiceId, setSpiArgs, setStepsToPerform } from "@/store/debugger/debuggerSlice";
+import { setServiceId, setSpiArgs, setStepsToPerform, setUseBlockStepping } from "@/store/debugger/debuggerSlice";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "../Instructions/utils";
 import { useContext, useState } from "react";
@@ -11,6 +11,7 @@ import { logger } from "@/utils/loggerService";
 import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
 import { Separator } from "../ui/separator";
 import { WithHelp } from "../WithHelp/WithHelp";
+import { Switch } from "@/components/ui/switch";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -94,6 +95,18 @@ export const DebuggerSettingsContent = () => {
               value={debuggerState.stepsToPerform}
             />
           </div>
+          <div className="p-4 flex justify-between items-center mb-4">
+            <span className="block text-xs font-bold">
+              <WithHelp help="When enabled, Run and Continue commands will step block-by-block instead of instruction-by-instruction. Only available when Batched Steps is not enabled.">
+                Block Stepping
+              </WithHelp>
+            </span>
+            <Switch
+              disabled={debuggerState.stepsToPerform > 1}
+              checked={debuggerState.useBlockStepping}
+              onCheckedChange={(checked) => dispatch(setUseBlockStepping(checked))}
+            />
+          </div>
           <div className="p-4 flex justify-between items-center mb-2">
             <span className="block text-xs font-bold">
               <WithHelp
@@ -104,8 +117,6 @@ export const DebuggerSettingsContent = () => {
                 Host Calls Trace
               </WithHelp>
             </span>
-
-            <div className="flex">TODO</div>
           </div>
 
           <div className="p-4 mt-2 flex justify-between items-center mb-4">

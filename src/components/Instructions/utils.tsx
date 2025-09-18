@@ -1,4 +1,4 @@
-import { NumeralSystem } from "@/context/NumeralSystem.tsx";
+import { NumeralSystem } from "@/context/NumeralSystem";
 import { ArgumentType, Args, ProgramDecoder, BasicBlocks } from "@typeberry/pvm-debugger-adapter";
 import { ArgumentBitLengths, ArgsDecoder } from "@/packages/pvm/pvm/args-decoder";
 

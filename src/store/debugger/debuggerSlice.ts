@@ -28,6 +28,7 @@ export interface DebuggerState {
   pvmInitialized: boolean;
   pvmLoaded: boolean;
   stepsToPerform: number;
+  useBlockStepping: boolean;
   serviceId: number | null;
   hostCallsTrace: null;
   spiArgs: string | null;
@@ -84,6 +85,7 @@ const initialState: DebuggerState = {
   pvmInitialized: false,
   pvmLoaded: false,
   stepsToPerform: 1,
+  useBlockStepping: true,
   spiArgs: null,
   hostCallsTrace: null,
   serviceId: parseInt("0x30303030", 16),
@@ -139,6 +141,9 @@ const debuggerSlice = createSlice({
     setStepsToPerform(state, action) {
       state.stepsToPerform = action.payload;
     },
+    setUseBlockStepping(state, action) {
+      state.useBlockStepping = action.payload;
+    },
     setHasHostCallOpen(state, action) {
       state.hasHostCallOpen = action.payload;
     },
@@ -176,6 +181,7 @@ export const {
   setPvmInitialized,
   setPvmLoaded,
   setStepsToPerform,
+  setUseBlockStepping,
   setServiceId,
   setSpiArgs,
   setPvmOptions,

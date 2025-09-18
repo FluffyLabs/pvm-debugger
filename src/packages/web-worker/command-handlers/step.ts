@@ -1,10 +1,8 @@
-import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm";
-import { nextInstruction } from "../pvm";
+import { ExpectedState, Status } from "@/types/pvm";
 import { getState } from "../utils";
 import { CommandStatus, PvmApiInterface } from "../types";
 
 export type StepParams = {
-  program: Uint8Array;
   pvm: PvmApiInterface | null;
   stepsToPerform: number;
   serviceId: number | null;
@@ -12,18 +10,24 @@ export type StepParams = {
 export type StepResponse = {
   status: CommandStatus;
   error?: unknown;
-  result: CurrentInstruction | object;
+  currentPc: number;
   state: ExpectedState;
   exitArg: number;
   isFinished: boolean;
 };
 
-const step = async ({ pvm, program, stepsToPerform }: StepParams) => {
+const step = async ({ pvm, stepsToPerform }: StepParams) => {
   if (!pvm) {
     throw new Error("PVM is uninitialized.");
   }
 
-  let isFinished = stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep();
+  let isFinished = await new Promise<boolean>((resolve) => {
+    // make sure that we don't block the thread on internal pvm
+    // NOTE maybe it would be better if the internal PVM was async?
+    setTimeout(() => {
+      resolve(stepsToPerform > 1 ? !pvm.nSteps(stepsToPerform) : !pvm.nextStep());
+    }, 0);
+  });
   const state = await getState(pvm);
 
   // It's not really finished if we're in host status
@@ -31,16 +35,14 @@ const step = async ({ pvm, program, stepsToPerform }: StepParams) => {
     isFinished = false;
   }
 
-  const result = nextInstruction(state.pc ?? 0, program) as unknown as CurrentInstruction;
-
-  return { result, state, isFinished, exitArg: pvm.getExitArg() };
+  return { state, isFinished, currentPc: state.pc ?? 0, exitArg: pvm.getExitArg() };
 };
 
-export const runStep = async ({ pvm, program, stepsToPerform, serviceId }: StepParams): Promise<StepResponse> => {
+export const runStep = async ({ pvm, stepsToPerform, serviceId }: StepParams): Promise<StepResponse> => {
   try {
-    const data = await step({ pvm, program, stepsToPerform, serviceId });
+    const data = await step({ pvm, stepsToPerform, serviceId });
     return { status: CommandStatus.SUCCESS, ...data };
   } catch (error) {
-    return { status: CommandStatus.ERROR, error, isFinished: true, result: {}, state: {}, exitArg: 0 };
+    return { status: CommandStatus.ERROR, error, isFinished: true, currentPc: 0, state: {}, exitArg: 0 };
   }
 };

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, isRejected } from "@reduxjs/toolkit";
 import { RootState } from "@/store";
-import { CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
+import { ExpectedState, Status } from "@/types/pvm.ts";
 import {
   selectIsDebugFinished,
   setIsDebugFinished,
@@ -8,13 +8,11 @@ import {
   setIsStepMode,
 } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
-import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction.ts";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
 import { isInstructionError } from "@/types/type-guards";
-import { nextInstruction } from "@/packages/web-worker/pvm.ts";
 import { SerializedFile } from "@/lib/utils.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -40,7 +38,7 @@ export interface WorkerState {
   worker: Worker;
   currentState: ExpectedState;
   previousState: ExpectedState;
-  currentInstruction?: CurrentInstruction;
+  currentPc?: number;
   exitArg?: number;
   isRunMode?: boolean;
   isBreakpoint?: boolean;
@@ -249,13 +247,8 @@ export const handleHostCall = createAsyncThunk(
   async ({ workerId }: { workerId?: string }, { getState, dispatch }) => {
     const state = getState() as RootState;
 
-    const previousInstruction = nextInstruction(
-      state.workers[0].previousState.pc ?? 0,
-      new Uint8Array(state.debugger.program),
-    );
-
     const instructionEnriched = state.debugger.programPreviewResult.find(
-      (instruction) => instruction.instructionCode === previousInstruction?.instructionCode,
+      (instruction) => instruction.address === state.workers[0].previousState.pc,
     );
 
     if (
@@ -303,18 +296,31 @@ export const handleHostCall = createAsyncThunk(
   },
 );
 
+// Calculate steps based on whether we're using block stepping or not
+function getStepsToPerform(state: RootState) {
+  const { stepsToPerform, useBlockStepping } = state.debugger;
+  if (stepsToPerform === 1 && useBlockStepping) {
+    return calculateStepsToExitBlockForAllWorkers(state);
+  }
+  return stepsToPerform;
+}
+
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
   const stepAllWorkersAgain = async () => {
-    await dispatch(stepAllWorkers({})).unwrap();
+    const state = getState() as RootState;
+
+    const stepsToPerform = getStepsToPerform(state);
+
+    await dispatch(stepAllWorkers({ stepsToPerform })).unwrap();
     const allSame = selectHasAllSameState(getState() as RootState);
 
     if (!allSame) {
       dispatch(setIsRunMode(false));
     }
 
-    const state = getState() as RootState;
+    const newState = getState() as RootState;
 
-    if (selectShouldContinueRunning(state)) {
+    if (selectShouldContinueRunning(newState)) {
       await stepAllWorkersAgain();
     }
   };
@@ -325,10 +331,16 @@ export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers",
 export const runAllWorkers = createAsyncThunk("workers/runAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
 
+  // Calculate initial steps based on whether we're using block stepping
+  const batchedSteps = getStepsToPerform(state);
+
   await Promise.all(
     state.workers.map(async (worker) => {
       const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.RUN,
+        payload: {
+          batchedSteps,
+        },
       });
 
       if (hasCommandStatusError(data)) {
@@ -360,7 +372,6 @@ export const stepAllWorkers = createAsyncThunk(
         const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
           command: Commands.STEP,
           payload: {
-            program: new Uint8Array(debuggerState.program),
             stepsToPerform,
           },
         });
@@ -377,7 +388,7 @@ export const stepAllWorkers = createAsyncThunk(
         dispatch(
           setWorkerCurrentInstruction({
             id: worker.id,
-            instruction: data.payload.result,
+            pc: data.payload.currentPc,
           }),
         );
         dispatch(setIsStepMode(true));
@@ -508,6 +519,76 @@ export const loadMemoryRangeAllWorkers = createAsyncThunk(
   },
 );
 
+// Utility function to calculate steps needed to exit the current block for a specific worker
+const calculateStepsToExitBlockForWorker = (
+  workerPc: number,
+  programPreviewResult: Array<{ address: number; block: { isEnd: boolean; number: number } }>,
+): number => {
+  if (!programPreviewResult || programPreviewResult.length === 0) {
+    return 1;
+  }
+
+  const currentInstruction = programPreviewResult.find((x) => x.address === workerPc);
+
+  if (!currentInstruction) {
+    return 1;
+  }
+
+  // If we're already at the end of a block, step once
+  if (currentInstruction.block.isEnd) {
+    return 1;
+  }
+
+  // Find the current instruction in the program preview result
+  const currentIndex = programPreviewResult.findIndex((inst) => inst.address === currentInstruction.address);
+  if (currentIndex === -1) {
+    return 1;
+  }
+
+  // Count instructions remaining in the current block
+  let stepsInBlock = 1; // Count the step from current instruction
+
+  for (let i = currentIndex + 1; i < programPreviewResult.length; i++) {
+    const instruction = programPreviewResult[i];
+
+    // If we encounter a different block or the end of current block, stop counting
+    if (instruction.block.number !== currentInstruction.block.number) {
+      break;
+    }
+
+    stepsInBlock++;
+
+    // If this instruction is the end of the block, we're done
+    if (instruction.block.isEnd) {
+      break;
+    }
+  }
+
+  return stepsInBlock;
+};
+
+// Utility function to calculate steps needed to exit current blocks for all workers
+const calculateStepsToExitBlockForAllWorkers = (state: RootState): number => {
+  const workers = state.workers;
+  const { programPreviewResult } = state.debugger;
+
+  if (!workers.length || !programPreviewResult) {
+    return 1;
+  }
+
+  // Calculate steps needed for each worker and take the maximum
+  // This ensures all workers step to their respective block boundaries
+  const stepsForWorkers = workers.map((worker: WorkerState) => {
+    const pc = worker.currentState.pc;
+    if (pc === undefined) {
+      return 1;
+    }
+    return calculateStepsToExitBlockForWorker(pc, programPreviewResult);
+  });
+
+  return Math.max(...stepsForWorkers);
+};
+
 export const selectMemoryRangesForFirstWorker = (state: RootState) => {
   return state.workers[0]?.memoryRanges ?? [];
 };
@@ -542,7 +623,7 @@ const workers = createSlice({
   name: "workers",
   initialState,
   reducers: {
-    createWorker(state, action) {
+    createWorker(state, action: { payload: WorkerState }) {
       state.push(action.payload);
     },
     setWorkerCurrentState(
@@ -570,59 +651,39 @@ const workers = createSlice({
         }
       }
     },
-    setAllWorkersCurrentState(state, action) {
+    setAllWorkersCurrentState(state, action: { payload: ExpectedState | ((s: ExpectedState) => ExpectedState) }) {
       state.forEach((worker) => {
         if (typeof action.payload === "function") {
           worker.currentState = action.payload(worker.currentState);
         } else {
-          // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
-          if (Number(action.payload.currentState?.status) === -1) {
-            worker.currentState = {
-              ...action.payload,
-              status: 255,
-            };
-          } else {
-            worker.currentState = action.payload;
-          }
+          worker.currentState = action.payload;
         }
       });
     },
-    setAllWorkersPreviousState(state, action) {
+    setAllWorkersPreviousState(state, action: { payload: ExpectedState }) {
       state.forEach((worker) => {
-        // TODO: remove the check and the mapping to status 255 as soon as OK status is not -1 in PVM and PolkaVM anymore
-        if (Number(action.payload.currentState?.status) === -1) {
-          worker.previousState = {
-            ...action.payload,
-            status: 255,
-          };
-        } else {
-          worker.previousState = action.payload;
-        }
+        worker.previousState = action.payload;
       });
     },
-    setWorkerCurrentInstruction(state, action) {
+    setWorkerCurrentPc(state, action: { payload: { id: string; pc?: number } }) {
       const worker = getWorker(state, action.payload.id);
 
       if (worker) {
-        if (action.payload.instruction === null) {
-          worker.currentInstruction = virtualTrapInstruction;
-        } else {
-          worker.currentInstruction = action.payload.instruction;
-        }
+        worker.currentPc = action.payload.pc;
       }
     },
-    setAllWorkersCurrentInstruction(state, action) {
+    setAllWorkersCurrentPc(state, action: { payload: number | undefined }) {
       state.forEach((worker) => {
-        worker.currentInstruction = action.payload;
+        worker.currentPc = action.payload;
       });
     },
-    setWorkerIsLoading(state, action) {
+    setWorkerIsLoading(state, action: { payload: { id: string; isLoading?: boolean } }) {
       const worker = getWorker(state, action.payload.id);
       if (worker) {
         worker.isLoading = action.payload.isLoading;
       }
     },
-    setIsBreakpoint(state, action) {
+    setIsBreakpoint(state, action: { payload: { id: string; isBreakpoint?: boolean } }) {
       const worker = getWorker(state, action.payload.id);
       if (worker) {
         worker.isBreakpoint = action.payload.isBreakpoint;
@@ -672,7 +733,7 @@ const workers = createSlice({
 
       memory.isLoading = action.payload.isLoading;
     },
-    setWorkerExitArg(state, action) {
+    setWorkerExitArg(state, action: { payload: { id: string; exitArg?: number } }) {
       const worker = getWorker(state, action.payload.id);
       if (worker) {
         worker.exitArg = action.payload.exitArg;
@@ -740,10 +801,10 @@ const workers = createSlice({
 
 export const {
   setWorkerCurrentState,
-  setWorkerCurrentInstruction,
+  setWorkerCurrentPc: setWorkerCurrentInstruction,
   setAllWorkersCurrentState,
   setAllWorkersPreviousState,
-  setAllWorkersCurrentInstruction,
+  setAllWorkersCurrentPc,
   setWorkerIsLoading,
   setIsBreakpoint,
   appendMemory,
