@@ -1,7 +1,7 @@
 import { useDropzone } from "react-dropzone";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
 import { mapUploadFileInputToOutput } from "./utils";
-import { bytes, ProgramDecoder } from "@typeberry/pvm-debugger-adapter";
+import { bytes, pvm } from "@typeberry/lib";
 import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { SafeParseReturnType, z } from "zod";
 import { useAppSelector } from "@/store/hooks";
@@ -144,7 +144,7 @@ function loadFileFromUint8Array(
   // Finally try to load program as a Generic
   let program = null;
   try {
-    program = new ProgramDecoder(uint8Array);
+    program = new pvm.ProgramDecoder(uint8Array);
   } catch (e) {
     console.warn("not a generic PVM", e);
   }

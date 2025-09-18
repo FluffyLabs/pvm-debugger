@@ -1,7 +1,7 @@
 import { ExpectedState, InitialState } from "@/types/pvm";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
-import { Pvm as InternalPvm } from "@/types/pvm";
 import { SerializedFile } from "@/lib/utils.ts";
+import { pvm } from "@typeberry/lib";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 
@@ -85,4 +85,4 @@ export enum CommandStatus {
 }
 
 // TODO: unify the api
-export type PvmApiInterface = WasmPvmShellInterface | InternalPvm;
+export type PvmApiInterface = WasmPvmShellInterface | pvm.Pvm;

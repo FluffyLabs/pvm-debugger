@@ -1,7 +1,7 @@
 import { Textarea } from "@/components/ui/textarea.tsx";
 import React, { useMemo, useState } from "react";
 import classNames from "classnames";
-import { bytes } from "@typeberry/pvm-debugger-adapter";
+import { bytes } from "@typeberry/lib";
 import { logger } from "@/utils/loggerService";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";

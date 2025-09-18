@@ -1,5 +1,5 @@
 import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
-import { Pvm as InternalPvm } from "@typeberry/pvm-debugger-adapter";
+import { pvm } from "@typeberry/lib";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmBindgenShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
@@ -10,14 +10,14 @@ import { createAssemblyScriptWasmPvmShell } from "./wasmAsShell.ts";
 
 export async function getState(pvm: PvmApiInterface): Promise<ExpectedState> {
   const regs = isInternalPvm(pvm)
-    ? (Array.from(await pvm.getRegisters()) as RegistersArray)
-    : uint8asRegs(await pvm.getRegisters());
+    ? (Array.from(pvm.getRegisters()) as RegistersArray)
+    : uint8asRegs(pvm.getRegisters());
 
   return {
-    pc: await pvm.getProgramCounter(),
+    pc: pvm.getProgramCounter(),
     regs,
-    gas: await pvm.getGasLeft(),
-    status: await pvm.getStatus(),
+    gas: pvm.getGasLeft(),
+    status: pvm.getStatus(),
   };
 }
 
@@ -70,8 +70,8 @@ export function uint8asRegs(arr: Uint8Array): RegistersArray {
   return regs;
 }
 
-export function isInternalPvm(pvm: PvmApiInterface): pvm is InternalPvm {
-  return pvm instanceof InternalPvm;
+export function isInternalPvm(instance: PvmApiInterface): instance is pvm.Pvm {
+  return instance instanceof pvm.Pvm;
 }
 
 export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiInterface> {

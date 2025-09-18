@@ -1,5 +1,5 @@
-import { Args } from "@typeberry/pvm-debugger-adapter";
-export { Pvm } from "@typeberry/pvm-debugger-adapter";
+import { pvm } from "@typeberry/lib";
+export const Pvm = pvm.Pvm;
 
 type GrowToSize<T, N extends number, A extends T[]> = A["length"] extends N ? A : GrowToSize<T, N, [...A, T]>;
 type FixedArray<T, N extends number> = GrowToSize<T, N, []>;
@@ -48,7 +48,7 @@ export type Block = {
 export type CurrentInstruction =
   | {
       address: number;
-      args: Args;
+      args: pvm.Args;
       name: string;
       gas: number;
       block: Block;

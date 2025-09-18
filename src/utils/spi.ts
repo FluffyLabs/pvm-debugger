@@ -1,4 +1,4 @@
-import { decodeStandardProgram, extractCodeAndMetadata } from "@typeberry/pvm-debugger-adapter";
+import { pvm } from "@typeberry/lib";
 
 export function decodeSpiWithMetadata(blob: Uint8Array, args: Uint8Array) {
   try {
@@ -16,8 +16,8 @@ export function decodeSpiWithMetadata(blob: Uint8Array, args: Uint8Array) {
 }
 
 function tryAsSpi(blob: Uint8Array, args: Uint8Array, withMetadata: boolean) {
-  const { code: spiCode, metadata } = withMetadata ? extractCodeAndMetadata(blob) : { code: blob };
-  const { code, memory, registers } = decodeStandardProgram(spiCode, args);
+  const { code: spiCode, metadata } = withMetadata ? pvm.extractCodeAndMetadata(blob) : { code: blob };
+  const { code, memory, registers } = pvm.decodeStandardProgram(spiCode, args);
 
   return { code, memory, registers, metadata };
 }

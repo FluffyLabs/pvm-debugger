@@ -1,15 +1,5 @@
 import { CommandStatus, PvmApiInterface } from "../types";
-import {
-  HostCallRegisters,
-  Result,
-  interpreter,
-  numbers,
-  Registers,
-  IHostCallMemory,
-  IHostCallRegisters,
-  OK,
-  HostCallMemory,
-} from "@typeberry/pvm-debugger-adapter";
+import { numbers, pvm_host_calls, utils, pvm_interpreter } from "@typeberry/lib";
 import { isInternalPvm } from "../utils";
 import { WasmPvmShellInterface } from "../wasmBindgenShell";
 
@@ -32,7 +22,7 @@ type HostCallResponse =
       error?: unknown;
     };
 
-class SimpleRegisters implements IHostCallRegisters {
+class SimpleRegisters implements pvm_host_calls.IHostCallRegisters {
   flatRegisters!: Uint8Array;
   pvm!: WasmPvmShellInterface;
 
@@ -49,11 +39,11 @@ class SimpleRegisters implements IHostCallRegisters {
 const getRegisters = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
     const regs = pvm.getInterpreter().getRegisters();
-    return new HostCallRegisters(regs);
+    return new pvm_host_calls.HostCallRegisters(regs);
   }
 
   const registers = new SimpleRegisters();
-  const regs = new Registers();
+  const regs = new pvm_interpreter.Registers();
   const rawRegs = new BigUint64Array(pvm.getRegisters().buffer);
   regs.copyFrom(rawRegs);
   registers.flatRegisters = pvm.getRegisters();
@@ -62,32 +52,33 @@ const getRegisters = (pvm: PvmApiInterface) => {
   return registers;
 };
 
-class SimpleMemory implements IHostCallMemory {
+class SimpleMemory implements pvm_host_calls.IHostCallMemory {
   pvm!: WasmPvmShellInterface;
   memorySize: number = 4096;
 
   loadInto(result: Uint8Array, startAddress: numbers.U64) {
     const memoryDump = this.pvm.getPageDump(Number(startAddress / tryAsU64(this.memorySize)));
     result.set(memoryDump.subarray(0, result.length));
-
-    return Result.ok(OK);
+    // eslint-disable-next-line
+    return utils.Result.ok("ok" as any);
   }
 
   storeFrom(address: numbers.U64, bytes: Uint8Array) {
     // TODO [ToDr] Either change the API to require handling multi-page writes or change this code to split the write into multiple pages.
     this.pvm.setMemory(Number(address), bytes);
-    return Result.ok(OK);
+    // eslint-disable-next-line
+    return utils.Result.ok("ok" as any);
   }
 
   getMemory() {
     // TODO [MaSi]: This function is used only by `peek` and `poke` host calls, so dummy implementation is okay for now.
-    return new interpreter.Memory();
+    return new pvm_interpreter.Memory();
   }
 }
 
 const getMemory = (pvm: PvmApiInterface) => {
   if (isInternalPvm(pvm)) {
-    return new HostCallMemory(pvm.getInterpreter().getMemory());
+    return new pvm_host_calls.HostCallMemory(pvm.getInterpreter().getMemory());
   }
   const memory = new SimpleMemory();
   memory.pvm = pvm;

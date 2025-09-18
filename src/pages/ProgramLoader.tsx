@@ -1,6 +1,6 @@
 import { Loader } from "@/components/ProgramLoader/Loader.tsx";
 import { useEffect, useRef } from "react";
-import { bytes } from "@typeberry/pvm-debugger-adapter";
+import { bytes } from "@typeberry/lib";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { useNavigate } from "react-router";
 import { useAppSelector } from "@/store/hooks.ts";
