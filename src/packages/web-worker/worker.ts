@@ -73,22 +73,7 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
       payload: { isRunMode, isFinished: true, state: state ?? {} },
       messageId: e.data.messageId,
     });
-    let isFinished = false;
-    while (!isFinished && isRunMode) {
-      const res = await commandHandlers.runStep({
-        pvm,
-        stepsToPerform: e.data.payload.batchedSteps,
-        serviceId,
-      });
-      isFinished = res.isFinished;
-      postTypedMessage({
-        command: Commands.STEP,
-        status: res.status,
-        error: res.error,
-        payload: { currentPc: res.currentPc, state: res.state, isFinished, isRunMode, exitArg: res.exitArg },
-        messageId: e.data.messageId,
-      });
-    }
+    // NOTE stepping is controlled by UI, since we synchronize over all workers.
   } else if (e.data.command === Commands.STOP) {
     isRunMode = false;
     postTypedMessage({
