@@ -298,11 +298,11 @@ export const handleHostCall = createAsyncThunk(
 
 // Calculate steps based on whether we're using block stepping or not
 function getStepsToPerform(state: RootState) {
-  const { stepsToPerform, useBlockStepping } = state.debugger;
-  if (stepsToPerform === 1 && useBlockStepping) {
+  const { uiRefreshRate } = state.debugger;
+  if (uiRefreshRate.mode === "block") {
     return calculateStepsToExitBlockForAllWorkers(state);
   }
-  return stepsToPerform;
+  return uiRefreshRate.instructionCount;
 }
 
 export const continueAllWorkers = createAsyncThunk("workers/continueAllWorkers", async (_, { getState, dispatch }) => {
