@@ -70,7 +70,7 @@ export const DebuggerSettingsContent = () => {
             />
           </div>
 
-          <div className="p-4 flex justify-between items-center mb-4">
+          <div className="p-4 flex justify-between items-start mb-4">
             <span className="block text-xs font-bold">
               <WithHelp help="How frequently the UI should be refreshed.">UI refresh rate</WithHelp>
             </span>
@@ -90,43 +90,30 @@ export const DebuggerSettingsContent = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="instructions">After N instructions</SelectItem>
-                  <SelectItem value="block">After block</SelectItem>
+                  <SelectItem value="instructions">{debuggerState.uiRefreshRate.instructionCount} steps</SelectItem>
+                  <SelectItem value="block">Each block</SelectItem>
                 </SelectContent>
               </Select>
-              {debuggerState.uiRefreshRate.mode === "instructions" && (
-                <Input
-                  className={commonClass}
-                  type="number"
-                  step={1}
-                  min={1}
-                  max={1000}
-                  placeholder="Number of instructions"
-                  onChange={(ev) => {
-                    dispatch(
-                      setUiRefreshRate({
-                        ...debuggerState.uiRefreshRate,
-                        instructionCount: parseInt(ev.target.value) || 1,
-                      }),
-                    );
-                  }}
-                  value={debuggerState.uiRefreshRate.instructionCount}
-                />
-              )}
+              <Input
+                className={commonClass}
+                disabled={debuggerState.uiRefreshRate.mode !== "instructions"}
+                type="number"
+                step={1}
+                min={1}
+                max={10000}
+                placeholder="Number of instructions"
+                onChange={(ev) => {
+                  dispatch(
+                    setUiRefreshRate({
+                      ...debuggerState.uiRefreshRate,
+                      instructionCount: parseInt(ev.target.value) || 1,
+                    }),
+                  );
+                }}
+                value={debuggerState.uiRefreshRate.instructionCount}
+              />
             </div>
           </div>
-          <div className="p-4 flex justify-between items-center mb-2">
-            <span className="block text-xs font-bold">
-              <WithHelp
-                help={`Configure storage for read & write host calls.
-                 Confirm empty, if you want to process.
-                 Storage can be modified by the program execution.`}
-              >
-                Host Calls Trace
-              </WithHelp>
-            </span>
-          </div>
-
           <div className="p-4 mt-2 flex justify-between items-center mb-4">
             <span className="block text-xs font-bold">
               <WithHelp help="Hex-encoded JAM SPI arguments written to the heap">JAM SPI arguments</WithHelp>
@@ -140,6 +127,17 @@ export const DebuggerSettingsContent = () => {
               }}
               value={debuggerState.spiArgs ?? ""}
             />
+          </div>
+          <div className="p-4 flex justify-between items-center mb-2">
+            <span className="block text-xs font-bold">
+              <WithHelp
+                help={`Configure storage for read & write host calls.
+                  Confirm empty, if you want to process.
+                    Storage can be modified by the program execution.`}
+              >
+                Host Calls Trace
+              </WithHelp>
+            </span>
           </div>
 
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
