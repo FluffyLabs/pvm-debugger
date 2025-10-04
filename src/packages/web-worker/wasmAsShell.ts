@@ -5,15 +5,18 @@ import { instantiate } from "./wasmAsInit";
 export async function createAssemblyScriptWasmPvmShell(module: WebAssembly.Module): Promise<WasmPvmShellInterface> {
   const imports = {};
   const instance = await instantiate(module, imports);
+
   const {
     // memory,
     // InputKind,
     // HasMetadata,
     // disassemble,
+    // prepareProgram,
     // runProgram,
     // runVm,
     // getAssembly,
     // wrapAsProgram,
+    // resetJAM,
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
