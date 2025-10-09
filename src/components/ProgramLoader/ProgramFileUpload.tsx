@@ -144,14 +144,14 @@ function loadFileFromUint8Array(
   // Finally try to load program as a Generic
   let program = null;
   try {
-    program = new pvm.ProgramDecoder(uint8Array);
+    program = new pvm.ProgramDecoder(rawBytes);
   } catch (e) {
     console.warn("not a generic PVM", e);
   }
 
   if (program !== null) {
     onFileUpload({
-      program: Array.from(uint8Array),
+      program: Array.from(rawBytes),
       name: `${loadedFileName} [generic]`,
       isSpi: false,
       kind: "Generic PVM",
