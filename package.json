@@ -76,7 +76,7 @@
     "esbuild": "^0.25.10",
     "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
+    "eslint-plugin-react-refresh": "^0.4.23",
     "globals": "^16.4.0",
     "husky": "^9.1.1",
     "jsdom": "^27.0.0",
