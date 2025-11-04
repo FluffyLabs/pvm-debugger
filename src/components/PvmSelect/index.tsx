@@ -33,6 +33,8 @@ interface WasmMetadata {
 }
 
 export interface SelectedPvmWithPayload {
+  /** Versioning for persistence. */
+  version: 1;
   id: string;
   type: PvmTypes | AvailablePvms;
   label: string;
@@ -172,6 +174,15 @@ export const PvmSelect = () => {
     Promise.all(
       pvmsWithPayload.map(async (pvm) => {
         if (pvm.type === PvmTypes.WASM_URL) {
+          // fix old persisted versions which fuck up `url` and `metaUrl`.
+          if (pvm.version !== 1 && pvm.params) {
+            pvm.params = {
+              ...pvm.params,
+              metaUrl: path.join(pvm.params.url ?? "", "../pvm-metadata.json"),
+            };
+            pvm.version = 1;
+          }
+
           if (pvm.params?.metaUrl) {
             try {
               const metadata = await fetchWasmMetadata(pvm.params.metaUrl);

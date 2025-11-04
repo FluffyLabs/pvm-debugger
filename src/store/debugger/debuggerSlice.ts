@@ -47,17 +47,20 @@ const initialState: DebuggerState = {
   pvmOptions: {
     allAvailablePvms: [
       {
+        version: 1,
         id: AvailablePvms.TYPEBERRY,
         type: PvmTypes.BUILT_IN,
         label: `@typeberry/pvm v${import.meta.env.TYPEBERRY_PVM_VERSION}`,
       },
       {
+        version: 1,
         id: AvailablePvms.POLKAVM,
         type: PvmTypes.WASM_URL,
         params: { metaUrl: "https://todr.me/polkavm/pvm-metadata.json" },
         label: "PolkaVM",
       },
       {
+        version: 1,
         id: AvailablePvms.ANANAS,
         type: PvmTypes.WASM_URL,
         params: {
