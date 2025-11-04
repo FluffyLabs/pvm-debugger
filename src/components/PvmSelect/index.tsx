@@ -178,7 +178,7 @@ export const PvmSelect = () => {
           if (pvm.version !== 1 && pvm.params) {
             pvm.params = {
               ...pvm.params,
-              metaUrl: path.join(pvm.params.url ?? "", "../pvm-metadata.json"),
+              metaUrl: path.join(pvm.params.url ?? "", "../../pvm-metadata.json"),
             };
             pvm.version = 1;
           }
