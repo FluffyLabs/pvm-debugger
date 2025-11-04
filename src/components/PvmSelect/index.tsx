@@ -18,6 +18,7 @@ import {
   setSelectedPvms,
 } from "@/store/debugger/debuggerSlice.ts";
 import { SerializedFile, serializeFile } from "@/lib/utils.ts";
+import { logger } from "@/utils/loggerService";
 
 interface WasmMetadata {
   name: string;
@@ -37,6 +38,9 @@ export interface SelectedPvmWithPayload {
   label: string;
   params?: {
     file?: SerializedFile;
+    /** Metadata url. */
+    metaUrl?: string;
+    /** WASM blob url. */
     url?: string;
   };
   removable?: boolean;
@@ -131,6 +135,7 @@ export const PvmSelect = () => {
           id,
           type: PvmTypes.WASM_URL,
           params: {
+            metaUrl: url,
             url: path.join(url, "../", wasmMetadata.wasmBlobUrl),
           },
           label: `${id} v${wasmMetadata.version}` as string,
@@ -167,27 +172,36 @@ export const PvmSelect = () => {
     Promise.all(
       pvmsWithPayload.map(async (pvm) => {
         if (pvm.type === PvmTypes.WASM_URL) {
-          if (pvm.params?.url) {
-            const metadata = await fetchWasmMetadata(pvm.params.url);
-            if (!metadata) {
-              throw new Error("Invalid metadata");
+          if (pvm.params?.metaUrl) {
+            try {
+              const metadata = await fetchWasmMetadata(pvm.params.metaUrl);
+              if (!metadata) {
+                throw new Error("Invalid metadata");
+              }
+              return {
+                ...pvm,
+                id: pvm.id,
+                type: PvmTypes.WASM_URL,
+                params: {
+                  ...pvmsWithPayload.find((p) => p.id === pvm.id)?.params,
+                  url: path.join(pvm.params.metaUrl, "../", metadata.wasmBlobUrl).replace("https:/", "https://"), // TODO: check why the http protocol path is getting messed up
+                },
+                label: `${metadata.name} v${metadata.version}` as string,
+              };
+            } catch (e) {
+              logger.error(`Error while updating ${pvm.id}: ${e}`, { error: e });
             }
-            return {
-              id: pvm.id,
-              type: PvmTypes.WASM_URL,
-              params: {
-                ...pvmsWithPayload.find((p) => p.id === pvm.id)?.params,
-                url: path.join(pvm.params.url, "../", metadata.wasmBlobUrl).replace("https:/", "https://"), // TODO: check why the http protocol path is getting messed up
-              },
-              label: `${metadata.name} v${metadata.version}` as string,
-            };
           }
         }
         return pvm;
       }),
-    ).then((values) => {
-      dispatch(setPvmOptions(values));
-    });
+    )
+      .then((values) => {
+        dispatch(setPvmOptions(values));
+      })
+      .catch((e) => {
+        logger.error(`Unable to fetch PVM: ${e}`, { error: e });
+      });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -54,14 +54,14 @@ const initialState: DebuggerState = {
       {
         id: AvailablePvms.POLKAVM,
         type: PvmTypes.WASM_URL,
-        params: { url: "https://todr.me/polkavm/pvm-metadata.json" },
+        params: { metaUrl: "https://todr.me/polkavm/pvm-metadata.json" },
         label: "PolkaVM",
       },
       {
         id: AvailablePvms.ANANAS,
         type: PvmTypes.WASM_URL,
         params: {
-          url: "https://todr.me/anan-as/pvm-metadata.json",
+          metaUrl: "https://todr.me/anan-as/pvm-metadata.json",
         },
         label: "Anan-AS",
       },
