@@ -6,7 +6,7 @@ import workersReducer from "./workers/workersSlice";
 import debuggerReducer, { debuggerSliceListenerMiddleware, DebuggerState } from "./debugger/debuggerSlice";
 
 const persistConfig = {
-  key: "debugger",
+  key: "pvms",
   storage,
   whitelist: ["pvmOptions"],
 };
