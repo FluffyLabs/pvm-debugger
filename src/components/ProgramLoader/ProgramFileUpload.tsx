@@ -80,7 +80,7 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
 
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
-    accept: { "application/octet-stream": [".bin", ".pvm"], "application/json": [".json"] },
+    accept: { "application/octet-stream": [".bin", ".pvm", ".jam"], "application/json": [".json"] },
     noClick: true,
   });
 
