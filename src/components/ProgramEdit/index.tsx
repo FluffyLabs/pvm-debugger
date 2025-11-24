@@ -28,7 +28,7 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: ReactNode; c
           title="Edit the code"
           onClick={() => {
             if (isProgramEditMode) {
-              debuggerActions.startProgram(initialState, program, programName);
+              debuggerActions.startProgram(initialState, program, programName, null);
               dispatch(setIsProgramEditMode(false));
             } else {
               debuggerActions.restartProgram(initialState);

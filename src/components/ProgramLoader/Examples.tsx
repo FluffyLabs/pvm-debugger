@@ -4,10 +4,12 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { programs } from "./examplePrograms";
 import { useState } from "react";
 import doomUrl from "./doom.bin?url";
+import golUrl from "./gol.jam?url";
 import { loadFileFromUint8Array } from "./loadingUtils";
 
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
   const [isDoomLoading, setIsDoomLoading] = useState(false);
+  const [isGolLoading, setIsGolLoading] = useState(false);
 
   return (
     <div>
@@ -28,7 +30,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
                   memory: program.memory,
                   gas: program.gas,
                 },
-                isSpi: false,
+                spiProgram: null,
                 kind: "Example",
                 program: programs[key].program,
                 name: program.name,
@@ -49,13 +51,36 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
             return;
           }
           setIsDoomLoading(true);
-          const data = await fetch(doomUrl);
-          const blob = await data.bytes();
-          setIsDoomLoading(false);
-          loadFileFromUint8Array("doom.bin", blob, new Uint8Array(), () => {}, onProgramLoad, {});
+          try {
+            const data = await fetch(doomUrl);
+            const blob = await data.bytes();
+            loadFileFromUint8Array("doom.bin", blob, new Uint8Array(), () => {}, onProgramLoad, {});
+          } finally {
+            setIsDoomLoading(false);
+          }
         }}
       >
         {isDoomLoading ? "..." : "Doom"}
+      </Badge>
+      <Badge
+        id="gol-sdk"
+        variant={isGolLoading ? "outline" : "brand"}
+        className={`mb-2 mr-2 text-xs sm:text-md ${isGolLoading ? "cursor-wait" : "cursor-pointer"}`}
+        onClick={async () => {
+          if (isGolLoading) {
+            return;
+          }
+          setIsGolLoading(true);
+          try {
+            const data = await fetch(golUrl);
+            const blob = await data.bytes();
+            loadFileFromUint8Array("game-of-life.jam", blob, new Uint8Array(), () => {}, onProgramLoad, {});
+          } finally {
+            setIsGolLoading(false);
+          }
+        }}
+      >
+        {isGolLoading ? "..." : "GoL (JAM-SDK)"}
       </Badge>
     </div>
   );

@@ -1,7 +1,7 @@
 import { logger } from "@/utils/loggerService";
 import { getMemorySize, loadArrayBufferAsWasm } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
-import { pvm } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 import { deserializeFile, SerializedFile } from "@/lib/utils.ts";
 import loadWasmFromWebsockets from "../wasmFromWebsockets";
 
@@ -25,7 +25,7 @@ const load = async (
 }> => {
   if (args.type === PvmTypes.BUILT_IN) {
     return {
-      pvm: new pvm.Pvm(),
+      pvm: new pvm.DebuggerAdapter(),
     };
   } else if (args.type === PvmTypes.WASM_FILE) {
     if (!args.params.file) {

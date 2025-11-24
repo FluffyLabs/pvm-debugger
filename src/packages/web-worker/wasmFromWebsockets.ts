@@ -46,6 +46,7 @@ export default function wasmFromWebsockets(): Promise<{
           "getRegisters",
           "getPageDump",
           "getExitArg",
+          "resetJAM",
           "resetGeneric",
           "resetGenericWithMemory",
           "runMemory",
@@ -111,6 +112,19 @@ export default function wasmFromWebsockets(): Promise<{
             newParams[0] ? Array.from(newParams[0]) : [],
             newParams[1] ? Array.from(newParams[1]) : [],
             newParams[2] ? Array.from(newParams[2]) : [],
+            newParams[3] ? Array.from(newParams[3]) : [],
+            newParams[4],
+          ];
+          return socket.send(JSON.stringify(request));
+        }
+
+        if (method === "resetJAM") {
+          const newParams = request.params[0];
+
+          request.params = [
+            newParams[0] ? Array.from(newParams[0]) : [],
+            newParams[1],
+            newParams[2],
             newParams[3] ? Array.from(newParams[3]) : [],
             newParams[4],
           ];

@@ -1,9 +1,5 @@
 import { CommandStatus, PvmApiInterface } from "../types";
-import { numbers, pvm_host_calls, utils, pvm_interpreter } from "@typeberry/lib";
-import { isInternalPvm } from "../utils";
-import { WasmPvmShellInterface } from "../wasmBindgenShell";
-
-const { tryAsU64 } = numbers;
+import { numbers, utils, pvm } from "@typeberry/lib";
 
 type HostCallParams = {
   pvm: PvmApiInterface | null;
@@ -22,64 +18,49 @@ type HostCallResponse =
       error?: unknown;
     };
 
-class SimpleRegisters implements pvm_host_calls.IHostCallRegisters {
+class SimpleRegisters implements pvm.IRegisters {
   flatRegisters!: Uint8Array;
-  pvm!: WasmPvmShellInterface;
+  pvm!: PvmApiInterface;
 
-  get(registerIndex: number): numbers.U64 {
-    return tryAsU64(new BigUint64Array(this.flatRegisters.buffer)[registerIndex]);
+  getAllEncoded(): Uint8Array {
+    return this.flatRegisters;
   }
-
-  set(registerIndex: number, value: numbers.U64): void {
-    new BigUint64Array(this.flatRegisters.buffer)[registerIndex] = value;
+  setAllEncoded(bytes: Uint8Array): void {
+    this.flatRegisters = bytes;
     this.pvm.setRegisters(this.flatRegisters);
   }
 }
 
 const getRegisters = (pvm: PvmApiInterface) => {
-  if (isInternalPvm(pvm)) {
-    const regs = pvm.getInterpreter().getRegisters();
-    return new pvm_host_calls.HostCallRegisters(regs);
-  }
-
   const registers = new SimpleRegisters();
-  const regs = new pvm_interpreter.Registers();
-  const rawRegs = new BigUint64Array(pvm.getRegisters().buffer);
-  regs.copyFrom(rawRegs);
   registers.flatRegisters = pvm.getRegisters();
   registers.pvm = pvm;
 
   return registers;
 };
 
-class SimpleMemory implements pvm_host_calls.IHostCallMemory {
-  pvm!: WasmPvmShellInterface;
+class SimpleMemory implements pvm.IMemory {
+  pvm!: PvmApiInterface;
   memorySize: number = 4096;
 
-  loadInto(result: Uint8Array, startAddress: numbers.U64) {
-    const memoryDump = this.pvm.getPageDump(Number(startAddress / tryAsU64(this.memorySize)));
-    result.set(memoryDump.subarray(0, result.length));
+  read(startAddress: numbers.U32, result: Uint8Array) {
+    const memoryDump = this.pvm.getPageDump(Number(startAddress / this.memorySize));
+    if (memoryDump !== null) {
+      result.set(memoryDump.subarray(0, result.length));
+    }
     // eslint-disable-next-line
     return utils.Result.ok("ok" as any);
   }
 
-  storeFrom(address: numbers.U64, bytes: Uint8Array) {
+  store(address: numbers.U32, bytes: Uint8Array) {
     // TODO [ToDr] Either change the API to require handling multi-page writes or change this code to split the write into multiple pages.
     this.pvm.setMemory(Number(address), bytes);
     // eslint-disable-next-line
     return utils.Result.ok("ok" as any);
   }
-
-  getMemory() {
-    // TODO [MaSi]: This function is used only by `peek` and `poke` host calls, so dummy implementation is okay for now.
-    return new pvm_interpreter.Memory();
-  }
 }
 
 const getMemory = (pvm: PvmApiInterface) => {
-  if (isInternalPvm(pvm)) {
-    return new pvm_host_calls.HostCallMemory(pvm.getInterpreter().getMemory());
-  }
   const memory = new SimpleMemory();
   memory.pvm = pvm;
 

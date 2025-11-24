@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pvm } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 import {
   groupInstructionsByBlocks,
   getVisibleInstructionCount,
@@ -27,7 +27,7 @@ function createMockInstruction(
     instructionCode: 1,
     instructionBytes: new Uint8Array([1, 2, 3]),
     args: {
-      type: pvm.ArgumentType.NO_ARGUMENTS,
+      type: pvm.args.ArgumentType.NO_ARGUMENTS,
       noOfBytesToSkip: 3,
     },
     block: {

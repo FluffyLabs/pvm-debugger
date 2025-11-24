@@ -37,6 +37,8 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
   } else if (e.data.command === Commands.INIT) {
     const data = await commandHandlers.runInit({
       pvm,
+      spiProgram: e.data.payload.spiProgram,
+      spiArgs: e.data.payload.spiArgs,
       program: e.data.payload.program,
       initialState: e.data.payload.initialState,
     });

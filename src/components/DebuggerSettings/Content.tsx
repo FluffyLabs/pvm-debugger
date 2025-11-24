@@ -12,6 +12,8 @@ import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
 import { Separator } from "../ui/separator";
 import { WithHelp } from "../WithHelp/WithHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { bytes } from "@typeberry/lib";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -26,6 +28,18 @@ export const DebuggerSettingsContent = () => {
   const dispatch = useAppDispatch();
   const { numeralSystem } = useContext(NumeralSystemContext);
   const [error, setError] = useState<string>();
+  const [textSpi, setTextSpi] = useState(debuggerState.spiArgs?.toString() ?? "");
+  const isSpiError = textSpi !== debuggerState.spiArgs?.toString();
+  const handleTextSpi = (newVal: string) => {
+    setTextSpi(newVal);
+    try {
+      const parsed = bytes.BytesBlob.parseBlob(newVal);
+      dispatch(setSpiArgs(parsed));
+    } catch {
+      // Ignore parse errors - user may be typing
+    }
+  };
+
   const onServiceIdChange = async (newServiceId: number) => {
     setError("");
     try {
@@ -119,13 +133,13 @@ export const DebuggerSettingsContent = () => {
               <WithHelp help="Hex-encoded JAM SPI arguments written to the heap">JAM SPI arguments</WithHelp>
             </span>
             <Input
-              className={commonClass}
+              className={cn(commonClass, { "border-red": isSpiError })}
               placeholder="0x-prefixed, encoded operands"
               onChange={(e) => {
                 const value = e.target?.value;
-                dispatch(setSpiArgs(value));
+                handleTextSpi(value);
               }}
-              value={debuggerState.spiArgs ?? ""}
+              value={textSpi}
             />
           </div>
           <div className="p-4 flex justify-between items-center mb-2">

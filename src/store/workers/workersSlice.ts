@@ -142,6 +142,8 @@ export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (
       const initData = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.INIT,
         payload: {
+          spiProgram: state.debugger.spiProgram,
+          spiArgs: state.debugger.spiArgs,
           initialState: debuggerState.initialState,
           program: new Uint8Array(debuggerState.program),
         },

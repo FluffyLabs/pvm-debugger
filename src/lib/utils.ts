@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { pvm } from "@typeberry/lib";
-import { MemoryChunkItem, PageMapItem } from "@/types/pvm.ts";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
+import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -76,7 +76,7 @@ function pageAlignUp(v: number) {
   return (((v + PAGE_SIZE - 1) >> PAGE_SHIFT) << PAGE_SHIFT) >>> 0;
 }
 
-function asChunks(mem: pvm.MemorySegment[]): MemoryChunkItem[] {
+function asChunks(mem: pvm.spi.MemorySegment[]): MemoryChunkItem[] {
   const items = [];
   for (const segment of mem) {
     if (segment.data === null) {
@@ -101,7 +101,7 @@ function asChunks(mem: pvm.MemorySegment[]): MemoryChunkItem[] {
   return items;
 }
 
-function asPageMap(mem: pvm.MemorySegment[], isWriteable: boolean): PageMapItem[] {
+function asPageMap(mem: pvm.spi.MemorySegment[], isWriteable: boolean): PageMapItem[] {
   const items = [];
   for (const segment of mem) {
     const pageOffset = segment.start % PAGE_SIZE;
@@ -118,10 +118,14 @@ function asPageMap(mem: pvm.MemorySegment[], isWriteable: boolean): PageMapItem[
   return items;
 }
 
-export function getAsPageMap(mem: pvm.SpiMemory): PageMapItem[] {
+export function getAsPageMap(mem: pvm.spi.SpiMemory): PageMapItem[] {
   return asPageMap(mem.readable, false).concat(asPageMap(mem.writeable, true));
 }
 
-export function getAsChunks(mem: pvm.SpiMemory): MemoryChunkItem[] {
+export function getAsChunks(mem: pvm.spi.SpiMemory): MemoryChunkItem[] {
   return asChunks(mem.readable).concat(asChunks(mem.writeable));
+}
+
+export function bigUint64ArrayToRegistersArray(registers: BigUint64Array): RegistersArray {
+  return Array.from({ length: 13 }, (_, idx) => BigInt(registers[idx] ?? 0n)) as RegistersArray;
 }

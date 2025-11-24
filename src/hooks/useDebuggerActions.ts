@@ -29,7 +29,7 @@ import {
   syncMemoryRangeAllWorkers,
   WorkerState,
 } from "@/store/workers/workersSlice";
-import { AvailablePvms, ExpectedState, Status } from "@/types/pvm";
+import { AvailablePvms, ExpectedState, SpiProgram, Status } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
 import { useCallback } from "react";
 
@@ -56,9 +56,15 @@ export const useDebuggerActions = () => {
   );
 
   const startProgram = useCallback(
-    async (initialState: ExpectedState, newProgram: number[], programName: string, exampleName?: string) => {
+    async (
+      initialState: ExpectedState,
+      newProgram: number[],
+      programName: string,
+      spiProgram: SpiProgram | null,
+      exampleName?: string,
+    ) => {
       dispatch(setInitialState(initialState));
-      dispatch(setProgram({ program: newProgram, programName, exampleName }));
+      dispatch(setProgram({ program: newProgram, programName, exampleName, spiProgram }));
       const currentState = {
         pc: initialState.pc ?? 0,
         regs: initialState.regs,
@@ -88,6 +94,7 @@ export const useDebuggerActions = () => {
           { ...data.initial, status: Status.OK },
           data.program,
           data.name,
+          data.spiProgram,
           data.exampleName,
         );
         if (

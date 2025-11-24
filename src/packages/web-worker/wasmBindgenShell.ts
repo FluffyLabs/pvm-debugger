@@ -7,6 +7,9 @@ export interface WasmPvmShellInterface {
   setNextProgramCounter?(pc: number): void;
   getGasLeft(): bigint;
   setGasLeft?(gas: bigint): void;
+  resetJAM:
+    | undefined
+    | ((program: Uint8Array, pc: number, gas: bigint, args: Uint8Array, hasMetadata?: boolean) => void);
   resetGeneric(program: Uint8Array, registers: Uint8Array, gas: bigint): void;
   resetGenericWithMemory?(
     program: Uint8Array,
@@ -45,6 +48,7 @@ export function createWasmPvmShell(): WasmPvmShellInterface {
   } = wasm;
   return {
     __wbg_set_wasm,
+    resetJAM: undefined,
     resetGeneric,
     resetGenericWithMemory,
     nextStep,

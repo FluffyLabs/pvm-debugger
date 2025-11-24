@@ -1,11 +1,12 @@
 import { InitialState } from "@/types/pvm";
-import { pvm, pvm_interpreter } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 
-const { tryAsMemoryIndex, tryAsSbrkIndex, MemoryBuilder: InternalPvmMemoryBuilder } = pvm_interpreter;
+const { tryAsMemoryIndex, tryAsSbrkIndex, MemoryBuilder: InternalPvmMemoryBuilder, Registers } = pvm;
 
-export const initPvm = async (pvm: pvm.Pvm, program: Uint8Array, initialState: InitialState) => {
+export const initPvm = async (pvm: pvm.DebuggerAdapter, program: Uint8Array, initialState: InitialState) => {
   const initialMemory = initialState.memory ?? [];
   const pageMap = initialState.pageMap ?? [];
+  const regs = initialState.regs ?? Array.from<bigint>({ length: 13 }).fill(0n);
 
   const memoryBuilder = new InternalPvmMemoryBuilder();
   for (const page of pageMap) {
@@ -45,7 +46,7 @@ export const initPvm = async (pvm: pvm.Pvm, program: Uint8Array, initialState: I
   const heapStartIndex = tryAsMemoryIndex(hasMemoryLayout ? maxAddressFromPageMap + pageSize : 0);
   const heapEndIndex = tryAsSbrkIndex(2 ** 32 - 2 * 2 ** 16 - 2 ** 24);
   const memory = maybeMemory ?? memoryBuilder.finalize(heapStartIndex, heapEndIndex);
-  const registers = new pvm_interpreter.Registers();
-  registers.copyFrom(new BigUint64Array(initialState.regs!.map((x) => BigInt(x))));
-  pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 0n, registers, memory);
+  const registers = new Registers();
+  registers.copyFrom(new BigUint64Array(regs));
+  pvm.reset(new Uint8Array(program), initialState.pc ?? 0, initialState.gas ?? 10_000n, registers, memory);
 };

@@ -1,5 +1,5 @@
 import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
-import { pvm } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmBindgenShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
@@ -9,9 +9,7 @@ import { PvmApiInterface } from "./types.ts";
 import { createAssemblyScriptWasmPvmShell } from "./wasmAsShell.ts";
 
 export async function getState(pvm: PvmApiInterface): Promise<ExpectedState> {
-  const regs = isInternalPvm(pvm)
-    ? (Array.from(pvm.getRegisters()) as RegistersArray)
-    : uint8asRegs(pvm.getRegisters());
+  const regs = uint8asRegs(pvm.getRegisters());
 
   return {
     pc: pvm.getProgramCounter(),
@@ -61,17 +59,16 @@ export function u64_le_bytes(val: bigint) {
 }
 
 export function uint8asRegs(arr: Uint8Array): RegistersArray {
-  const regs: RegistersArray = [0n, 1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n, 11n, 12n];
+  const regs = Array.from({ length: 13 }, () => 0n) as RegistersArray;
   const u64Regs = new BigUint64Array(arr.buffer);
-  for (const regIdx of regs) {
-    const idx = Number(regIdx);
-    regs[idx] = u64Regs[idx];
+  for (let idx = 0; idx < regs.length; idx += 1) {
+    regs[idx] = u64Regs[idx] ?? 0n;
   }
   return regs;
 }
 
-export function isInternalPvm(instance: PvmApiInterface): instance is pvm.Pvm {
-  return instance instanceof pvm.Pvm;
+export function isInternalPvm(instance: PvmApiInterface): instance is pvm.DebuggerAdapter {
+  return instance instanceof pvm.DebuggerAdapter;
 }
 
 export async function loadArrayBufferAsWasm(bytes: ArrayBuffer): Promise<PvmApiInterface> {

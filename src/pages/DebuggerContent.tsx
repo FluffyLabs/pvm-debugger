@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
-import { useCallback, useMemo } from "react";
-import { CurrentInstruction, RegistersArray } from "@/types/pvm.ts";
+import { useCallback } from "react";
+import { CurrentInstruction } from "@/types/pvm.ts";
 import { setActiveMobileTab, setClickedInstruction, setIsProgramInvalid } from "@/store/debugger/debuggerSlice.ts";
 import { InitialLoadProgramCTA } from "@/components/InitialLoadProgramCTA";
 import { InstructionMode } from "@/components/Instructions/types.ts";
@@ -12,8 +12,7 @@ import { Registers } from "@/components/Registers";
 import { MemoryPreview } from "@/components/MemoryPreview";
 import classNames from "classnames";
 import { KnowledgeBase } from "@/components/KnowledgeBase";
-import { bytes } from "@typeberry/lib";
-import { getAsChunks, getAsPageMap } from "@/lib/utils";
+import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils";
 import { decodeSpiWithMetadata } from "@/utils/spi";
 
 const MobileTabs = () => {
@@ -104,14 +103,6 @@ const DebuggerContent = () => {
     programName.includes("(") ? programName.indexOf("(") : undefined,
   );
 
-  const spiArgsAsBytes = useMemo(() => {
-    try {
-      return bytes.BytesBlob.parseBlob(spiArgs ?? "0x").raw;
-    } catch {
-      return new Uint8Array();
-    }
-  }, [spiArgs]);
-
   return (
     <div className="w-full h-full p-3 pt-0 flex flex-col gap-4 overflow-hidden max-sm:mb-3">
       <div className="w-full col-span-12 mt-3 sm:hidden">
@@ -140,24 +131,24 @@ const DebuggerContent = () => {
                   ) : (
                     <ProgramTextLoader
                       program={program}
-                      setProgram={(program, error) => {
+                      setProgram={(programBlob: number[] | undefined, error) => {
                         if (error) {
                           dispatch(setIsProgramInvalid(true));
                         }
                         let maybeSpi;
                         try {
                           maybeSpi = decodeSpiWithMetadata(
-                            program === undefined ? new Uint8Array() : new Uint8Array(program),
-                            spiArgsAsBytes,
+                            programBlob === undefined ? new Uint8Array() : new Uint8Array(programBlob),
+                            spiArgs ?? new Uint8Array(),
                           );
                         } catch {
                           maybeSpi = null;
                         }
 
-                        if (!error && program) {
+                        if (!error && programBlob) {
                           if (maybeSpi) {
-                            const { code, memory: rawMemory, registers } = maybeSpi;
-                            const regs = Array.from(registers) as RegistersArray;
+                            const { code, memory: rawMemory, registers, metadata } = maybeSpi;
+                            const regs = bigUint64ArrayToRegistersArray(registers);
 
                             const pageMap = getAsPageMap(rawMemory);
                             const memory = getAsChunks(rawMemory);
@@ -166,16 +157,19 @@ const DebuggerContent = () => {
                               program: Array.from(code) || [],
                               initial: { ...initialState, regs, pageMap, memory },
                               name: `${programNameWithoutSuffix} (SPI)`,
-                              isSpi: true,
                               kind: "JAM SPI",
+                              spiProgram: {
+                                program: new Uint8Array(programBlob),
+                                hasMetadata: metadata !== undefined,
+                              },
                             };
                             debuggerActions.handleProgramLoad(program);
                           } else {
                             debuggerActions.handleProgramLoad({
                               initial: initialState,
-                              program: program || [],
+                              program: programBlob ?? [],
                               name: `${programName} (generic)`,
-                              isSpi: false,
+                              spiProgram: null,
                               kind: "Generic PVM",
                             });
                           }

@@ -1,8 +1,8 @@
 import { mapUploadFileInputToOutput } from "./utils";
-import { bytes, pvm } from "@typeberry/lib";
-import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
+import { bytes, pvm_interpreter as pvm } from "@typeberry/lib";
+import { ExpectedState, MemoryChunkItem, PageMapItem } from "@/types/pvm.ts";
 import { type ZodIssue, type ZodSafeParseResult, z } from "zod";
-import { getAsChunks, getAsPageMap } from "@/lib/utils.ts";
+import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 import { decodeSpiWithMetadata } from "@/utils/spi";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
 
@@ -42,7 +42,7 @@ const validateJsonTestCaseSchema = (json: RawProgramUploadFileInput): Validation
 export function loadFileFromUint8Array(
   loadedFileName: string,
   uint8Array: Uint8Array,
-  spiArgsAsBytes: Uint8Array,
+  spiArgsAsBytes: Uint8Array | null,
   setError: (e?: string) => void,
   onFileUpload: (d: ProgramUploadFileOutput) => void,
   initialState: ExpectedState,
@@ -91,22 +91,25 @@ export function loadFileFromUint8Array(
   // Try to decode the program as an SPI
   let spi = null;
   try {
-    spi = decodeSpiWithMetadata(rawBytes, spiArgsAsBytes);
+    spi = decodeSpiWithMetadata(rawBytes, spiArgsAsBytes ?? new Uint8Array());
   } catch (e) {
     console.warn("not an SPI blob", e);
   }
   if (spi !== null) {
-    const { code, memory, registers } = spi;
+    const { code, memory, registers, metadata } = spi;
     const pageMap: PageMapItem[] = getAsPageMap(memory);
     const chunks: MemoryChunkItem[] = getAsChunks(memory);
 
     onFileUpload({
       program: Array.from(code),
       name: `${loadedFileName} [spi]`,
-      isSpi: true,
+      spiProgram: {
+        program: rawBytes,
+        hasMetadata: metadata !== undefined,
+      },
       kind: "JAM SPI",
       initial: {
-        regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
+        regs: bigUint64ArrayToRegistersArray(registers),
         pc: 0,
         pageMap,
         memory: chunks,
@@ -119,7 +122,7 @@ export function loadFileFromUint8Array(
   // Finally try to load program as a Generic
   let program = null;
   try {
-    program = new pvm.ProgramDecoder(rawBytes);
+    program = pvm.Program.fromGeneric(rawBytes, false);
   } catch (e) {
     console.warn("not a generic PVM", e);
   }
@@ -128,7 +131,7 @@ export function loadFileFromUint8Array(
     onFileUpload({
       program: Array.from(rawBytes),
       name: `${loadedFileName} [generic]`,
-      isSpi: false,
+      spiProgram: null,
       kind: "Generic PVM",
       initial: initialState,
     });

@@ -7,6 +7,7 @@ export function createGoWasmPvmShell(): WasmPvmShellInterface {
 
   return {
     __wbg_set_wasm,
+    resetJAM: undefined,
     resetGeneric: reset,
     nextStep,
     nSteps: (steps: number) => {
