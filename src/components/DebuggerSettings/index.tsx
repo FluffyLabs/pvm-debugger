@@ -14,7 +14,7 @@ export const DebuggerSettings = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {noTrigger ? null : (
-        <DialogTrigger>
+        <DialogTrigger className="cursor-pointer">
           <Settings height="34px" width="20px" className="text-[#858585]" />
         </DialogTrigger>
       )}

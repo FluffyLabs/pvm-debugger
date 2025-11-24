@@ -30,14 +30,14 @@ export const Instructions = (props: InstructionsProps) => {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setUseBlockView(false)}
-                className={`p-1 rounded transition-colors ${!useBlockView ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                className={`cursor-pointer p-1 rounded transition-colors ${!useBlockView ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 title="List view"
               >
                 <List className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setUseBlockView(true)}
-                className={`p-1 rounded transition-colors ${useBlockView ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                className={`cursor-pointer p-1 rounded transition-colors ${useBlockView ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}
                 title="Block view"
               >
                 <Layers className="h-4 w-4" />
