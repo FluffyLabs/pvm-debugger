@@ -15,7 +15,7 @@ export const ErrorWarningTooltip = (props: {
       </TooltipTrigger>
       <TooltipContent
         side={props.side || "bottom"}
-        className={`border-[1px] rounded-md ${props.variant === "dark" ? "bg-[#242424]" : "bg-[#fff]"} p-2 mt-2 text-red-500 z-10`}
+        className={`border rounded-md ${props.variant === "dark" ? "bg-[#242424]" : "bg-white"} p-2 mt-2 text-red-500 z-10`}
       >
         <p>{props.msg}</p>
       </TooltipContent>

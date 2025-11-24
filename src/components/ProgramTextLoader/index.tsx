@@ -101,7 +101,8 @@ export const ProgramTextLoader = ({
           className={classNames(
             "w-full flex-auto font-inconsolata text-base border-2 rounded-md focus-visible:ring-offset-0",
             {
-              "focus-visible:ring-1 focus-visible:outline-none active:outline-none border-red-500": isProgramInvalid,
+              "focus-visible:ring-1 focus-visible:outline-hidden active:outline-hidden border-red-500":
+                isProgramInvalid,
             },
           )}
           id="program"

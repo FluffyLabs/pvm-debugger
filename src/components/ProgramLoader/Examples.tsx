@@ -42,7 +42,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
       })}
       <Badge
         id="doom"
-        variant={isDoomLoading ? "outline" : "brand"}
+        variant={isDoomLoading ? "outline-solid" : "brand"}
         className={`mb-2 mr-2 text-xs sm:text-md ${isDoomLoading ? "cursor-wait" : "cursor-pointer"}`}
         onClick={async () => {
           if (isDoomLoading) {

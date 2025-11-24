@@ -21,7 +21,7 @@ export const Instructions = (props: InstructionsProps) => {
   const [useBlockView, setUseBlockView] = useState(true);
 
   return (
-    <div className="border-[1px] rounded-md bg-card h-full flex flex-col overflow-hidden font-inconsolata">
+    <div className="border rounded-md bg-card h-full flex flex-col overflow-hidden font-inconsolata">
       <ProgramEdit
         classNames="rounded-ss rounded-se font-poppins"
         startSlot={
