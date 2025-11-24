@@ -1,5 +1,5 @@
 import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
-import { AvailablePvms, CurrentInstruction, ExpectedState, Status } from "@/types/pvm.ts";
+import { AvailablePvms, CurrentInstruction, ExpectedState, SpiProgram, Status } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
@@ -39,7 +39,8 @@ export interface DebuggerState {
   uiRefreshRate: UiRefreshRate;
   serviceId: number | null;
   hostCallsTrace: null;
-  spiArgs: string | null;
+  spiProgram: SpiProgram | null;
+  spiArgs: Uint8Array | null;
   activeMobileTab: "program" | "status" | "memory";
 }
 
@@ -72,6 +73,8 @@ const initialState: DebuggerState = {
   exampleName: null,
   programName: "<empty>",
   program: [],
+  spiProgram: null,
+  spiArgs: null,
   initialState: {
     regs: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
     pc: 0,
@@ -98,7 +101,6 @@ const initialState: DebuggerState = {
     mode: "block" as UiRefreshMode,
     instructionCount: 1,
   },
-  spiArgs: null,
   hostCallsTrace: null,
   serviceId: parseInt("0x30303030", 16),
   activeMobileTab: "program",
@@ -108,11 +110,22 @@ const debuggerSlice = createSlice({
   name: "debugger",
   initialState,
   reducers: {
-    setProgram(state, action) {
-      const { program, programName, exampleName } = action.payload;
+    setProgram(
+      state,
+      action: {
+        payload: {
+          program: number[];
+          programName: string;
+          spiProgram: SpiProgram | null;
+          exampleName?: string;
+        };
+      },
+    ) {
+      const { program, programName, exampleName, spiProgram } = action.payload;
       state.program = program;
       state.programName = programName;
-      state.exampleName = exampleName;
+      state.spiProgram = spiProgram;
+      state.exampleName = exampleName ?? null;
     },
     setInitialState(state, action) {
       state.initialState = action.payload;
@@ -166,6 +179,9 @@ const debuggerSlice = createSlice({
     },
     setServiceId(state, action) {
       state.serviceId = action.payload;
+    },
+    setSpiProgram(state, action: { payload: SpiProgram }) {
+      state.spiProgram = action.payload;
     },
     setSpiArgs(state, action) {
       state.spiArgs = action.payload;

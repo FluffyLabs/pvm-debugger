@@ -1,7 +1,7 @@
-import { ExpectedState, InitialState } from "@/types/pvm";
+import { ExpectedState, InitialState, SpiProgram } from "@/types/pvm";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { SerializedFile } from "@/lib/utils.ts";
-import { pvm } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 
@@ -49,7 +49,15 @@ export type CommandWorkerRequestParams =
       command: Commands.LOAD;
       payload: { type: PvmTypes; params: { url?: string; file?: SerializedFile } };
     }
-  | { command: Commands.INIT; payload: { program: Uint8Array; initialState: InitialState } }
+  | {
+      command: Commands.INIT;
+      payload: {
+        spiArgs: Uint8Array | null;
+        spiProgram: SpiProgram | null;
+        program: Uint8Array;
+        initialState: InitialState;
+      };
+    }
   | { command: Commands.STEP; payload: { stepsToPerform: number } }
   | { command: Commands.RUN; payload: { batchedSteps: number } }
   | { command: Commands.STOP }
@@ -85,4 +93,4 @@ export enum CommandStatus {
 }
 
 // TODO: unify the api
-export type PvmApiInterface = WasmPvmShellInterface | pvm.Pvm;
+export type PvmApiInterface = WasmPvmShellInterface | pvm.DebuggerAdapter;

@@ -1,8 +1,12 @@
-import { pvm } from "@typeberry/lib";
-export const Pvm = pvm.Pvm;
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 
 type GrowToSize<T, N extends number, A extends T[]> = A["length"] extends N ? A : GrowToSize<T, N, [...A, T]>;
 type FixedArray<T, N extends number> = GrowToSize<T, N, []>;
+
+export type SpiProgram = {
+  program: Uint8Array;
+  hasMetadata: boolean;
+};
 
 export type RegistersArray = FixedArray<bigint, 13>;
 
@@ -48,7 +52,7 @@ export type Block = {
 export type CurrentInstruction =
   | {
       address: number;
-      args: pvm.Args;
+      args: pvm.args.Args;
       name: string;
       gas: number;
       block: Block;

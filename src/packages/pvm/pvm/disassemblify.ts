@@ -1,6 +1,6 @@
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction";
 import { byteToOpCodeMap } from "./assemblify";
-import { pvm } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 import { Instruction } from "./instruction";
 import { CurrentInstruction } from "@/types/pvm";
 
@@ -10,7 +10,7 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
   const mask = programDecoder.getMask();
   const blocks = new pvm.BasicBlocks();
   blocks.reset(code, mask);
-  const argsDecoder = new pvm.ArgsDecoder();
+  const argsDecoder = new pvm.args.ArgsDecoder();
   argsDecoder.reset(code, mask);
   let i = 0;
   const printableProgram = [];
@@ -21,9 +21,9 @@ export function disassemblify(rawProgram: Uint8Array): CurrentInstruction[] {
     const currentInstruction = code[i];
     const isValidInstruction = Instruction[currentInstruction] !== undefined;
     const argumentType = isValidInstruction
-      ? pvm.instructionArgumentTypeMap[currentInstruction]
-      : pvm.ArgumentType.NO_ARGUMENTS;
-    const args = pvm.createResults()[argumentType];
+      ? pvm.args.instructionArgumentTypeMap[currentInstruction]
+      : pvm.args.ArgumentType.NO_ARGUMENTS;
+    const args = pvm.args.createResults()[argumentType];
     const isBlockStart = blocks.isBeginningOfBasicBlock(i);
     const isBlockEnd = blocks.isBeginningOfBasicBlock(i + 1);
 

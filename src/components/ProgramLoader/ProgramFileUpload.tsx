@@ -1,12 +1,11 @@
 import { useDropzone } from "react-dropzone";
 import { ProgramUploadFileOutput } from "./types";
-import { bytes } from "@typeberry/lib";
 import { useAppSelector } from "@/store/hooks";
 import { selectInitialState } from "@/store/debugger/debuggerSlice";
 import { cn } from "@/lib/utils.ts";
 import { UploadCloud } from "lucide-react";
 import { Button } from "../ui/button";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import { loadFileFromUint8Array } from "./loadingUtils";
 
@@ -25,14 +24,6 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
   const [manualInput, setManualInput] = useState("");
   const [loadedFileName, setLoadedFileName] = useState<string | undefined>(undefined);
 
-  const spiArgsAsBytes = useMemo(() => {
-    try {
-      return bytes.BytesBlob.parseBlob(spiArgs ?? "0x").raw;
-    } catch {
-      return new Uint8Array();
-    }
-  }, [spiArgs]);
-
   useEffect(() => {
     // reset the state of upload
     if (isUpload) {
@@ -45,8 +36,8 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
     }
 
     const buffer = new TextEncoder().encode(manualInput);
-    loadFileFromUint8Array("pasted", buffer, spiArgsAsBytes, setError, onFileUpload, initialState);
-  }, [manualInput, isUpload, initialState, onFileUpload, spiArgsAsBytes, setError]);
+    loadFileFromUint8Array("pasted", buffer, spiArgs, setError, onFileUpload, initialState);
+  }, [manualInput, isUpload, initialState, onFileUpload, spiArgs, setError]);
 
   const handleFileRead = (e: ProgressEvent<FileReader>) => {
     setError(undefined);
@@ -60,7 +51,7 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
     loadFileFromUint8Array(
       loadedFileName ?? "",
       new Uint8Array(arrayBuffer),
-      spiArgsAsBytes,
+      spiArgs,
       setError,
       onFileUpload,
       initialState,

@@ -1,4 +1,4 @@
-import { InitialState } from "@/types/pvm";
+import { InitialState, SpiProgram } from "@/types/pvm";
 
 export type ProgramUploadFileOutput = {
   name: string;
@@ -6,7 +6,7 @@ export type ProgramUploadFileOutput = {
   program: number[];
   exampleName?: string;
   kind: string;
-  isSpi: boolean;
+  spiProgram: SpiProgram | null;
 };
 
 export type ProgramUploadFileInput = {

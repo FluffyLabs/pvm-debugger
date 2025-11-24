@@ -22,7 +22,7 @@ export function mapUploadFileInputToOutput(data: ProgramUploadFileInput, kind: s
       })),
     },
     kind,
-    isSpi: false,
+    spiProgram: null,
     program: data.program,
     // expected: mapKeys(expected, (_value: unknown, key) => camelCase(key.replace("expected", ""))) as unknown as ProgramUploadFileOutput["expected"],
   };

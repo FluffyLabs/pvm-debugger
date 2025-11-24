@@ -6,7 +6,7 @@ import { useNavigate } from "react-router";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectInitialState } from "@/store/debugger/debuggerSlice.ts";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions.ts";
-import { getAsChunks, getAsPageMap } from "@/lib/utils.ts";
+import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 import { programs } from "@/components/ProgramLoader/examplePrograms";
 import { decodeSpiWithMetadata } from "@/utils/spi";
 
@@ -43,7 +43,7 @@ const ProgramLoader = () => {
         await debuggerActions.handleProgramLoad({
           program: program.program,
           name: program.name,
-          isSpi: false,
+          spiProgram: null,
           kind: "Example",
           initial: {
             regs: program.regs.map((x) => BigInt(x)) as RegistersArray,
@@ -69,7 +69,7 @@ const ProgramLoader = () => {
 
           if (searchParams.get("flavour") === "jam") {
             try {
-              const { code, memory, registers } = decodeSpiWithMetadata(parsedBlob.raw, new Uint8Array());
+              const { code, memory, registers, metadata } = decodeSpiWithMetadata(parsedBlob.raw, new Uint8Array());
 
               const pageMap: PageMapItem[] = getAsPageMap(memory);
               const chunks: MemoryChunkItem[] = getAsChunks(memory);
@@ -77,10 +77,13 @@ const ProgramLoader = () => {
               await debuggerActions.handleProgramLoad({
                 program: Array.from(code),
                 name: "loaded-from-url [SPI]",
-                isSpi: true,
+                spiProgram: {
+                  program: parsedBlob.raw,
+                  hasMetadata: metadata !== undefined,
+                },
                 kind: "JAM SPI",
                 initial: {
-                  regs: Array.from(registers).map((x) => BigInt(x as number | bigint)) as RegistersArray,
+                  regs: bigUint64ArrayToRegistersArray(registers),
                   pc: 0,
                   pageMap,
                   memory: chunks,
@@ -97,8 +100,8 @@ const ProgramLoader = () => {
               program: parsedBlobArray,
               name: "loaded-from-url [generic]",
               initial: initialState,
-              isSpi: false,
               kind: "Generic PVM",
+              spiProgram: null,
             });
 
             navigate("/", { replace: true });

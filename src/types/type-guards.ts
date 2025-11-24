@@ -1,4 +1,4 @@
-import { pvm } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 import { CurrentInstruction } from "./pvm";
 
 export function isInstructionError(
@@ -8,7 +8,7 @@ export function isInstructionError(
 }
 
 export function isOneImmediateArgs(
-  args: pvm.Args,
-): args is Extract<pvm.Args, { type: typeof pvm.ArgumentType.ONE_IMMEDIATE }> {
-  return args.type === pvm.ArgumentType.ONE_IMMEDIATE;
+  args: pvm.args.Args,
+): args is Extract<pvm.args.Args, { type: typeof pvm.args.ArgumentType.ONE_IMMEDIATE }> {
+  return args.type === pvm.args.ArgumentType.ONE_IMMEDIATE;
 }

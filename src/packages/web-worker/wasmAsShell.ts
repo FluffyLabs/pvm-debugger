@@ -16,7 +16,7 @@ export async function createAssemblyScriptWasmPvmShell(module: WebAssembly.Modul
     // runVm,
     // getAssembly,
     // wrapAsProgram,
-    // resetJAM,
+    resetJAM,
     resetGeneric,
     resetGenericWithMemory,
     nextStep,
@@ -35,6 +35,7 @@ export async function createAssemblyScriptWasmPvmShell(module: WebAssembly.Modul
 
   return {
     __wbg_set_wasm: () => {},
+    resetJAM,
     resetGeneric,
     resetGenericWithMemory,
     nextStep,

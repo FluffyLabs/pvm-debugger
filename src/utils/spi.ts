@@ -1,6 +1,13 @@
-import { pvm } from "@typeberry/lib";
+import { pvm_interpreter as pvm } from "@typeberry/lib";
 
-export function decodeSpiWithMetadata(blob: Uint8Array, args: Uint8Array) {
+export type DecodedSpiProgram = {
+  code: Uint8Array;
+  memory: pvm.spi.SpiMemory;
+  registers: BigUint64Array;
+  metadata?: Uint8Array;
+};
+
+export function decodeSpiWithMetadata(blob: Uint8Array, args: Uint8Array): DecodedSpiProgram {
   try {
     return tryAsSpi(blob, args, true);
   } catch (e) {
@@ -15,9 +22,16 @@ export function decodeSpiWithMetadata(blob: Uint8Array, args: Uint8Array) {
   }
 }
 
-function tryAsSpi(blob: Uint8Array, args: Uint8Array, withMetadata: boolean) {
-  const { code: spiCode, metadata } = withMetadata ? pvm.extractCodeAndMetadata(blob) : { code: blob };
-  const { code, memory, registers } = pvm.decodeStandardProgram(spiCode, args);
+function tryAsSpi(blob: Uint8Array, args: Uint8Array, withMetadata: boolean): DecodedSpiProgram {
+  const { code: spiCode, metadata } = withMetadata
+    ? pvm.extractCodeAndMetadata(blob)
+    : { code: blob, metadata: undefined };
+  const program = pvm.spi.decodeStandardProgram(spiCode, args);
 
-  return { code, memory, registers, metadata };
+  return {
+    code: program.code,
+    memory: program.memory,
+    registers: program.registers,
+    metadata,
+  };
 }

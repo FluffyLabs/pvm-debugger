@@ -14,6 +14,8 @@ import { Separator } from "../ui/separator";
 import { TriangleAlert } from "lucide-react";
 import { WithHelp } from "../WithHelp/WithHelp";
 import { Input } from "../ui/input";
+import { bytes } from "@typeberry/lib";
+import { cn } from "@/lib/utils";
 
 export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
@@ -23,6 +25,17 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
   const debuggerState = useAppSelector((state) => state.debugger);
   const navigate = useNavigate();
+  const [textSpiArgs, setTextSpiArgs] = useState(debuggerState.spiArgs?.toString() ?? "");
+  const isSpiArgsError = textSpiArgs !== debuggerState.spiArgs?.toString();
+  const handleTextSpiArgs = (newVal: string) => {
+    setTextSpiArgs(newVal);
+    try {
+      const parsed = bytes.BytesBlob.parseBlob(newVal);
+      dispatch(setSpiArgs(parsed));
+    } catch {
+      // Ignore parse errors - user may be typing
+    }
+  };
 
   useEffect(() => {
     setError("");
@@ -89,7 +102,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
                 <pre>{JSON.stringify(programLoad.initial, null, 2)}</pre>
               </details>
             </div>
-            {programLoad.isSpi && (
+            {programLoad.spiProgram !== null && (
               <>
                 <div className="mt-2 flex justify-between items-center">
                   <span className="block text-xs font-bold min-w-[150px]">
@@ -97,13 +110,13 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
                   </span>
                   <Input
                     size={2}
-                    className="text-xs m-2"
+                    className={cn("text-xs m-2", { "border-red": isSpiArgsError })}
                     placeholder="0x-prefixed, encoded operands"
                     onChange={(e) => {
                       const value = e.target?.value;
-                      dispatch(setSpiArgs(value));
+                      handleTextSpiArgs(value);
                     }}
-                    value={debuggerState.spiArgs ?? ""}
+                    value={textSpiArgs}
                   />
                 </div>
                 <div className="mt-2 flex justify-between items-center">

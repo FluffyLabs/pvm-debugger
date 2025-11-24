@@ -27,7 +27,7 @@ export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element;
           title="Edit the code"
           onClick={() => {
             if (isProgramEditMode) {
-              debuggerActions.startProgram(initialState, program, programName);
+              debuggerActions.startProgram(initialState, program, programName, null);
               dispatch(setIsProgramEditMode(false));
             } else {
               debuggerActions.restartProgram(initialState);
