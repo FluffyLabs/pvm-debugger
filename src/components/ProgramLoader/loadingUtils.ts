@@ -1,13 +1,13 @@
 import { mapUploadFileInputToOutput } from "./utils";
 import { bytes, pvm_interpreter as pvm } from "@typeberry/lib";
 import { ExpectedState, MemoryChunkItem, PageMapItem } from "@/types/pvm.ts";
-import { SafeParseReturnType, z } from "zod";
+import { type ZodIssue, type ZodSafeParseResult, z } from "zod";
 import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 import { decodeSpiWithMetadata } from "@/utils/spi";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
 
 type RawProgramUploadFileInput = unknown;
-type ValidationResult = SafeParseReturnType<RawProgramUploadFileInput, ProgramUploadFileInput>;
+type ValidationResult = ZodSafeParseResult<ProgramUploadFileInput>;
 
 const validateJsonTestCaseSchema = (json: RawProgramUploadFileInput): ValidationResult => {
   const pageMapSchema = z.object({
@@ -21,7 +21,7 @@ const validateJsonTestCaseSchema = (json: RawProgramUploadFileInput): Validation
     contents: z.array(z.number()),
   });
 
-  const schema = z.object({
+  const schema: z.ZodType<ProgramUploadFileInput> = z.object({
     name: z.string(),
     "initial-regs": z.array(z.number()).length(13),
     "initial-pc": z.number(),
@@ -143,7 +143,7 @@ export function loadFileFromUint8Array(
 const generateErrorMessageFromZodValidation = (result: ValidationResult): string => {
   if (!result.error) return "Unknown error occurred";
 
-  const formattedErrors = result.error.errors.map((err) => {
+  const formattedErrors = result.error.issues.map((err: ZodIssue) => {
     const path = err.path.join(" > ") || "root";
     return `Field: "${path}" - ${err.message}`;
   });

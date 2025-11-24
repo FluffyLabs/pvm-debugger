@@ -97,7 +97,7 @@ export const BasicBlockHeader = forwardRef<HTMLTableRowElement, BasicBlockHeader
     >
       {/* Address Column with Expand/Collapse Icon */}
       <td className="p-1.5 cursor-pointer relative w-[20%] border-b">
-        <div style={{ backgroundColor: borderColor }} className="w-[3px] absolute h-[100%] left-0 top-0" />
+        <div style={{ backgroundColor: borderColor }} className="w-[3px] absolute h-full left-0 top-0" />
         <div className="flex items-center gap-1">{formatAddress(block.startAddress)}</div>
       </td>
 

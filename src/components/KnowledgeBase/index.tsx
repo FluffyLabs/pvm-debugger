@@ -38,7 +38,7 @@ export const KnowledgeBase = ({ currentInstruction }: { currentInstruction: Curr
   }, [searchText]);
 
   return (
-    <div className="border-[1px] rounded-md max-sm:hidden">
+    <div className="border rounded-md max-sm:hidden">
       <Accordion
         type="single"
         collapsible

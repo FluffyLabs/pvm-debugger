@@ -120,7 +120,7 @@ const DebuggerContent = () => {
           ) : (
             <>
               {isProgramEditMode && (
-                <div className="border-[1px] rounded-md h-full">
+                <div className="border rounded-md h-full">
                   {instructionMode === InstructionMode.ASM ? (
                     <Assembly
                       programName={`${programNameWithoutSuffix} (edited)`}

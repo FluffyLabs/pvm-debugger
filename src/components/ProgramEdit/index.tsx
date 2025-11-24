@@ -6,8 +6,9 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { InstructionMode } from "../Instructions/types";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import cs from "classnames";
+import type { ReactNode } from "react";
 
-export const ProgramEdit = ({ startSlot, classNames }: { startSlot: JSX.Element; classNames?: string }) => {
+export const ProgramEdit = ({ startSlot, classNames }: { startSlot: ReactNode; classNames?: string }) => {
   const dispatch = useAppDispatch();
   const debuggerActions = useDebuggerActions();
   const { program, programName, initialState, isProgramEditMode, isProgramInvalid, instructionMode } = useAppSelector(

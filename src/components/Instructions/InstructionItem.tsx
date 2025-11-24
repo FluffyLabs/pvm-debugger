@@ -63,7 +63,7 @@ const AddressCell = ({
     >
       <div
         style={{ backgroundColor: backgroundClass ? undefined : colors.border }}
-        className={classNames("w-[3px] absolute h-[100%] left-0 top-0", backgroundClass)}
+        className={classNames("w-[3px] absolute h-full left-0 top-0", backgroundClass)}
       ></div>
       <div style={{ color: colors.color }} onClick={() => onAddressClick(programRow.counter)}>
         {programRow.addressEl}
