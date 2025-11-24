@@ -240,6 +240,7 @@ debuggerSliceListenerMiddleware.startListening({
     if (hexProgram?.length < MAX_URL_LENGTH) {
       params.set("program", `0x${hexProgram}`);
     } else {
+      params.delete("program");
       logger.warn("Program is too large to be stored in the URL");
     }
     if (exampleName) {

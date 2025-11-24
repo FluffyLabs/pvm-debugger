@@ -4,10 +4,16 @@ import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 import path from "path";
 import packageJson from "./package.json";
-import { importMetaResolvePolyfill } from "./plugins/import-meta-resolve";
+import { importMetaResolveEsbuildPlugin, importMetaResolvePolyfill } from "./plugins/import-meta-resolve";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  optimizeDeps: {
+    exclude: ["@typeberry/lib"],
+    esbuildOptions: {
+      plugins: [importMetaResolveEsbuildPlugin()],
+    },
+  },
   build: {
     rollupOptions: {
       treeshake: {

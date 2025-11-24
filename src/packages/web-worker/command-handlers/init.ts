@@ -32,7 +32,9 @@ const init = async ({ pvm, spiProgram, spiArgs, program, initialState }: InitPar
     if (pvm.setGasLeft) {
       pvm.setGasLeft(BigInt(gas));
     }
-    pvm.nextStep();
+    if (!isInternalPvm(pvm)) {
+      pvm.nextStep();
+    }
   };
 
   if (pvm.resetJAM && spiProgram !== null) {

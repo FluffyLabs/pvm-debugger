@@ -1,9 +1,9 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
-import { importMetaResolvePolyfill } from "./plugins/import-meta-resolve";
+import { importMetaResolveVitestPlugin } from "./plugins/import-meta-resolve";
 
 export default defineConfig({
-  plugins: [importMetaResolvePolyfill()],
+  plugins: [importMetaResolveVitestPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
