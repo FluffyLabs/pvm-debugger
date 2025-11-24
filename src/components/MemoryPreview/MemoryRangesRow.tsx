@@ -64,7 +64,7 @@ export function MemoryRangeRow({
   const [draftStart, setDraftStart] = useState(start);
   const [draftLength, setDraftLength] = useState(length);
 
-  const [, ref] = useDrag({
+  const [, dragRef] = useDrag({
     type: "MEMORY_ROW",
     item: { index },
     canDrag: !isLast,
@@ -73,7 +73,7 @@ export function MemoryRangeRow({
     }),
   });
 
-  const [, drop] = useDrop({
+  const [, dropRef] = useDrop({
     accept: "MEMORY_ROW",
     hover: (draggedItem: { index: number }) => {
       if (draggedItem.index !== index) {
@@ -82,6 +82,14 @@ export function MemoryRangeRow({
       }
     },
   });
+
+  const connectRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || isLast) return;
+      dragRef(dropRef(node));
+    },
+    [dragRef, dropRef, isLast],
+  );
 
   useEffect(() => {
     if (draftLength > 0 && draftStart >= 0) {
@@ -114,7 +122,7 @@ export function MemoryRangeRow({
 
   return (
     <Card
-      ref={(node) => !isLast && ref(drop(node))}
+      ref={connectRefs}
       className={classNames("border rounded my-2 mx-4 mb-0 p-2", {
         "cursor-move": !isLast,
       })}

@@ -92,11 +92,12 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
-    @apply bg-background text-foreground;
-    @apply font-poppins;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: "Poppins", "sans-serif", system-ui;
   }
 
   @font-face {
