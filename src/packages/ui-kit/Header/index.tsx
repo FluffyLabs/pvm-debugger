@@ -12,8 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown, ExternalLink } from "lucide-react";
+import type { ReactNode } from "react";
 
-export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
+export const Header = ({ endSlot }: { endSlot?: ReactNode }) => {
   return (
     <div className="bg-[#242424] w-full flex flex-row items-center justify-between py-[18px] text-xs overflow-hidden border-b border-b-secondary-foreground dark:border-b-brand">
       <div className="flex items-center gap-5 sm:w-full">
@@ -21,7 +22,7 @@ export const Header = ({ endSlot }: { endSlot?: JSX.Element }) => {
           <img src={Logo} alt="FluffyLabs logo" className="h-[40px] max-w-fit" />
           <img src={Brand} alt="FluffyLabs brand" className="hidden md:inline ml-4 h-[28px]" />
         </a>
-        <Separator className="bg-gray-600 w-[1px] h-[40px] sm:h-[50px]" orientation="vertical" />
+        <Separator className="bg-gray-600 w-px h-[40px] sm:h-[50px]" orientation="vertical" />
         <div className="flex max-sm:flex-col-reverse max-sm:hidden items-end md:items-center h-[50px]">
           <img src={ToolName} alt="FluffyLabs brand" className="h-[40px]" />
           <div className="shrink sm:ml-1 sm:mb-4">

@@ -61,7 +61,7 @@ const ComputedValue = ({
   };
 
   const sharedStyles = {
-    "font-inconsolata text-base h-[1.5rem]": true,
+    "font-inconsolata text-base h-6": true,
   };
 
   if (isEqualAcrossWorkers && wasEqualAcrossWorkers && previousValue === value) {
@@ -89,7 +89,7 @@ const ComputedValue = ({
         </TooltipTrigger>
 
         <TooltipContent>
-          <div className="grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+          <div className="grid grid-cols-[minmax(0,auto)_minmax(0,auto)]">
             {workers.map((worker, index) => (
               <React.Fragment key={index}>
                 <div>
@@ -120,7 +120,7 @@ const EditableField = ({
 
   return (
     <Input
-      className="h-[1.5rem] mt-[-1px] font-inconsolata text-base text-center m-auto w-20 h-6 pt-0 pb-[1px] px-[4px] text-brand-dark dark:text-brand border-transparent hover:border-input align-top"
+      className="h-6 -mt-px font-inconsolata text-base text-center m-auto w-20 h-6 pt-0 pb-px px-[4px] text-brand-dark dark:text-brand border-transparent hover:border-input align-top"
       onChange={onChange}
       onKeyUp={(e) => {
         if (e.key === "Enter") {
@@ -152,7 +152,7 @@ export const Registers = ({
   const isDarkMode = useIsDarkMode();
 
   return (
-    <div className="border-[1px] rounded-md overflow-auto bg-card h-full">
+    <div className="border rounded-md overflow-auto bg-card h-full">
       <div className="font-poppins flex flex-col items-start text-xs">
         {/* Summary */}
         <table className="w-full table-fixed  text-center">

@@ -63,7 +63,7 @@ export const MemoryCell = ({
     <span
       key={index}
       className={classNames(
-        "relative mr-[1px] pr-0.5 font-inconsolata text-[15px]",
+        "relative mr-px pr-0.5 font-inconsolata text-[15px]",
         {
           "bg-brand": isNumber(selectedAddress) && selectedAddress === address + index,
           "font-bold": value !== 0,
@@ -79,7 +79,7 @@ export const MemoryCell = ({
 
           <TooltipPortal>
             <TooltipContent>
-              <div className="font-poppins grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+              <div className="font-poppins grid grid-cols-[minmax(0,auto)_minmax(0,auto)]">
                 Page={Math.floor(address / PAGE_SIZE)}
               </div>
             </TooltipContent>
@@ -100,7 +100,7 @@ export const MemoryCell = ({
 
           <TooltipPortal>
             <TooltipContent>
-              <div className="font-inconsolata grid grid-cols-[minmax(0,auto),minmax(0,auto)]">
+              <div className="font-inconsolata grid grid-cols-[minmax(0,auto)_minmax(0,auto)]">
                 {workers.map((worker) => (
                   <React.Fragment key={worker.id}>
                     <div>

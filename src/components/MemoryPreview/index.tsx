@@ -10,7 +10,7 @@ export const MemoryPreview = () => {
   const triggerClass =
     "text-xs w-1/2 h-8 bg-title text-secondary-foreground dark:text-brand data-[state=active]:bg-black data-[state=active]:text-white dark:data-[state=active]:bg-brand dark:data-[state=active]:text-background rounded-se-none rounded-ee-none";
   return (
-    <div className="border-[1px] rounded-md h-full bg-card">
+    <div className="border rounded-md h-full bg-card">
       <Tabs defaultValue="pages" className="flex flex-col h-full">
         <TabsList className="bg-transparent p-0 m-4 mb-0 max-sm:hidden border dark:border-brand">
           <TabsTrigger className={triggerClass} value="pages">

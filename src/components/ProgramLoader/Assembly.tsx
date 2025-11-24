@@ -179,7 +179,7 @@ export const Assembly = ({
       <ProgramEdit startSlot={<span className="text-xs">{programName}</span>} />
       <div
         className={classNames("flex-auto gap-1 font-poppins overflow-auto", {
-          "focus-visible:ring-3 focus-visible:outline-none active:outline-none": isError,
+          "focus-visible:ring-3 focus-visible:outline-hidden active:outline-hidden": isError,
           "border-red-500": isError,
         })}
       >
