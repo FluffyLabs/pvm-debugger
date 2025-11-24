@@ -14,7 +14,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@typeberry/*": ["./node_modules/typeberry/packages/*"]
     }
   }
 }
