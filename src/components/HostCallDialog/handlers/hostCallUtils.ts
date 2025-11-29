@@ -11,23 +11,45 @@ const { Result } = utils;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const OK = Symbol("OK") as any;
 
-// Mock memory implementation that tracks writes
+// Mock memory implementation that tracks writes and can be pre-populated
 export class MockMemory implements IMemory {
-  private data = new Map<number, Uint8Array>();
+  // Store memory as contiguous regions for proper partial reads
+  private regions: Array<{ start: number; data: Uint8Array }> = [];
   public writes: Array<{ address: number; data: Uint8Array }> = [];
 
+  /**
+   * Pre-populate memory with data from actual PVM memory.
+   * Call this before executing host calls that need to read from memory.
+   */
+  preload(address: number, data: Uint8Array) {
+    this.regions.push({ start: address, data: new Uint8Array(data) });
+  }
+
   store(address: U32, bytes: Uint8Array) {
-    this.data.set(address, new Uint8Array(bytes));
+    // Store as a new region (overwrites are handled by read order)
+    this.regions.push({ start: address, data: new Uint8Array(bytes) });
     this.writes.push({ address, data: new Uint8Array(bytes) });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Result.ok(OK) as any;
   }
 
   read(address: U32, result: Uint8Array) {
-    const stored = this.data.get(address);
-    if (stored) {
-      result.set(stored.slice(0, result.length));
+    const length = result.length;
+    // Search regions in reverse order (latest writes take precedence)
+    for (let i = this.regions.length - 1; i >= 0; i--) {
+      const region = this.regions[i];
+      const regionEnd = region.start + region.data.length;
+      const requestEnd = address + length;
+
+      // Check if this region contains the requested range
+      if (address >= region.start && requestEnd <= regionEnd) {
+        const offset = address - region.start;
+        result.set(region.data.slice(offset, offset + length));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return Result.ok(OK) as any;
+      }
     }
+    // If not found, return zeros (result is already zeroed by caller typically)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Result.ok(OK) as any;
   }

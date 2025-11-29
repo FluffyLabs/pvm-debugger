@@ -14,7 +14,7 @@ const { BytesBlob } = bytes;
 type AccountsRead = jam_host_calls.general.AccountsRead;
 
 // eslint-disable-next-line react-refresh/only-export-components
-const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume }) => {
+const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
 
   const serviceId = jam_host_calls.getServiceId(numbers.tryAsU64(regs[7]));
@@ -22,7 +22,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
   // State for when we need user input
   const [requestedKeyHex, setRequestedKeyHex] = useState<string | null>(null);
   const [valueHex, setValueHex] = useState("");
-  const [hasValue, setHasValue] = useState(true); // true = provide value, false = None/not found
+  const [hasValue, setHasValue] = useState(false);
   const [needsUserInput, setNeedsUserInput] = useState(false);
   const [isExecuting, setIsExecuting] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +52,16 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         };
 
         const mockMemory = new MockMemory();
+
+        // Preload key memory from actual PVM
+        // Read host call: regs[8] = key pointer, regs[9] = key length
+        const keyPointer = Number(regs[8] ?? 0n);
+        const keyLength = Number(regs[9] ?? 0n);
+        if (keyLength > 0) {
+          const keyData = await readMemory(keyPointer, keyLength);
+          mockMemory.preload(keyPointer, keyData);
+        }
+
         const regBytes = regsToBytes(regs);
         const mockGas = new MockGasCounter(currentState.gas ?? 100000n);
 
@@ -82,7 +92,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
     };
 
     execute();
-  }, [regs, currentState.gas, serviceId, onResume]);
+  }, [regs, currentState.gas, serviceId, readMemory, onResume]);
 
   const handleResume = async (mode: "step" | "block" | "run") => {
     if (!requestedKeyHex) return;
@@ -110,6 +120,15 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
       };
 
       const mockMemory = new MockMemory();
+
+      // Preload key memory from actual PVM
+      const keyPointer = Number(regs[8] ?? 0n);
+      const keyLength = Number(regs[9] ?? 0n);
+      if (keyLength > 0) {
+        const keyData = await readMemory(keyPointer, keyLength);
+        mockMemory.preload(keyPointer, keyData);
+      }
+
       const regBytes = regsToBytes(regs);
       const mockGas = new MockGasCounter(currentState.gas ?? 100000n);
 

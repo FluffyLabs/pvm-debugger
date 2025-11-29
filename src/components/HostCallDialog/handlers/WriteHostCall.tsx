@@ -11,7 +11,7 @@ const { Result } = utils;
 type AccountsWrite = jam_host_calls.general.AccountsWrite;
 
 // eslint-disable-next-line react-refresh/only-export-components
-const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, onResume }) => {
+const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, readMemory, onResume }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
 
   const serviceId = regs[7];
@@ -33,6 +33,27 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
         };
 
         const mockMemory = new MockMemory();
+
+        // Preload key memory from actual PVM
+        // Write host call: regs[8] = key pointer, regs[9] = key length
+        const keyPointer = Number(regs[8] ?? 0n);
+        const keyLength = Number(regs[9] ?? 0n);
+        if (keyLength > 0) {
+          const keyData = await readMemory(keyPointer, keyLength);
+          mockMemory.preload(keyPointer, keyData);
+        }
+
+        // Preload value memory from actual PVM
+        // Write host call: regs[10] = value pointer (can be max u64 for deletion), regs[11] = value length
+        const valuePointer = regs[10] ?? 0n;
+        const valueLength = Number(regs[11] ?? 0n);
+        // Check if value pointer is not "infinity" (max u64 indicates deletion)
+        const MAX_U64 = 0xffffffffffffffffn;
+        if (valuePointer < MAX_U64 && valueLength > 0) {
+          const valueData = await readMemory(Number(valuePointer), valueLength);
+          mockMemory.preload(Number(valuePointer), valueData);
+        }
+
         const regBytes = regsToBytes(regs);
         const mockGas = new MockGasCounter(currentState.gas ?? 100000n);
 
@@ -55,7 +76,7 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
     };
 
     execute();
-  }, [regs, currentState.gas, serviceId, onResume]);
+  }, [regs, currentState.gas, serviceId, readMemory, onResume]);
 
   if (error) {
     return (
