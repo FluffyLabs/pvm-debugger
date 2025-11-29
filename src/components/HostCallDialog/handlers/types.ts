@@ -1,5 +1,5 @@
 import { ExpectedState } from "@/types/pvm";
-import { HostCallResumeMode } from "@/store/workers/workersSlice";
+import { HostCallResumeMode, MemoryEdit } from "@/store/workers/workersSlice";
 
 export interface HostCallHandlerProps {
   /** Current state from the first worker */
@@ -9,7 +9,7 @@ export interface HostCallHandlerProps {
   /** Function to read memory from PVM */
   readMemory: (startAddress: number, length: number) => Promise<Uint8Array>;
   /** Function to resume execution */
-  onResume: (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint) => void;
+  onResume: (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint, memoryEdits?: MemoryEdit[]) => void;
   /** Function to close the dialog without resuming */
   onClose: () => void;
 }

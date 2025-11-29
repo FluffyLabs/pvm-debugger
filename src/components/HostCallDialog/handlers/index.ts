@@ -1,8 +1,11 @@
 import { HostCallHandler } from "./types";
 import { LogHostCall } from "./LogHostCall";
+import { FetchHostCall } from "./FetchHostCall";
+import { ReadHostCall } from "./ReadHostCall";
+import { WriteHostCall } from "./WriteHostCall";
 
 // Registry of all special host call handlers
-const handlers: HostCallHandler[] = [LogHostCall];
+const handlers: HostCallHandler[] = [LogHostCall, FetchHostCall, ReadHostCall, WriteHostCall];
 
 // Map for quick lookup by index
 const handlersByIndex = new Map<number, HostCallHandler>(handlers.map((h) => [h.index, h]));

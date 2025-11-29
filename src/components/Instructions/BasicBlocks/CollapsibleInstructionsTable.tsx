@@ -20,6 +20,7 @@ import {
   toggleBlockExpanded,
   BasicBlockGroup,
 } from "./blockUtils";
+import { ArgsDecoder } from "@/packages/pvm/pvm/args-decoder";
 
 export const CollapsibleInstructionsTable = ({
   status,
@@ -165,7 +166,12 @@ export const CollapsibleInstructionsTable = ({
   const widestItemValue = useMemo(() => {
     if (!blocks.length) return "";
 
-    const argsDecoder = decodeAndGetArgsDecoder(program);
+    let argsDecoder: ArgsDecoder;
+    try {
+      argsDecoder = decodeAndGetArgsDecoder(program);
+    } catch {
+      return "";
+    }
     let widest = "";
 
     blocks.forEach((block) => {

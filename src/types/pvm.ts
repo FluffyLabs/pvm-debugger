@@ -10,6 +10,9 @@ export type SpiProgram = {
 
 export type RegistersArray = FixedArray<bigint, 13>;
 
+/** Default register values (all zeros) */
+export const DEFAULT_REGS: RegistersArray = [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n];
+
 export type InitialState = {
   regs?: RegistersArray;
   pc?: number;

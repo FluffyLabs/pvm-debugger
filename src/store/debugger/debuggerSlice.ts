@@ -1,5 +1,5 @@
 import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
-import { AvailablePvms, CurrentInstruction, ExpectedState, SpiProgram, Status } from "@/types/pvm.ts";
+import { AvailablePvms, CurrentInstruction, DEFAULT_REGS, ExpectedState, SpiProgram, Status } from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
@@ -75,9 +75,9 @@ const initialState: DebuggerState = {
   programName: "<empty>",
   program: [],
   spiProgram: null,
-  spiArgs: null,
+  spiArgs: new Uint8Array([0x18, 0x00, 0x00]), // Default: 0x180000
   initialState: {
-    regs: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
+    regs: DEFAULT_REGS,
     pc: 0,
     pageMap: [],
     memory: [],
@@ -100,11 +100,11 @@ const initialState: DebuggerState = {
   stepsToPerform: 1,
   useBlockStepping: true,
   uiRefreshRate: {
-    mode: "block" as UiRefreshMode,
-    instructionCount: 1,
+    mode: "instructions" as UiRefreshMode,
+    instructionCount: 100,
   },
   hostCallsTrace: null,
-  serviceId: parseInt("0x30303030", 16),
+  serviceId: parseInt("0x00000000", 16),
   activeMobileTab: "program",
 };
 
@@ -188,7 +188,7 @@ const debuggerSlice = createSlice({
     setSpiProgram(state, action: { payload: SpiProgram }) {
       state.spiProgram = action.payload;
     },
-    setSpiArgs(state, action) {
+    setSpiArgs(state, action: { payload: Uint8Array }) {
       state.spiArgs = action.payload;
     },
     setPvmOptions(state, action) {

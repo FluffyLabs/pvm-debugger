@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { valueToNumeralSystem } from "@/components/Instructions/utils";
-import { ExpectedState, RegistersArray } from "@/types/pvm";
+import { DEFAULT_REGS, ExpectedState, RegistersArray } from "@/types/pvm";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { MemoryEditor } from "./MemoryEditor";
+import { HostCallActionButtons } from "./handlers/HostCallActionButtons";
 
 // Re-export for convenience
 export type { MemoryEdit } from "@/store/workers/workersSlice";
-import type { MemoryEdit } from "@/store/workers/workersSlice";
+import type { HostCallResumeMode, MemoryEdit } from "@/store/workers/workersSlice";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -25,6 +26,7 @@ interface DefaultHostCallContentProps {
   onRegsChange: (regs: bigint[]) => void;
   onGasChange: (gas: bigint) => void;
   onMemoryChange: (memory: MemoryEdit | null) => void;
+  onResume: (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint) => void;
 }
 
 export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
@@ -33,18 +35,19 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
   numeralSystem,
   readMemory,
   onRegsChange,
+  onResume,
   onGasChange,
   onMemoryChange,
 }) => {
   // Local state for editable values
-  const [regs, setRegs] = useState<bigint[]>([0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n]);
+  const [regs, setRegs] = useState<bigint[]>([...DEFAULT_REGS]);
   const [gas, setGas] = useState<bigint>(0n);
 
   // Initialize local state when currentState changes
   useEffect(() => {
     if (currentState) {
       // Copy current registers
-      const newRegs = currentState.regs ? [...currentState.regs] : [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n];
+      const newRegs = currentState.regs ? [...currentState.regs] : [...DEFAULT_REGS];
       setRegs(newRegs);
       onRegsChange(newRegs);
 
@@ -80,50 +83,53 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
   );
 
   return (
-    <div className="space-y-4">
-      {/* Two-column layout: 1fr for gas/registers, 2fr for memory */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Column 1: Gas and Registers */}
-        <div className="space-y-4 md:col-span-1">
-          {/* Gas */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Gas</label>
-            <Input
-              className="font-mono"
-              value={valueToNumeralSystem(gas, numeralSystem)}
-              onChange={(e) => handleGasChange(e.target.value)}
-              onKeyUp={(e) => e.key === "Enter" && e.currentTarget.blur()}
-              disabled={isLoading}
-            />
-          </div>
+    <>
+      <div className="space-y-4 flex-1 overflow-y-auto p-2">
+        {/* Two-column layout: 1fr for gas/registers, 2fr for memory */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Column 1: Gas and Registers */}
+          <div className="space-y-4 md:col-span-1">
+            {/* Gas */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Gas</label>
+              <Input
+                className="font-mono"
+                value={valueToNumeralSystem(gas, numeralSystem)}
+                onChange={(e) => handleGasChange(e.target.value)}
+                onKeyUp={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                disabled={isLoading}
+              />
+            </div>
 
-          {/* Registers */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Registers</label>
-            <div className="space-y-1">
-              {(regs as RegistersArray).map((regValue, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <span className="w-6 text-xs font-mono">
-                    ω<sub>{index}</sub>
-                  </span>
-                  <Input
-                    className="font-mono text-sm h-7 flex-1"
-                    value={valueToNumeralSystem(regValue, numeralSystem)}
-                    onChange={(e) => handleRegisterChange(index, e.target.value)}
-                    onKeyUp={(e) => e.key === "Enter" && e.currentTarget.blur()}
-                    disabled={isLoading}
-                  />
-                </div>
-              ))}
+            {/* Registers */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Registers</label>
+              <div className="space-y-1">
+                {(regs as RegistersArray).map((regValue, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="w-6 text-xs font-mono">
+                      ω<sub>{index}</sub>
+                    </span>
+                    <Input
+                      className="font-mono text-sm h-7 flex-1"
+                      value={valueToNumeralSystem(regValue, numeralSystem)}
+                      onChange={(e) => handleRegisterChange(index, e.target.value)}
+                      onKeyUp={(e) => e.key === "Enter" && e.currentTarget.blur()}
+                      disabled={isLoading}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Column 2: Memory Editor (2x width) */}
-        <div className="space-y-2 md:col-span-2">
-          <MemoryEditor readMemory={readMemory} disabled={isLoading} onMemoryChange={handleMemoryChange} />
+          {/* Column 2: Memory Editor (2x width) */}
+          <div className="space-y-2 md:col-span-2">
+            <MemoryEditor readMemory={readMemory} disabled={isLoading} onMemoryChange={handleMemoryChange} />
+          </div>
         </div>
       </div>
-    </div>
+      <HostCallActionButtons onResume={onResume} disabled={isLoading} />
+    </>
   );
 };

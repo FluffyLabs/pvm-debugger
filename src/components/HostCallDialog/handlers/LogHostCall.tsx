@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Play, StepForward, SkipForward } from "lucide-react";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
+import { HostCallActionButtons } from "./HostCallActionButtons";
 
 enum LogLevel {
   ERROR = 0,
@@ -88,63 +87,50 @@ const LogHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, is
   };
 
   return (
-    <div className="space-y-4">
-      {/* Log Level */}
-      <div className="flex items-center gap-2">
-        <span className="font-medium text-sm">Level:</span>
-        <span className={`px-2 py-1 rounded text-xs font-mono ${getLogLevelStyle(logLevel)}`}>
-          {getLogLevelName(logLevel)}
-        </span>
-      </div>
-
-      {/* Target */}
-      {target && (
-        <div className="space-y-1">
-          <span className="font-medium text-sm">Target:</span>
-          <div className="p-2 bg-muted rounded-md font-mono text-sm">{target}</div>
+    <>
+      <div className="space-y-4 overflow-y-auto flex-1 p-2">
+        {/* Log Level */}
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-sm">Level:</span>
+          <span className={`px-2 py-1 rounded text-xs font-mono ${getLogLevelStyle(logLevel)}`}>
+            {getLogLevelName(logLevel)}
+          </span>
         </div>
-      )}
 
-      {/* Message */}
-      <div className="space-y-1">
-        <span className="font-medium text-sm">Message:</span>
-        {isLoadingMemory ? (
-          <div className="p-3 bg-muted rounded-md text-sm text-muted-foreground">Loading message...</div>
-        ) : error ? (
-          <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">{error}</div>
-        ) : (
-          <div className="p-3 bg-muted rounded-md font-mono text-sm whitespace-pre-wrap break-all">
-            {message || <span className="text-muted-foreground">(empty)</span>}
+        {/* Target */}
+        {target && (
+          <div className="space-y-1">
+            <span className="font-medium text-sm">Target:</span>
+            <div className="p-2 bg-muted rounded-md font-mono text-sm">{target}</div>
           </div>
         )}
-      </div>
 
-      {/* Memory addresses info */}
-      <div className="text-xs text-muted-foreground space-y-1">
-        <div>
-          Target: 0x{targetStart.toString(16)} ({targetLength} bytes)
+        {/* Message */}
+        <div className="space-y-1">
+          <span className="font-medium text-sm">Message:</span>
+          {isLoadingMemory ? (
+            <div className="p-3 bg-muted rounded-md text-sm text-muted-foreground">Loading message...</div>
+          ) : error ? (
+            <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">{error}</div>
+          ) : (
+            <div className="p-3 bg-muted rounded-md font-mono text-sm whitespace-pre-wrap break-all">
+              {message || <span className="text-muted-foreground">(empty)</span>}
+            </div>
+          )}
         </div>
-        <div>
-          Message: 0x{msgStart.toString(16)} ({msgLength} bytes)
-        </div>
-      </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2 pt-2">
-        <Button variant="secondary" onClick={() => handleResume("run")} disabled={isLoading || isLoadingMemory}>
-          <Play className="w-3.5 mr-1.5" />
-          Run
-        </Button>
-        <Button variant="secondary" onClick={() => handleResume("step")} disabled={isLoading || isLoadingMemory}>
-          <StepForward className="w-3.5 mr-1.5" />
-          Step
-        </Button>
-        <Button variant="secondary" onClick={() => handleResume("block")} disabled={isLoading || isLoadingMemory}>
-          <SkipForward className="w-3.5 mr-1.5" />
-          Block
-        </Button>
+        {/* Memory addresses info */}
+        <div className="text-xs text-muted-foreground space-y-1">
+          <div>
+            Target: 0x{targetStart.toString(16)} ({targetLength} bytes)
+          </div>
+          <div>
+            Message: 0x{msgStart.toString(16)} ({msgLength} bytes)
+          </div>
+        </div>
       </div>
-    </div>
+      <HostCallActionButtons onResume={handleResume} disabled={isLoading || isLoadingMemory} />
+    </>
   );
 };
 

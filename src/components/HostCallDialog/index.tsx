@@ -1,20 +1,12 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Play, StepForward, SkipForward } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setHasHostCallOpen, setPendingHostCallIndex } from "@/store/debugger/debuggerSlice";
 import { resumeAfterHostCall, readMemoryRange, HostCallResumeMode } from "@/store/workers/workersSlice";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { getHostCallHandler } from "./handlers";
 import { DefaultHostCallContent, MemoryEdit } from "./DefaultHostCallContent";
+import { DEFAULT_REGS } from "@/types/pvm";
 
 const HOST_CALL_NAMES: Record<number, string> = {
   0: "gas",
@@ -86,23 +78,29 @@ export const HostCallDialog = () => {
   }, [dispatch]);
 
   const handleResume = useCallback(
-    async (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint, memory?: MemoryEdit) => {
+    async (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint, memoryEdits?: MemoryEdit[]) => {
       setIsLoading(true);
       try {
         // Use provided values or fall back to pending/current state
-        const finalRegs = regs ??
-          pendingRegs ??
-          currentState.regs ?? [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n];
+        const finalRegs = regs ?? pendingRegs ?? currentState.regs ?? DEFAULT_REGS;
         const currentGas = currentState.gas ?? 10000n;
         const finalGas = gas ?? pendingGas ?? (currentGas > 10n ? currentGas - 10n : 0n);
-        const finalMemory = memory ?? pendingMemory ?? undefined;
+
+        // Combine memory edits from host calls with pending memory from default UI
+        const finalMemoryEdits: MemoryEdit[] = [];
+        if (memoryEdits && memoryEdits.length > 0) {
+          finalMemoryEdits.push(...memoryEdits);
+        }
+        if (pendingMemory) {
+          finalMemoryEdits.push(pendingMemory);
+        }
 
         await dispatch(
           resumeAfterHostCall({
             regs: finalRegs as bigint[],
             gas: finalGas,
             mode,
-            memory: finalMemory,
+            memoryEdits: finalMemoryEdits.length > 0 ? finalMemoryEdits : undefined,
           }),
         ).unwrap();
       } catch (e) {
@@ -146,44 +144,25 @@ export const HostCallDialog = () => {
         </div>
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {specialHandler?.hasCustomUI ? (
-            <specialHandler.Component
-              currentState={currentState}
-              isLoading={isLoading}
-              readMemory={readMemory}
-              onResume={handleResume}
-              onClose={handleClose}
-            />
-          ) : (
-            <DefaultHostCallContent
-              currentState={currentState}
-              isLoading={isLoading}
-              numeralSystem={numeralSystem}
-              readMemory={readMemory}
-              onRegsChange={setPendingRegs}
-              onGasChange={setPendingGas}
-              onMemoryChange={setPendingMemory}
-            />
-          )}
-        </div>
-
-        {/* Footer with buttons - only for default UI */}
-        {!specialHandler?.hasCustomUI && (
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => handleResume("run")} disabled={isLoading}>
-              <Play className="w-3.5 mr-1.5" />
-              Run
-            </Button>
-            <Button variant="secondary" onClick={() => handleResume("step")} disabled={isLoading}>
-              <StepForward className="w-3.5 mr-1.5" />
-              Step
-            </Button>
-            <Button variant="secondary" onClick={() => handleResume("block")} disabled={isLoading}>
-              <SkipForward className="w-3.5 mr-1.5" />
-              Block
-            </Button>
-          </DialogFooter>
+        {specialHandler?.hasCustomUI ? (
+          <specialHandler.Component
+            currentState={currentState}
+            isLoading={isLoading}
+            readMemory={readMemory}
+            onResume={handleResume}
+            onClose={handleClose}
+          />
+        ) : (
+          <DefaultHostCallContent
+            currentState={currentState}
+            isLoading={isLoading}
+            numeralSystem={numeralSystem}
+            readMemory={readMemory}
+            onResume={handleResume}
+            onRegsChange={setPendingRegs}
+            onGasChange={setPendingGas}
+            onMemoryChange={setPendingMemory}
+          />
         )}
       </DialogContent>
     </Dialog>

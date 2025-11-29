@@ -6,10 +6,12 @@ import { useState } from "react";
 import doomUrl from "./doom.bin?url";
 import golUrl from "./gol.jam?url";
 import { loadFileFromUint8Array } from "./loadingUtils";
+import { useAppSelector } from "@/store/hooks";
 
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
   const [isDoomLoading, setIsDoomLoading] = useState(false);
   const [isGolLoading, setIsGolLoading] = useState(false);
+  const spiArgs = useAppSelector((state) => state.debugger.spiArgs);
 
   return (
     <div>
@@ -54,7 +56,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
           try {
             const data = await fetch(doomUrl);
             const blob = await data.bytes();
-            loadFileFromUint8Array("doom.bin", blob, new Uint8Array(), () => {}, onProgramLoad, {});
+            loadFileFromUint8Array("doom.bin", blob, spiArgs, () => {}, onProgramLoad, {});
           } finally {
             setIsDoomLoading(false);
           }
@@ -74,7 +76,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
           try {
             const data = await fetch(golUrl);
             const blob = await data.bytes();
-            loadFileFromUint8Array("game-of-life.jam", blob, new Uint8Array(), () => {}, onProgramLoad, {});
+            loadFileFromUint8Array("game-of-life.jam", blob, spiArgs, () => {}, onProgramLoad, {});
           } finally {
             setIsGolLoading(false);
           }

@@ -634,7 +634,12 @@ export interface MemoryEdit {
 export const resumeAfterHostCall = createAsyncThunk(
   "workers/resumeAfterHostCall",
   async (
-    { regs, gas, mode, memory }: { regs: bigint[]; gas: bigint; mode: HostCallResumeMode; memory?: MemoryEdit },
+    {
+      regs,
+      gas,
+      mode,
+      memoryEdits,
+    }: { regs: bigint[]; gas: bigint; mode: HostCallResumeMode; memoryEdits?: MemoryEdit[] },
     { getState, dispatch },
   ) => {
     const state = getState() as RootState;
@@ -656,17 +661,20 @@ export const resumeAfterHostCall = createAsyncThunk(
       }),
     );
 
-    // Write memory to all workers if provided
-    if (memory) {
+    // Write all memory edits to all workers if provided
+    if (memoryEdits && memoryEdits.length > 0) {
       await Promise.all(
         state.workers.map(async (worker) => {
-          const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-            command: Commands.SET_MEMORY,
-            payload: { address: memory.address, data: memory.data },
-          });
+          // Write each memory edit sequentially for this worker
+          for (const memory of memoryEdits) {
+            const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+              command: Commands.SET_MEMORY,
+              payload: { address: memory.address, data: memory.data },
+            });
 
-          if (hasCommandStatusError(resp)) {
-            throw resp.error;
+            if (hasCommandStatusError(resp)) {
+              throw resp.error;
+            }
           }
         }),
       );

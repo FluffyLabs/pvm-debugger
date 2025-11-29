@@ -1,7 +1,7 @@
 import { mapUploadFileInputToOutput } from "./utils";
 import { bytes, pvm_interpreter as pvm } from "@typeberry/lib";
 import { ExpectedState, MemoryChunkItem, PageMapItem } from "@/types/pvm.ts";
-import { type ZodIssue, type ZodSafeParseResult, z } from "zod";
+import { type ZodSafeParseResult, z } from "zod";
 import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 import { decodeSpiWithMetadata } from "@/utils/spi";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
@@ -110,10 +110,10 @@ export function loadFileFromUint8Array(
       kind: "JAM SPI",
       initial: {
         regs: bigUint64ArrayToRegistersArray(registers),
-        pc: 0,
+        pc: 5,
         pageMap,
         memory: chunks,
-        gas: 10000n,
+        gas: 100000n,
       },
     });
     return;
@@ -143,7 +143,7 @@ export function loadFileFromUint8Array(
 const generateErrorMessageFromZodValidation = (result: ValidationResult): string => {
   if (!result.error) return "Unknown error occurred";
 
-  const formattedErrors = result.error.issues.map((err: ZodIssue) => {
+  const formattedErrors = result.error.issues.map((err) => {
     const path = err.path.join(" > ") || "root";
     return `Field: "${path}" - ${err.message}`;
   });
