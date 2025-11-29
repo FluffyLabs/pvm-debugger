@@ -22,6 +22,7 @@ export interface DebuggerState {
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
   hasHostCallOpen: boolean;
+  pendingHostCallIndex: number | null;
   initialState: ExpectedState;
   instructionMode: InstructionMode;
   isDebugFinished: boolean;
@@ -88,6 +89,7 @@ const initialState: DebuggerState = {
   isRunMode: false,
   isStepMode: false,
   hasHostCallOpen: false,
+  pendingHostCallIndex: null,
   programPreviewResult: [],
   breakpointAddresses: [],
   clickedInstruction: null,
@@ -177,6 +179,9 @@ const debuggerSlice = createSlice({
     setHasHostCallOpen(state, action) {
       state.hasHostCallOpen = action.payload;
     },
+    setPendingHostCallIndex(state, action: { payload: number | null }) {
+      state.pendingHostCallIndex = action.payload;
+    },
     setServiceId(state, action) {
       state.serviceId = action.payload;
     },
@@ -203,6 +208,7 @@ export const {
   setBreakpointAddresses,
   setClickedInstruction,
   setHasHostCallOpen,
+  setPendingHostCallIndex,
   setInitialState,
   setInstructionMode,
   setIsDebugFinished,

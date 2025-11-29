@@ -10,6 +10,7 @@ import ProgramLoader from "@/pages/ProgramLoader.tsx";
 import { Navigate, Route, Routes } from "react-router";
 import { AppsSidebar } from "./packages/ui-kit/AppsSidebar";
 import { MobileDebuggerControls } from "./components/MobileDebuggerControlls";
+import { HostCallDialog } from "./components/HostCallDialog";
 
 function App() {
   const { pvmInitialized } = useAppSelector((state) => state.debugger);
@@ -45,6 +46,7 @@ function App() {
       </div>
 
       <ToastContainer />
+      <HostCallDialog />
     </>
   );
 }

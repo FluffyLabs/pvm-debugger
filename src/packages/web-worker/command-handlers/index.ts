@@ -3,6 +3,8 @@ import { runLoad } from "./load";
 import { runStep } from "./step";
 import { runMemory } from "./memory";
 import { runHostCall } from "./host-call.ts";
+import { runSetState } from "./set-state.ts";
+import { runSetMemory } from "./set-memory.ts";
 
 export default {
   runInit,
@@ -10,4 +12,6 @@ export default {
   runStep,
   runMemory,
   runHostCall,
+  runSetState,
+  runSetMemory,
 };

@@ -127,6 +127,33 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
       error: null,
       messageId: e.data.messageId,
     });
+  } else if (e.data.command === Commands.SET_STATE) {
+    const data = await commandHandlers.runSetState({
+      pvm,
+      regs: e.data.payload.regs,
+      gas: e.data.payload.gas,
+    });
+
+    postTypedMessage({
+      command: Commands.SET_STATE,
+      status: data.status,
+      error: data.error,
+      payload: { state: data.state },
+      messageId: e.data.messageId,
+    });
+  } else if (e.data.command === Commands.SET_MEMORY) {
+    const data = await commandHandlers.runSetMemory({
+      pvm,
+      address: e.data.payload.address,
+      data: e.data.payload.data,
+    });
+
+    postTypedMessage({
+      command: Commands.SET_MEMORY,
+      status: data.status,
+      error: data.error,
+      messageId: e.data.messageId,
+    });
   } else if (e.data.command === Commands.UNLOAD) {
     socket?.close();
 
