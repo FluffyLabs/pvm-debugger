@@ -11,6 +11,7 @@ import React from "react";
 import { isNumber } from "lodash";
 import { getStatusColor } from "@/utils/colors";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
+import { cn } from "@/lib/utils";
 
 const ComputedValue = ({
   propName,
@@ -171,15 +172,25 @@ export const Registers = ({
                     value={currentState.status}
                     previousValue={previousState.status}
                     propName="status"
-                    formatter={(value) => (
-                      <span
-                        className={"py-1 px-4 rounded-xl lowercase border"}
-                        style={getStatusStyles(isDarkMode, Number(value))}
-                        test-id="program-status"
-                      >
-                        {Status[Number(value)] ?? `Invalid(${value})`}
-                      </span>
-                    )}
+                    formatter={(value) => {
+                      const statusValue = Number(value);
+                      const statusName = Status[statusValue] ?? `Invalid(${value})`;
+                      const exitArg = workers[0]?.exitArg;
+                      const displayText =
+                        statusValue === Status.HOST && exitArg !== undefined ? `${statusName}-${exitArg}` : statusName;
+
+                      return (
+                        <span
+                          className={cn("py-1 px-4 rounded-xl lowercase border", {
+                            "text-xs whitespace-nowrap": statusValue === Status.HOST,
+                          })}
+                          style={getStatusStyles(isDarkMode, statusValue)}
+                          test-id="program-status"
+                        >
+                          {displayText}
+                        </span>
+                      );
+                    }}
                     workers={workers}
                   />
                 )}

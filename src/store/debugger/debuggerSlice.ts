@@ -1,5 +1,13 @@
 import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
-import { AvailablePvms, CurrentInstruction, ExpectedState, SpiProgram, Status } from "@/types/pvm.ts";
+import {
+  AvailablePvms,
+  CurrentInstruction,
+  DEFAULT_GAS,
+  DEFAULT_REGS,
+  ExpectedState,
+  SpiProgram,
+  Status,
+} from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
@@ -22,6 +30,7 @@ export interface DebuggerState {
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
   hasHostCallOpen: boolean;
+  pendingHostCallIndex: number | null;
   initialState: ExpectedState;
   instructionMode: InstructionMode;
   isDebugFinished: boolean;
@@ -74,13 +83,13 @@ const initialState: DebuggerState = {
   programName: "<empty>",
   program: [],
   spiProgram: null,
-  spiArgs: null,
+  spiArgs: new Uint8Array([0x18, 0x00, 0x00]), // Default: 0x180000
   initialState: {
-    regs: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n],
+    regs: DEFAULT_REGS,
     pc: 0,
     pageMap: [],
     memory: [],
-    gas: 10000n,
+    gas: DEFAULT_GAS,
     status: Status.OK,
   },
   isProgramEditMode: false,
@@ -88,6 +97,7 @@ const initialState: DebuggerState = {
   isRunMode: false,
   isStepMode: false,
   hasHostCallOpen: false,
+  pendingHostCallIndex: null,
   programPreviewResult: [],
   breakpointAddresses: [],
   clickedInstruction: null,
@@ -98,11 +108,11 @@ const initialState: DebuggerState = {
   stepsToPerform: 1,
   useBlockStepping: true,
   uiRefreshRate: {
-    mode: "block" as UiRefreshMode,
-    instructionCount: 1,
+    mode: "instructions" as UiRefreshMode,
+    instructionCount: 10_000,
   },
   hostCallsTrace: null,
-  serviceId: parseInt("0x30303030", 16),
+  serviceId: parseInt("0x00000000", 16),
   activeMobileTab: "program",
 };
 
@@ -177,13 +187,16 @@ const debuggerSlice = createSlice({
     setHasHostCallOpen(state, action) {
       state.hasHostCallOpen = action.payload;
     },
+    setPendingHostCallIndex(state, action: { payload: number | null }) {
+      state.pendingHostCallIndex = action.payload;
+    },
     setServiceId(state, action) {
       state.serviceId = action.payload;
     },
     setSpiProgram(state, action: { payload: SpiProgram }) {
       state.spiProgram = action.payload;
     },
-    setSpiArgs(state, action) {
+    setSpiArgs(state, action: { payload: Uint8Array }) {
       state.spiArgs = action.payload;
     },
     setPvmOptions(state, action) {
@@ -203,6 +216,7 @@ export const {
   setBreakpointAddresses,
   setClickedInstruction,
   setHasHostCallOpen,
+  setPendingHostCallIndex,
   setInitialState,
   setInstructionMode,
   setIsDebugFinished,

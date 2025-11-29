@@ -24,14 +24,15 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   const debuggerActions = useDebuggerActions();
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
   const debuggerState = useAppSelector((state) => state.debugger);
+  const spiArgs = bytes.BytesBlob.blobFrom(debuggerState.spiArgs ?? new Uint8Array());
   const navigate = useNavigate();
-  const [textSpiArgs, setTextSpiArgs] = useState(debuggerState.spiArgs?.toString() ?? "");
-  const isSpiArgsError = textSpiArgs !== debuggerState.spiArgs?.toString();
+  const [textSpiArgs, setTextSpiArgs] = useState(spiArgs.toString());
+  const isSpiArgsError = textSpiArgs !== spiArgs.toString();
   const handleTextSpiArgs = (newVal: string) => {
     setTextSpiArgs(newVal);
     try {
       const parsed = bytes.BytesBlob.parseBlob(newVal);
-      dispatch(setSpiArgs(parsed));
+      dispatch(setSpiArgs(parsed.raw));
     } catch {
       // Ignore parse errors - user may be typing
     }

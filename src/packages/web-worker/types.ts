@@ -40,6 +40,8 @@ export type WorkerResponseParams = CommonWorkerResponseParams &
             };
       }
     | { command: Commands.SET_SERVICE_ID }
+    | { command: Commands.SET_STATE; payload: { state: ExpectedState } }
+    | { command: Commands.SET_MEMORY }
     | { command: Commands.UNLOAD }
   );
 
@@ -64,6 +66,8 @@ export type CommandWorkerRequestParams =
   | { command: Commands.MEMORY; payload: { startAddress: number; stopAddress: number } }
   | { command: Commands.HOST_CALL; payload: { hostCallIdentifier: number } }
   | { command: Commands.SET_SERVICE_ID; payload: { serviceId: number } }
+  | { command: Commands.SET_STATE; payload: { regs: bigint[]; gas: bigint } }
+  | { command: Commands.SET_MEMORY; payload: { address: number; data: Uint8Array } }
   | { command: Commands.UNLOAD };
 
 export type WorkerRequestParams = CommonWorkerRequestParams & CommandWorkerRequestParams;
@@ -77,6 +81,8 @@ export enum Commands {
   MEMORY = "memory",
   HOST_CALL = "host_call",
   SET_SERVICE_ID = "set_service_id",
+  SET_STATE = "set_state",
+  SET_MEMORY = "set_memory",
   UNLOAD = "unload",
 }
 

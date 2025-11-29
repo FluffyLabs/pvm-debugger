@@ -26,15 +26,16 @@ function stringToNumber<T>(value: string, cb: (x: string) => T): T {
 export const DebuggerSettingsContent = () => {
   const debuggerState = useAppSelector((state) => state.debugger);
   const dispatch = useAppDispatch();
+  const spiArgs = bytes.BytesBlob.blobFrom(debuggerState.spiArgs?.slice(0) ?? new Uint8Array());
   const { numeralSystem } = useContext(NumeralSystemContext);
   const [error, setError] = useState<string>();
-  const [textSpi, setTextSpi] = useState(debuggerState.spiArgs?.toString() ?? "");
-  const isSpiError = textSpi !== debuggerState.spiArgs?.toString();
+  const [textSpi, setTextSpi] = useState(spiArgs.toString());
+  const isSpiError = textSpi !== spiArgs.toString();
   const handleTextSpi = (newVal: string) => {
     setTextSpi(newVal);
     try {
       const parsed = bytes.BytesBlob.parseBlob(newVal);
-      dispatch(setSpiArgs(parsed));
+      dispatch(setSpiArgs(parsed.raw));
     } catch {
       // Ignore parse errors - user may be typing
     }
