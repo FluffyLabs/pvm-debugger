@@ -109,7 +109,7 @@ const initialState: DebuggerState = {
   useBlockStepping: true,
   uiRefreshRate: {
     mode: "instructions" as UiRefreshMode,
-    instructionCount: 100,
+    instructionCount: 10_000,
   },
   hostCallsTrace: null,
   serviceId: parseInt("0x00000000", 16),
