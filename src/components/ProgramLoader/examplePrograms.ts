@@ -1,3 +1,5 @@
+import { DEFAULT_GAS } from "@/types/pvm";
+
 export const programs: {
   [key: string]: {
     name: string;
@@ -19,7 +21,7 @@ export const programs: {
     pc: 0,
     pageMap: [],
     memory: [],
-    gas: 100000n,
+    gas: DEFAULT_GAS,
   },
   gameOfLife: {
     name: "Conway's Game of Life",
@@ -67,7 +69,7 @@ export const programs: {
     pc: 0,
     pageMap: [],
     memory: [],
-    gas: 10000n,
+    gas: DEFAULT_GAS,
   },
   storeU16: {
     name: "Store U16 instruction",
@@ -82,7 +84,7 @@ export const programs: {
       },
     ],
     memory: [],
-    gas: 10000n,
+    gas: DEFAULT_GAS,
   },
   empty: {
     name: "Empty",
@@ -91,6 +93,6 @@ export const programs: {
     pc: 0,
     pageMap: [],
     memory: [],
-    gas: 10000n,
+    gas: DEFAULT_GAS,
   },
 };

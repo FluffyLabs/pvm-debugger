@@ -3,7 +3,7 @@ import { HostCallHandler, HostCallHandlerProps } from "./types";
 import { jam_host_calls, pvm_host_calls, block, utils } from "@typeberry/lib";
 import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
 import { storageManager } from "./storageManager";
-import { DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
 
 const { Write } = jam_host_calls.general;
 const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
@@ -55,7 +55,7 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
         }
 
         const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? 100000n);
+        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
 
         const hostCallMemory = new HostCallMemory(mockMemory);
         const hostCallRegisters = new HostCallRegisters(regBytes);

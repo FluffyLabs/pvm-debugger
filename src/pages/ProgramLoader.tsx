@@ -1,7 +1,7 @@
 import { Loader } from "@/components/ProgramLoader/Loader.tsx";
 import { useEffect, useRef } from "react";
 import { bytes } from "@typeberry/lib";
-import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
+import { DEFAULT_GAS, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 import { useNavigate } from "react-router";
 import { useAppSelector } from "@/store/hooks.ts";
 import { selectInitialState } from "@/store/debugger/debuggerSlice.ts";
@@ -87,7 +87,7 @@ const ProgramLoader = () => {
                   pc: 0,
                   pageMap,
                   memory: chunks,
-                  gas: 10000n,
+                  gas: DEFAULT_GAS,
                 },
               });
 

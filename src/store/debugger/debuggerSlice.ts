@@ -1,5 +1,13 @@
 import { createListenerMiddleware, createSlice } from "@reduxjs/toolkit";
-import { AvailablePvms, CurrentInstruction, DEFAULT_REGS, ExpectedState, SpiProgram, Status } from "@/types/pvm.ts";
+import {
+  AvailablePvms,
+  CurrentInstruction,
+  DEFAULT_GAS,
+  DEFAULT_REGS,
+  ExpectedState,
+  SpiProgram,
+  Status,
+} from "@/types/pvm.ts";
 import { InstructionMode } from "@/components/Instructions/types.ts";
 import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
@@ -81,7 +89,7 @@ const initialState: DebuggerState = {
     pc: 0,
     pageMap: [],
     memory: [],
-    gas: 10000n,
+    gas: DEFAULT_GAS,
     status: Status.OK,
   },
   isProgramEditMode: false,

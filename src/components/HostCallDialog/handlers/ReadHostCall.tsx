@@ -6,7 +6,7 @@ import { jam_host_calls, pvm_host_calls, bytes, block, numbers } from "@typeberr
 import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
 import { storageManager } from "./storageManager";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
 
 const { Read } = jam_host_calls.general;
 const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
@@ -63,7 +63,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         }
 
         const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? 100000n);
+        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
 
         const hostCallMemory = new HostCallMemory(mockMemory);
         const hostCallRegisters = new HostCallRegisters(regBytes);
@@ -130,7 +130,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
       }
 
       const regBytes = regsToBytes(regs);
-      const mockGas = new MockGasCounter(currentState.gas ?? 100000n);
+      const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
 
       const hostCallMemory = new HostCallMemory(mockMemory);
       const hostCallRegisters = new HostCallRegisters(regBytes);

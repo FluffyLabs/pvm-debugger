@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { valueToNumeralSystem } from "@/components/Instructions/utils";
-import { DEFAULT_REGS, ExpectedState, RegistersArray } from "@/types/pvm";
+import { DEFAULT_GAS, DEFAULT_REGS, ExpectedState, RegistersArray } from "@/types/pvm";
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { MemoryEditor } from "./MemoryEditor";
 import { HostCallActionButtons } from "./handlers/HostCallActionButtons";
@@ -52,7 +52,7 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
       onRegsChange(newRegs);
 
       // Set gas to current gas - 10 (as per requirement)
-      const currentGas = currentState.gas ?? 10000n;
+      const currentGas = currentState.gas ?? DEFAULT_GAS;
       const newGas = currentGas > 10n ? currentGas - 10n : 0n;
       setGas(newGas);
       onGasChange(newGas);

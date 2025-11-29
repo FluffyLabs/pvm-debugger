@@ -6,7 +6,7 @@ import { resumeAfterHostCall, readMemoryRange, HostCallResumeMode } from "@/stor
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { getHostCallHandler } from "./handlers";
 import { DefaultHostCallContent, MemoryEdit } from "./DefaultHostCallContent";
-import { DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
 
 const HOST_CALL_NAMES: Record<number, string> = {
   0: "gas",
@@ -83,7 +83,7 @@ export const HostCallDialog = () => {
       try {
         // Use provided values or fall back to pending/current state
         const finalRegs = regs ?? pendingRegs ?? currentState.regs ?? DEFAULT_REGS;
-        const currentGas = currentState.gas ?? 10000n;
+        const currentGas = currentState.gas ?? DEFAULT_GAS;
         const finalGas = gas ?? pendingGas ?? (currentGas > 10n ? currentGas - 10n : 0n);
 
         // Combine memory edits from host calls with pending memory from default UI

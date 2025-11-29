@@ -4,7 +4,7 @@ import { HostCallHandler, HostCallHandlerProps } from "./types";
 import { jam_host_calls, pvm_host_calls, bytes, block } from "@typeberry/lib";
 import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
 
 const { Fetch, FetchKind } = jam_host_calls.general;
 const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
@@ -129,7 +129,7 @@ const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
       // Create mock memory and registers
       const mockMemory = new MockMemory();
       const regBytes = regsToBytes(regs);
-      const mockGas = new MockGasCounter(currentState.gas ?? 100000n);
+      const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
 
       // Wrap in PVM host call wrappers
       const hostCallMemory = new HostCallMemory(mockMemory);

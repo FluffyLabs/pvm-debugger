@@ -1,6 +1,6 @@
 import { mapUploadFileInputToOutput } from "./utils";
 import { bytes, pvm_interpreter as pvm } from "@typeberry/lib";
-import { ExpectedState, MemoryChunkItem, PageMapItem } from "@/types/pvm.ts";
+import { DEFAULT_GAS, ExpectedState, MemoryChunkItem, PageMapItem } from "@/types/pvm.ts";
 import { type ZodSafeParseResult, z } from "zod";
 import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 import { decodeSpiWithMetadata } from "@/utils/spi";
@@ -113,7 +113,7 @@ export function loadFileFromUint8Array(
         pc: 5,
         pageMap,
         memory: chunks,
-        gas: 100000n,
+        gas: DEFAULT_GAS,
       },
     });
     return;
