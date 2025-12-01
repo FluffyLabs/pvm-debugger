@@ -37,10 +37,10 @@ function toAscii(byte: number): string {
 }
 
 export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled, onMemoryChange }) => {
-  const [addressInput, setAddressInput] = useState("");
+  const [addressInput, setAddressInput] = useState("0x1000");
   const [lengthInput, setLengthInput] = useState("256");
-  const [address, setAddress] = useState<number | null>(null);
-  const [length, setLength] = useState<number | null>(null);
+  const [address, setAddress] = useState<number | null>(0x1000);
+  const [length, setLength] = useState<number | null>(256);
   const [data, setData] = useState<Uint8Array | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,12 +77,16 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
     loadMemory();
   }, [address, length, readMemory, onMemoryChange]);
 
-  const handleAddressBlur = useCallback(() => {
+  const updateAddress = useCallback((addressInput: string) => {
+    setAddressInput(addressInput);
+
     const parsed = parseNumber(addressInput);
     setAddress(parsed);
-  }, [addressInput]);
+  }, []);
 
-  const handleLengthBlur = useCallback(() => {
+  const updateLength = useCallback((lengthInput: string) => {
+    setLengthInput(lengthInput);
+
     const parsed = parseNumber(lengthInput);
     if (parsed !== null && parsed > MAX_LENGTH) {
       setLengthInput(MAX_LENGTH.toString());
@@ -90,7 +94,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
     } else {
       setLength(parsed);
     }
-  }, [lengthInput]);
+  }, []);
 
   const handleByteClick = useCallback(
     (byteIndex: number) => {
@@ -157,9 +161,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
             className="font-mono"
             placeholder="0x1000"
             value={addressInput}
-            onChange={(e) => setAddressInput(e.target.value)}
-            onBlur={handleAddressBlur}
-            onKeyUp={(e) => e.key === "Enter" && handleAddressBlur()}
+            onChange={(e) => updateAddress(e.target.value)}
             disabled={disabled}
           />
         </div>
@@ -169,9 +171,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
             className="font-mono"
             placeholder="256"
             value={lengthInput}
-            onChange={(e) => setLengthInput(e.target.value)}
-            onBlur={handleLengthBlur}
-            onKeyUp={(e) => e.key === "Enter" && handleLengthBlur()}
+            onChange={(e) => updateLength(e.target.value)}
             disabled={disabled}
           />
         </div>

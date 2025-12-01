@@ -13,6 +13,18 @@ const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
 const { BytesBlob } = bytes;
 type AccountsRead = jam_host_calls.general.AccountsRead;
 
+// Helper to decode hex to ASCII (replaces non-printable chars with dots)
+function hexToAscii(hex: string): string {
+  const clean = hex.replace(/^0x/i, "");
+  let result = "";
+  for (let i = 0; i < clean.length; i += 2) {
+    const byte = parseInt(clean.slice(i, i + 2), 16);
+    // Printable ASCII range: 32-126
+    result += byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".";
+  }
+  return result;
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
@@ -181,9 +193,14 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
           <label className="text-sm font-medium">Requested Key (hex-encoded)</label>
           <div className="p-2 bg-muted rounded-md font-mono text-sm break-all">{requestedKeyHex || "(unknown)"}</div>
           {requestedKeyHex && (
-            <div className="text-xs text-muted-foreground">
-              Length: {requestedKeyHex.replace(/^0x/i, "").length / 2} bytes
-            </div>
+            <>
+              <div className="p-2 bg-muted/50 rounded-md font-mono text-sm break-all text-muted-foreground">
+                ASCII: {hexToAscii(requestedKeyHex)}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Length: {requestedKeyHex.replace(/^0x/i, "").length / 2} bytes
+              </div>
+            </>
           )}
         </div>
 

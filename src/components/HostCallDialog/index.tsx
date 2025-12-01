@@ -56,6 +56,7 @@ export const HostCallDialog = () => {
   const currentState = useMemo(() => firstWorker?.currentState ?? {}, [firstWorker?.currentState]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [useGenericUI, setUseGenericUI] = useState(false);
 
   // State for default UI - lifted up so footer can access it
   const [pendingRegs, setPendingRegs] = useState<bigint[] | null>(null);
@@ -66,6 +67,7 @@ export const HostCallDialog = () => {
   useEffect(() => {
     if (hasHostCallOpen) {
       setIsLoading(false);
+      setUseGenericUI(false);
       setPendingRegs(null);
       setPendingGas(null);
       setPendingMemory(null);
@@ -141,10 +143,19 @@ export const HostCallDialog = () => {
           <span className="font-medium">Host Call:</span>
           <code className="px-2 py-1 bg-background rounded text-sm font-mono">{hostCallName}</code>
           <span className="text-muted-foreground text-sm">(index: {pendingHostCallIndex ?? "?"})</span>
+          {specialHandler?.hasCustomUI && (
+            <button
+              className="ml-auto text-xs text-muted-foreground hover:text-foreground underline"
+              onClick={() => setUseGenericUI(!useGenericUI)}
+              disabled={isLoading}
+            >
+              {useGenericUI ? "Use custom UI" : "Use generic UI"}
+            </button>
+          )}
         </div>
 
         {/* Scrollable content area */}
-        {specialHandler?.hasCustomUI ? (
+        {specialHandler?.hasCustomUI && !useGenericUI ? (
           <specialHandler.Component
             currentState={currentState}
             isLoading={isLoading}

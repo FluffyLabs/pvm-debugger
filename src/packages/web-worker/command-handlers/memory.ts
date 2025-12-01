@@ -72,11 +72,12 @@ export const runMemory = async (params: MemoryParams): Promise<MemoryResponse> =
     };
   }
 
+  const dumpParams = () => `size=${params.memorySize}, start=${params.startAddress}, stop=${params.stopAddress}`;
   if (params.startAddress < 0 || params.stopAddress < 0) {
     return {
       memoryChunk: new Uint8Array(),
       status: CommandStatus.ERROR,
-      error: new Error("Invalid memory address"),
+      error: new Error(`Invalid memory address: ${dumpParams()}`),
     };
   }
 
@@ -84,7 +85,7 @@ export const runMemory = async (params: MemoryParams): Promise<MemoryResponse> =
     return {
       memoryChunk: new Uint8Array(),
       status: CommandStatus.ERROR,
-      error: new Error("Memory range is out of bounds"),
+      error: new Error(`Memory range is out of bounds: ${dumpParams()}`),
     };
   }
 
@@ -92,7 +93,7 @@ export const runMemory = async (params: MemoryParams): Promise<MemoryResponse> =
     return {
       memoryChunk: new Uint8Array(),
       status: CommandStatus.ERROR,
-      error: new Error("Invalid memory range"),
+      error: new Error(`Invalid memory range: ${dumpParams()}`),
     };
   }
 
