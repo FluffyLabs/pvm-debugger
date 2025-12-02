@@ -13,15 +13,13 @@ interface MemoryEditorProps {
 function parseNumber(value: string): number | null {
   if (!value.trim()) return null;
 
-  try {
-    // Support hex (0x...) and decimal
-    if (value.toLowerCase().startsWith("0x")) {
-      return parseInt(value, 16);
-    }
-    return parseInt(value, 10);
-  } catch {
-    return null;
+  // Support hex (0x...) and decimal
+  if (value.toLowerCase().startsWith("0x")) {
+    const parsed = parseInt(value, 16);
+    return isNaN(parsed) ? null : parsed;
   }
+  const parsed = parseInt(value, 10);
+  return isNaN(parsed) ? null : parsed;
 }
 
 function toHex(byte: number): string {
