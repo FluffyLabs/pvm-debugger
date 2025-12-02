@@ -14,7 +14,7 @@ interface GasResult {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume }) => {
+const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume, serviceId }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
 
   const [result, setResult] = useState<GasResult | null>(null);
@@ -33,7 +33,7 @@ const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, is
         const ctx = new HostCallContext(regs, currentState.gas);
 
         // Gas host call doesn't use memory, only registers
-        const currentServiceId = block.tryAsServiceId(0);
+        const currentServiceId = block.tryAsServiceId(serviceId ?? 0);
         const gas = new Gas(currentServiceId);
         await gas.execute(ctx.mockGas, ctx.hostCallRegisters);
 
@@ -53,7 +53,7 @@ const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, is
     };
 
     execute();
-  }, [regs, currentState.gas]);
+  }, [regs, currentState.gas, serviceId]);
 
   const handleResume = (mode: "step" | "block" | "run") => {
     if (!result) return;

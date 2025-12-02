@@ -61,10 +61,15 @@ interface WriteResult {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
+const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({
+  currentState,
+  isLoading,
+  readMemory,
+  onResume,
+  serviceId,
+}) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
 
-  const serviceId = regs[7];
   const [displayData, setDisplayData] = useState<Omit<WriteResult, "modifiedRegs" | "finalGas" | "memoryEdits"> | null>(
     null,
   );
@@ -72,6 +77,7 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
   const [error, setError] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(true);
   const hasExecuted = useRef(false);
+  const resolvedServiceId = useMemo(() => block.tryAsServiceId(serviceId ?? 0), [serviceId]);
 
   // Execute on mount to get the result, but don't auto-resume
   useEffect(() => {
@@ -116,13 +122,12 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           valueHex = bytesToHex(valueData);
         }
 
-        const currentServiceId = block.tryAsServiceId(Number(serviceId));
-        const write = new Write(currentServiceId, accounts);
+        const write = new Write(resolvedServiceId, accounts);
         await write.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         // Store data for display
         setDisplayData({
-          serviceId: serviceId?.toString() ?? "0",
+          serviceId: resolvedServiceId.toString(),
           key: keyHex,
           keyLength,
           value: valueHex,
@@ -140,7 +145,7 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
     };
 
     execute();
-  }, [regs, currentState.gas, serviceId, readMemory]);
+  }, [regs, currentState.gas, readMemory, resolvedServiceId]);
 
   const handleResume = async (mode: "step" | "block" | "run") => {
     if (!displayData) return;
@@ -182,8 +187,7 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
         ctx.preloadMemory(Number(valuePointer), valueData);
       }
 
-      const currentServiceId = block.tryAsServiceId(Number(serviceId));
-      const write = new Write(currentServiceId, accounts);
+      const write = new Write(resolvedServiceId, accounts);
       await write.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
       const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();

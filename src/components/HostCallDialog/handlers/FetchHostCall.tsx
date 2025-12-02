@@ -76,7 +76,7 @@ const FETCH_KIND_INFO: Record<number, { name: string; description: string; needs
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
-const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume }) => {
+const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume, serviceId }) => {
   const regs = currentState.regs ?? DEFAULT_REGS;
   const fetchKind = Number(regs[10] ?? 0n);
   const fetchInfo = FETCH_KIND_INFO[fetchKind] || {
@@ -136,7 +136,7 @@ const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
       const hostCallRegisters = new HostCallRegisters(regBytes);
 
       // Create and execute Fetch host call
-      const currentServiceId = block.tryAsServiceId(0);
+      const currentServiceId = block.tryAsServiceId(serviceId ?? 0);
       const fetch = new Fetch(currentServiceId, externalities);
       await fetch.execute(mockGas, hostCallRegisters, hostCallMemory);
 

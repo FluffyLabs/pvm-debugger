@@ -21,8 +21,10 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
   isLoading,
   readMemory,
   onResume,
+  serviceId,
 }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
+  const resolvedServiceId = useMemo(() => block.tryAsServiceId(serviceId ?? 0), [serviceId]);
 
   const [provideData, setProvideData] = useState<ProvideData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
           requestPreimage: () => Result.ok(OK),
           forgetPreimage: () => Result.ok(OK),
           eject: () => Result.ok(OK),
-          newService: () => Result.ok(block.tryAsServiceId(0)),
+          newService: () => Result.ok(resolvedServiceId),
           upgradeService: () => {},
           updateValidatorsData: () => Result.ok(OK),
           checkpoint: () => {},
@@ -74,8 +76,7 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
           ctx.preloadMemory(preimagePointer, preimageData);
         }
 
-        const currentServiceId = block.tryAsServiceId(0);
-        const provide = new Provide(currentServiceId, partialState);
+        const provide = new Provide(resolvedServiceId, partialState);
         await provide.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setProvideData(capturedData);
@@ -88,7 +89,7 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
     };
 
     execute();
-  }, [regs, currentState.gas, readMemory]);
+  }, [regs, currentState.gas, readMemory, resolvedServiceId]);
 
   const handleResume = async (mode: "step" | "block" | "run") => {
     setError(null);
@@ -102,7 +103,7 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
         requestPreimage: () => Result.ok(OK),
         forgetPreimage: () => Result.ok(OK),
         eject: () => Result.ok(OK),
-        newService: () => Result.ok(block.tryAsServiceId(0)),
+        newService: () => Result.ok(resolvedServiceId),
         upgradeService: () => {},
         updateValidatorsData: () => Result.ok(OK),
         checkpoint: () => {},
@@ -120,8 +121,7 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
         ctx.preloadMemory(preimagePointer, preimageData);
       }
 
-      const currentServiceId = block.tryAsServiceId(0);
-      const provide = new Provide(currentServiceId, partialState);
+      const provide = new Provide(resolvedServiceId, partialState);
       await provide.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
       const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();

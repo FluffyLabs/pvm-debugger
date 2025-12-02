@@ -13,10 +13,17 @@ const { BytesBlob } = bytes;
 type AccountsRead = jam_host_calls.general.AccountsRead;
 
 // eslint-disable-next-line react-refresh/only-export-components
-const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
+const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({
+  currentState,
+  isLoading,
+  readMemory,
+  onResume,
+  serviceId,
+}) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
 
-  const serviceId = jam_host_calls.getServiceId(numbers.tryAsU64(regs[7]));
+  const requestedServiceId = jam_host_calls.getServiceId(numbers.tryAsU64(regs[7]));
+  const resolvedServiceId = useMemo(() => block.tryAsServiceId(serviceId ?? 0), [serviceId]);
 
   // State for when we need user input
   const [requestedKeyHex, setRequestedKeyHex] = useState<string | null>(null);
@@ -61,8 +68,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
           ctx.preloadMemory(keyPointer, keyData);
         }
 
-        const currentServiceId = serviceId ?? block.tryAsServiceId(0);
-        const read = new Read(currentServiceId, accounts);
+        const read = new Read(resolvedServiceId, accounts);
         await read.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setRequestedKeyHex(capturedKeyHex);
@@ -83,7 +89,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
     };
 
     execute();
-  }, [regs, currentState.gas, serviceId, readMemory, onResume]);
+  }, [regs, currentState.gas, serviceId, readMemory, onResume, resolvedServiceId]);
 
   const handleResume = async (mode: "step" | "block" | "run") => {
     if (!requestedKeyHex) return;
@@ -120,8 +126,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         ctx.preloadMemory(keyPointer, keyData);
       }
 
-      const currentServiceId = block.tryAsServiceId(Number(serviceId));
-      const read = new Read(currentServiceId, accounts);
+      const read = new Read(resolvedServiceId, accounts);
       await read.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
       const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
@@ -155,7 +160,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         <div className="space-y-1">
           <label className="text-sm font-medium">Service ID</label>
           <div className="p-2 bg-muted rounded-md font-mono text-sm">
-            {serviceId === null ? "current" : serviceId.toString()}
+            {requestedServiceId === null ? "current" : requestedServiceId.toString()}
           </div>
         </div>
 

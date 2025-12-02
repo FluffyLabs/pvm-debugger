@@ -22,8 +22,10 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
   isLoading,
   readMemory,
   onResume,
+  serviceId,
 }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
+  const resolvedServiceId = useMemo(() => block.tryAsServiceId(serviceId ?? 0), [serviceId]);
 
   const [transferData, setTransferData] = useState<TransferData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
           requestPreimage: () => Result.ok(OK),
           forgetPreimage: () => Result.ok(OK),
           eject: () => Result.ok(OK),
-          newService: () => Result.ok(block.tryAsServiceId(0)),
+          newService: () => Result.ok(resolvedServiceId),
           upgradeService: () => {},
           updateValidatorsData: () => Result.ok(OK),
           checkpoint: () => {},
@@ -76,8 +78,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
           ctx.preloadMemory(memoPointer, memoData);
         }
 
-        const currentServiceId = block.tryAsServiceId(0);
-        const transfer = new Transfer(currentServiceId, partialState);
+        const transfer = new Transfer(resolvedServiceId, partialState);
         await transfer.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setTransferData(capturedData);
@@ -90,7 +91,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
     };
 
     execute();
-  }, [regs, currentState.gas, readMemory]);
+  }, [regs, currentState.gas, readMemory, resolvedServiceId]);
 
   const handleResume = async (mode: "step" | "block" | "run") => {
     setError(null);
@@ -103,7 +104,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
         requestPreimage: () => Result.ok(OK),
         forgetPreimage: () => Result.ok(OK),
         eject: () => Result.ok(OK),
-        newService: () => Result.ok(block.tryAsServiceId(0)),
+        newService: () => Result.ok(resolvedServiceId),
         upgradeService: () => {},
         updateValidatorsData: () => Result.ok(OK),
         checkpoint: () => {},
@@ -122,8 +123,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
         ctx.preloadMemory(memoPointer, memoData);
       }
 
-      const currentServiceId = block.tryAsServiceId(0);
-      const transfer = new Transfer(currentServiceId, partialState);
+      const transfer = new Transfer(resolvedServiceId, partialState);
       await transfer.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
       const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();

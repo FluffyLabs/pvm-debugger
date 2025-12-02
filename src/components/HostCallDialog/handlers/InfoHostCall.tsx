@@ -26,7 +26,7 @@ const DEFAULT_LAST_ACCUMULATION = "0";
 const DEFAULT_PARENT_SERVICE = "0";
 
 // eslint-disable-next-line react-refresh/only-export-components
-const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume }) => {
+const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume, serviceId }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
   const requestedServiceId = regs[7];
 
@@ -81,7 +81,7 @@ const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
 
       const ctx = new HostCallContext(regs, currentState.gas);
 
-      const currentServiceId = block.tryAsServiceId(0);
+      const currentServiceId = block.tryAsServiceId(serviceId ?? 0);
       const info = new Info(currentServiceId, accounts);
       await info.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 

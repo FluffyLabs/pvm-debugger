@@ -65,7 +65,6 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
       try {
         const memoryData = await readMemory(address, length);
         setData(memoryData);
-        onMemoryChange?.(address, memoryData);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to read memory");
         setData(null);

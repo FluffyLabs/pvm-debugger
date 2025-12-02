@@ -48,6 +48,7 @@ export const HostCallDialog = () => {
   const { numeralSystem } = useContext(NumeralSystemContext);
 
   const hasHostCallOpen = useAppSelector((state) => state.debugger.hasHostCallOpen);
+  const configuredServiceId = useAppSelector((state) => state.debugger.serviceId);
   const pendingHostCallIndex = useAppSelector((state) => state.debugger.pendingHostCallIndex);
   const workers = useAppSelector((state) => state.workers);
 
@@ -60,7 +61,7 @@ export const HostCallDialog = () => {
   // State for default UI - lifted up so footer can access it
   const [pendingRegs, setPendingRegs] = useState<bigint[] | null>(null);
   const [pendingGas, setPendingGas] = useState<bigint | null>(null);
-  const [pendingMemory, setPendingMemory] = useState<MemoryEdit | null>(null);
+  const [pendingMemoryEdits, setPendingMemoryEdits] = useState<MemoryEdit[]>([]);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -69,7 +70,7 @@ export const HostCallDialog = () => {
       setUseGenericUI(false);
       setPendingRegs(null);
       setPendingGas(null);
-      setPendingMemory(null);
+      setPendingMemoryEdits([]);
     }
   }, [hasHostCallOpen]);
 
@@ -87,8 +88,8 @@ export const HostCallDialog = () => {
         if (memoryEdits && memoryEdits.length > 0) {
           finalMemoryEdits.push(...memoryEdits);
         }
-        if (pendingMemory) {
-          finalMemoryEdits.push(pendingMemory);
+        if (pendingMemoryEdits.length > 0) {
+          finalMemoryEdits.push(...pendingMemoryEdits);
         }
 
         await dispatch(
@@ -99,13 +100,29 @@ export const HostCallDialog = () => {
             memoryEdits: finalMemoryEdits.length > 0 ? finalMemoryEdits : undefined,
           }),
         ).unwrap();
+        setPendingMemoryEdits([]);
       } catch (e) {
         console.error("Failed to resume after host call:", e);
         setIsLoading(false);
       }
     },
-    [dispatch, currentState, pendingRegs, pendingGas, pendingMemory],
+    [dispatch, currentState, pendingRegs, pendingGas, pendingMemoryEdits],
   );
+
+  const handleManualMemoryChange = useCallback((memoryEdit: MemoryEdit | null) => {
+    if (!memoryEdit) {
+      return;
+    }
+    setPendingMemoryEdits((prev) => {
+      const existingIndex = prev.findIndex((entry) => entry.address === memoryEdit.address);
+      if (existingIndex >= 0) {
+        const next = [...prev];
+        next[existingIndex] = memoryEdit;
+        return next;
+      }
+      return [...prev, memoryEdit];
+    });
+  }, []);
 
   const readMemory = useCallback(
     async (startAddress: number, length: number): Promise<Uint8Array> => {
@@ -159,6 +176,7 @@ export const HostCallDialog = () => {
           <specialHandler.Component
             currentState={currentState}
             isLoading={isLoading}
+            serviceId={configuredServiceId ?? null}
             readMemory={readMemory}
             onResume={handleResume}
           />
@@ -171,7 +189,7 @@ export const HostCallDialog = () => {
             onResume={handleResume}
             onRegsChange={setPendingRegs}
             onGasChange={setPendingGas}
-            onMemoryChange={setPendingMemory}
+            onMemoryChange={handleManualMemoryChange}
           />
         )}
       </DialogContent>

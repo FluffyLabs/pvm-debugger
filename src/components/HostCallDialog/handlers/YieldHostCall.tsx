@@ -15,8 +15,15 @@ interface YieldData {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
+const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({
+  currentState,
+  isLoading,
+  readMemory,
+  onResume,
+  serviceId,
+}) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
+  const resolvedServiceId = useMemo(() => block.tryAsServiceId(serviceId ?? 0), [serviceId]);
 
   const [yieldData, setYieldData] = useState<YieldData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +52,7 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           requestPreimage: () => Result.ok(OK),
           forgetPreimage: () => Result.ok(OK),
           eject: () => Result.ok(OK),
-          newService: () => Result.ok(block.tryAsServiceId(0)),
+          newService: () => Result.ok(resolvedServiceId),
           upgradeService: () => {},
           updateValidatorsData: () => Result.ok(OK),
           checkpoint: () => {},
@@ -65,8 +72,7 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           ctx.preloadMemory(hashPointer, hashData);
         }
 
-        const currentServiceId = block.tryAsServiceId(0);
-        const yieldCall = new Yield(currentServiceId, partialState);
+        const yieldCall = new Yield(resolvedServiceId, partialState);
         await yieldCall.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setYieldData(capturedData);
@@ -79,7 +85,7 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
     };
 
     execute();
-  }, [regs, currentState.gas, readMemory]);
+  }, [regs, currentState.gas, readMemory, resolvedServiceId]);
 
   const handleResume = async (mode: "step" | "block" | "run") => {
     setError(null);
@@ -93,7 +99,7 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
         requestPreimage: () => Result.ok(OK),
         forgetPreimage: () => Result.ok(OK),
         eject: () => Result.ok(OK),
-        newService: () => Result.ok(block.tryAsServiceId(0)),
+        newService: () => Result.ok(resolvedServiceId),
         upgradeService: () => {},
         updateValidatorsData: () => Result.ok(OK),
         checkpoint: () => {},
@@ -111,8 +117,7 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
         ctx.preloadMemory(hashPointer, hashData);
       }
 
-      const currentServiceId = block.tryAsServiceId(0);
-      const yieldCall = new Yield(currentServiceId, partialState);
+      const yieldCall = new Yield(resolvedServiceId, partialState);
       await yieldCall.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
       const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
