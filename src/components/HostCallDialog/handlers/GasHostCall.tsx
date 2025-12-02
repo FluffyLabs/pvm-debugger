@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, block } from "@typeberry/lib";
-import { MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
+import { jam_host_calls, block } from "@typeberry/lib";
+import { HostCallContext } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_REGS } from "@/types/pvm";
 
 const { GasHostCall: Gas } = jam_host_calls.general;
-const { HostCallRegisters } = pvm_host_calls;
 
 interface GasResult {
   gasRemaining: string;
@@ -31,18 +30,14 @@ const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, is
     const execute = async () => {
       setIsExecuting(true);
       try {
-        const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-        const hostCallRegisters = new HostCallRegisters(regBytes);
+        const ctx = new HostCallContext(regs, currentState.gas);
 
         // Gas host call doesn't use memory, only registers
         const currentServiceId = block.tryAsServiceId(0);
         const gas = new Gas(currentServiceId);
-        await gas.execute(mockGas, hostCallRegisters);
+        await gas.execute(ctx.mockGas, ctx.hostCallRegisters);
 
-        const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-        const finalGas = BigInt(mockGas.get());
+        const { modifiedRegs, finalGas } = ctx.getResult();
 
         // Store result for display, wait for user confirmation
         setResult({

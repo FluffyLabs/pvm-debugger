@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, block, utils, hash } from "@typeberry/lib";
-import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs, OK } from "./hostCallUtils";
+import { jam_host_calls, block, utils, hash } from "@typeberry/lib";
+import { HostCallContext, OK } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_REGS } from "@/types/pvm";
 
 const { Yield } = jam_host_calls.accumulate;
-const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
 const { Result } = utils;
 type PartialState = jam_host_calls.PartialState;
 type OpaqueHash = hash.OpaqueHash;
@@ -55,7 +54,7 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           providePreimage: () => Result.ok(OK),
         };
 
-        const mockMemory = new MockMemory();
+        const ctx = new HostCallContext(regs, currentState.gas);
 
         // Preload hash memory from actual PVM
         // Yield: regs[7] = hash pointer (32 bytes)
@@ -63,18 +62,12 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
         const HASH_SIZE = 32;
         if (hashPointer > 0) {
           const hashData = await readMemory(hashPointer, HASH_SIZE);
-          mockMemory.preload(hashPointer, hashData);
+          ctx.preloadMemory(hashPointer, hashData);
         }
-
-        const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-        const hostCallMemory = new HostCallMemory(mockMemory);
-        const hostCallRegisters = new HostCallRegisters(regBytes);
 
         const currentServiceId = block.tryAsServiceId(0);
         const yieldCall = new Yield(currentServiceId, partialState);
-        await yieldCall.execute(mockGas, hostCallRegisters, hostCallMemory);
+        await yieldCall.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setYieldData(capturedData);
         setIsExecuting(false);
@@ -109,28 +102,20 @@ const YieldHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
         providePreimage: () => Result.ok(OK),
       };
 
-      const mockMemory = new MockMemory();
+      const ctx = new HostCallContext(regs, currentState.gas);
 
       const hashPointer = Number(regs[7] ?? 0n);
       const HASH_SIZE = 32;
       if (hashPointer > 0) {
         const hashData = await readMemory(hashPointer, HASH_SIZE);
-        mockMemory.preload(hashPointer, hashData);
+        ctx.preloadMemory(hashPointer, hashData);
       }
-
-      const regBytes = regsToBytes(regs);
-      const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-      const hostCallMemory = new HostCallMemory(mockMemory);
-      const hostCallRegisters = new HostCallRegisters(regBytes);
 
       const currentServiceId = block.tryAsServiceId(0);
       const yieldCall = new Yield(currentServiceId, partialState);
-      await yieldCall.execute(mockGas, hostCallRegisters, hostCallMemory);
+      await yieldCall.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
-      const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-      const finalGas = BigInt(mockGas.get());
-      const memoryEdits = mockMemory.writes;
+      const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
 
       onResume(mode, modifiedRegs, finalGas, memoryEdits);
     } catch (e) {

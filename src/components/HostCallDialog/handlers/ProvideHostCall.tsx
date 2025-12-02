@@ -1,25 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, block, utils } from "@typeberry/lib";
-import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs, OK } from "./hostCallUtils";
+import { jam_host_calls, block, utils } from "@typeberry/lib";
+import { HostCallContext, hexToAscii, OK } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_REGS } from "@/types/pvm";
 
 const { Provide } = jam_host_calls.accumulate;
-const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
 const { Result } = utils;
 type PartialState = jam_host_calls.PartialState;
-
-// Helper to decode hex to ASCII (replaces non-printable chars with dots)
-function hexToAscii(hex: string): string {
-  const clean = hex.replace(/^0x/i, "");
-  let result = "";
-  for (let i = 0; i < clean.length; i += 2) {
-    const byte = parseInt(clean.slice(i, i + 2), 16);
-    result += byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".";
-  }
-  return result;
-}
 
 interface ProvideData {
   service: string;
@@ -75,7 +63,7 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
           yield: () => {},
         };
 
-        const mockMemory = new MockMemory();
+        const ctx = new HostCallContext(regs, currentState.gas);
 
         // Preload preimage memory from actual PVM
         // Provide: regs[7] = service ID, regs[8] = preimage pointer, regs[9] = preimage length
@@ -83,18 +71,12 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
         const preimageLength = Number(regs[9] ?? 0n);
         if (preimagePointer > 0 && preimageLength > 0) {
           const preimageData = await readMemory(preimagePointer, preimageLength);
-          mockMemory.preload(preimagePointer, preimageData);
+          ctx.preloadMemory(preimagePointer, preimageData);
         }
-
-        const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-        const hostCallMemory = new HostCallMemory(mockMemory);
-        const hostCallRegisters = new HostCallRegisters(regBytes);
 
         const currentServiceId = block.tryAsServiceId(0);
         const provide = new Provide(currentServiceId, partialState);
-        await provide.execute(mockGas, hostCallRegisters, hostCallMemory);
+        await provide.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setProvideData(capturedData);
         setIsExecuting(false);
@@ -129,28 +111,20 @@ const ProvideHostCallComponent: React.FC<HostCallHandlerProps> = ({
         yield: () => {},
       };
 
-      const mockMemory = new MockMemory();
+      const ctx = new HostCallContext(regs, currentState.gas);
 
       const preimagePointer = Number(regs[8] ?? 0n);
       const preimageLength = Number(regs[9] ?? 0n);
       if (preimagePointer > 0 && preimageLength > 0) {
         const preimageData = await readMemory(preimagePointer, preimageLength);
-        mockMemory.preload(preimagePointer, preimageData);
+        ctx.preloadMemory(preimagePointer, preimageData);
       }
-
-      const regBytes = regsToBytes(regs);
-      const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-      const hostCallMemory = new HostCallMemory(mockMemory);
-      const hostCallRegisters = new HostCallRegisters(regBytes);
 
       const currentServiceId = block.tryAsServiceId(0);
       const provide = new Provide(currentServiceId, partialState);
-      await provide.execute(mockGas, hostCallRegisters, hostCallMemory);
+      await provide.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
-      const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-      const finalGas = BigInt(mockGas.get());
-      const memoryEdits = mockMemory.writes;
+      const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
 
       onResume(mode, modifiedRegs, finalGas, memoryEdits);
     } catch (e) {

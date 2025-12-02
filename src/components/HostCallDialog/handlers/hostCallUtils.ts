@@ -1,4 +1,5 @@
-import { pvm, utils } from "@typeberry/lib";
+import { pvm, pvm_host_calls, utils } from "@typeberry/lib";
+import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
 
 type IMemory = pvm.IMemory;
 type IGasCounter = pvm.IGasCounter;
@@ -124,4 +125,66 @@ export function hexToBytes(hex: string): Uint8Array {
 // Helper to convert Uint8Array to hex string
 export function bytesToHex(bytes: Uint8Array): string {
   return "0x" + Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Helper to decode hex to ASCII (replaces non-printable chars with dots)
+export function hexToAscii(hex: string): string {
+  const clean = hex.replace(/^0x/i, "");
+  let result = "";
+  for (let i = 0; i < clean.length; i += 2) {
+    const byte = parseInt(clean.slice(i, i + 2), 16);
+    // Printable ASCII range: 32-126
+    result += byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".";
+  }
+  return result;
+}
+
+/**
+ * Result of host call execution containing modified state
+ */
+export interface HostCallResult {
+  modifiedRegs: bigint[];
+  finalGas: bigint;
+  memoryEdits: Array<{ address: number; data: Uint8Array }>;
+}
+
+/**
+ * Host call execution context that manages memory, gas, and registers.
+ * Provides a unified way to set up and execute host calls.
+ */
+export class HostCallContext {
+  readonly mockMemory: MockMemory;
+  readonly mockGas: MockGasCounter;
+  readonly hostCallMemory: InstanceType<typeof pvm_host_calls.HostCallMemory>;
+  readonly hostCallRegisters: InstanceType<typeof pvm_host_calls.HostCallRegisters>;
+
+  constructor(regs?: bigint[], gas?: bigint) {
+    const actualRegs = regs ?? DEFAULT_REGS;
+    const actualGas = gas ?? DEFAULT_GAS;
+
+    this.mockMemory = new MockMemory();
+    this.mockGas = new MockGasCounter(actualGas);
+
+    const regBytes = regsToBytes(actualRegs);
+    this.hostCallMemory = new pvm_host_calls.HostCallMemory(this.mockMemory);
+    this.hostCallRegisters = new pvm_host_calls.HostCallRegisters(regBytes);
+  }
+
+  /**
+   * Preload memory region from actual PVM memory
+   */
+  preloadMemory(address: number, data: Uint8Array): void {
+    this.mockMemory.preload(address, data);
+  }
+
+  /**
+   * Get the result after host call execution
+   */
+  getResult(): HostCallResult {
+    return {
+      modifiedRegs: bytesToRegs(this.hostCallRegisters.getEncoded()),
+      finalGas: BigInt(this.mockGas.get()),
+      memoryEdits: this.mockMemory.writes,
+    };
+  }
 }

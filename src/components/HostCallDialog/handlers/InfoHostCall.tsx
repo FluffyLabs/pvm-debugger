@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, block, state, bytes, numbers } from "@typeberry/lib";
-import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
+import { jam_host_calls, block, state, bytes, numbers } from "@typeberry/lib";
+import { HostCallContext } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_REGS } from "@/types/pvm";
 
 const { Info } = jam_host_calls.general;
-const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
 const { ServiceAccountInfo } = state;
 const { tryAsU32, tryAsU64 } = numbers;
 const { tryAsServiceId, tryAsTimeSlot, tryAsServiceGas } = block;
@@ -27,7 +26,7 @@ const DEFAULT_LAST_ACCUMULATION = "0";
 const DEFAULT_PARENT_SERVICE = "0";
 
 // eslint-disable-next-line react-refresh/only-export-components
-const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
+const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
   const requestedServiceId = regs[7];
 
@@ -80,31 +79,13 @@ const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         getServiceInfo: () => serviceInfo,
       };
 
-      const mockMemory = new MockMemory();
-
-      // Preload output memory region if needed
-      // Info host call: regs[7] = service ID or current, output goes to regs[7] address
-      const outputPointer = Number(regs[7] ?? 0n);
-      // The output is 68 bytes according to the spec
-      const outputLength = 68;
-      if (outputPointer > 0 && outputPointer < 0xffffffff) {
-        const existingData = await readMemory(outputPointer, outputLength);
-        mockMemory.preload(outputPointer, existingData);
-      }
-
-      const regBytes = regsToBytes(regs);
-      const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-      const hostCallMemory = new HostCallMemory(mockMemory);
-      const hostCallRegisters = new HostCallRegisters(regBytes);
+      const ctx = new HostCallContext(regs, currentState.gas);
 
       const currentServiceId = block.tryAsServiceId(0);
       const info = new Info(currentServiceId, accounts);
-      await info.execute(mockGas, hostCallRegisters, hostCallMemory);
+      await info.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
-      const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-      const finalGas = BigInt(mockGas.get());
-      const memoryEdits = mockMemory.writes;
+      const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
 
       onResume(mode, modifiedRegs, finalGas, memoryEdits);
     } catch (e) {

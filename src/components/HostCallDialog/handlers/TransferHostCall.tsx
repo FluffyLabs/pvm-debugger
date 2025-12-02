@@ -1,25 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, block, utils, bytes } from "@typeberry/lib";
-import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs, OK } from "./hostCallUtils";
+import { jam_host_calls, block, utils, bytes } from "@typeberry/lib";
+import { HostCallContext, hexToAscii, OK } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_REGS } from "@/types/pvm";
 
 const { Transfer } = jam_host_calls.accumulate;
-const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
 const { Result } = utils;
 type PartialState = jam_host_calls.PartialState;
-
-// Helper to decode hex to ASCII (replaces non-printable chars with dots)
-function hexToAscii(hex: string): string {
-  const clean = hex.replace(/^0x/i, "");
-  let result = "";
-  for (let i = 0; i < clean.length; i += 2) {
-    const byte = parseInt(clean.slice(i, i + 2), 16);
-    result += byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".";
-  }
-  return result;
-}
 
 interface TransferData {
   destination: string;
@@ -77,7 +65,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
           providePreimage: () => Result.ok(OK),
         };
 
-        const mockMemory = new MockMemory();
+        const ctx = new HostCallContext(regs, currentState.gas);
 
         // Preload memo memory from actual PVM
         // Transfer: regs[7] = destination, regs[8] = amount, regs[9] = gas, regs[10] = memo pointer
@@ -85,18 +73,12 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
         const MEMO_SIZE = 128; // TRANSFER_MEMO_BYTES
         if (memoPointer > 0) {
           const memoData = await readMemory(memoPointer, MEMO_SIZE);
-          mockMemory.preload(memoPointer, memoData);
+          ctx.preloadMemory(memoPointer, memoData);
         }
-
-        const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-        const hostCallMemory = new HostCallMemory(mockMemory);
-        const hostCallRegisters = new HostCallRegisters(regBytes);
 
         const currentServiceId = block.tryAsServiceId(0);
         const transfer = new Transfer(currentServiceId, partialState);
-        await transfer.execute(mockGas, hostCallRegisters, hostCallMemory);
+        await transfer.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setTransferData(capturedData);
         setIsExecuting(false);
@@ -131,28 +113,20 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
         providePreimage: () => Result.ok(OK),
       };
 
-      const mockMemory = new MockMemory();
+      const ctx = new HostCallContext(regs, currentState.gas);
 
       const memoPointer = Number(regs[10] ?? 0n);
       const MEMO_SIZE = 128;
       if (memoPointer > 0) {
         const memoData = await readMemory(memoPointer, MEMO_SIZE);
-        mockMemory.preload(memoPointer, memoData);
+        ctx.preloadMemory(memoPointer, memoData);
       }
-
-      const regBytes = regsToBytes(regs);
-      const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-      const hostCallMemory = new HostCallMemory(mockMemory);
-      const hostCallRegisters = new HostCallRegisters(regBytes);
 
       const currentServiceId = block.tryAsServiceId(0);
       const transfer = new Transfer(currentServiceId, partialState);
-      await transfer.execute(mockGas, hostCallRegisters, hostCallMemory);
+      await transfer.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
-      const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-      const finalGas = BigInt(mockGas.get());
-      const memoryEdits = mockMemory.writes;
+      const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
 
       onResume(mode, modifiedRegs, finalGas, memoryEdits);
     } catch (e) {

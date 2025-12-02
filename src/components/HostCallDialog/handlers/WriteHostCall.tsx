@@ -1,35 +1,50 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, block, utils } from "@typeberry/lib";
-import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
+import { jam_host_calls, block, utils } from "@typeberry/lib";
+import { HostCallContext, hexToAscii, bytesToHex } from "./hostCallUtils";
 import { storageManager } from "./storageManager";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_REGS } from "@/types/pvm";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-const { Write } = jam_host_calls.general;
-const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
+const { Write, HostCallResult } = jam_host_calls.general;
 const { Result } = utils;
 type AccountsWrite = jam_host_calls.general.AccountsWrite;
 
-// Helper to decode hex to ASCII (replaces non-printable chars with dots)
-function hexToAscii(hex: string): string {
-  const clean = hex.replace(/^0x/i, "");
-  let result = "";
-  for (let i = 0; i < clean.length; i += 2) {
-    const byte = parseInt(clean.slice(i, i + 2), 16);
-    result += byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".";
-  }
-  return result;
+// Error options for write host call
+const ERROR_OPTIONS = [
+  { value: "success", label: "Success - Write succeeds", result: null },
+  { value: "FULL", label: "FULL - Storage full / insufficient balance", result: HostCallResult.FULL },
+] as const;
+
+// Map HostCallResult values to their names
+const HOST_CALL_RESULT_NAMES: Record<string, string> = {
+  [HostCallResult.NONE.toString()]: "NONE",
+  [HostCallResult.WHAT.toString()]: "WHAT",
+  [HostCallResult.OOB.toString()]: "OOB",
+  [HostCallResult.WHO.toString()]: "WHO",
+  [HostCallResult.FULL.toString()]: "FULL",
+  [HostCallResult.CORE.toString()]: "CORE",
+  [HostCallResult.CASH.toString()]: "CASH",
+  [HostCallResult.LOW.toString()]: "LOW",
+  [HostCallResult.HUH.toString()]: "HUH",
+};
+
+function formatHostCallResult(value: bigint): string {
+  const name = HOST_CALL_RESULT_NAMES[value.toString()];
+  const hex = "0x" + value.toString(16);
+  return name ? `${name} (${hex})` : hex;
 }
 
-// Helper to convert Uint8Array to hex string
-function bytesToHex(bytes: Uint8Array): string {
-  return (
-    "0x" +
-    Array.from(bytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("")
-  );
+function formatExpectedResult(selectedError: string, previousLength: number | null): string {
+  if (selectedError === "success") {
+    return previousLength !== null
+      ? `${previousLength} (0x${previousLength.toString(16)})`
+      : "NONE (0xffffffffffffffff)";
+  }
+  const option = ERROR_OPTIONS.find((opt) => opt.value === selectedError);
+  return option ? formatHostCallResult(option.result!) : "unknown";
 }
 
 interface WriteResult {
@@ -50,7 +65,10 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
 
   const serviceId = regs[7];
-  const [result, setResult] = useState<WriteResult | null>(null);
+  const [displayData, setDisplayData] = useState<Omit<WriteResult, "modifiedRegs" | "finalGas" | "memoryEdits"> | null>(
+    null,
+  );
+  const [selectedError, setSelectedError] = useState<string>("success");
   const [error, setError] = useState<string | null>(null);
   const [isExecuting, setIsExecuting] = useState(true);
   const hasExecuted = useRef(false);
@@ -73,49 +91,37 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           },
         };
 
-        const mockMemory = new MockMemory();
+        const ctx = new HostCallContext(regs, currentState.gas);
 
         // Preload key memory from actual PVM
-        // Write host call: regs[8] = key pointer, regs[9] = key length
-        const keyPointer = Number(regs[8] ?? 0n);
-        const keyLength = Number(regs[9] ?? 0n);
+        const keyPointer = Number(regs[7] ?? 0n);
+        const keyLength = Number(regs[8] ?? 0n);
         let keyHex = "";
         if (keyLength > 0) {
           const keyData = await readMemory(keyPointer, keyLength);
-          mockMemory.preload(keyPointer, keyData);
+          ctx.preloadMemory(keyPointer, keyData);
           keyHex = bytesToHex(keyData);
         }
 
         // Preload value memory from actual PVM
-        // Write host call: regs[10] = value pointer (can be max u64 for deletion), regs[11] = value length
-        const valuePointer = regs[10] ?? 0n;
-        const valueLength = Number(regs[11] ?? 0n);
+        const valuePointer = regs[9] ?? 0n;
+        const valueLength = Number(regs[10] ?? 0n);
         // Check if value pointer is not "infinity" (max u64 indicates deletion)
         const MAX_U64 = 0xffffffffffffffffn;
         const isDelete = valuePointer >= MAX_U64;
         let valueHex: string | null = null;
         if (!isDelete && valueLength > 0) {
           const valueData = await readMemory(Number(valuePointer), valueLength);
-          mockMemory.preload(Number(valuePointer), valueData);
+          ctx.preloadMemory(Number(valuePointer), valueData);
           valueHex = bytesToHex(valueData);
         }
 
-        const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-        const hostCallMemory = new HostCallMemory(mockMemory);
-        const hostCallRegisters = new HostCallRegisters(regBytes);
-
         const currentServiceId = block.tryAsServiceId(Number(serviceId));
         const write = new Write(currentServiceId, accounts);
-        await write.execute(mockGas, hostCallRegisters, hostCallMemory);
+        await write.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
-        const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-        const finalGas = BigInt(mockGas.get());
-        const memoryEdits = mockMemory.writes;
-
-        // Store result for display, wait for user confirmation
-        setResult({
+        // Store data for display
+        setDisplayData({
           serviceId: serviceId?.toString() ?? "0",
           key: keyHex,
           keyLength,
@@ -123,9 +129,6 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           valueLength,
           isDelete,
           previousLength: capturedPreviousLength,
-          modifiedRegs,
-          finalGas,
-          memoryEdits,
         });
         setIsExecuting(false);
       } catch (e) {
@@ -139,9 +142,58 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
     execute();
   }, [regs, currentState.gas, serviceId, readMemory]);
 
-  const handleResume = (mode: "step" | "block" | "run") => {
-    if (!result) return;
-    onResume(mode, result.modifiedRegs, result.finalGas, result.memoryEdits);
+  const handleResume = async (mode: "step" | "block" | "run") => {
+    if (!displayData) return;
+
+    setError(null);
+    setIsExecuting(true);
+
+    try {
+      const selectedOption = ERROR_OPTIONS.find((opt) => opt.value === selectedError);
+      const shouldFail = selectedOption?.result !== null;
+
+      const accounts: AccountsWrite = {
+        write: (rawKey, data) => {
+          if (shouldFail) {
+            return Result.error("full" as const, () => "Storage full");
+          }
+          const previousLength = storageManager.write(rawKey, data ? data.raw : null);
+          return Result.ok(previousLength);
+        },
+      };
+
+      const ctx = new HostCallContext(regs, currentState.gas);
+
+      // Preload key memory from actual PVM
+      const keyPointer = Number(regs[7] ?? 0n);
+      const keyLength = Number(regs[8] ?? 0n);
+      if (keyLength > 0) {
+        const keyData = await readMemory(keyPointer, keyLength);
+        ctx.preloadMemory(keyPointer, keyData);
+      }
+
+      // Preload value memory from actual PVM
+      const valuePointer = regs[9] ?? 0n;
+      const valueLength = Number(regs[10] ?? 0n);
+      const MAX_U64 = 0xffffffffffffffffn;
+      const isDelete = valuePointer >= MAX_U64;
+      if (!isDelete && valueLength > 0) {
+        const valueData = await readMemory(Number(valuePointer), valueLength);
+        ctx.preloadMemory(Number(valuePointer), valueData);
+      }
+
+      const currentServiceId = block.tryAsServiceId(Number(serviceId));
+      const write = new Write(currentServiceId, accounts);
+      await write.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
+
+      const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
+
+      onResume(mode, modifiedRegs, finalGas, memoryEdits);
+    } catch (e) {
+      console.error(e);
+      setError(e instanceof Error ? e.message : "Failed to execute write");
+      setIsExecuting(false);
+    }
   };
 
   if (isExecuting) {
@@ -159,38 +211,40 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
   return (
     <>
       <div className="space-y-4 overflow-y-auto flex-1 p-2">
-        <div className="text-sm font-medium border-b pb-2">Write Host Call Result</div>
+        <div className="text-sm font-medium border-b pb-2">Write Host Call</div>
 
-        {result && (
+        {displayData && (
           <div className="space-y-3">
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Service ID</label>
-              <div className="p-2 bg-muted rounded-md font-mono text-sm">{result.serviceId}</div>
+              <div className="p-2 bg-muted rounded-md font-mono text-sm">{displayData.serviceId}</div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Key ({result.keyLength} bytes)</label>
-              <div className="p-2 bg-muted rounded-md font-mono text-sm break-all">{result.key || "(empty)"}</div>
-              {result.keyLength > 0 && result.keyLength <= 64 && (
+              <label className="text-xs font-medium text-muted-foreground">Key ({displayData.keyLength} bytes)</label>
+              <div className="p-2 bg-muted rounded-md font-mono text-sm break-all">{displayData.key || "(empty)"}</div>
+              {displayData.keyLength > 0 && displayData.keyLength <= 64 && (
                 <div className="p-2 bg-muted/50 rounded-md font-mono text-sm break-all text-muted-foreground">
-                  ASCII: {hexToAscii(result.key)}
+                  ASCII: {hexToAscii(displayData.key)}
                 </div>
               )}
             </div>
 
-            {result.isDelete ? (
+            {displayData.isDelete ? (
               <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-md text-sm">
                 Delete operation (value pointer = max u64)
               </div>
             ) : (
               <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Value ({result.valueLength} bytes)</label>
+                <label className="text-xs font-medium text-muted-foreground">
+                  Value ({displayData.valueLength} bytes)
+                </label>
                 <div className="p-2 bg-muted rounded-md font-mono text-sm break-all max-h-32 overflow-y-auto">
-                  {result.value || "(empty)"}
+                  {displayData.value || "(empty)"}
                 </div>
-                {result.value && result.valueLength <= 64 && (
+                {displayData.value && displayData.valueLength <= 64 && (
                   <div className="p-2 bg-muted/50 rounded-md font-mono text-sm break-all text-muted-foreground">
-                    ASCII: {hexToAscii(result.value)}
+                    ASCII: {hexToAscii(displayData.value)}
                   </div>
                 )}
               </div>
@@ -199,13 +253,31 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
             <div className="space-y-1">
               <label className="text-xs font-medium text-muted-foreground">Previous Value Length</label>
               <div className="p-2 bg-muted rounded-md font-mono text-sm">
-                {result.previousLength !== null ? `${result.previousLength} bytes` : "Key did not exist"}
+                {displayData.previousLength !== null ? `${displayData.previousLength} bytes` : "Key did not exist"}
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Result (written to ω₇)</label>
-              <div className="p-2 bg-muted rounded-md font-mono text-sm">{result.modifiedRegs[7]?.toString()}</div>
+            {/* Write result selection */}
+            <div className="space-y-2 pt-2 border-t">
+              <Label className="text-sm font-medium">Write Result</Label>
+              <RadioGroup value={selectedError} onValueChange={setSelectedError}>
+                {ERROR_OPTIONS.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.value} id={option.value} />
+                    <Label htmlFor={option.value} className="font-normal cursor-pointer">
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+
+              {/* Show expected result */}
+              <div className="space-y-1 pt-2">
+                <label className="text-xs font-medium text-muted-foreground">Expected Result (ω₇)</label>
+                <div className="p-2 bg-muted rounded-md font-mono text-sm">
+                  {formatExpectedResult(selectedError, displayData.previousLength)}
+                </div>
+              </div>
             </div>
           </div>
         )}

@@ -1,7 +1,6 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setHasHostCallOpen, setPendingHostCallIndex } from "@/store/debugger/debuggerSlice";
 import { resumeAfterHostCall, readMemoryRange, HostCallResumeMode } from "@/store/workers/workersSlice";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { getHostCallHandler } from "./handlers";
@@ -74,11 +73,6 @@ export const HostCallDialog = () => {
     }
   }, [hasHostCallOpen]);
 
-  const handleClose = useCallback(() => {
-    dispatch(setHasHostCallOpen(false));
-    dispatch(setPendingHostCallIndex(null));
-  }, [dispatch]);
-
   const handleResume = useCallback(
     async (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint, memoryEdits?: MemoryEdit[]) => {
       setIsLoading(true);
@@ -127,8 +121,14 @@ export const HostCallDialog = () => {
   const hostCallName = getHostCallName(pendingHostCallIndex);
 
   return (
-    <Dialog open={hasHostCallOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-[75vw] max-h-[90vh] flex flex-col" hideClose={isLoading}>
+    <Dialog open={hasHostCallOpen}>
+      <DialogContent
+        className="max-w-[75vw] max-h-[90vh] flex flex-col"
+        hideClose
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Host Call</DialogTitle>
           <DialogDescription>
@@ -161,7 +161,6 @@ export const HostCallDialog = () => {
             isLoading={isLoading}
             readMemory={readMemory}
             onResume={handleResume}
-            onClose={handleClose}
           />
         ) : (
           <DefaultHostCallContent

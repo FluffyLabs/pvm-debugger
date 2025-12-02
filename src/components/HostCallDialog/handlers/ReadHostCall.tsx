@@ -2,28 +2,15 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, bytes, block, numbers } from "@typeberry/lib";
-import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
+import { jam_host_calls, bytes, block, numbers } from "@typeberry/lib";
+import { HostCallContext, hexToAscii } from "./hostCallUtils";
 import { storageManager } from "./storageManager";
 import { HostCallActionButtons } from "./HostCallActionButtons";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_REGS } from "@/types/pvm";
 
 const { Read } = jam_host_calls.general;
-const { HostCallRegisters, HostCallMemory } = pvm_host_calls;
 const { BytesBlob } = bytes;
 type AccountsRead = jam_host_calls.general.AccountsRead;
-
-// Helper to decode hex to ASCII (replaces non-printable chars with dots)
-function hexToAscii(hex: string): string {
-  const clean = hex.replace(/^0x/i, "");
-  let result = "";
-  for (let i = 0; i < clean.length; i += 2) {
-    const byte = parseInt(clean.slice(i, i + 2), 16);
-    // Printable ASCII range: 32-126
-    result += byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".";
-  }
-  return result;
-}
 
 // eslint-disable-next-line react-refresh/only-export-components
 const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
@@ -63,7 +50,7 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
           },
         };
 
-        const mockMemory = new MockMemory();
+        const ctx = new HostCallContext(regs, currentState.gas);
 
         // Preload key memory from actual PVM
         // Read host call: regs[8] = key pointer, regs[9] = key length
@@ -71,26 +58,18 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         const keyLength = Number(regs[9] ?? 0n);
         if (keyLength > 0) {
           const keyData = await readMemory(keyPointer, keyLength);
-          mockMemory.preload(keyPointer, keyData);
+          ctx.preloadMemory(keyPointer, keyData);
         }
-
-        const regBytes = regsToBytes(regs);
-        const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-        const hostCallMemory = new HostCallMemory(mockMemory);
-        const hostCallRegisters = new HostCallRegisters(regBytes);
 
         const currentServiceId = serviceId ?? block.tryAsServiceId(0);
         const read = new Read(currentServiceId, accounts);
-        await read.execute(mockGas, hostCallRegisters, hostCallMemory);
+        await read.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
         setRequestedKeyHex(capturedKeyHex);
 
         if (hadCachedValue) {
           // We had the value cached, execution completed successfully - auto-resume
-          const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-          const finalGas = BigInt(mockGas.get());
-          const memoryEdits = mockMemory.writes;
+          const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
           onResume("step", modifiedRegs, finalGas, memoryEdits);
         } else {
           // We need user to provide the value
@@ -131,29 +110,21 @@ const ReadHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         },
       };
 
-      const mockMemory = new MockMemory();
+      const ctx = new HostCallContext(regs, currentState.gas);
 
       // Preload key memory from actual PVM
       const keyPointer = Number(regs[8] ?? 0n);
       const keyLength = Number(regs[9] ?? 0n);
       if (keyLength > 0) {
         const keyData = await readMemory(keyPointer, keyLength);
-        mockMemory.preload(keyPointer, keyData);
+        ctx.preloadMemory(keyPointer, keyData);
       }
-
-      const regBytes = regsToBytes(regs);
-      const mockGas = new MockGasCounter(currentState.gas ?? DEFAULT_GAS);
-
-      const hostCallMemory = new HostCallMemory(mockMemory);
-      const hostCallRegisters = new HostCallRegisters(regBytes);
 
       const currentServiceId = block.tryAsServiceId(Number(serviceId));
       const read = new Read(currentServiceId, accounts);
-      await read.execute(mockGas, hostCallRegisters, hostCallMemory);
+      await read.execute(ctx.mockGas, ctx.hostCallRegisters, ctx.hostCallMemory);
 
-      const modifiedRegs = bytesToRegs(hostCallRegisters.getEncoded());
-      const finalGas = BigInt(mockGas.get());
-      const memoryEdits = mockMemory.writes;
+      const { modifiedRegs, finalGas, memoryEdits } = ctx.getResult();
 
       onResume(mode, modifiedRegs, finalGas, memoryEdits);
     } catch (e) {

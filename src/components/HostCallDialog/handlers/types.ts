@@ -10,8 +10,6 @@ export interface HostCallHandlerProps {
   readMemory: (startAddress: number, length: number) => Promise<Uint8Array>;
   /** Function to resume execution */
   onResume: (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint, memoryEdits?: MemoryEdit[]) => void;
-  /** Function to close the dialog without resuming */
-  onClose: () => void;
 }
 
 export interface HostCallHandler {
