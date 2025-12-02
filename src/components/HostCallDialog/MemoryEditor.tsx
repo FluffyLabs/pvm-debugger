@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 const MAX_LENGTH = 4096;
@@ -42,8 +42,9 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
   const [data, setData] = useState<Uint8Array | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editingByte, setEditingByte] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const [focusedByte, setFocusedByte] = useState<number | null>(null);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const asciiRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Load memory when address and length are set
   useEffect(() => {
@@ -72,7 +73,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
     };
 
     loadMemory();
-  }, [address, length, readMemory, onMemoryChange]);
+  }, [address, length, readMemory]);
 
   const updateAddress = useCallback((addressInput: string) => {
     setAddressInput(addressInput);
@@ -93,48 +94,259 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
     }
   }, []);
 
-  const handleByteClick = useCallback(
-    (byteIndex: number) => {
-      if (disabled || !data) return;
-      setEditingByte(byteIndex);
-      setEditValue(toHex(data[byteIndex]));
+  const focusByte = useCallback(
+    (index: number, caret: number) => {
+      if (!data) return;
+      const clampedIndex = Math.max(0, Math.min(data.length - 1, index));
+      setFocusedByte(clampedIndex);
+      requestAnimationFrame(() => {
+        const input = inputRefs.current[clampedIndex];
+        if (input) {
+          const pos = Math.max(0, Math.min(2, caret));
+          input.focus();
+          input.setSelectionRange(pos, pos);
+        }
+      });
     },
-    [disabled, data],
+    [data],
   );
 
-  const handleByteChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase();
-    // Only allow hex characters, max 2
-    if (/^[0-9A-F]{0,2}$/.test(value)) {
-      setEditValue(value);
-    }
-  }, []);
+  const focusAscii = useCallback(
+    (index: number) => {
+      if (!data) return;
+      const clampedIndex = Math.max(0, Math.min(data.length - 1, index));
+      setFocusedByte(clampedIndex);
+      requestAnimationFrame(() => {
+        const input = asciiRefs.current[clampedIndex];
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+    },
+    [data],
+  );
 
-  const handleByteBlur = useCallback(() => {
-    if (editingByte === null || !data || address === null) {
-      setEditingByte(null);
-      return;
-    }
-
-    const byteValue = parseInt(editValue || "0", 16);
-    if (!isNaN(byteValue) && byteValue >= 0 && byteValue <= 255) {
+  const writeByte = useCallback(
+    (byteIndex: number, byteValue: number) => {
+      if (!data || address === null) return;
       const newData = new Uint8Array(data);
-      newData[editingByte] = byteValue;
+      newData[byteIndex] = byteValue & 0xff;
       setData(newData);
       onMemoryChange?.(address, newData);
-    }
-    setEditingByte(null);
-  }, [editingByte, editValue, data, address, onMemoryChange]);
+    },
+    [data, address, onMemoryChange],
+  );
 
-  const handleByteKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        handleByteBlur();
-      } else if (e.key === "Escape") {
-        setEditingByte(null);
+  const applyHexDigit = useCallback(
+    (byteIndex: number, nibbleIndex: 0 | 1, hexDigit: string) => {
+      if (!data) {
+        return;
+      }
+
+      const nibbleValue = parseInt(hexDigit, 16);
+      if (Number.isNaN(nibbleValue)) return;
+
+      const current = data[byteIndex] ?? 0;
+      const updated =
+        nibbleIndex === 0 ? ((nibbleValue << 4) & 0xf0) | (current & 0x0f) : (current & 0xf0) | (nibbleValue & 0x0f);
+      writeByte(byteIndex, updated);
+    },
+    [data, writeByte],
+  );
+
+  const moveToNextNibble = useCallback(
+    (byteIndex: number, nibble: 0 | 1) => {
+      if (!data) return;
+      if (nibble === 0) {
+        focusByte(byteIndex, 1);
+      } else {
+        const nextIndex = Math.min(data.length - 1, byteIndex + 1);
+        focusByte(nextIndex, 0);
       }
     },
-    [handleByteBlur],
+    [data, focusByte],
+  );
+
+  const moveToPreviousNibble = useCallback(
+    (byteIndex: number, nibble: 0 | 1) => {
+      if (!data) return;
+      if (nibble === 1) {
+        focusByte(byteIndex, 0);
+      } else {
+        const prevIndex = Math.max(0, byteIndex - 1);
+        focusByte(prevIndex, 1);
+      }
+    },
+    [data, focusByte],
+  );
+
+  const handleByteKeyDown = useCallback(
+    (byteIndex: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (disabled || !data) return;
+      const input = e.currentTarget;
+      const selectionStart = Math.min(Math.max(input.selectionStart ?? 0, 0), 1) as 0 | 1;
+      const hex = e.key.toUpperCase();
+
+      if (/^[0-9A-F]$/.test(hex)) {
+        e.preventDefault();
+        applyHexDigit(byteIndex, selectionStart, hex);
+        moveToNextNibble(byteIndex, selectionStart);
+        return;
+      }
+
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        const deletingFirstNibble = selectionStart === 0;
+        const targetNibble: 0 | 1 = deletingFirstNibble ? 1 : ((selectionStart - 1) as 0 | 1);
+        const targetIndex = deletingFirstNibble ? Math.max(0, byteIndex - 1) : byteIndex;
+        applyHexDigit(targetIndex, targetNibble, "0");
+        const caretPosition = targetNibble === 0 ? 0 : 1;
+        focusByte(targetIndex, caretPosition);
+        return;
+      }
+
+      if (e.key === "Delete") {
+        e.preventDefault();
+        applyHexDigit(byteIndex, selectionStart, "0");
+        focusByte(byteIndex, selectionStart);
+        return;
+      }
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        moveToPreviousNibble(byteIndex, selectionStart);
+        return;
+      }
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        moveToNextNibble(byteIndex, selectionStart);
+        return;
+      }
+    },
+    [applyHexDigit, data, disabled, focusByte, moveToNextNibble, moveToPreviousNibble],
+  );
+
+  const handleBeforeInput = useCallback(
+    (byteIndex: number, e: React.FormEvent<HTMLInputElement>) => {
+      if (disabled || !data) return;
+      const nativeEvent = e.nativeEvent as InputEvent;
+      const raw = nativeEvent.data ?? "";
+      const text = raw.toUpperCase().replace(/[^0-9A-F]/g, "");
+      if (!text) {
+        nativeEvent.preventDefault();
+        return;
+      }
+      nativeEvent.preventDefault();
+      const input = e.currentTarget;
+      let nibble = Math.min(Math.max(input.selectionStart ?? 0, 0), 1) as 0 | 1;
+      let index = byteIndex;
+      for (const char of text) {
+        applyHexDigit(index, nibble, char);
+        if (!data) break;
+        if (nibble === 0) {
+          nibble = 1;
+        } else {
+          nibble = 0;
+          if (index < data.length - 1) {
+            index += 1;
+          }
+        }
+      }
+      focusByte(index, nibble);
+    },
+    [applyHexDigit, data, disabled, focusByte],
+  );
+
+  const handlePaste = useCallback(
+    (byteIndex: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+      if (disabled || !data || address === null) return;
+      let clipboard = e.clipboardData.getData("text") ?? "";
+      clipboard = clipboard.replace(/^0x/i, "");
+      let hex = clipboard.toUpperCase().replace(/[^0-9A-F]/g, "");
+      if (!hex) return;
+      e.preventDefault();
+      if (hex.length % 2 === 1) {
+        hex = `0${hex}`;
+      }
+      const newData = new Uint8Array(data);
+      let index = byteIndex;
+      for (let i = 0; i < hex.length && index < newData.length; i += 2) {
+        const chunk = hex.slice(i, i + 2);
+        const byteValue = parseInt(chunk, 16);
+        if (Number.isNaN(byteValue)) continue;
+        newData[index] = byteValue;
+        index += 1;
+      }
+      setData(newData);
+      onMemoryChange?.(address, newData);
+      focusByte(Math.min(index, newData.length - 1), 0);
+    },
+    [address, data, disabled, focusByte, onMemoryChange],
+  );
+
+  const handleAsciiBeforeInput = useCallback(
+    (byteIndex: number, e: React.FormEvent<HTMLInputElement>) => {
+      if (disabled || !data) return;
+      const nativeEvent = e.nativeEvent as InputEvent;
+      const text = nativeEvent.data ?? "";
+      if (!text || text === "\n") {
+        nativeEvent.preventDefault();
+        return;
+      }
+      nativeEvent.preventDefault();
+      writeByte(byteIndex, text.charCodeAt(text.length - 1));
+      focusAscii(Math.min(data.length - 1, byteIndex + 1));
+    },
+    [data, disabled, focusAscii, writeByte],
+  );
+
+  const handleAsciiPaste = useCallback(
+    (byteIndex: number, e: React.ClipboardEvent<HTMLInputElement>) => {
+      if (disabled || !data || address === null) return;
+      const pasted = e.clipboardData.getData("text");
+      if (!pasted) return;
+      e.preventDefault();
+      const newData = new Uint8Array(data);
+      let index = byteIndex;
+      for (const char of pasted) {
+        newData[index] = char.charCodeAt(0) & 0xff;
+        index += 1;
+        if (index >= newData.length) break;
+      }
+      setData(newData);
+      onMemoryChange?.(address, newData);
+      focusAscii(Math.min(newData.length - 1, index));
+    },
+    [address, data, disabled, focusAscii, onMemoryChange],
+  );
+
+  const handleAsciiKeyDown = useCallback(
+    (byteIndex: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (disabled || !data) return;
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        writeByte(byteIndex, 0);
+        focusAscii(Math.max(0, byteIndex - 1));
+        return;
+      }
+      if (e.key === "Delete") {
+        e.preventDefault();
+        writeByte(byteIndex, 0);
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        focusAscii(Math.max(0, byteIndex - 1));
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        focusAscii(Math.min(data.length - 1, byteIndex + 1));
+      }
+    },
+    [data, disabled, focusAscii, writeByte],
   );
 
   // Split data into rows for display
@@ -195,32 +407,36 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
                     </td>
                     {/* Hex bytes */}
                     <td className="px-2 py-0.5 border-r">
-                      <div className="flex gap-1 flex-wrap">
+                      <div className="flex flex-wrap">
                         {row.bytes.map((byte, i) => {
                           const byteIndex = row.offset + i;
-                          const isEditing = editingByte === byteIndex;
+                          const isActive = focusedByte === byteIndex;
 
-                          return isEditing ? (
+                          return (
                             <input
                               key={i}
-                              type="text"
-                              className="w-5 h-4 text-center bg-brand/20 border border-brand rounded text-xs p-0 focus:outline-none"
-                              value={editValue}
-                              onChange={handleByteChange}
-                              onBlur={handleByteBlur}
-                              onKeyDown={handleByteKeyDown}
-                              autoFocus
+                              ref={(el) => {
+                                inputRefs.current[byteIndex] = el;
+                              }}
+                              className={`w-4 h-4 text-center font-mono text-xs uppercase rounded border ${
+                                disabled
+                                  ? "cursor-not-allowed opacity-50 bg-muted"
+                                  : "cursor-text hover:border-brand focus-visible:ring-1 focus-visible:ring-brand bg-background"
+                              } ${isActive ? "border-brand" : "border-transparent"}`}
+                              value={toHex(byte)}
+                              onFocus={() => !disabled && setFocusedByte(byteIndex)}
+                              onKeyDown={(e) => handleByteKeyDown(byteIndex, e)}
+                              onBeforeInput={(e) => handleBeforeInput(byteIndex, e)}
+                              onPaste={(e) => handlePaste(byteIndex, e)}
+                              onChange={() => {}}
+                              onClick={(e) => {
+                                // keep caret where clicked but ensure nibble boundaries
+                                const target = e.currentTarget;
+                                const pos = Math.min(Math.max(target.selectionStart ?? 0, 0), 1);
+                                requestAnimationFrame(() => target.setSelectionRange(pos, pos));
+                              }}
+                              disabled={disabled}
                             />
-                          ) : (
-                            <span
-                              key={i}
-                              className={`w-5 text-center cursor-pointer hover:bg-brand/20 rounded ${
-                                disabled ? "cursor-not-allowed opacity-50" : ""
-                              }`}
-                              onClick={() => handleByteClick(byteIndex)}
-                            >
-                              {toHex(byte)}
-                            </span>
                           );
                         })}
                         {/* Pad with empty spaces if row is incomplete */}
@@ -235,8 +451,37 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
                       </div>
                     </td>
                     {/* ASCII */}
-                    <td className="px-2 py-0.5 text-muted-foreground select-none">
-                      {row.bytes.map((byte) => toAscii(byte)).join("")}
+                    <td className="px-2 py-0.5 text-muted-foreground">
+                      <div className="flex flex-wrap">
+                        {row.bytes.map((byte, i) => {
+                          const byteIndex = row.offset + i;
+                          const asciiChar = toAscii(byte);
+                          return (
+                            <input
+                              key={i}
+                              ref={(el) => {
+                                asciiRefs.current[byteIndex] = el;
+                              }}
+                              className={`w-4 h-4 text-center font-mono text-xs rounded border p-0 ${
+                                disabled
+                                  ? "cursor-not-allowed opacity-50 bg-muted"
+                                  : "cursor-text hover:border-brand focus-visible:ring-1 focus-visible:ring-brand bg-background"
+                              } ${focusedByte === byteIndex ? "border-brand" : "border-transparent"}`}
+                              value={asciiChar}
+                              onFocus={() => {
+                                if (!disabled) {
+                                  focusAscii(byteIndex);
+                                }
+                              }}
+                              onKeyDown={(e) => handleAsciiKeyDown(byteIndex, e)}
+                              onBeforeInput={(e) => handleAsciiBeforeInput(byteIndex, e)}
+                              onPaste={(e) => handleAsciiPaste(byteIndex, e)}
+                              onChange={() => {}}
+                              disabled={disabled}
+                            />
+                          );
+                        })}
+                      </div>
                     </td>
                   </tr>
                 ))}
