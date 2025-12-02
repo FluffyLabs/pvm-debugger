@@ -32,6 +32,7 @@ import {
 import { AvailablePvms, ExpectedState, SpiProgram, Status } from "@/types/pvm";
 import { logger } from "@/utils/loggerService";
 import { useCallback } from "react";
+import { storageManager } from "@/components/HostCallDialog/handlers/storageManager";
 
 export const useDebuggerActions = () => {
   const { breakpointAddresses, initialState } = useAppSelector((state) => state.debugger);
@@ -40,6 +41,7 @@ export const useDebuggerActions = () => {
 
   const restartProgram = useCallback(
     async (state: ExpectedState) => {
+      storageManager.clear();
       dispatch(setInitialState(state));
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
@@ -63,6 +65,7 @@ export const useDebuggerActions = () => {
       spiProgram: SpiProgram | null,
       exampleName?: string,
     ) => {
+      storageManager.clear();
       dispatch(setInitialState(initialState));
       dispatch(setProgram({ program: newProgram, programName, exampleName, spiProgram }));
       const currentState = {

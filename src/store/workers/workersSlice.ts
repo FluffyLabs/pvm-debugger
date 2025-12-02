@@ -6,6 +6,8 @@ import {
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
+  setHasHostCallOpen,
+  setPendingHostCallIndex,
 } from "@/store/debugger/debuggerSlice.ts";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { logger } from "@/utils/loggerService";
@@ -261,9 +263,12 @@ export const handleHostCall = createAsyncThunk(
       throw new Error("Invalid host call instruction");
     }
 
-    // we should request a traces in case there is none yet.
+    // Open dialog if no traces are available, allowing user to manually set register values
     if (state.debugger.hostCallsTrace === null) {
-      throw new Error("Missing host call traces!");
+      const exitArg = state.workers[0]?.exitArg ?? -1;
+      dispatch(setPendingHostCallIndex(exitArg));
+      dispatch(setHasHostCallOpen(true));
+      return;
     }
 
     await Promise.all(
@@ -594,6 +599,107 @@ const calculateStepsToExitBlockForAllWorkers = (state: RootState): number => {
 export const selectMemoryRangesForFirstWorker = (state: RootState) => {
   return state.workers[0]?.memoryRanges ?? [];
 };
+
+export type HostCallResumeMode = "step" | "block" | "run";
+
+export const readMemoryRange = createAsyncThunk(
+  "workers/readMemoryRange",
+  async ({ startAddress, length }: { startAddress: number; length: number }, { getState }) => {
+    const state = getState() as RootState;
+    const worker = state.workers[0];
+
+    if (!worker) {
+      throw new Error("No workers available");
+    }
+
+    const stopAddress = startAddress + length;
+    const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+      command: Commands.MEMORY,
+      payload: { startAddress, stopAddress },
+    });
+
+    if (hasCommandStatusError(resp)) {
+      throw resp.error;
+    }
+
+    return resp.payload.memoryChunk;
+  },
+);
+
+export interface MemoryEdit {
+  address: number;
+  data: Uint8Array;
+}
+
+export const resumeAfterHostCall = createAsyncThunk(
+  "workers/resumeAfterHostCall",
+  async (
+    {
+      regs,
+      gas,
+      mode,
+      memoryEdits,
+    }: { regs: bigint[]; gas: bigint; mode: HostCallResumeMode; memoryEdits?: MemoryEdit[] },
+    { getState, dispatch },
+  ) => {
+    const state = getState() as RootState;
+
+    // Set state for all workers
+    await Promise.all(
+      state.workers.map(async (worker) => {
+        const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+          command: Commands.SET_STATE,
+          payload: { regs, gas },
+        });
+
+        if (hasCommandStatusError(resp)) {
+          throw resp.error;
+        }
+
+        // Update Redux state with new values
+        dispatch(setWorkerCurrentState({ id: worker.id, currentState: resp.payload.state }));
+      }),
+    );
+
+    // Write all memory edits to all workers if provided
+    if (memoryEdits && memoryEdits.length > 0) {
+      await Promise.all(
+        state.workers.map(async (worker) => {
+          // Write each memory edit sequentially for this worker
+          for (const memory of memoryEdits) {
+            const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+              command: Commands.SET_MEMORY,
+              payload: { address: memory.address, data: memory.data },
+            });
+
+            if (hasCommandStatusError(resp)) {
+              throw resp.error;
+            }
+          }
+        }),
+      );
+    }
+
+    // Close the dialog
+    dispatch(setHasHostCallOpen(false));
+    dispatch(setPendingHostCallIndex(null));
+
+    // Resume execution based on mode
+    if (mode === "run") {
+      dispatch(setIsRunMode(true));
+      await dispatch(runAllWorkers()).unwrap();
+    } else if (mode === "block") {
+      const stepsToPerform = calculateStepsToExitBlockForAllWorkers(getState() as RootState);
+      await dispatch(stepAllWorkers({ stepsToPerform })).unwrap();
+    } else {
+      // step
+      await dispatch(stepAllWorkers({ stepsToPerform: 1 })).unwrap();
+    }
+
+    await dispatch(refreshPageAllWorkers());
+    await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
+  },
+);
 
 export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id: string, { getState }) => {
   const state = getState() as RootState;
