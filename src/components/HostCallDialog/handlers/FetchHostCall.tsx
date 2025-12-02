@@ -198,7 +198,7 @@ const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           <div>ω₁₀ (fetch kind): {fetchKind}</div>
           <div>ω₇ (output): {regs[7]?.toString()}</div>
           <div>ω₈ (offset): {regs[8]?.toString()}</div>
-          <div>ω₁₀ (length): {regs[9]?.toString()}</div>
+          <div>ω₉ (length): {regs[9]?.toString()}</div>
           <div>ω₁₁: {regs[11]?.toString()}</div>
         </div>
       </div>
