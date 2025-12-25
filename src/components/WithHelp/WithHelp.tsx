@@ -3,7 +3,7 @@ import { Popover, PopoverContent } from "../ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { InfoIcon } from "lucide-react";
 
-export function WithHelp({ help, children }: { help: string; children: ReactNode }) {
+export function WithHelp({ help, children }: { help: ReactNode; children: ReactNode }) {
   return (
     <>
       {children}{" "}

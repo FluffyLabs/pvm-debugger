@@ -118,7 +118,7 @@ const ProgramLoader = () => {
 
   return (
     <div className="w-full h-full flex flex-col items-center bg-accent dark:bg-background">
-      <div className="sm:max-w-[50vw] sm:my-auto 2xl:my-[100px] sm:mr-[72px] max-sm:h-full sm:rounded-lg sm:border overflow-hidden">
+      <div className="sm:max-w-[70vw] sm:my-auto 2xl:my-[100px] sm:mr-[72px] max-sm:h-full sm:rounded-lg sm:border overflow-hidden">
         <Loader />
       </div>
     </div>
