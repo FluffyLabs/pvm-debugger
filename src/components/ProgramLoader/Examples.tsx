@@ -14,7 +14,7 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
   const spiArgs = useAppSelector((state) => state.debugger.spiArgs);
 
   return (
-    <div>
+    <div className="flex flex-row flex-wrap max-w-[50vw]">
       {Object.keys(programs).map((key) => {
         const program = programs[key];
         return (
