@@ -12,95 +12,36 @@ import { useNavigate } from "react-router";
 import { Links } from "./Links";
 import { Separator } from "../ui/separator";
 import { TriangleAlert } from "lucide-react";
-import { bytes, codec, numbers } from "@typeberry/lib";
+import { bytes } from "@typeberry/lib";
 import {
   EntrypointSelector,
+  Entrypoint,
   RefineParams,
   AccumulateParams,
   IsAuthorizedParams,
-  Entrypoint,
 } from "./EntrypointSelector";
+import { loadSpiConfig, saveSpiConfig } from "./spiConfig";
+import { encodeRefineParams, encodeAccumulateParams, encodeIsAuthorizedParams } from "./spiEncoding";
 
 type LoaderStep = "upload" | "entrypoint";
-
-// Encoding functions for each entrypoint
-function encodeRefineParams(params: RefineParams): Uint8Array {
-  const refineDescriptor = codec.codec.object({
-    core: codec.codec.varU32,
-    index: codec.codec.varU32,
-    id: codec.codec.varU32,
-    payload: codec.codec.blob,
-    package: codec.codec.blob,
-  });
-
-  const payload = params.payload
-    ? bytes.BytesBlob.parseBlob(params.payload)
-    : bytes.BytesBlob.blobFrom(new Uint8Array());
-  const packageHash = bytes.BytesBlob.parseBlob(params.package);
-
-  const data = {
-    core: numbers.tryAsU32(parseInt(params.core, 10) || 0),
-    index: numbers.tryAsU32(parseInt(params.index, 10) || 0),
-    id: numbers.tryAsU32(parseInt(params.id, 10) || 0),
-    payload,
-    package: packageHash,
-  };
-
-  return codec.Encoder.encodeObject(refineDescriptor, data).raw;
-}
-
-function encodeAccumulateParams(params: AccumulateParams): Uint8Array {
-  const accumulateDescriptor = codec.codec.object({
-    slot: codec.codec.varU32,
-    id: codec.codec.varU32,
-    results: codec.codec.varU32,
-  });
-
-  const data = {
-    slot: numbers.tryAsU32(parseInt(params.slot, 10) || 0),
-    id: numbers.tryAsU32(parseInt(params.id, 10) || 0),
-    results: numbers.tryAsU32(parseInt(params.results, 10) || 0),
-  };
-
-  return codec.Encoder.encodeObject(accumulateDescriptor, data).raw;
-}
-
-function encodeIsAuthorizedParams(params: IsAuthorizedParams): Uint8Array {
-  const isAuthorizedDescriptor = codec.codec.object({
-    core: codec.codec.varU32,
-  });
-
-  const data = {
-    core: numbers.tryAsU32(parseInt(params.core, 10) || 0),
-  };
-
-  return codec.Encoder.encodeObject(isAuthorizedDescriptor, data).raw;
-}
 
 export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) => void }) => {
   const dispatch = useAppDispatch();
   const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
   const [error, setError] = useState<string>();
   const [currentStep, setCurrentStep] = useState<LoaderStep>("upload");
-  const [selectedEntrypoint, setSelectedEntrypoint] = useState<Entrypoint>("accumulate");
-  const [refineParams, setRefineParams] = useState<RefineParams>({
-    core: "0",
-    index: "0",
-    id: "0",
-    payload: "",
-    package: "0x0000000000000000000000000000000000000000000000000000000000000000",
-  });
-  const [accumulateParams, setAccumulateParams] = useState<AccumulateParams>({
-    slot: "42",
-    id: "0",
-    results: "0",
-  });
-  const [isAuthorizedParams, setIsAuthorizedParams] = useState<IsAuthorizedParams>({
-    core: "0",
-  });
-  const [encodedSpiArgs, setEncodedSpiArgs] = useState<string>("");
+
+  // Load saved config once on mount
+  const savedConfig = loadSpiConfig();
+
+  const [selectedEntrypoint, setSelectedEntrypoint] = useState<Entrypoint>(savedConfig.entrypoint);
+  const [refineParams, setRefineParams] = useState<RefineParams>(savedConfig.refineParams);
+  const [accumulateParams, setAccumulateParams] = useState<AccumulateParams>(savedConfig.accumulateParams);
+  const [isAuthorizedParams, setIsAuthorizedParams] = useState<IsAuthorizedParams>(savedConfig.isAuthorizedParams);
+  const [isManualMode, setIsManualMode] = useState<boolean>(savedConfig.isManualMode);
+  const [encodedSpiArgs, setEncodedSpiArgs] = useState<string>(savedConfig.encodedArgs);
   const [encodingError, setEncodingError] = useState<string | null>(null);
-  const [manualPc, setManualPc] = useState<string>("0");
+  const [manualPc, setManualPc] = useState<string>(savedConfig.manualPc);
   const debuggerActions = useDebuggerActions();
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
   const navigate = useNavigate();
@@ -176,6 +117,20 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         }
 
         await debuggerActions.handleProgramLoad(modifiedProgram);
+
+        // Save SPI configuration to localStorage after successful load
+        if (loadedProgram?.spiProgram) {
+          saveSpiConfig({
+            entrypoint: selectedEntrypoint,
+            refineParams,
+            accumulateParams,
+            isAuthorizedParams,
+            isManualMode,
+            manualPc,
+            encodedArgs: encodedSpiArgs,
+          });
+        }
+
         setIsDialogOpen?.(false);
         navigate("/", { replace: true });
       } catch (error) {
@@ -186,7 +141,20 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         }
       }
     },
-    [dispatch, programLoad, debuggerActions, setIsDialogOpen, navigate, encodedSpiArgs, manualPc],
+    [
+      dispatch,
+      programLoad,
+      debuggerActions,
+      setIsDialogOpen,
+      navigate,
+      encodedSpiArgs,
+      manualPc,
+      selectedEntrypoint,
+      refineParams,
+      accumulateParams,
+      isAuthorizedParams,
+      isManualMode,
+    ],
   );
 
   const handleNextStep = () => {
@@ -268,6 +236,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
               encodedSpiArgs={encodedSpiArgs}
               onEncodedSpiArgsChange={setEncodedSpiArgs}
               encodingError={encodingError}
+              isManualMode={isManualMode}
+              onIsManualModeChange={setIsManualMode}
             />
           </div>
         )}

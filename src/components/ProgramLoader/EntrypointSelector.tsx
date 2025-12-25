@@ -3,7 +3,6 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Input } from "../ui/input";
 import { WithHelp } from "../WithHelp/WithHelp";
 import { Switch } from "../ui/switch";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type RefineParams = {
@@ -40,6 +39,8 @@ type EntrypointSelectorProps = {
   encodingError: string | null;
   manualPc: string;
   onManualPcChange: (pc: string) => void;
+  isManualMode: boolean;
+  onIsManualModeChange: (mode: boolean) => void;
 };
 
 export const EntrypointSelector = ({
@@ -56,18 +57,25 @@ export const EntrypointSelector = ({
   encodingError,
   manualPc,
   onManualPcChange,
+  isManualMode,
+  onIsManualModeChange,
 }: EntrypointSelectorProps) => {
-  const [isManualMode, setIsManualMode] = useState(false);
 
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">{isManualMode ? "Manual Configuration" : "Select Entrypoint"}</h3>
         <div className="flex items-center gap-2">
-          <Label htmlFor="manual-mode" className="text-xs">
-            Manual Mode
+          <Switch
+            variant={!isManualMode ? 'secondary' : undefined}
+            id="manual-mode"
+            checked={isManualMode}
+            onCheckedChange={onIsManualModeChange}
+          />
+          <Label htmlFor="manual-mode"
+            className="text-xs cursor-pointer">
+            RAW
           </Label>
-          <Switch id="manual-mode" checked={isManualMode} onCheckedChange={setIsManualMode} />
         </div>
       </div>
 
@@ -77,21 +85,30 @@ export const EntrypointSelector = ({
           onValueChange={(value) => onEntrypointChange(value as Entrypoint)}
           className="flex flex-row gap-4"
         >
-          <div className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1">
+          <div
+            className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1"
+            onClick={() => onEntrypointChange("refine")}
+          >
             <RadioGroupItem value="refine" id="refine" />
             <Label htmlFor="refine" className="cursor-pointer font-medium text-sm">
               Refine
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1">
+          <div
+            className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1"
+            onClick={() => onEntrypointChange("accumulate")}
+          >
             <RadioGroupItem value="accumulate" id="accumulate" />
             <Label htmlFor="accumulate" className="cursor-pointer font-medium text-sm">
               Accumulate
             </Label>
           </div>
 
-          <div className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1">
+          <div
+            className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1"
+            onClick={() => onEntrypointChange("is_authorized")}
+          >
             <RadioGroupItem value="is_authorized" id="is_authorized" />
             <Label htmlFor="is_authorized" className="cursor-pointer font-medium text-sm">
               Is Authorized
@@ -102,7 +119,7 @@ export const EntrypointSelector = ({
 
       {isManualMode && (
         <div className="space-y-3 pt-4 border-t">
-          <h4 className="text-xs font-semibold text-muted-foreground">Manual Configuration</h4>
+          <h4 className="text-xs font-semibold text-muted-foreground">Entrypoint</h4>
 
           <div className="flex items-center gap-2">
             <Label htmlFor="manual-pc" className="text-xs min-w-[120px]">
@@ -337,7 +354,7 @@ export const EntrypointSelector = ({
       {/* SPI Arguments Section */}
       <div className="space-y-3 mt-4 pt-4 border-t">
         <h4 className="text-xs font-semibold text-muted-foreground">
-          SPI Arguments {isManualMode ? "(Manual)" : "(Auto-generated)"}
+          SPI Arguments {isManualMode ? "" : "(Auto-generated)"}
         </h4>
 
         <div className="flex flex-col gap-2">

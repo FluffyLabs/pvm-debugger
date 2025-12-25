@@ -14,6 +14,8 @@ import { WithHelp } from "../WithHelp/WithHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { bytes } from "@typeberry/lib";
+import { Button } from "@/components/ui/button";
+import { SpiConfigDialog } from "./SpiConfigDialog";
 
 function stringToNumber<T>(value: string, cb: (x: string) => T): T {
   try {
@@ -31,6 +33,7 @@ export const DebuggerSettingsContent = () => {
   const [error, setError] = useState<string>();
   const [textSpi, setTextSpi] = useState(spiArgs.toString());
   const isSpiError = textSpi !== spiArgs.toString();
+  const [isSpiConfigDialogOpen, setIsSpiConfigDialogOpen] = useState(false);
   const handleTextSpi = (newVal: string) => {
     setTextSpi(newVal);
     try {
@@ -133,15 +136,20 @@ export const DebuggerSettingsContent = () => {
             <span className="block text-xs font-bold">
               <WithHelp help="Hex-encoded JAM SPI arguments written to the heap">JAM SPI arguments</WithHelp>
             </span>
-            <Input
-              className={cn(commonClass, { "border-red": isSpiError })}
-              placeholder="0x-prefixed, encoded operands"
-              onChange={(e) => {
-                const value = e.target?.value;
-                handleTextSpi(value);
-              }}
-              value={textSpi}
-            />
+            <div className="flex flex-col gap-2 flex-end">
+              <Input
+                className={cn(commonClass, { "border-red": isSpiError })}
+                placeholder="0x-prefixed, encoded operands"
+                onChange={(e) => {
+                  const value = e.target?.value;
+                  handleTextSpi(value);
+                }}
+                value={textSpi}
+              />
+              <Button variant="outline" size="sm" onClick={() => setIsSpiConfigDialogOpen(true)}>
+                Configure
+              </Button>
+            </div>
           </div>
           <div className="p-4 flex justify-between items-center mb-2">
             <span className="block text-xs font-bold">
@@ -158,6 +166,15 @@ export const DebuggerSettingsContent = () => {
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
       </DialogDescription>
+
+      <SpiConfigDialog
+        open={isSpiConfigDialogOpen}
+        onOpenChange={setIsSpiConfigDialogOpen}
+        onApply={(encodedArgs) => {
+          dispatch(setSpiArgs(encodedArgs));
+          setTextSpi(bytes.BytesBlob.blobFrom(encodedArgs).toString());
+        }}
+      />
     </>
   );
 };
