@@ -60,20 +60,18 @@ export const EntrypointSelector = ({
   isManualMode,
   onIsManualModeChange,
 }: EntrypointSelectorProps) => {
-
   return (
     <div className="flex flex-col space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">{isManualMode ? "Manual Configuration" : "Select Entrypoint"}</h3>
         <div className="flex items-center gap-2">
           <Switch
-            variant={!isManualMode ? 'secondary' : undefined}
+            variant={!isManualMode ? "secondary" : undefined}
             id="manual-mode"
             checked={isManualMode}
             onCheckedChange={onIsManualModeChange}
           />
-          <Label htmlFor="manual-mode"
-            className="text-xs cursor-pointer">
+          <Label htmlFor="manual-mode" className="text-xs cursor-pointer">
             RAW
           </Label>
         </div>

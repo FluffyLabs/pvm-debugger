@@ -4,8 +4,8 @@ import { useState, useCallback, useEffect } from "react";
 import { ProgramUploadFileOutput } from "./types";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
-import { setIsProgramEditMode, setSpiArgs } from "@/store/debugger/debuggerSlice.ts";
-import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
+import { setIsProgramEditMode, setSpiArgs, setServiceId } from "@/store/debugger/debuggerSlice.ts";
+import { selectIsAnyWorkerLoading, setAllWorkersServiceId } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { ProgramFileUpload } from "@/components/ProgramLoader/ProgramFileUpload.tsx";
 import { useNavigate } from "react-router";
@@ -104,6 +104,22 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
           // Set the encoded parameters as SPI arguments
           dispatch(setSpiArgs(parsedArgs.raw));
+
+          // Extract and set service ID from entrypoint parameters
+          let serviceId: number;
+          switch (selectedEntrypoint) {
+            case "refine":
+              serviceId = parseInt(refineParams.id, 10) || 0;
+              break;
+            case "accumulate":
+              serviceId = parseInt(accumulateParams.id, 10) || 0;
+              break;
+            case "is_authorized":
+              serviceId = 0; // Use default for is_authorized
+              break;
+          }
+          dispatch(setServiceId(serviceId));
+          await dispatch(setAllWorkersServiceId()).unwrap();
 
           // Update the initial state with the correct PC for the entrypoint
           const pc = parseInt(manualPc, 10) || 0;

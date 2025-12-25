@@ -170,9 +170,20 @@ export const DebuggerSettingsContent = () => {
       <SpiConfigDialog
         open={isSpiConfigDialogOpen}
         onOpenChange={setIsSpiConfigDialogOpen}
-        onApply={(encodedArgs) => {
+        onApply={async (encodedArgs, _pc, serviceId) => {
           dispatch(setSpiArgs(encodedArgs));
           setTextSpi(bytes.BytesBlob.blobFrom(encodedArgs).toString());
+
+          // Update service ID if it changed
+          try {
+            dispatch(setServiceId(serviceId));
+            await dispatch(setAllWorkersServiceId()).unwrap();
+          } catch (e) {
+            if (e instanceof Error || isSerializedError(e)) {
+              setError(e.message);
+              logger.error(e.toString(), { error: e, hideToast: true });
+            }
+          }
         }}
       />
     </>

@@ -16,6 +16,7 @@ type SpiConfigDialogProps = {
 
 export const SpiConfigDialog = ({ open, onOpenChange, onApply }: SpiConfigDialogProps) => {
   const savedConfig = loadSpiConfig();
+  const globalServiceId = useAppSelector((state) => state.debugger.serviceId);
 
   const [selectedEntrypoint, setSelectedEntrypoint] = useState<Entrypoint>(savedConfig.entrypoint);
   const [refineParams, setRefineParams] = useState(savedConfig.refineParams);
@@ -25,6 +26,15 @@ export const SpiConfigDialog = ({ open, onOpenChange, onApply }: SpiConfigDialog
   const [encodedSpiArgs, setEncodedSpiArgs] = useState(savedConfig.encodedArgs);
   const [encodingError, setEncodingError] = useState<string | null>(null);
   const [manualPc, setManualPc] = useState(savedConfig.manualPc);
+
+  // Sync service ID from global settings when dialog opens
+  useEffect(() => {
+    if (open && globalServiceId !== null) {
+      const serviceIdStr = globalServiceId.toString();
+      setRefineParams((prev) => ({ ...prev, id: serviceIdStr }));
+      setAccumulateParams((prev) => ({ ...prev, id: serviceIdStr }));
+    }
+  }, [open, globalServiceId]);
 
   // Auto-encode parameters when they change
   const handleAutoEncode = () => {
@@ -66,6 +76,21 @@ export const SpiConfigDialog = ({ open, onOpenChange, onApply }: SpiConfigDialog
       const parsedArgs = bytes.BytesBlob.parseBlob(encodedSpiArgs);
       const pc = parseInt(manualPc, 10) || 0;
 
+      // Extract service ID from the current entrypoint parameters
+      let serviceId: number;
+      switch (selectedEntrypoint) {
+        case "refine":
+          serviceId = parseInt(refineParams.id, 10) || 0;
+          break;
+        case "accumulate":
+          serviceId = parseInt(accumulateParams.id, 10) || 0;
+          break;
+        case "is_authorized":
+          // is_authorized doesn't have a service ID parameter, use global
+          serviceId = globalServiceId ?? 0;
+          break;
+      }
+
       // Save configuration
       saveSpiConfig({
         entrypoint: selectedEntrypoint,
@@ -77,7 +102,7 @@ export const SpiConfigDialog = ({ open, onOpenChange, onApply }: SpiConfigDialog
         encodedArgs: encodedSpiArgs,
       });
 
-      onApply(parsedArgs.raw, pc);
+      onApply(parsedArgs.raw, pc, serviceId);
       onOpenChange(false);
     } catch (error) {
       setEncodingError(error instanceof Error ? error.message : "Invalid SPI arguments");
