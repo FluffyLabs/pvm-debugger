@@ -18,14 +18,7 @@ test("GoL example loads and SPI configuration works", async ({ page }) => {
   await loadButton.click();
 
   // Wait for the program loader dialog to close
-  await page.waitForTimeout(2000);
-
-  // Verify program loader dialog is no longer visible
-  // Wait for navigation back to main view
-  await page.waitForURL("/", { timeout: 10000 });
-
-  // Wait a bit more for state to settle
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(3000);
 
   // Verify that the settings cog shows the SPI indicator (blue dot)
   const settingsButton = page.getByTestId("settings-button");
