@@ -8,16 +8,27 @@ test("GoL example loads and SPI configuration works", async ({ page }) => {
   // Load the GoL (JAM-SDK) example
   await openProgram(page, "gol-sdk");
 
-  // Wait for entrypoint selection dialog to appear
+  // Wait for program loader dialog to appear
   await page.waitForTimeout(1000);
 
-  // Wait for Load button to be visible and enabled, then click it
+  // For SPI programs, we need to click the button twice:
+  // First click: Advance from "upload" to "entrypoint" step
+  const nextButton = page.getByTestId("load-button");
+  await nextButton.waitFor({ state: "visible", timeout: 5000 });
+  await expect(nextButton).toBeEnabled();
+  await expect(nextButton).toHaveText("Next");
+  await nextButton.click();
+
+  // Wait for entrypoint configuration UI to appear
+  await page.waitForTimeout(500);
+
+  // Second click: Actually load the program
   const loadButton = page.getByTestId("load-button");
-  await loadButton.waitFor({ state: "visible", timeout: 5000 });
   await expect(loadButton).toBeEnabled();
+  await expect(loadButton).toHaveText("Load");
   await loadButton.click();
 
-  // Wait for the program loader dialog to close
+  // Wait for the program to load and dialog to close
   await page.waitForTimeout(3000);
 
   // Verify that the settings cog shows the SPI indicator (blue dot)
