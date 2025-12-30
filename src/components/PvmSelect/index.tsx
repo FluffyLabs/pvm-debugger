@@ -233,7 +233,7 @@ export const PvmSelect = () => {
       {error && <ErrorWarningTooltip variant="dark" classNames="ml-3" msg={error} />}
       <MultiSelect
         className="border-none text-red-400 min-h-0 h-[32px] text-xs"
-        test-id="pvm-select"
+        data-testid="pvm-select"
         maxCount={1}
         required
         options={pvmsWithPayload.map((pvm) => ({ value: pvm.id, label: pvm.label, removable: pvm.removable }))}
