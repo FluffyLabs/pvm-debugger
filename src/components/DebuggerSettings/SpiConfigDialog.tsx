@@ -138,10 +138,12 @@ export const SpiConfigDialog = ({ open, onOpenChange, onApply }: SpiConfigDialog
           <Separator />
         </div>
         <div className="flex justify-end gap-3 px-7 mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" data-testid="spi-cancel-button" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleApply}>Apply</Button>
+          <Button data-testid="spi-apply-button" onClick={handleApply}>
+            Apply
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -16,8 +16,8 @@ export const step = async (page: Page) => {
 };
 
 export const selectPVM = async (page: Page, pvmType: string) => {
-  await page.waitForSelector('button[test-id="pvm-select"]');
-  await page.click('button[test-id="pvm-select"]');
+  await page.waitForSelector('button[data-testid="pvm-select"]');
+  await page.click('button[data-testid="pvm-select"]');
 
   await page.waitForSelector('[role="dialog"]');
 

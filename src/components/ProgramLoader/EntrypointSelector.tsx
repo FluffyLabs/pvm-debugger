@@ -68,6 +68,7 @@ export const EntrypointSelector = ({
           <Switch
             variant={!isManualMode ? "secondary" : undefined}
             id="manual-mode"
+            data-testid="manual-mode-switch"
             checked={isManualMode}
             onCheckedChange={onIsManualModeChange}
           />
@@ -85,6 +86,7 @@ export const EntrypointSelector = ({
         >
           <div
             className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1"
+            data-testid="entrypoint-refine"
             onClick={() => onEntrypointChange("refine")}
           >
             <RadioGroupItem value="refine" id="refine" />
@@ -95,6 +97,7 @@ export const EntrypointSelector = ({
 
           <div
             className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1"
+            data-testid="entrypoint-accumulate"
             onClick={() => onEntrypointChange("accumulate")}
           >
             <RadioGroupItem value="accumulate" id="accumulate" />
@@ -105,6 +108,7 @@ export const EntrypointSelector = ({
 
           <div
             className="flex items-center space-x-2 border rounded-lg px-4 py-2 hover:bg-accent cursor-pointer flex-1"
+            data-testid="entrypoint-is-authorized"
             onClick={() => onEntrypointChange("is_authorized")}
           >
             <RadioGroupItem value="is_authorized" id="is_authorized" />
@@ -125,6 +129,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="manual-pc"
+              data-testid="manual-pc"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -153,6 +158,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="refine-core"
+              data-testid="refine-core"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -175,6 +181,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="refine-index"
+              data-testid="refine-index"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -197,6 +204,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="refine-id"
+              data-testid="refine-id"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -219,6 +227,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="refine-payload"
+              data-testid="refine-payload"
               className="text-xs flex-1"
               placeholder="0x..."
               value={refineParams.payload}
@@ -240,6 +249,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="refine-package"
+              data-testid="refine-package"
               className="text-xs flex-1"
               placeholder="0x..."
               value={refineParams.package}
@@ -267,6 +277,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="accumulate-slot"
+              data-testid="accumulate-slot"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -289,6 +300,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="accumulate-id"
+              data-testid="accumulate-id"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -311,6 +323,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="accumulate-results"
+              data-testid="accumulate-results"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -339,6 +352,7 @@ export const EntrypointSelector = ({
             </Label>
             <Input
               id="is-authorized-core"
+              data-testid="is-authorized-core"
               type="number"
               className="text-xs flex-1"
               placeholder="0"
@@ -361,6 +375,7 @@ export const EntrypointSelector = ({
           </Label>
           <Input
             id="spi-args"
+            data-testid="spi-args"
             className={cn("text-xs font-mono", {
               "border-red-500": encodingError !== null,
               "bg-muted": !isManualMode,
