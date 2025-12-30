@@ -12,13 +12,11 @@ async function runProgramTest(page: Page, pvmType: string) {
   // Test the "Run" button functionality
   await page.click('button:has-text("Run")');
 
-  // Wait for execution to complete
-  await page.waitForTimeout(5000);
+  // Wait for execution to complete (increased timeout for local environment)
+  const programStatus = page.getByTestId("program-status");
+  await expect(programStatus).toHaveText("HALT", { timeout: 15000 });
 
-  const programStatus = page.locator('[test-id="program-status"]');
-  await expect(programStatus).toHaveText("HALT");
-
-  // const jumpIndInstructionParent = page.locator('div[test-id="instruction-item"]:has(span:has-text("JUMP_IND"))');
+  // const jumpIndInstructionParent = page.locator('div[data-testid="instruction-item"]:has(span:has-text("JUMP_IND"))');
   // await expect(jumpIndInstructionParent).toHaveCSS('background-color', 'rgb(76, 175, 80)');
 }
 

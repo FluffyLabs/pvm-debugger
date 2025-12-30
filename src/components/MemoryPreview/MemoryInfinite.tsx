@@ -73,7 +73,7 @@ export const MemoryCell = ({
     >
       {isEqualAcrossWorkers ? (
         <Tooltip delayDuration={100} open={isPageTooltipDisabled ? false : undefined}>
-          <TooltipTrigger data-test-id="memory-cell">
+          <TooltipTrigger data-testid="memory-cell">
             {valueToNumeralSystem(value, numeralSystem, numeralSystem ? 2 : 3, false)}
           </TooltipTrigger>
 
@@ -89,7 +89,7 @@ export const MemoryCell = ({
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <span
-              data-test-id="memory-cell"
+              data-testid="memory-cell"
               className="font-inconsolata"
               dangerouslySetInnerHTML={{
                 __html: numeralSystem ? "&quest;&#8288;&quest;&#8288;" : "&quest;&#8288;&quest;&#8288;&quest;&#8288;",
