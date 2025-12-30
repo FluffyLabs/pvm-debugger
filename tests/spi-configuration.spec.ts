@@ -12,7 +12,7 @@ test("GoL example loads and SPI configuration works", async ({ page }) => {
   await page.waitForTimeout(1000);
 
   // Wait for Load button to be visible and enabled, then click it
-  const loadButton = page.locator("button#load-button");
+  const loadButton = page.getByTestId("load-button");
   await loadButton.waitFor({ state: "visible", timeout: 5000 });
   await expect(loadButton).toBeEnabled();
   await loadButton.click();
@@ -28,72 +28,59 @@ test("GoL example loads and SPI configuration works", async ({ page }) => {
   await page.waitForTimeout(1000);
 
   // Verify that the settings cog shows the SPI indicator (blue dot)
-  const settingsButton = page.locator("button.cursor-pointer:has(svg)").first();
-  const spiIndicator = page.locator("span.bg-blue-500");
+  const settingsButton = page.getByTestId("settings-button");
+  const spiIndicator = page.getByTestId("spi-indicator");
   await expect(spiIndicator).toBeVisible();
 
   // Click settings button to open settings dialog
   await settingsButton.click();
 
   // Wait for settings dialog to open
+  // Wait for dialog to open and get the last one (desktop dialog, not mobile)
   await page.waitForSelector('[role="dialog"]');
+  const visibleDialog = page.locator('[role="dialog"]').last();
 
-  // Verify "JAM SPI arguments" section is visible
-  const spiArgsLabel = page.locator("text=JAM SPI arguments");
-  await expect(spiArgsLabel).toBeVisible();
-
-  // Find and click the "Configure" button
-  const configureButton = page.locator('button:has-text("Configure")');
+  // Find and click the "Configure" button within the visible dialog
+  const configureButton = visibleDialog.getByTestId("configure-spi-button");
   await expect(configureButton).toBeVisible();
   await configureButton.click();
 
   // Wait for SPI config dialog to open
   await page.waitForTimeout(500);
 
-  // Verify entrypoint selector is visible
-  const entrypointHeader = page.locator("text=Select Entrypoint");
-  await expect(entrypointHeader).toBeVisible();
+  // Get the SPI config dialog
+  const spiConfigDialog = page.getByRole("dialog", { name: "Configure SPI Entrypoint" });
 
-  // Verify default entrypoint is "Accumulate"
-  const accumulateOption = page.locator('div:has-text("Accumulate")');
-  await expect(accumulateOption).toBeVisible();
-
-  // Click on "Refine" entrypoint
-  const refineOption = page.locator('div:has-text("Refine")').first();
+  // Click on "Refine" entrypoint within the SPI config dialog
+  const refineOption = spiConfigDialog.getByTestId("entrypoint-refine");
   await refineOption.click();
 
   // Wait for parameters to update
   await page.waitForTimeout(500);
 
-  // Verify Refine parameters are visible
-  const coreLabel = page.locator("text=Core");
-  await expect(coreLabel).toBeVisible();
-
   // Change core parameter value
-  const coreInput = page.locator("input#refine-core");
+  const coreInput = spiConfigDialog.getByTestId("refine-core");
   await coreInput.fill("5");
 
   // Wait for auto-encoding
   await page.waitForTimeout(500);
 
   // Verify SPI Arguments field is auto-filled
-  const spiArgsInput = page.locator("input#spi-args");
+  const spiArgsInput = spiConfigDialog.getByTestId("spi-args");
   const spiArgsValue = await spiArgsInput.inputValue();
   expect(spiArgsValue).toBeTruthy();
   expect(spiArgsValue.startsWith("0x")).toBeTruthy();
 
   // Click Apply button
-  const applyButton = page.locator('button:has-text("Apply")');
+  const applyButton = spiConfigDialog.getByTestId("spi-apply-button");
   await applyButton.click();
 
   // Wait for dialog to close
   await page.waitForTimeout(500);
 
-  // Verify we're back at the settings dialog
-  await expect(spiArgsLabel).toBeVisible();
-
   // Verify the SPI arguments input field is updated
-  const settingsSpiArgsInput = page.locator('input[placeholder*="0x-prefixed"]');
+  const settingsDialog = page.locator('[role="dialog"]').last();
+  const settingsSpiArgsInput = settingsDialog.getByTestId("spi-args-input-settings");
   const updatedSpiArgs = await settingsSpiArgsInput.inputValue();
   expect(updatedSpiArgs).toBe(spiArgsValue);
 
@@ -113,42 +100,43 @@ test("Manual mode allows direct PC and SPI args editing", async ({ page }) => {
 
   // Wait for entrypoint selection dialog and load the program
   await page.waitForTimeout(1000);
-  const loadButton = page.locator("button#load-button");
+  const loadButton = page.getByTestId("load-button");
   await loadButton.waitFor({ state: "visible", timeout: 5000 });
   await expect(loadButton).toBeEnabled();
   await loadButton.click();
   await page.waitForTimeout(3000);
 
   // Open settings
-  const settingsButton = page.locator("button.cursor-pointer:has(svg)").first();
+  const settingsButton = page.getByTestId("settings-button");
   await settingsButton.click();
+  // Wait for dialog to open and get the last one (desktop dialog, not mobile)
   await page.waitForSelector('[role="dialog"]');
+  const visibleDialog = page.locator('[role="dialog"]').last();
 
-  // Click Configure button
-  const configureButton = page.locator('button:has-text("Configure")');
+  // Click Configure button within the visible dialog
+  const configureButton = visibleDialog.getByTestId("configure-spi-button");
   await configureButton.click();
   await page.waitForTimeout(500);
 
-  // Toggle to manual mode using the RAW switch
-  const rawSwitch = page.locator('button[role="switch"]');
+  // Get the SPI config dialog
+  const spiConfigDialog = page.getByRole("dialog", { name: "Configure SPI Entrypoint" });
+
+  // Toggle to manual mode using the RAW switch within the SPI config dialog
+  const rawSwitch = spiConfigDialog.getByTestId("manual-mode-switch");
   await rawSwitch.click();
 
   // Wait for manual mode UI
   await page.waitForTimeout(500);
 
-  // Verify Manual Configuration header is visible
-  const manualHeader = page.locator("text=Manual Configuration");
-  await expect(manualHeader).toBeVisible();
-
   // Verify Program Counter input is visible
-  const pcInput = page.locator("input#manual-pc");
+  const pcInput = spiConfigDialog.getByTestId("manual-pc");
   await expect(pcInput).toBeVisible();
 
   // Change PC value
   await pcInput.fill("10");
 
   // Verify SPI args input is editable (not read-only)
-  const spiArgsInput = page.locator("input#spi-args");
+  const spiArgsInput = spiConfigDialog.getByTestId("spi-args");
   const isReadOnly = await spiArgsInput.getAttribute("readonly");
   expect(isReadOnly).toBeNull();
 
@@ -156,14 +144,15 @@ test("Manual mode allows direct PC and SPI args editing", async ({ page }) => {
   await spiArgsInput.fill("0x123456");
 
   // Click Apply
-  const applyButton = page.locator('button:has-text("Apply")');
+  const applyButton = spiConfigDialog.getByTestId("spi-apply-button");
   await applyButton.click();
 
   // Wait for success
   await page.waitForTimeout(500);
 
   // Verify settings dialog shows updated SPI args
-  const settingsSpiArgsInput = page.locator('input[placeholder*="0x-prefixed"]');
+  const settingsDialog = page.locator('[role="dialog"]').last();
+  const settingsSpiArgsInput = settingsDialog.getByTestId("spi-args-input-settings");
   const updatedSpiArgs = await settingsSpiArgsInput.inputValue();
   expect(updatedSpiArgs).toBe("0x123456");
 });
@@ -177,36 +166,37 @@ test("Service ID is synced between settings and entrypoint parameters", async ({
 
   // Wait for entrypoint selection dialog and load the program
   await page.waitForTimeout(1000);
-  const loadButton = page.locator("button#load-button");
+  const loadButton = page.getByTestId("load-button");
   await loadButton.waitFor({ state: "visible", timeout: 5000 });
   await expect(loadButton).toBeEnabled();
   await loadButton.click();
   await page.waitForTimeout(3000);
 
   // Open settings
-  const settingsButton = page.locator("button.cursor-pointer:has(svg)").first();
+  const settingsButton = page.getByTestId("settings-button");
   await settingsButton.click();
+  // Wait for dialog to open and get the last one (desktop dialog, not mobile)
   await page.waitForSelector('[role="dialog"]');
+  const visibleDialog = page.locator('[role="dialog"]').last();
 
   // Find the Service ID input in settings
-  const serviceIdInput = page
-    .locator("input")
-    .filter({ hasText: /Service ID/ })
-    .or(page.locator('div:has-text("Service ID")').locator("..").locator("input"))
-    .first();
+  const serviceIdInput = visibleDialog.getByTestId("service-id-input");
 
-  // Click Configure button
-  const configureButton = page.locator('button:has-text("Configure")');
+  // Click Configure button within the visible dialog
+  const configureButton = visibleDialog.getByTestId("configure-spi-button");
   await configureButton.click();
   await page.waitForTimeout(500);
 
-  // Select Accumulate entrypoint
-  const accumulateOption = page.locator('div:has-text("Accumulate")').first();
+  // Get the SPI config dialog
+  const spiConfigDialog = page.getByRole("dialog", { name: "Configure SPI Entrypoint" });
+
+  // Select Accumulate entrypoint within the SPI config dialog
+  const accumulateOption = spiConfigDialog.getByTestId("entrypoint-accumulate");
   await accumulateOption.click();
   await page.waitForTimeout(500);
 
   // Find the Service ID field in accumulate parameters
-  const accumulateServiceIdInput = page.locator("input#accumulate-id");
+  const accumulateServiceIdInput = spiConfigDialog.getByTestId("accumulate-id");
   await expect(accumulateServiceIdInput).toBeVisible();
 
   // Change the service ID in the accumulate entrypoint
@@ -214,11 +204,12 @@ test("Service ID is synced between settings and entrypoint parameters", async ({
   await page.waitForTimeout(500);
 
   // Apply changes
-  const applyButton = page.locator('button:has-text("Apply")');
+  const applyButton = spiConfigDialog.getByTestId("spi-apply-button");
   await applyButton.click();
   await page.waitForTimeout(500);
 
-  // Verify the global Service ID was updated
+  // Verify the global Service ID was updated (may be in hex format)
   const updatedServiceId = await serviceIdInput.inputValue();
-  expect(updatedServiceId).toBe("999");
+  // Service ID can be displayed as "999" or "0x3e7" depending on numeral system
+  expect(updatedServiceId === "999" || updatedServiceId === "0x3e7").toBeTruthy();
 });

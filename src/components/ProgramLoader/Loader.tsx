@@ -227,7 +227,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
                   <span className="block text-xs font-bold min-w-[150px]">Initial state:</span>
                   <details open={false} className="flex-1 ml-2">
                     <summary>view</summary>
-                    <pre>{JSON.stringify(programLoad.initial, null, 2)}</pre>
+                    <pre className="max-h-[300px] overflow-auto">{JSON.stringify(programLoad.initial, null, 2)}</pre>
                   </details>
                 </div>
               </div>
@@ -271,6 +271,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         <Button
           className="mt-3 min-w-[92px]"
           id="load-button"
+          data-testid="load-button"
           type="button"
           disabled={!isProgramLoaded}
           onClick={currentStep === "entrypoint" ? () => handleLoad() : handleNextStep}

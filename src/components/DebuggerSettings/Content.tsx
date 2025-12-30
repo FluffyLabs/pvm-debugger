@@ -79,6 +79,7 @@ export const DebuggerSettingsContent = () => {
             </span>
             <Input
               className={commonClass}
+              data-testid="service-id-input"
               onChange={(e) => {
                 const value = e.target?.value;
                 const parsedValue = stringToNumber(value, Number);
@@ -139,6 +140,7 @@ export const DebuggerSettingsContent = () => {
             <div className="flex flex-col gap-2 flex-end">
               <Input
                 className={cn(commonClass, { "border-red": isSpiError })}
+                data-testid="spi-args-input-settings"
                 placeholder="0x-prefixed, encoded operands"
                 onChange={(e) => {
                   const value = e.target?.value;
@@ -146,7 +148,12 @@ export const DebuggerSettingsContent = () => {
                 }}
                 value={textSpi}
               />
-              <Button variant="outline" size="sm" onClick={() => setIsSpiConfigDialogOpen(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="configure-spi-button"
+                onClick={() => setIsSpiConfigDialogOpen(true)}
+              >
                 Configure
               </Button>
             </div>
