@@ -185,7 +185,7 @@ export const Registers = ({
                             "text-xs whitespace-nowrap": statusValue === Status.HOST,
                           })}
                           style={getStatusStyles(isDarkMode, statusValue)}
-                          test-id="program-status"
+                          data-testid="program-status"
                         >
                           {displayText}
                         </span>

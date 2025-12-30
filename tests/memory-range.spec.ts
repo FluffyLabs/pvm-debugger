@@ -6,24 +6,30 @@ test("Should modify memory ranges", async ({ page }) => {
   await selectPVM(page, "@typeberry");
   await openProgram(page, "storeU16");
 
+  // Wait for program to load and initialize
+  await page.waitForTimeout(2000);
+
   await page.getByRole("tab", { name: "Ranges" }).click();
   await page.getByLabel("Start").click();
   await page.getByLabel("Start").fill("131072");
   await page.getByRole("button", { name: "Add" }).click();
 
-  await expect(page.locator("[data-test-id='memory-cell']").first()).toContainText("00", { timeout: 2000 });
-  await expect(page.locator("[data-test-id='memory-cell']").nth(1)).toContainText("00", { timeout: 2000 });
+  await expect(page.getByTestId("memory-cell").first()).toContainText("00", { timeout: 2000 });
+  await expect(page.getByTestId("memory-cell").nth(1)).toContainText("00", { timeout: 2000 });
 
   await step(page);
 
-  await expect(page.locator("[data-test-id='memory-cell']").first()).toContainText("78", { timeout: 2000 });
-  await expect(page.locator("[data-test-id='memory-cell']").nth(1)).toContainText("56", { timeout: 2000 });
+  await expect(page.getByTestId("memory-cell").first()).toContainText("78", { timeout: 2000 });
+  await expect(page.getByTestId("memory-cell").nth(1)).toContainText("56", { timeout: 2000 });
 });
 
 test("Should show interpretations", async ({ page }) => {
   await openDebugger(page);
   await selectPVM(page, "@typeberry");
   await openProgram(page, "storeU16");
+
+  // Wait for program to load and initialize
+  await page.waitForTimeout(2000);
 
   await page.getByRole("tab", { name: "Ranges" }).click();
   await page.getByLabel("Start").click();
@@ -41,6 +47,9 @@ test("Should not show interpretations for longer memory chunks", async ({ page }
   await openDebugger(page);
   await selectPVM(page, "@typeberry");
   await openProgram(page, "storeU16");
+
+  // Wait for program to load and initialize
+  await page.waitForTimeout(2000);
 
   await page.getByRole("tab", { name: "Ranges" }).click();
   await page.getByLabel("Start").click();
@@ -60,6 +69,9 @@ test("Should show diffs between PVMs", async ({ page }) => {
   await openDebugger(page);
   await selectPVM(page, "typeberry");
   await openProgram(page, "storeU16");
+
+  // Wait for program to load and initialize
+  await page.waitForTimeout(2000);
 
   await page.getByRole("tab", { name: "Ranges" }).click();
   await page.getByLabel("Start").click();

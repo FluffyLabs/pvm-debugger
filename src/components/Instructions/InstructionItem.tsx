@@ -128,7 +128,7 @@ export const InstructionItem = forwardRef(
         <TableRow
           ref={ref}
           className={classNames({ "opacity-50": isLast }, "overflow-hidden")}
-          test-id="instruction-item"
+          data-testid="instruction-item"
           style={{
             backgroundColor,
             color,
