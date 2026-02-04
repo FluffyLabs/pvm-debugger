@@ -65,6 +65,27 @@ export const Links = () => {
           </div>
         </div>
       </li>
+      <li>
+        <div className="flex gap-2 text-[11px] mt-3">
+          <a href="https://github.com/polkadot-fellows/JIPs/blob/main/JIP-6.md" target="_blank">
+            <ExternalLink className="inline w-4 mb-1 mr-2 text-brand-dark dark:text-brand" />
+          </a>
+          <div>
+            <p className="">Ecalli Trace file (.log, .trace)</p>
+            <p className="inline text-secondary-foreground">
+              <small>
+                Load a trace file with embedded program and host call data. See{" "}
+                <a
+                  className="text-brand-dark dark:text-brand underline"
+                  href="https://github.com/polkadot-fellows/JIPs/blob/main/JIP-6.md"
+                >
+                  specification
+                </a>
+              </small>
+            </p>
+          </div>
+        </div>
+      </li>
     </ul>
   );
 };

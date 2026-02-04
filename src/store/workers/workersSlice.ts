@@ -6,15 +6,14 @@ import {
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
-  setHasHostCallOpen,
-  setPendingHostCallIndex,
+  setPendingHostCall,
 } from "@/store/debugger/debuggerSlice.ts";
+import { findHostCallEntry, HostCallEntry, StateMismatch } from "@/lib/hostCallTrace";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
-import { isInstructionError } from "@/types/type-guards";
 import { SerializedFile } from "@/lib/utils.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -251,54 +250,101 @@ export const handleHostCall = createAsyncThunk(
   async ({ workerId }: { workerId?: string }, { getState, dispatch }) => {
     const state = getState() as RootState;
 
-    const instructionEnriched = state.debugger.programPreviewResult.find(
-      (instruction) => instruction.address === state.workers[0].previousState.pc,
-    );
+    const exitArg = state.workers[0]?.exitArg ?? -1;
+    const trace = state.debugger.hostCallsTrace;
+    const nextHostCallIndex = state.debugger.nextHostCallIndex;
+    const autoContinue = state.debugger.autoContinueOnHostCalls;
 
-    if (
-      !instructionEnriched ||
-      isInstructionError(instructionEnriched)
-      // !isOneImmediateArgs(instructionEnriched.args)
-    ) {
-      throw new Error("Invalid host call instruction");
-    }
+    const openDialog = (hcId: number, entry: HostCallEntry | null, mismatches: StateMismatch[] = []) => {
+      dispatch(
+        setPendingHostCall({
+          pendingHostCall: {
+            hostCallId: hcId,
+            entry,
+            mismatches,
+          },
+          nextHostCallIndex: nextHostCallIndex,
+        }),
+      );
+    };
 
-    // Open dialog if no traces are available, allowing user to manually set register values
-    if (state.debugger.hostCallsTrace === null) {
-      const exitArg = state.workers[0]?.exitArg ?? -1;
-      dispatch(setPendingHostCallIndex(exitArg));
-      dispatch(setHasHostCallOpen(true));
+    // just open the dialog
+    if (trace === null || !trace.parsed) {
+      logger.info("  [handleHostCall] No trace -> opening dialog");
+      openDialog(exitArg, null);
       return;
     }
 
+    const currentState = state.workers[0]?.currentState;
+    const pc = currentState?.pc ?? 0;
+    const gas = currentState?.gas ?? 0n;
+    const regs = (currentState?.regs ?? []) as bigint[];
+
+    const result = findHostCallEntry(trace.parsed, nextHostCallIndex, pc, gas, regs, exitArg);
+
+    if (result.entry === null) {
+      logger.info("  [handleHostCall] No entry found -> opening dialog");
+      openDialog(exitArg, null);
+      return;
+    }
+
+    if (result.mismatches.length > 0) {
+      logger.info("  [handleHostCall] Mismatches found -> stopping, opening dialog");
+      openDialog(exitArg, result.entry, result.mismatches);
+      return;
+    }
+
+    if (!autoContinue) {
+      logger.debug("  [handleHostCall] autoContinue=false -> opening dialog");
+      openDialog(exitArg, result.entry, result.mismatches);
+      return;
+    }
+
+    logger.debug("  [handleHostCall] AUTO-CONTINUING with trace data");
+    // TODO [ToDr] This should be a separate method?
+    const newRegs = [...regs];
+    for (const rw of result.entry.registerWrites) {
+      newRegs[rw.index] = rw.value;
+    }
+    const newGas = result.entry.gasAfter ?? gas;
+    const memoryEdits = result.entry.memoryWrites.map((mw) => ({
+      address: mw.address,
+      data: mw.data,
+    }));
+
+    logger.debug(`  [handleHostCall] Setting state: gas=${newGas}, memEdits=${memoryEdits.length}`);
     await Promise.all(
       state.workers
         .filter(({ id }) => {
-          // Allow to call it for a single worker
           return workerId ? workerId === id : true;
         })
         .map(async (worker) => {
           const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-            command: Commands.HOST_CALL,
-            payload: { hostCallIdentifier: worker.exitArg ?? -1 },
+            command: Commands.SET_STATE,
+            payload: { regs: newRegs, gas: newGas },
           });
-
-          // TODO [ToDr] Handle host call response?
-
-          if ((getState() as RootState).debugger.isRunMode) {
-            dispatch(continueAllWorkers());
-          }
 
           if (hasCommandStatusError(resp)) {
             throw new Error(resp.error.message);
           }
+
+          logger.info(`  [handleHostCall] dispatching setWorkerCurrentState for ${worker.id}`);
+          dispatch(setWorkerCurrentState({ id: worker.id, currentState: resp.payload.state }));
+
+          for (const mem of memoryEdits) {
+            const memResp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+              command: Commands.SET_MEMORY,
+              payload: { address: mem.address, data: mem.data },
+            });
+
+            if (hasCommandStatusError(memResp)) {
+              throw new Error(memResp.error.message);
+            }
+          }
         }),
     );
 
-    if (selectShouldContinueRunning(state)) {
-      dispatch(continueAllWorkers());
-    }
-
+    logger.info("  [handleHostCall] Done - returning without opening dialog");
     return;
   },
 );
@@ -412,13 +458,10 @@ export const stepAllWorkers = createAsyncThunk(
         }
 
         if (state.status === Status.HOST) {
-          // break execution if host call trace is not provided
-          // and we the PVM stops.
-          if (debuggerState.hostCallsTrace === null) {
-            dispatch(setIsRunMode(false));
-          }
-
+          logger.group(`[HOST CALL] PVM stopped at pc=${state.pc}, exitArg=${exitArg}`);
+          dispatch(setIsRunMode(false));
           await dispatch(handleHostCall({ workerId: worker.id })).unwrap();
+          logger.groupEnd();
         }
 
         return {
@@ -642,9 +685,10 @@ export const resumeAfterHostCall = createAsyncThunk(
     }: { regs: bigint[]; gas: bigint; mode: HostCallResumeMode; memoryEdits?: MemoryEdit[] },
     { getState, dispatch },
   ) => {
+    logger.group(`[resumeAfterHostCall] mode=${mode}, gas=${gas}, memEdits=${memoryEdits?.length ?? 0}`);
     const state = getState() as RootState;
 
-    // Set state for all workers
+    logger.log("Setting state for all workers...");
     await Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
@@ -656,16 +700,14 @@ export const resumeAfterHostCall = createAsyncThunk(
           throw resp.error;
         }
 
-        // Update Redux state with new values
         dispatch(setWorkerCurrentState({ id: worker.id, currentState: resp.payload.state }));
       }),
     );
 
-    // Write all memory edits to all workers if provided
     if (memoryEdits && memoryEdits.length > 0) {
+      logger.info(`Writing ${memoryEdits.length} memory edits...`);
       await Promise.all(
         state.workers.map(async (worker) => {
-          // Write each memory edit sequentially for this worker
           for (const memory of memoryEdits) {
             const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
               command: Commands.SET_MEMORY,
@@ -680,11 +722,16 @@ export const resumeAfterHostCall = createAsyncThunk(
       );
     }
 
-    // Close the dialog
-    dispatch(setHasHostCallOpen(false));
-    dispatch(setPendingHostCallIndex(null));
+    logger.info("Closing dialog...");
+    dispatch(
+      setPendingHostCall({
+        pendingHostCall: null,
+        nextHostCallIndex: state.debugger.nextHostCallIndex + 1,
+      }),
+    );
 
     // Resume execution based on mode
+    logger.info(`Resuming execution in mode: ${mode}`);
     if (mode === "run") {
       dispatch(setIsRunMode(true));
       await dispatch(runAllWorkers()).unwrap();
@@ -692,12 +739,13 @@ export const resumeAfterHostCall = createAsyncThunk(
       const stepsToPerform = calculateStepsToExitBlockForAllWorkers(getState() as RootState);
       await dispatch(stepAllWorkers({ stepsToPerform })).unwrap();
     } else {
-      // step
       await dispatch(stepAllWorkers({ stepsToPerform: 1 })).unwrap();
     }
 
     await dispatch(refreshPageAllWorkers());
     await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
+    logger.info("resumeAfterHostCall complete");
+    logger.groupEnd();
   },
 );
 

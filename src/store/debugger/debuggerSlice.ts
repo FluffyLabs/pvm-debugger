@@ -13,12 +13,24 @@ import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
 import { logger } from "@/utils/loggerService.tsx";
+import { HostCallEntry, ParsedTrace, parseTrace, StateMismatch } from "@/lib/hostCallTrace";
 
 export type UiRefreshMode = "instructions" | "block";
 
 export interface UiRefreshRate {
   mode: UiRefreshMode;
   instructionCount: number;
+}
+
+export interface HostCallTraceState {
+  rawContent: string;
+  parsed: ParsedTrace | null;
+}
+
+export interface HostCallPaused {
+  hostCallId: number;
+  entry: HostCallEntry | null;
+  mismatches: StateMismatch[];
 }
 
 export interface DebuggerState {
@@ -29,8 +41,6 @@ export interface DebuggerState {
   isProgramInvalid: boolean;
   breakpointAddresses: number[];
   clickedInstruction: CurrentInstruction | null;
-  hasHostCallOpen: boolean;
-  pendingHostCallIndex: number | null;
   initialState: ExpectedState;
   instructionMode: InstructionMode;
   isDebugFinished: boolean;
@@ -47,7 +57,16 @@ export interface DebuggerState {
   useBlockStepping: boolean;
   uiRefreshRate: UiRefreshRate;
   serviceId: number | null;
-  hostCallsTrace: null;
+  /** Loaded host call trace information. */
+  hostCallsTrace: HostCallTraceState | null;
+  /**
+   * Index (count) of the next host call (NOT: id of the host call)
+   * In case the trace is not loaded, this will simply count the host calls.
+   */
+  nextHostCallIndex: number;
+  /** Currently pending host call. May include data from trace log. */
+  pendingHostCall: HostCallPaused | null;
+  autoContinueOnHostCalls: boolean;
   spiProgram: SpiProgram | null;
   spiArgs: Uint8Array | null;
   activeMobileTab: "program" | "status" | "memory";
@@ -96,8 +115,6 @@ const initialState: DebuggerState = {
   isProgramInvalid: false,
   isRunMode: false,
   isStepMode: false,
-  hasHostCallOpen: false,
-  pendingHostCallIndex: null,
   programPreviewResult: [],
   breakpointAddresses: [],
   clickedInstruction: null,
@@ -112,6 +129,9 @@ const initialState: DebuggerState = {
     instructionCount: 10_000,
   },
   hostCallsTrace: null,
+  pendingHostCall: null,
+  nextHostCallIndex: 0,
+  autoContinueOnHostCalls: false,
   serviceId: parseInt("0x00000000", 16),
   activeMobileTab: "program",
 };
@@ -184,12 +204,6 @@ const debuggerSlice = createSlice({
       state.stepsToPerform = action.payload.instructionCount;
       state.useBlockStepping = action.payload.mode === "block";
     },
-    setHasHostCallOpen(state, action) {
-      state.hasHostCallOpen = action.payload;
-    },
-    setPendingHostCallIndex(state, action: { payload: number | null }) {
-      state.pendingHostCallIndex = action.payload;
-    },
     setServiceId(state, action) {
       state.serviceId = action.payload;
     },
@@ -208,6 +222,35 @@ const debuggerSlice = createSlice({
     setActiveMobileTab(state, action) {
       state.activeMobileTab = action.payload;
     },
+    setHostCallsTrace(state, action: { payload: string | null }) {
+      if (action.payload === null || action.payload.trim() === "") {
+        state.hostCallsTrace = null;
+      } else {
+        const parsed = parseTrace(action.payload);
+        state.hostCallsTrace = {
+          rawContent: action.payload,
+          parsed,
+        };
+        // reset host call index
+        state.nextHostCallIndex = 0;
+        state.pendingHostCall = null;
+      }
+    },
+    setPendingHostCall(
+      state,
+      action: {
+        payload: {
+          pendingHostCall: HostCallPaused | null;
+          nextHostCallIndex: number;
+        };
+      },
+    ) {
+      state.pendingHostCall = action.payload.pendingHostCall;
+      state.nextHostCallIndex = action.payload.nextHostCallIndex;
+    },
+    setAutoContinueOnHostCalls(state, action: { payload: boolean }) {
+      state.autoContinueOnHostCalls = action.payload;
+    },
   },
 });
 
@@ -215,8 +258,6 @@ export const {
   setIsProgramInvalid,
   setBreakpointAddresses,
   setClickedInstruction,
-  setHasHostCallOpen,
-  setPendingHostCallIndex,
   setInitialState,
   setInstructionMode,
   setIsDebugFinished,
@@ -235,6 +276,9 @@ export const {
   setPvmOptions,
   setSelectedPvms,
   setActiveMobileTab,
+  setHostCallsTrace,
+  setPendingHostCall,
+  setAutoContinueOnHostCalls,
 } = debuggerSlice.actions;
 
 export const debuggerSliceListenerMiddleware = createListenerMiddleware();
@@ -280,5 +324,7 @@ export const selectIsDebugFinished = (state: RootState) => state.debugger.isDebu
 export const selectPvmInitialized = (state: RootState) => state.debugger.pvmInitialized;
 export const selectAllAvailablePvms = (state: RootState) => state.debugger.pvmOptions.allAvailablePvms;
 export const selectSelectedPvms = (state: RootState) => state.debugger.pvmOptions.selectedPvm;
+export const selectHostCallsTrace = (state: RootState) => state.debugger.hostCallsTrace;
+export const selectAutoContinueOnHostCalls = (state: RootState) => state.debugger.autoContinueOnHostCalls;
 
 export default debuggerSlice.reducer;

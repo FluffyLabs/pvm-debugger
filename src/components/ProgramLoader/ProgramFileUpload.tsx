@@ -10,7 +10,7 @@ import { Input } from "../ui/input";
 import { loadFileFromUint8Array } from "./loadingUtils";
 
 type ProgramFileUploadProps = {
-  onFileUpload: (val: ProgramUploadFileOutput) => void;
+  onFileUpload: (val: ProgramUploadFileOutput, traceContent?: string) => void;
   setError: (e?: string) => void;
   isError: boolean;
   close?: () => void;
@@ -71,7 +71,11 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
 
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
-    accept: { "application/octet-stream": [".bin", ".pvm", ".jam"], "application/json": [".json"] },
+    accept: {
+      "application/octet-stream": [".bin", ".pvm", ".jam"],
+      "application/json": [".json"],
+      "text/plain": [".log", ".trace"],
+    },
     noClick: true,
   });
 
