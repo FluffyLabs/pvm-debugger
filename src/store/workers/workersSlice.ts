@@ -688,7 +688,7 @@ export const resumeAfterHostCall = createAsyncThunk(
     logger.group(`[resumeAfterHostCall] mode=${mode}, gas=${gas}, memEdits=${memoryEdits?.length ?? 0}`);
     const state = getState() as RootState;
 
-    logger.log("Setting state for all workers...");
+    logger.info("Setting state for all workers...");
     await Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {

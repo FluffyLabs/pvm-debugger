@@ -5,7 +5,7 @@ import { resumeAfterHostCall, readMemoryRange, HostCallResumeMode } from "@/stor
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { getHostCallHandler } from "./handlers";
 import { DefaultHostCallContent, MemoryEdit } from "./DefaultHostCallContent";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_GAS, DEFAULT_REGS, ExpectedState } from "@/types/pvm";
 import { AlertTriangle } from "lucide-react";
 
 const HOST_CALL_NAMES: Record<number, string> = {
@@ -50,12 +50,11 @@ export const HostCallDialog = () => {
 
   const configuredServiceId = useAppSelector((state) => state.debugger.serviceId);
   const pendingHostCall = useAppSelector((state) => state.debugger.pendingHostCall);
-  const pendingHostCallIndex = useAppSelector((state) => state.debugger.nextHostCallIndex);
   const workers = useAppSelector((state) => state.workers);
 
   const firstWorker = workers[0];
-  const currentState = firstWorker?.currentState;
-  const regs = (currentState.regs ?? DEFAULT_REGS) as bigint[];
+  const currentState: ExpectedState | undefined = firstWorker?.currentState;
+  const regs = (currentState?.regs ?? DEFAULT_REGS) as bigint[];
   const traceEntry = pendingHostCall?.entry ?? null;
   const mismatches = pendingHostCall?.mismatches ?? [];
 
@@ -161,9 +160,9 @@ export const HostCallDialog = () => {
   );
 
   // Check for special handler
-  const specialHandler = pendingHostCallIndex !== null ? getHostCallHandler(pendingHostCallIndex) : undefined;
-
-  const hostCallName = getHostCallName(pendingHostCallIndex);
+  const hostCallId = pendingHostCall?.hostCallId ?? 10_000;
+  const specialHandler = getHostCallHandler(hostCallId);
+  const hostCallName = getHostCallName(hostCallId);
 
   return (
     <Dialog open={pendingHostCall !== null}>
@@ -186,9 +185,9 @@ export const HostCallDialog = () => {
         <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
           <span className="font-medium">Host Call:</span>
           <code className="px-2 py-1 bg-background rounded text-sm font-mono">{hostCallName}</code>
-          <span className="text-muted-foreground text-sm">(index: {pendingHostCallIndex ?? "?"})</span>
+          <span className="text-muted-foreground text-sm">(index: {hostCallId})</span>
           {traceEntry && <span className="text-xs text-green-600 dark:text-green-400 ml-2">(trace entry found)</span>}
-          {specialHandler?.hasCustomUI && (
+          {specialHandler?.hasCustomUI && !traceEntry && (
             <button
               className="ml-auto text-xs text-muted-foreground hover:text-foreground underline"
               onClick={() => setUseGenericUI(!useGenericUI)}
@@ -215,8 +214,8 @@ export const HostCallDialog = () => {
           </div>
         )}
 
-        {/* TODO [ToDr] Special handles need to be able to process trace data! */}
-        {specialHandler?.hasCustomUI && !useGenericUI ? (
+        {/* When trace entry is available, always use generic UI to show trace data */}
+        {specialHandler?.hasCustomUI && !useGenericUI && !traceEntry ? (
           <specialHandler.Component
             currentState={currentState}
             isLoading={isLoading}
@@ -234,6 +233,7 @@ export const HostCallDialog = () => {
             onRegsChange={setPendingRegs}
             onGasChange={setPendingGas}
             onMemoryChange={handleManualMemoryChange}
+            traceEntry={traceEntry}
           />
         )}
       </DialogContent>
