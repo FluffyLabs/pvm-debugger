@@ -164,11 +164,12 @@ export const TraceConfigDialog = ({ open, onOpenChange }: TraceConfigDialogProps
               <div className="flex items-center gap-2">
                 <Switch
                   id="auto-continue"
+                  variant={!autoContinue ? "secondary" : undefined}
                   checked={autoContinue}
                   onCheckedChange={(checked: boolean) => dispatch(setAutoContinueOnHostCalls(checked))}
                 />
                 <Label htmlFor="auto-continue" className="text-sm cursor-pointer">
-                  Auto-continue on host calls
+                  Break only on trace mismatch
                 </Label>
               </div>
             </div>
