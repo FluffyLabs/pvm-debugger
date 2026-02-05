@@ -251,6 +251,10 @@ const debuggerSlice = createSlice({
     setAutoContinueOnHostCalls(state, action: { payload: boolean }) {
       state.autoContinueOnHostCalls = action.payload;
     },
+    resetHostCallIndex(state) {
+      state.nextHostCallIndex = 0;
+      state.pendingHostCall = null;
+    },
   },
 });
 
@@ -279,6 +283,7 @@ export const {
   setHostCallsTrace,
   setPendingHostCall,
   setAutoContinueOnHostCalls,
+  resetHostCallIndex,
 } = debuggerSlice.actions;
 
 export const debuggerSliceListenerMiddleware = createListenerMiddleware();

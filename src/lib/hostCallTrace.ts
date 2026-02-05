@@ -692,6 +692,33 @@ export function findHostCallEntry(
 }
 
 /**
+ * Serialize a single host call entry to its textual format
+ */
+export function serializeHostCallEntry(hc: HostCallEntry): string {
+  const lines: string[] = [];
+
+  lines.push(formatEcalli(hc));
+
+  for (const mr of hc.memoryReads) {
+    lines.push(formatMemread(mr));
+  }
+
+  for (const mw of hc.memoryWrites) {
+    lines.push(formatMemwrite(mw));
+  }
+
+  for (const rw of hc.registerWrites) {
+    lines.push(formatSetreg(rw));
+  }
+
+  if (hc.gasAfter !== null) {
+    lines.push(`setgas <- ${hc.gasAfter}`);
+  }
+
+  return lines.join("\n");
+}
+
+/**
  * Validate trace content and return errors
  */
 export function validateTrace(content: string): TraceParseError[] {

@@ -113,27 +113,6 @@ export const loadWorker = createAsyncThunk(
   },
 );
 
-export const setAllWorkersServiceId = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
-  const state = getState() as RootState;
-  const debuggerState = state.debugger;
-  const serviceId = debuggerState.serviceId;
-
-  if (serviceId === null) {
-    throw new Error("Service id is not set");
-  }
-
-  return Promise.all(
-    state.workers.map(async (worker) => {
-      await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.SET_SERVICE_ID,
-        payload: {
-          serviceId,
-        },
-      });
-    }),
-  );
-});
-
 export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
   const debuggerState = state.debugger;
@@ -179,6 +158,12 @@ export const loadMemoryChunkAllWorkers = createAsyncThunk(
   ) => {
     const state = getState() as RootState;
 
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("loadMemoryChunkAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
+
     return Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
@@ -209,6 +194,12 @@ export const refreshPageAllWorkers = createAsyncThunk(
   "workers/refreshPageAllWorkers",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
+
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("refreshPageAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
 
     return Promise.all(
       state.workers.map(async (worker) => {
@@ -249,8 +240,11 @@ export const handleHostCall = createAsyncThunk(
   "workers/handleHostCall",
   async ({ workerId }: { workerId?: string }, { getState, dispatch }) => {
     const state = getState() as RootState;
+    const workerState = state.workers.filter(({ id }) => {
+      return workerId ? workerId === id : true;
+    })[0];
 
-    const exitArg = state.workers[0]?.exitArg ?? -1;
+    const exitArg = workerState?.exitArg ?? -1;
     const trace = state.debugger.hostCallsTrace;
     const nextHostCallIndex = state.debugger.nextHostCallIndex;
     const autoContinue = state.debugger.autoContinueOnHostCalls;
@@ -274,8 +268,7 @@ export const handleHostCall = createAsyncThunk(
       openDialog(exitArg, null);
       return;
     }
-
-    const currentState = state.workers[0]?.currentState;
+    const currentState = workerState?.currentState;
     const pc = currentState?.pc ?? 0;
     const gas = currentState?.gas ?? 0n;
     const regs = (currentState?.regs ?? []) as bigint[];
@@ -345,6 +338,7 @@ export const handleHostCall = createAsyncThunk(
     );
 
     logger.info("  [handleHostCall] Done - returning without opening dialog");
+    dispatch(runAllWorkers());
     return;
   },
 );
@@ -420,6 +414,7 @@ export const stepAllWorkers = createAsyncThunk(
       return;
     }
 
+    let shouldOpenHostCalls;
     const responses = await Promise.all(
       state.workers.map(async (worker) => {
         const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
@@ -460,7 +455,7 @@ export const stepAllWorkers = createAsyncThunk(
         if (state.status === Status.HOST) {
           logger.group(`[HOST CALL] PVM stopped at pc=${state.pc}, exitArg=${exitArg}`);
           dispatch(setIsRunMode(false));
-          await dispatch(handleHostCall({ workerId: worker.id })).unwrap();
+          shouldOpenHostCalls = true;
           logger.groupEnd();
         }
 
@@ -472,6 +467,11 @@ export const stepAllWorkers = createAsyncThunk(
         };
       }),
     );
+
+    // we wait for all of the workers to reach the host call before handling it
+    if (shouldOpenHostCalls) {
+      await dispatch(handleHostCall({})).unwrap();
+    }
 
     const allFinished = responses.every((response) => response.isFinished);
 
@@ -502,6 +502,12 @@ export const refreshMemoryRangeAllWorkers = createAsyncThunk(
   "workers/refreshAllMemoryRanges",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
+
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("refreshMemoryRangeAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
 
     await Promise.all(
       state.workers.map(async (worker) => {
@@ -542,6 +548,13 @@ export const loadMemoryRangeAllWorkers = createAsyncThunk(
     { getState, dispatch },
   ) => {
     const state = getState() as RootState;
+
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("loadMemoryRangeAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
+
     const stopAddress = startAddress + length;
 
     return Promise.all(
@@ -649,6 +662,13 @@ export const readMemoryRange = createAsyncThunk(
   "workers/readMemoryRange",
   async ({ startAddress, length }: { startAddress: number; length: number }, { getState }) => {
     const state = getState() as RootState;
+
+    // Guard: return empty array if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("readMemoryRange: skipping - no workers or PVM not initialized");
+      return new Uint8Array(length);
+    }
+
     const worker = state.workers[0];
 
     if (!worker) {
@@ -704,8 +724,8 @@ export const resumeAfterHostCall = createAsyncThunk(
       }),
     );
 
+    logger.info(`Writing ${memoryEdits?.length} memory edits...`);
     if (memoryEdits && memoryEdits.length > 0) {
-      logger.info(`Writing ${memoryEdits.length} memory edits...`);
       await Promise.all(
         state.workers.map(async (worker) => {
           for (const memory of memoryEdits) {

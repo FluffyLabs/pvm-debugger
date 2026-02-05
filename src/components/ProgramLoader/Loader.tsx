@@ -5,7 +5,7 @@ import { ProgramUploadFileOutput } from "./types";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
 import { setIsProgramEditMode, setSpiArgs, setServiceId, setHostCallsTrace } from "@/store/debugger/debuggerSlice.ts";
-import { selectIsAnyWorkerLoading, setAllWorkersServiceId } from "@/store/workers/workersSlice";
+import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { ProgramFileUpload } from "@/components/ProgramLoader/ProgramFileUpload.tsx";
 import { useNavigate } from "react-router";
@@ -134,7 +134,6 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
               break;
           }
           dispatch(setServiceId(serviceId));
-          await dispatch(setAllWorkersServiceId()).unwrap();
 
           // Update the initial state with the correct PC for the entrypoint
           const pc = parseInt(manualPc, 10) || 0;

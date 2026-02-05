@@ -28,36 +28,29 @@ interface DefaultHostCallContentProps {
   onGasChange: (gas: bigint) => void;
   onMemoryChange: (memory: MemoryEdit | null) => void;
   onResume: (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint) => void;
+  onRestart?: () => void;
   traceEntry?: HostCallEntry | null;
+  hostCallId?: number;
 }
 
-/**
- * Serialize a HostCallEntry to JSON, handling Map and Uint8Array types
- */
-function serializeTraceEntry(entry: HostCallEntry): string {
-  const replacer = (_key: string, value: unknown) => {
-    if (value instanceof Map) {
-      const obj: Record<string, unknown> = {};
-      for (const [k, v] of value) {
-        obj[String(k)] = typeof v === "bigint" ? `0x${v.toString(16)}` : v;
-      }
-      return obj;
-    }
-    if (value instanceof Uint8Array) {
-      return (
-        "0x" +
-        Array.from(value)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("")
-      );
-    }
-    if (typeof value === "bigint") {
-      return `0x${value.toString(16)}`;
-    }
-    return value;
-  };
-  return JSON.stringify(entry, replacer, 2);
-}
+// Log level styles (matches LogHostCall.tsx)
+const LOG_LEVEL_STYLES: Record<number, string> = {
+  0: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300", // ERROR
+  1: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300", // WARNING
+  2: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300", // INFO
+  3: "bg-gray-100 text-gray-800 dark:bg-gray-800/50 dark:text-gray-300", // DEBUG
+  4: "bg-gray-100 text-gray-600 dark:bg-gray-800/30 dark:text-gray-400", // NIT
+};
+
+const LOG_LEVEL_NAMES: Record<number, string> = {
+  0: "ERROR",
+  1: "WARNING",
+  2: "INFO",
+  3: "DEBUG",
+  4: "NIT",
+};
+
+const decoder = new TextDecoder("utf8");
 
 export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
   currentState,
@@ -66,9 +59,11 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
   readMemory,
   onRegsChange,
   onResume,
+  onRestart,
   onGasChange,
   onMemoryChange,
   traceEntry,
+  hostCallId,
 }) => {
   // Local state for editable values
   const [regs, setRegs] = useState<bigint[]>([...DEFAULT_REGS]);
@@ -77,6 +72,12 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
   // Original values to track modifications
   const [originalRegs, setOriginalRegs] = useState<bigint[]>([...DEFAULT_REGS]);
   const [originalGas, setOriginalGas] = useState<bigint>(0n);
+
+  // Log message state (for log host call)
+  const [logTarget, setLogTarget] = useState<string>("");
+  const [logMessage, setLogMessage] = useState<string>("");
+  const [logLevel, setLogLevel] = useState<number>(2);
+  const [isLoadingLog, setIsLoadingLog] = useState(false);
 
   // Initialize local state when currentState changes
   useEffect(() => {
@@ -107,8 +108,54 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
     }
   }, [currentState, traceEntry, onRegsChange, onGasChange]);
 
+  // Load log message when this is a log host call (index 100)
+  useEffect(() => {
+    if (hostCallId !== 100 || !currentState?.regs) {
+      setLogTarget("");
+      setLogMessage("");
+      return;
+    }
+
+    const loadLogMessage = async () => {
+      setIsLoadingLog(true);
+      try {
+        const currentRegs = currentState.regs ?? DEFAULT_REGS;
+        const level = Number(currentRegs[7] ?? 0n);
+        const targetStart = Number(currentRegs[8] ?? 0n);
+        const targetLength = Number(currentRegs[9] ?? 0n);
+        const msgStart = Number(currentRegs[10] ?? 0n);
+        const msgLength = Number(currentRegs[11] ?? 0n);
+
+        setLogLevel(level);
+
+        // Read target string from memory
+        if (targetStart !== 0 && targetLength > 0) {
+          const targetBytes = await readMemory(targetStart, targetLength);
+          setLogTarget(decoder.decode(targetBytes));
+        } else {
+          setLogTarget("");
+        }
+
+        // Read message string from memory
+        if (msgLength > 0) {
+          const msgBytes = await readMemory(msgStart, msgLength);
+          setLogMessage(decoder.decode(msgBytes));
+        } else {
+          setLogMessage("");
+        }
+      } catch (e) {
+        console.error("Failed to read log message:", e);
+      } finally {
+        setIsLoadingLog(false);
+      }
+    };
+
+    loadLogMessage();
+  }, [hostCallId, currentState?.regs, readMemory]);
+
   // Check if a value has been modified from original
-  const isGasModified = gas !== originalGas;
+  // Gas is considered modified if trace provides gasAfter OR user changed it
+  const isGasModified = traceEntry?.gasAfter != null || gas !== originalGas;
   const isRegisterModified = (index: number) => regs[index] !== originalRegs[index];
 
   const handleRegisterChange = (index: number, value: string) => {
@@ -201,35 +248,39 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
     </div>
   );
 
+  // Log message display component
+  const logMessageDisplay = hostCallId === 100 && (
+    <div className="p-3 bg-muted rounded-md space-y-2">
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-sm">Log:</span>
+        <span className={`px-2 py-0.5 rounded text-xs font-mono ${LOG_LEVEL_STYLES[logLevel] ?? LOG_LEVEL_STYLES[2]}`}>
+          {LOG_LEVEL_NAMES[logLevel] ?? `UNKNOWN(${logLevel})`}
+        </span>
+        {logTarget && <span className="text-xs text-muted-foreground">[{logTarget}]</span>}
+      </div>
+      {isLoadingLog ? (
+        <div className="text-sm text-muted-foreground">Loading message...</div>
+      ) : (
+        <div className="p-2 bg-background rounded font-mono text-sm whitespace-pre-wrap break-all">
+          {logMessage || <span className="text-muted-foreground">(empty)</span>}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       <div className="space-y-4 flex-1 overflow-y-auto p-2">
-        {traceEntry ? (
-          // When trace entry is present: two-pane layout with trace on the right
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Left pane: Registers and Memory stacked vertically */}
-            <div className="space-y-4">
-              {gasAndRegisters}
-              {memoryEditor}
-            </div>
+        {/* Log message for log host call */}
+        {logMessageDisplay}
 
-            {/* Right pane: Trace Entry */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Trace Entry (JSON)</label>
-              <pre className="p-3 bg-muted rounded-md text-xs font-mono overflow-auto max-h-[60vh]">
-                {serializeTraceEntry(traceEntry)}
-              </pre>
-            </div>
-          </div>
-        ) : (
-          // Default layout: two-column with registers left, memory right (2x width)
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-1">{gasAndRegisters}</div>
-            <div className="md:col-span-2">{memoryEditor}</div>
-          </div>
-        )}
+        {/* Two-column layout: registers left, memory right (always) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-1">{gasAndRegisters}</div>
+          <div className="md:col-span-2">{memoryEditor}</div>
+        </div>
       </div>
-      <HostCallActionButtons onResume={onResume} disabled={isLoading} />
+      <HostCallActionButtons onResume={onResume} onRestart={onRestart} disabled={isLoading} />
     </>
   );
 };

@@ -11,7 +11,6 @@ import {
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { valueToNumeralSystem } from "../Instructions/utils";
 import { useContext, useState } from "react";
-import { setAllWorkersServiceId } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { logger } from "@/utils/loggerService";
 import { ToggleDarkMode } from "@/packages/ui-kit/DarkMode/ToggleDarkMode";
@@ -61,7 +60,6 @@ export const DebuggerSettingsContent = () => {
     setError("");
     try {
       dispatch(setServiceId(newServiceId));
-      await dispatch(setAllWorkersServiceId()).unwrap();
     } catch (e) {
       if (e instanceof Error || isSerializedError(e)) {
         setError(e.message);
@@ -213,7 +211,6 @@ export const DebuggerSettingsContent = () => {
           // Update service ID if it changed
           try {
             dispatch(setServiceId(serviceId));
-            await dispatch(setAllWorkersServiceId()).unwrap();
           } catch (e) {
             if (e instanceof Error || isSerializedError(e)) {
               setError(e.message);

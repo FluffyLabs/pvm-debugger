@@ -168,7 +168,7 @@ export const DebuggerControlls = () => {
         disabled={!pvmInitialized || isProgramEditMode}
       >
         <RefreshCcw className="w-3.5 md:mr-1.5" />
-        <span className="hidden md:block">Reset</span>
+        <span className="hidden md:block">Restart</span>
       </Button>
       <Separator className="h-[36px] sm:h-full" orientation="vertical" />
       {!isDebugFinished && isRunMode ? (
