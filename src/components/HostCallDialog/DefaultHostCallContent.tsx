@@ -5,7 +5,7 @@ import { DEFAULT_GAS, DEFAULT_REGS, ExpectedState, RegistersArray } from "@/type
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { MemoryEditor } from "./MemoryEditor";
 import { HostCallActionButtons } from "./handlers/HostCallActionButtons";
-import { HostCallEntry } from "@/lib/hostCallTrace";
+import { HostCallEntry } from "@/lib/host-call-trace";
 
 // Re-export for convenience
 export type { MemoryEdit } from "@/store/workers/workersSlice";

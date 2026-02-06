@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseTrace, getTraceSummary } from "./hostCallTrace";
+import { parseTrace, getTraceSummary } from "./host-call-trace";
 import * as fs from "fs";
 import * as path from "path";
 

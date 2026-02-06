@@ -8,7 +8,7 @@ import {
   setIsStepMode,
   setPendingHostCall,
 } from "@/store/debugger/debuggerSlice.ts";
-import { findHostCallEntry, HostCallEntry, StateMismatch } from "@/lib/hostCallTrace";
+import { findHostCallEntry, HostCallEntry, StateMismatch } from "@/lib/host-call-trace";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
@@ -338,7 +338,8 @@ export const handleHostCall = createAsyncThunk(
     );
 
     logger.info("  [handleHostCall] Done - returning without opening dialog");
-    dispatch(runAllWorkers());
+    // Advance host call index for all workers and await resuming execution
+    await dispatch(runAllWorkers()).unwrap();
     return;
   },
 );
@@ -776,17 +777,14 @@ export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id
     return;
   }
 
-  await Promise.all(
-    state.workers.map(async (worker) => {
-      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.UNLOAD,
-      });
+  // Send UNLOAD only to the specific worker being destroyed
+  const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+    command: Commands.UNLOAD,
+  });
 
-      if (hasCommandStatusError(data)) {
-        throw data.error;
-      }
-    }),
-  );
+  if (hasCommandStatusError(data)) {
+    throw data.error;
+  }
 
   worker.worker.terminate();
 

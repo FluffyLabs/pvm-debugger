@@ -25,6 +25,7 @@ export const HostCallActionButtons: React.FC<HostCallActionButtonsProps> = ({ on
     <div className="flex items-center pt-2">
       {onRestart && (
         <button
+          type="button"
           className="text-sm text-muted-foreground hover:text-foreground hover:underline disabled:opacity-50"
           onClick={onRestart}
           disabled={disabled}

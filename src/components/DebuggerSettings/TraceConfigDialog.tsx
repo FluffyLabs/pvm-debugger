@@ -9,7 +9,7 @@ import {
   selectHostCallsTrace,
   selectAutoContinueOnHostCalls,
 } from "@/store/debugger/debuggerSlice";
-import { validateTrace, getTraceSummary, parseTrace } from "@/lib/hostCallTrace";
+import { validateTrace, getTraceSummary, parseTrace } from "@/lib/host-call-trace";
 import CodeMirror from "@uiw/react-codemirror";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 import classNames from "classnames";

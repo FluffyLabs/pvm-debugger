@@ -79,7 +79,7 @@ export const useDebuggerActions = () => {
       dispatch(resetHostCallIndex());
 
       // Save memory ranges before destroying workers
-      const memoryRanges = workers[0]?.memoryRanges;
+      const memoryRanges = workers[0]?.memoryRanges ?? [];
 
       // Destroy all existing workers to clear message listeners
       await Promise.all(workers.map((worker: WorkerState) => dispatch(destroyWorker(worker.id)).unwrap()));
@@ -88,8 +88,10 @@ export const useDebuggerActions = () => {
       const selectedPvmConfigs = pvmOptions.allAvailablePvms.filter((pvm) => pvmOptions.selectedPvm.includes(pvm.id));
       await Promise.all(selectedPvmConfigs.map(recreateWorker));
 
-      // Restore memory ranges and initialize
-      await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      // Restore memory ranges and initialize (only if there are memory ranges)
+      if (memoryRanges.length > 0) {
+        await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      }
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
       await dispatch(initAllWorkers()).unwrap();
@@ -174,12 +176,15 @@ export const useDebuggerActions = () => {
     async (selectedPvms: SelectedPvmWithPayload[]) => {
       logger.debug("selectedPvms vs workers ", selectedPvms, workers);
 
-      const memoryRanges = workers[0]?.memoryRanges;
+      const memoryRanges = workers[0]?.memoryRanges ?? [];
 
       // Destroy all existing workers
       await Promise.all(workers.map((worker: WorkerState) => dispatch(destroyWorker(worker.id)).unwrap()));
 
-      await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      // Restore memory ranges only if there are any
+      if (memoryRanges.length > 0) {
+        await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      }
       await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
       await restartProgram(initialState);
       dispatch(setPvmLoaded(true));

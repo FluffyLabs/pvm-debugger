@@ -22,7 +22,7 @@ import {
 } from "./EntrypointSelector";
 import { loadSpiConfig, saveSpiConfig } from "./spiConfig";
 import { encodeRefineParams, encodeAccumulateParams, encodeIsAuthorizedParams } from "./spiEncoding";
-import { getTraceSummary, parseTrace } from "@/lib/hostCallTrace";
+import { getTraceSummary, parseTrace } from "@/lib/host-call-trace";
 
 type LoaderStep = "upload" | "entrypoint";
 
@@ -64,9 +64,15 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   const handleFileUpload = useCallback((output: ProgramUploadFileOutput, trace?: string) => {
     setProgramLoad(output);
     if (trace) {
-      setTraceContent(trace);
-      const parsed = parseTrace(trace);
-      setTraceSummary(getTraceSummary(parsed));
+      try {
+        setTraceContent(trace);
+        const parsed = parseTrace(trace);
+        setTraceSummary(getTraceSummary(parsed));
+      } catch (e) {
+        console.error("Failed to parse trace:", e);
+        setTraceContent(null);
+        setTraceSummary(null);
+      }
     } else {
       setTraceContent(null);
       setTraceSummary(null);

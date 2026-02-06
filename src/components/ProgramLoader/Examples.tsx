@@ -5,7 +5,7 @@ import { programs } from "./examplePrograms";
 import { useState } from "react";
 import doomUrl from "./doom.bin?url";
 import golUrl from "./gol.jam?url";
-import { loadFileFromUint8Array } from "./loadingUtils";
+import { loadFileFromUint8Array } from "./loading-utils";
 import { useAppSelector } from "@/store/hooks";
 
 export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {

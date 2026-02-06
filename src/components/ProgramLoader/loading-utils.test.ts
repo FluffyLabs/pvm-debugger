@@ -15,7 +15,7 @@ describe("loadingUtils", () => {
       const content = fs.readFileSync(tracePath);
       const uint8Array = new Uint8Array(content);
 
-      const { loadFileFromUint8Array } = await import("./loadingUtils");
+      const { loadFileFromUint8Array } = await import("./loading-utils");
 
       const setError = vi.fn();
       const onFileUpload = vi.fn();

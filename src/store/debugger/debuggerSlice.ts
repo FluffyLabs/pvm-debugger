@@ -13,7 +13,7 @@ import { RootState } from "@/store";
 import { SelectedPvmWithPayload } from "@/components/PvmSelect";
 import { PvmTypes } from "@/packages/web-worker/types.ts";
 import { logger } from "@/utils/loggerService.tsx";
-import { HostCallEntry, ParsedTrace, parseTrace, StateMismatch } from "@/lib/hostCallTrace";
+import { HostCallEntry, ParsedTrace, parseTrace, StateMismatch, validateTrace } from "@/lib/host-call-trace";
 
 export type UiRefreshMode = "instructions" | "block";
 
@@ -225,7 +225,18 @@ const debuggerSlice = createSlice({
     setHostCallsTrace(state, action: { payload: string | null }) {
       if (action.payload === null || action.payload.trim() === "") {
         state.hostCallsTrace = null;
+        // reset host call index and pending state when clearing trace
+        state.nextHostCallIndex = 0;
+        state.pendingHostCall = null;
       } else {
+        // Validate trace before parsing
+        const validationErrors = validateTrace(action.payload);
+        if (validationErrors.length > 0) {
+          console.error("Trace validation errors:", validationErrors);
+          // Don't set invalid trace - keep existing state or set to null
+          return;
+        }
+
         const parsed = parseTrace(action.payload);
         state.hostCallsTrace = {
           rawContent: action.payload,

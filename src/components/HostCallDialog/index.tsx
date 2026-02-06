@@ -7,7 +7,7 @@ import { getHostCallHandler } from "./handlers";
 import { DefaultHostCallContent, MemoryEdit } from "./DefaultHostCallContent";
 import { DEFAULT_GAS, DEFAULT_REGS, ExpectedState } from "@/types/pvm";
 import { AlertTriangle } from "lucide-react";
-import { serializeHostCallEntry } from "@/lib/hostCallTrace";
+import { serializeHostCallEntry } from "@/lib/host-call-trace";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 
 const HOST_CALL_NAMES: Record<number, string> = {
@@ -103,8 +103,8 @@ export const HostCallDialog = () => {
       setIsLoading(true);
       try {
         // Use provided values or fall back to pending/current state
-        const finalRegs = pendingRegs ?? currentState.regs ?? DEFAULT_REGS;
-        const currentGas = currentState.gas ?? DEFAULT_GAS;
+        const finalRegs = pendingRegs ?? currentState?.regs ?? DEFAULT_REGS;
+        const currentGas = currentState?.gas ?? DEFAULT_GAS;
         const finalGas = pendingGas ?? (currentGas > 10n ? currentGas - 10n : 0n);
 
         await dispatch(

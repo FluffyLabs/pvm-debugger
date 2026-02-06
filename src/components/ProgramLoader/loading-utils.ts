@@ -5,7 +5,7 @@ import { type ZodSafeParseResult, z } from "zod";
 import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils.ts";
 import { decodeSpiWithMetadata } from "@/utils/spi";
 import { ProgramUploadFileInput, ProgramUploadFileOutput } from "./types";
-import { parseTrace } from "@/lib/hostCallTrace";
+import { parseTrace } from "@/lib/host-call-trace";
 
 export interface LoadFileResult {
   output: ProgramUploadFileOutput;
@@ -45,6 +45,8 @@ const validateJsonTestCaseSchema = (json: RawProgramUploadFileInput): Validation
   return schema.safeParse(json);
 };
 
+const MAX_SPI_ARGS_SIZE = 16 * 1024 * 1024; // 16 MiB
+
 function buildSpiArgsFromMemoryWrites(memoryWrites: { address: number; data: Uint8Array }[]): Uint8Array {
   if (memoryWrites.length === 0) {
     return new Uint8Array();
@@ -55,6 +57,10 @@ function buildSpiArgsFromMemoryWrites(memoryWrites: { address: number; data: Uin
   const lastWrite = sorted[sorted.length - 1];
   const lastAddr = lastWrite.address + lastWrite.data.length;
   const totalSize = lastAddr - firstAddr;
+
+  if (totalSize > MAX_SPI_ARGS_SIZE) {
+    throw new Error(`Trace memory span too large: ${totalSize} bytes (max: ${MAX_SPI_ARGS_SIZE})`);
+  }
 
   const result = new Uint8Array(totalSize);
   for (const mw of sorted) {
@@ -68,6 +74,12 @@ function buildSpiArgsFromMemoryWrites(memoryWrites: { address: number; data: Uin
 function tryParseTraceFile(content: string, fileName: string, initialState: ExpectedState): LoadFileResult | null {
   const trace = parseTrace(content);
 
+  // Reject traces with parse errors
+  if (trace.errors.length > 0) {
+    console.warn("Trace parse errors:", trace.errors);
+    return null;
+  }
+
   if (!trace.prelude.program) {
     return null;
   }
@@ -80,7 +92,13 @@ function tryParseTraceFile(content: string, fileName: string, initialState: Expe
     return null;
   }
 
-  const spiArgs = buildSpiArgsFromMemoryWrites(trace.prelude.initialMemoryWrites);
+  let spiArgs: Uint8Array;
+  try {
+    spiArgs = buildSpiArgsFromMemoryWrites(trace.prelude.initialMemoryWrites);
+  } catch (e) {
+    console.warn("Trace memory span too large for SPI args:", e);
+    return null;
+  }
 
   let spi = null;
   try {
@@ -131,12 +149,24 @@ function tryParseTraceFile(content: string, fileName: string, initialState: Expe
       contents: Array.from(mw.data),
     }));
 
-    const pageMap: PageMapItem[] = memory.map((chunk) => ({
-      address: chunk.address & ~0xfff,
-      length: 4096,
-      "is-writable": true,
-    }));
+    // Generate pageMap entries for all pages spanned by memory chunks
+    const pageMap: PageMapItem[] = memory.flatMap((chunk) => {
+      const startPage = Math.floor(chunk.address / 4096);
+      const endAddr = chunk.address + chunk.contents.length;
+      const endPage = Math.floor((endAddr - 1) / 4096);
 
+      const pages: PageMapItem[] = [];
+      for (let pageIdx = startPage; pageIdx <= endPage; pageIdx++) {
+        pages.push({
+          address: pageIdx * 4096,
+          length: 4096,
+          "is-writable": true,
+        });
+      }
+      return pages;
+    });
+
+    // Remove duplicate pages (same address)
     const uniquePageMap = pageMap.filter(
       (item, index, self) => self.findIndex((t) => t.address === item.address) === index,
     );

@@ -7,7 +7,7 @@ import { UploadCloud } from "lucide-react";
 import { Button } from "../ui/button";
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "../ui/input";
-import { loadFileFromUint8Array } from "./loadingUtils";
+import { loadFileFromUint8Array } from "./loading-utils";
 
 type ProgramFileUploadProps = {
   onFileUpload: (val: ProgramUploadFileOutput, traceContent?: string) => void;

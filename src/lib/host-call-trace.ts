@@ -211,10 +211,21 @@ function parseMemreadLine(line: string): MemoryRead | null {
   if (!match) return null;
 
   const [, addrHex, lenStr, dataHex] = match;
+  const address = parseAddress(addrHex);
+  const length = parseInt(lenStr, 10);
+  const data = parseHexBytes(dataHex);
+
+  // Validate that data length matches declared length
+  if (data.length !== length) {
+    throw new Error(
+      `memread length mismatch at 0x${address.toString(16)}: declared len=${length}, actual data length=${data.length}`,
+    );
+  }
+
   return {
-    address: parseAddress(addrHex),
-    length: parseInt(lenStr, 10),
-    data: parseHexBytes(dataHex),
+    address,
+    length,
+    data,
   };
 }
 
@@ -227,10 +238,21 @@ function parseMemwriteLine(line: string): MemoryWrite | null {
   if (!match) return null;
 
   const [, addrHex, lenStr, dataHex] = match;
+  const address = parseAddress(addrHex);
+  const length = parseInt(lenStr, 10);
+  const data = parseHexBytes(dataHex);
+
+  // Validate that data length matches declared length
+  if (data.length !== length) {
+    throw new Error(
+      `memwrite length mismatch at 0x${address.toString(16)}: declared len=${length}, actual data length=${data.length}`,
+    );
+  }
+
   return {
-    address: parseAddress(addrHex),
-    length: parseInt(lenStr, 10),
-    data: parseHexBytes(dataHex),
+    address,
+    length,
+    data,
   };
 }
 
@@ -631,7 +653,10 @@ export function findHostCallEntry(
     return { entry: null, mismatches: [] };
   }
 
-  const entry = matchingEntries[0];
+  // First try to find an entry whose hostCallIndex matches and has acceptable gas
+  const exactMatch = matchingEntries.find((hc) => hc.index === hostCallIndex && hc.gas <= gas);
+  // Use exact match if found, otherwise fall back to the first matching entry
+  const entry = exactMatch ?? matchingEntries[0];
   const mismatches: StateMismatch[] = [];
 
   // Check PC

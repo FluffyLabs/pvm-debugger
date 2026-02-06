@@ -67,7 +67,11 @@ export const Links = () => {
       </li>
       <li>
         <div className="flex gap-2 text-[11px] mt-3">
-          <a href="https://github.com/polkadot-fellows/JIPs/blob/main/JIP-6.md" target="_blank">
+          <a
+            href="https://github.com/polkadot-fellows/JIPs/blob/main/JIP-6.md"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <ExternalLink className="inline w-4 mb-1 mr-2 text-brand-dark dark:text-brand" />
           </a>
           <div>
@@ -78,6 +82,7 @@ export const Links = () => {
                 <a
                   className="text-brand-dark dark:text-brand underline"
                   href="https://github.com/polkadot-fellows/JIPs/blob/main/JIP-6.md"
+                  rel="noopener noreferrer"
                 >
                   specification
                 </a>

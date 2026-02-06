@@ -16,8 +16,7 @@ class Logger {
   constructor() {
     if (typeof window !== "undefined") {
       // eslint-disable-next-line no-console
-      console.info(`Logger initialized watch console for logs
-    `);
+      console.info("Logger initialized — watch console for logs.");
     }
   }
 
