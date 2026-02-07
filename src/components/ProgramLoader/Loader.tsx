@@ -223,6 +223,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         {currentStep === "upload" && (
           <>
             <Examples
+              disabled={isLoading}
               onProgramLoad={(val) => {
                 handleFileUpload(val);
                 if (val.spiProgram === null) {
@@ -232,7 +233,12 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
             />
 
             <div className="my-10">
-              <ProgramFileUpload onFileUpload={handleFileUpload} isError={error !== undefined} setError={setError} />
+              <ProgramFileUpload
+                onFileUpload={handleFileUpload}
+                isError={error !== undefined}
+                setError={setError}
+                disabled={isLoading}
+              />
             </div>
             {error && (
               <p className="flex items-top text-destructive-foreground text-[11px] whitespace-pre-line">
@@ -311,7 +317,7 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
           id="load-button"
           data-testid="load-button"
           type="button"
-          disabled={!isProgramLoaded}
+          disabled={!isProgramLoaded || isLoading}
           onClick={currentStep === "entrypoint" ? () => handleLoad() : handleNextStep}
         >
           {currentStep === "entrypoint" || !isSpiProgram || hasTraceWithEntrypoint ? "Load" : "Next"}

@@ -115,17 +115,38 @@ export const loadWorker = createAsyncThunk(
 
 export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  const debuggerState = state.debugger;
+  const { program, initialState, spiProgram, spiArgs } = state.debugger;
 
-  return Promise.all(
-    state.workers.map(async (worker) => {
+  if (state.workers.length === 0) {
+    logger.warn("initAllWorkers: No workers to initialize. Waiting...");
+    // Retry a few times in case workers are being created
+    for (let i = 0; i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+      const newState = getState() as RootState;
+      if (newState.workers.length > 0) {
+        break;
+      }
+    }
+    const finalState = getState() as RootState;
+    if (finalState.workers.length === 0) {
+      logger.warn("initAllWorkers: Still no workers after wait. Aborting.");
+      return;
+    }
+  }
+
+  // Refresh state after wait
+  const currentState = getState() as RootState;
+  const currentWorkers = currentState.workers;
+
+  await Promise.all(
+    currentWorkers.map(async (worker) => {
       const initData = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.INIT,
         payload: {
-          spiProgram: state.debugger.spiProgram,
-          spiArgs: state.debugger.spiArgs,
-          initialState: debuggerState.initialState,
-          program: new Uint8Array(debuggerState.program),
+          spiProgram: spiProgram,
+          spiArgs: spiArgs || new Uint8Array(),
+          initialState: initialState,
+          program: new Uint8Array(program),
         },
       });
 
@@ -778,12 +799,16 @@ export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id
   }
 
   // Send UNLOAD only to the specific worker being destroyed
-  const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
-    command: Commands.UNLOAD,
-  });
+  try {
+    const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+      command: Commands.UNLOAD,
+    });
 
-  if (hasCommandStatusError(data)) {
-    throw data.error;
+    if (hasCommandStatusError(data)) {
+      console.warn(`Worker ${id} UNLOAD error:`, data.error);
+    }
+  } catch (e) {
+    console.warn(`Failed to send UNLOAD to worker ${id}:`, e);
   }
 
   worker.worker.terminate();

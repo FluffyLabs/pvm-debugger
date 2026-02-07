@@ -28,6 +28,7 @@ export const DebuggerControlls = () => {
   const workers = useAppSelector((state) => state.workers);
   const isLoading = useAppSelector(selectIsAnyWorkerLoading);
   const dispatch = useAppDispatch();
+  const noWorkers = workers.length === 0;
 
   const currentInstruction = programPreviewResult.find((x) => x.address === workers[0]?.currentPc);
 
@@ -156,6 +157,7 @@ export const DebuggerControlls = () => {
           onOpen={() => {
             setError(undefined);
           }}
+          disabled={!pvmInitialized || isProgramEditMode || isLoading || noWorkers}
         />
       </div>
       <Button
@@ -181,7 +183,7 @@ export const DebuggerControlls = () => {
           className="md:mr-3"
           variant="secondary"
           onClick={handleRunProgram}
-          disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error}
+          disabled={isDebugFinished || !pvmInitialized || isProgramEditMode || isLoading || !!error || noWorkers}
         >
           {isLoading ? <LoadingSpinner className="w-3.5 md:mr-1.5" size={20} /> : <Play className="w-3.5 md:mr-1.5" />}
           <span className="hidden md:block">Run</span>
@@ -197,7 +199,8 @@ export const DebuggerControlls = () => {
           !pvmInitialized ||
           isProgramEditMode ||
           isLoading ||
-          !!error
+          !!error ||
+          noWorkers
         }
       >
         {isLoading ? (
@@ -217,7 +220,8 @@ export const DebuggerControlls = () => {
           !pvmInitialized ||
           isProgramEditMode ||
           isLoading ||
-          !!error
+          !!error ||
+          noWorkers
         }
       >
         {isLoading ? (

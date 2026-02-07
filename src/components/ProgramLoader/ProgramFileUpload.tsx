@@ -14,9 +14,16 @@ type ProgramFileUploadProps = {
   setError: (e?: string) => void;
   isError: boolean;
   close?: () => void;
+  disabled?: boolean;
 };
 
-export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, onFileUpload, close, setError }) => {
+export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({
+  isError,
+  onFileUpload,
+  close,
+  setError,
+  disabled,
+}) => {
   const initialState = useAppSelector(selectInitialState);
   const spiArgs = useAppSelector((state) => state.debugger.spiArgs);
 
@@ -77,6 +84,7 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
       "text/plain": [".log", ".trace"],
     },
     noClick: true,
+    disabled,
   });
 
   const handleOpen = useCallback(() => {
@@ -96,7 +104,10 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
     <div>
       <div
         {...getRootProps()}
-        className="flex items-center justify-between border-dashed border-2 py-3 px-4 rounded-lg w-full mx-auto space-x-6"
+        className={cn(
+          "flex items-center justify-between border-dashed border-2 py-3 px-4 rounded-lg w-full mx-auto space-x-6",
+          disabled && "opacity-50 cursor-not-allowed",
+        )}
       >
         <div className="flex items-center space-x-2 flex-1">
           {isUpload ? (
@@ -114,16 +125,17 @@ export const ProgramFileUpload: React.FC<ProgramFileUploadProps> = ({ isError, o
               className={cn("flex-auto text-xs", {
                 "focus-visible:ring-red-500 ring-red-500 ring-2": isError,
               })}
+              disabled={disabled}
             />
           )}
         </div>
         <div className="flex space-x-2">
           {isUpload && (
-            <Button className="text-[10px] py-1 h-9" variant="ghost" onClick={setNoUpload}>
+            <Button className="text-[10px] py-1 h-9" variant="ghost" onClick={setNoUpload} disabled={disabled}>
               Paste manually
             </Button>
           )}
-          <Button className="text-[10px] py-1 h-9" variant="outlineBrand" onClick={handleOpen}>
+          <Button className="text-[10px] py-1 h-9" variant="outlineBrand" onClick={handleOpen} disabled={disabled}>
             {isLoaded ? "Change file" : "Upload file"}
           </Button>
         </div>

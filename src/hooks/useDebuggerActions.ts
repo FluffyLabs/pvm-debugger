@@ -181,6 +181,10 @@ export const useDebuggerActions = () => {
       // Destroy all existing workers
       await Promise.all(workers.map((worker: WorkerState) => dispatch(destroyWorker(worker.id)).unwrap()));
 
+      // Recreate workers with the same PVM configurations
+      const selectedPvmConfigs = pvmOptions.allAvailablePvms.filter((pvm) => pvmOptions.selectedPvm.includes(pvm.id));
+      await Promise.all(selectedPvmConfigs.map(recreateWorker));
+
       // Restore memory ranges only if there are any
       if (memoryRanges.length > 0) {
         await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
@@ -189,7 +193,7 @@ export const useDebuggerActions = () => {
       await restartProgram(initialState);
       dispatch(setPvmLoaded(true));
     },
-    [dispatch, initialState, restartProgram, workers],
+    [dispatch, initialState, restartProgram, workers, pvmOptions, recreateWorker],
   );
 
   return {
