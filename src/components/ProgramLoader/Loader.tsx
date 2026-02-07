@@ -4,14 +4,14 @@ import { useState, useCallback, useEffect } from "react";
 import { ProgramUploadFileOutput } from "./types";
 import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
-import { setIsProgramEditMode, setSpiArgs, setServiceId } from "@/store/debugger/debuggerSlice.ts";
-import { selectIsAnyWorkerLoading, setAllWorkersServiceId } from "@/store/workers/workersSlice";
+import { setIsProgramEditMode, setSpiArgs, setServiceId, setHostCallsTrace } from "@/store/debugger/debuggerSlice.ts";
+import { selectIsAnyWorkerLoading } from "@/store/workers/workersSlice";
 import { isSerializedError } from "@/store/utils";
 import { ProgramFileUpload } from "@/components/ProgramLoader/ProgramFileUpload.tsx";
 import { useNavigate } from "react-router";
 import { Links } from "./Links";
 import { Separator } from "../ui/separator";
-import { TriangleAlert } from "lucide-react";
+import { TriangleAlert, FileText } from "lucide-react";
 import { bytes } from "@typeberry/lib";
 import {
   EntrypointSelector,
@@ -22,6 +22,7 @@ import {
 } from "./EntrypointSelector";
 import { loadSpiConfig, saveSpiConfig } from "./spiConfig";
 import { encodeRefineParams, encodeAccumulateParams, encodeIsAuthorizedParams } from "./spiEncoding";
+import { getTraceSummary, parseTrace } from "@/lib/host-call-trace";
 
 type LoaderStep = "upload" | "entrypoint";
 
@@ -30,6 +31,8 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   const [programLoad, setProgramLoad] = useState<ProgramUploadFileOutput>();
   const [error, setError] = useState<string>();
   const [currentStep, setCurrentStep] = useState<LoaderStep>("upload");
+  const [traceContent, setTraceContent] = useState<string | null>(null);
+  const [traceSummary, setTraceSummary] = useState<ReturnType<typeof getTraceSummary> | null>(null);
 
   // Load saved config once on mount
   const savedConfig = loadSpiConfig();
@@ -57,6 +60,24 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
   useEffect(() => {
     setCurrentStep("upload");
   }, [programLoad]);
+
+  const handleFileUpload = useCallback((output: ProgramUploadFileOutput, trace?: string) => {
+    setProgramLoad(output);
+    if (trace) {
+      try {
+        setTraceContent(trace);
+        const parsed = parseTrace(trace);
+        setTraceSummary(getTraceSummary(parsed));
+      } catch (e) {
+        console.error("Failed to parse trace:", e);
+        setTraceContent(null);
+        setTraceSummary(null);
+      }
+    } else {
+      setTraceContent(null);
+      setTraceSummary(null);
+    }
+  }, []);
 
   // Auto-encode parameters when they change and update PC
   useEffect(() => {
@@ -119,7 +140,6 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
               break;
           }
           dispatch(setServiceId(serviceId));
-          await dispatch(setAllWorkersServiceId()).unwrap();
 
           // Update the initial state with the correct PC for the entrypoint
           const pc = parseInt(manualPc, 10) || 0;
@@ -133,6 +153,10 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         }
 
         await debuggerActions.handleProgramLoad(modifiedProgram);
+
+        if (traceContent) {
+          dispatch(setHostCallsTrace(traceContent));
+        }
 
         // Save SPI configuration to localStorage after successful load
         if (loadedProgram?.spiProgram) {
@@ -170,11 +194,14 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
       accumulateParams,
       isAuthorizedParams,
       isManualMode,
+      traceContent,
     ],
   );
 
+  const hasTraceWithEntrypoint = traceContent !== null;
+
   const handleNextStep = () => {
-    if (currentStep === "upload" && isSpiProgram) {
+    if (currentStep === "upload" && isSpiProgram && !hasTraceWithEntrypoint) {
       setCurrentStep("entrypoint");
     } else {
       handleLoad();
@@ -196,9 +223,9 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
         {currentStep === "upload" && (
           <>
             <Examples
+              disabled={isLoading}
               onProgramLoad={(val) => {
-                setProgramLoad(val);
-                // For non-SPI programs, load directly. For SPI programs, go to entrypoint selection
+                handleFileUpload(val);
                 if (val.spiProgram === null) {
                   handleLoad(val);
                 }
@@ -206,7 +233,12 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
             />
 
             <div className="my-10">
-              <ProgramFileUpload onFileUpload={setProgramLoad} isError={error !== undefined} setError={setError} />
+              <ProgramFileUpload
+                onFileUpload={handleFileUpload}
+                isError={error !== undefined}
+                setError={setError}
+                disabled={isLoading}
+              />
             </div>
             {error && (
               <p className="flex items-top text-destructive-foreground text-[11px] whitespace-pre-line">
@@ -230,6 +262,18 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
                     <pre className="max-h-[300px] overflow-auto">{JSON.stringify(programLoad.initial, null, 2)}</pre>
                   </details>
                 </div>
+
+                {traceSummary && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="block text-xs font-bold min-w-[150px]">Host Call Trace:</span>
+                      <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                        <FileText className="w-3 h-3" />
+                        {traceSummary.hostCallCount} host call{traceSummary.hostCallCount !== 1 ? "s" : ""} included
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {!error && !programLoad && <Links />}
@@ -273,10 +317,10 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
           id="load-button"
           data-testid="load-button"
           type="button"
-          disabled={!isProgramLoaded}
+          disabled={!isProgramLoaded || isLoading}
           onClick={currentStep === "entrypoint" ? () => handleLoad() : handleNextStep}
         >
-          {currentStep === "entrypoint" || !isSpiProgram ? "Load" : "Next"}
+          {currentStep === "entrypoint" || !isSpiProgram || hasTraceWithEntrypoint ? "Load" : "Next"}
         </Button>
       </div>
     </div>

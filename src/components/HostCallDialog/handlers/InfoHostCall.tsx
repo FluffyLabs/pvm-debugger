@@ -26,7 +26,13 @@ const DEFAULT_LAST_ACCUMULATION = "0";
 const DEFAULT_PARENT_SERVICE = "0";
 
 // eslint-disable-next-line react-refresh/only-export-components
-const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume, serviceId }) => {
+const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({
+  currentState,
+  isLoading,
+  onResume,
+  onRestart,
+  serviceId,
+}) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
   const requestedServiceId = regs[7];
 
@@ -234,7 +240,7 @@ const InfoHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, i
         {/* Error */}
         {error && <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">{error}</div>}
       </div>
-      <HostCallActionButtons onResume={handleResume} disabled={isLoading || isExecuting} />
+      <HostCallActionButtons onResume={handleResume} onRestart={onRestart} disabled={isLoading || isExecuting} />
     </>
   );
 };

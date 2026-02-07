@@ -5,10 +5,16 @@ import { programs } from "./examplePrograms";
 import { useState } from "react";
 import doomUrl from "./doom.bin?url";
 import golUrl from "./gol.jam?url";
-import { loadFileFromUint8Array } from "./loadingUtils";
+import { loadFileFromUint8Array } from "./loading-utils";
 import { useAppSelector } from "@/store/hooks";
 
-export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUploadFileOutput) => void }) => {
+export const Examples = ({
+  onProgramLoad,
+  disabled,
+}: {
+  onProgramLoad: (val: ProgramUploadFileOutput) => void;
+  disabled?: boolean;
+}) => {
   const [isDoomLoading, setIsDoomLoading] = useState(false);
   const [isGolLoading, setIsGolLoading] = useState(false);
   const spiArgs = useAppSelector((state) => state.debugger.spiArgs);
@@ -21,9 +27,10 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
           <Badge
             id={key}
             variant="brand"
-            className={"mb-2 mr-2 text-xs sm:text-md cursor-pointer"}
+            className={`mb-2 mr-2 text-xs sm:text-md ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             key={key}
             onClick={() => {
+              if (disabled) return;
               onProgramLoad({
                 initial: {
                   regs: program.regs.map((x) => BigInt(x)) as RegistersArray,
@@ -47,9 +54,9 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
       <Badge
         id="doom"
         variant={isDoomLoading ? "outline" : "brand"}
-        className={`mb-2 mr-2 text-xs sm:text-md ${isDoomLoading ? "cursor-wait" : "cursor-pointer"}`}
+        className={`mb-2 mr-2 text-xs sm:text-md ${isDoomLoading || disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         onClick={async () => {
-          if (isDoomLoading) {
+          if (isDoomLoading || disabled) {
             return;
           }
           setIsDoomLoading(true);
@@ -67,9 +74,9 @@ export const Examples = ({ onProgramLoad }: { onProgramLoad: (val: ProgramUpload
       <Badge
         id="gol-sdk"
         variant={isGolLoading ? "outline" : "brand"}
-        className={`mb-2 mr-2 text-xs sm:text-md ${isGolLoading ? "cursor-wait" : "cursor-pointer"}`}
+        className={`mb-2 mr-2 text-xs sm:text-md ${isGolLoading || disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         onClick={async () => {
-          if (isGolLoading) {
+          if (isGolLoading || disabled) {
             return;
           }
           setIsGolLoading(true);

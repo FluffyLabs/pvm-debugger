@@ -5,8 +5,6 @@ import { Commands, CommandStatus, PvmApiInterface, WorkerRequestParams, WorkerRe
 let pvm: PvmApiInterface | null = null;
 let memorySize: number | null = null;
 let isRunMode = false;
-// Set default serviceId to 0x30303030. This is the ASCII code for '0000'.
-let serviceId: number | null = parseInt("0x30303030", 16);
 let socket: WebSocket | undefined | null = null;
 
 export function postTypedMessage(msg: WorkerResponseParams) {
@@ -56,7 +54,6 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
     const { currentPc, state, isFinished, status, exitArg, error } = await commandHandlers.runStep({
       pvm,
       stepsToPerform: e.data.payload.stepsToPerform,
-      serviceId,
     });
     isRunMode = !isFinished;
 
@@ -117,15 +114,6 @@ async function rawOnMessage(e: MessageEvent<WorkerRequestParams>) {
       command: Commands.HOST_CALL,
       messageId: e.data.messageId,
       payload: data,
-    });
-  } else if (e.data.command === Commands.SET_SERVICE_ID) {
-    serviceId = e.data.payload.serviceId;
-
-    postTypedMessage({
-      command: Commands.SET_SERVICE_ID,
-      status: CommandStatus.SUCCESS,
-      error: null,
-      messageId: e.data.messageId,
     });
   } else if (e.data.command === Commands.SET_STATE) {
     const data = await commandHandlers.runSetState({

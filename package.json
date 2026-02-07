@@ -100,5 +100,8 @@
       "npm run format",
       "npm run lint"
     ]
-  }
+  },
+  "trustedDependencies": [
+    "@swc/core"
+  ]
 }

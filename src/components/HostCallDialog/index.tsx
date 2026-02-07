@@ -1,11 +1,14 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resumeAfterHostCall, readMemoryRange, HostCallResumeMode } from "@/store/workers/workersSlice";
 import { NumeralSystemContext } from "@/context/NumeralSystemContext";
 import { getHostCallHandler } from "./handlers";
 import { DefaultHostCallContent, MemoryEdit } from "./DefaultHostCallContent";
-import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
+import { DEFAULT_GAS, DEFAULT_REGS, ExpectedState } from "@/types/pvm";
+import { AlertTriangle } from "lucide-react";
+import { serializeHostCallEntry } from "@/lib/host-call-trace";
+import { useDebuggerActions } from "@/hooks/useDebuggerActions";
 
 const HOST_CALL_NAMES: Record<number, string> = {
   0: "gas",
@@ -46,63 +49,75 @@ function getHostCallName(index: number | null): string {
 export const HostCallDialog = () => {
   const dispatch = useAppDispatch();
   const { numeralSystem } = useContext(NumeralSystemContext);
+  const { restartProgram } = useDebuggerActions();
 
-  const hasHostCallOpen = useAppSelector((state) => state.debugger.hasHostCallOpen);
   const configuredServiceId = useAppSelector((state) => state.debugger.serviceId);
-  const pendingHostCallIndex = useAppSelector((state) => state.debugger.pendingHostCallIndex);
+  const pendingHostCall = useAppSelector((state) => state.debugger.pendingHostCall);
+  const initialState = useAppSelector((state) => state.debugger.initialState);
   const workers = useAppSelector((state) => state.workers);
 
   const firstWorker = workers[0];
-  const currentState = useMemo(() => firstWorker?.currentState ?? {}, [firstWorker?.currentState]);
+  const currentState: ExpectedState | undefined = firstWorker?.currentState;
+  const regs = (currentState?.regs ?? DEFAULT_REGS) as bigint[];
+  const traceEntry = pendingHostCall?.entry ?? null;
+  const mismatches = pendingHostCall?.mismatches ?? [];
 
   const [isLoading, setIsLoading] = useState(false);
   const [useGenericUI, setUseGenericUI] = useState(false);
+  const [showTraceEntry, setShowTraceEntry] = useState(true);
 
   // State for default UI - lifted up so footer can access it
-  const [pendingRegs, setPendingRegs] = useState<bigint[] | null>(null);
-  const [pendingGas, setPendingGas] = useState<bigint | null>(null);
+  const [pendingRegs, setPendingRegs] = useState<bigint[]>(regs);
+  const [pendingGas, setPendingGas] = useState<bigint>(currentState?.gas ?? 0n);
   const [pendingMemoryEdits, setPendingMemoryEdits] = useState<MemoryEdit[]>([]);
 
-  // Reset state when dialog opens
   useEffect(() => {
-    if (hasHostCallOpen) {
-      setIsLoading(false);
-      setUseGenericUI(false);
-      setPendingRegs(null);
-      setPendingGas(null);
-      setPendingMemoryEdits([]);
+    if (traceEntry === null) {
+      return;
     }
-  }, [hasHostCallOpen]);
+
+    // set pending registers
+    setPendingRegs((regs) => {
+      const newRegs = [...regs];
+      for (const rw of traceEntry.registerWrites) {
+        newRegs[rw.index] = rw.value;
+      }
+      return newRegs;
+    });
+
+    // set pending gas
+    if (traceEntry.gasAfter !== null) {
+      setPendingGas(traceEntry.gasAfter);
+    }
+
+    // set pending memory writes
+    const memEdits: MemoryEdit[] = traceEntry.memoryWrites.map((mw) => ({
+      address: mw.address,
+      data: mw.data,
+    }));
+    setPendingMemoryEdits(memEdits);
+  }, [traceEntry]);
 
   const handleResume = useCallback(
-    async (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint, memoryEdits?: MemoryEdit[]) => {
+    async (mode: HostCallResumeMode) => {
       setIsLoading(true);
       try {
         // Use provided values or fall back to pending/current state
-        const finalRegs = regs ?? pendingRegs ?? currentState.regs ?? DEFAULT_REGS;
-        const currentGas = currentState.gas ?? DEFAULT_GAS;
-        const finalGas = gas ?? pendingGas ?? (currentGas > 10n ? currentGas - 10n : 0n);
-
-        // Combine memory edits from host calls with pending memory from default UI
-        const finalMemoryEdits: MemoryEdit[] = [];
-        if (memoryEdits && memoryEdits.length > 0) {
-          finalMemoryEdits.push(...memoryEdits);
-        }
-        if (pendingMemoryEdits.length > 0) {
-          finalMemoryEdits.push(...pendingMemoryEdits);
-        }
+        const finalRegs = pendingRegs ?? currentState?.regs ?? DEFAULT_REGS;
+        const currentGas = currentState?.gas ?? DEFAULT_GAS;
+        const finalGas = pendingGas ?? (currentGas > 10n ? currentGas - 10n : 0n);
 
         await dispatch(
           resumeAfterHostCall({
-            regs: finalRegs as bigint[],
+            regs: finalRegs,
             gas: finalGas,
             mode,
-            memoryEdits: finalMemoryEdits.length > 0 ? finalMemoryEdits : undefined,
+            memoryEdits: pendingMemoryEdits.length > 0 ? [...pendingMemoryEdits] : undefined,
           }),
         ).unwrap();
-        setPendingMemoryEdits([]);
       } catch (e) {
         console.error("Failed to resume after host call:", e);
+      } finally {
         setIsLoading(false);
       }
     },
@@ -133,12 +148,12 @@ export const HostCallDialog = () => {
   );
 
   // Check for special handler
-  const specialHandler = pendingHostCallIndex !== null ? getHostCallHandler(pendingHostCallIndex) : undefined;
-
-  const hostCallName = getHostCallName(pendingHostCallIndex);
+  const hostCallId = pendingHostCall?.hostCallId ?? 10_000;
+  const specialHandler = getHostCallHandler(hostCallId);
+  const hostCallName = getHostCallName(hostCallId);
 
   return (
-    <Dialog open={hasHostCallOpen}>
+    <Dialog open={pendingHostCall !== null}>
       <DialogContent
         className="max-w-[75vw] max-h-[90vh] flex flex-col"
         hideClose
@@ -155,12 +170,20 @@ export const HostCallDialog = () => {
           </DialogDescription>
         </DialogHeader>
 
-        {/* Host Call Index */}
         <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
           <span className="font-medium">Host Call:</span>
           <code className="px-2 py-1 bg-background rounded text-sm font-mono">{hostCallName}</code>
-          <span className="text-muted-foreground text-sm">(index: {pendingHostCallIndex ?? "?"})</span>
-          {specialHandler?.hasCustomUI && (
+          <span className="text-muted-foreground text-sm">(index: {hostCallId})</span>
+          {traceEntry && (
+            <button
+              className="text-xs text-green-600 dark:text-green-400 ml-2 hover:underline"
+              onClick={() => setShowTraceEntry(!showTraceEntry)}
+              disabled={isLoading}
+            >
+              {showTraceEntry ? "hide trace" : "(display trace entry)"}
+            </button>
+          )}
+          {specialHandler?.hasCustomUI && !traceEntry && (
             <button
               className="ml-auto text-xs text-muted-foreground hover:text-foreground underline"
               onClick={() => setUseGenericUI(!useGenericUI)}
@@ -171,14 +194,39 @@ export const HostCallDialog = () => {
           )}
         </div>
 
-        {/* Scrollable content area */}
-        {specialHandler?.hasCustomUI && !useGenericUI ? (
+        {mismatches.length > 0 && (
+          <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-md text-sm">
+            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-yellow-800 dark:text-yellow-200">State mismatch with trace file</p>
+              <ul className="mt-1 text-yellow-700 dark:text-yellow-300 text-xs">
+                {mismatches.map((m, i) => (
+                  <li key={i}>
+                    {m.details ?? m.field}: expected {m.expected}, got {m.actual}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {traceEntry && showTraceEntry && (
+          <div className="space-y-1">
+            <pre className="p-3 bg-muted rounded-md text-xs font-mono overflow-auto max-h-32">
+              {serializeHostCallEntry(traceEntry)}
+            </pre>
+          </div>
+        )}
+
+        {/* When trace entry is available, always use generic UI to show trace data */}
+        {specialHandler?.hasCustomUI && !useGenericUI && !traceEntry ? (
           <specialHandler.Component
             currentState={currentState}
             isLoading={isLoading}
             serviceId={configuredServiceId ?? null}
             readMemory={readMemory}
             onResume={handleResume}
+            onRestart={() => restartProgram(initialState)}
           />
         ) : (
           <DefaultHostCallContent
@@ -187,9 +235,12 @@ export const HostCallDialog = () => {
             numeralSystem={numeralSystem}
             readMemory={readMemory}
             onResume={handleResume}
+            onRestart={() => restartProgram(initialState)}
             onRegsChange={setPendingRegs}
             onGasChange={setPendingGas}
             onMemoryChange={handleManualMemoryChange}
+            traceEntry={traceEntry}
+            hostCallId={hostCallId}
           />
         )}
       </DialogContent>
