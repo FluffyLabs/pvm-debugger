@@ -8,6 +8,8 @@
  * @see https://github.com/tomusdrw/JIPs/blob/td-jip6-ecalliloggin/JIP-6.md
  */
 
+import { z } from "zod";
+
 /** Register dump: mapping from register index to value */
 export type RegisterDump = Map<number, bigint>;
 
@@ -119,6 +121,128 @@ export interface StateMismatch {
   expected: string;
   actual: string;
   details?: string;
+}
+
+// ============================================================================
+// Zod Validation Schemas
+// ============================================================================
+
+/** Zod schema for MemoryRead */
+const MemoryReadSchema = z.object({
+  address: z.number(),
+  length: z.number(),
+  data: z.instanceof(Uint8Array),
+});
+
+/** Zod schema for MemoryWrite */
+const MemoryWriteSchema = z.object({
+  address: z.number(),
+  length: z.number(),
+  data: z.instanceof(Uint8Array),
+});
+
+/** Zod schema for RegisterWrite */
+const RegisterWriteSchema = z.object({
+  index: z.number(),
+  value: z.bigint(),
+});
+
+/** Zod schema for HostCallEntry */
+const HostCallEntrySchema = z.object({
+  index: z.number(),
+  pc: z.number(),
+  gas: z.bigint(),
+  registers: z.instanceof(Map),
+  memoryReads: z.array(MemoryReadSchema),
+  memoryWrites: z.array(MemoryWriteSchema),
+  registerWrites: z.array(RegisterWriteSchema),
+  gasAfter: z.bigint().nullable(),
+  lineNumber: z.number(),
+});
+
+/** Zod schema for StartEntry */
+const StartEntrySchema = z.object({
+  pc: z.number(),
+  gas: z.bigint(),
+  registers: z.instanceof(Map),
+});
+
+/** Zod schema for TracePrelude */
+const TracePreludeSchema = z.object({
+  program: z.string().nullable(),
+  start: StartEntrySchema.nullable(),
+  initialMemoryWrites: z.array(MemoryWriteSchema),
+});
+
+/** Zod schema for TerminationReason */
+const TerminationReasonSchema = z.union([
+  z.object({ type: z.literal("HALT") }),
+  z.object({ type: z.literal("PANIC"), argument: z.number() }),
+  z.object({ type: z.literal("OOG") }),
+]);
+
+/** Zod schema for TerminationEntry */
+const TerminationEntrySchema = z.object({
+  reason: TerminationReasonSchema,
+  pc: z.number(),
+  gas: z.bigint(),
+  registers: z.instanceof(Map),
+  lineNumber: z.number(),
+});
+
+/** Zod schema for TraceParseError */
+const TraceParseErrorSchema = z.object({
+  lineNumber: z.number(),
+  line: z.string(),
+  message: z.string(),
+});
+
+/** Zod schema for ParsedTrace */
+const ParsedTraceSchema = z.object({
+  contextLines: z.array(z.string()),
+  prelude: TracePreludeSchema,
+  hostCalls: z.array(HostCallEntrySchema),
+  termination: TerminationEntrySchema.nullable(),
+  errors: z.array(TraceParseErrorSchema),
+});
+
+/**
+ * Validate a parsed trace structure using Zod
+ * @param trace The parsed trace to validate
+ * @returns Zod safe parse result
+ */
+export function validateParsedTrace(trace: unknown) {
+  return ParsedTraceSchema.safeParse(trace);
+}
+
+/**
+ * Validate trace content string and return detailed validation result
+ * @param content The trace content to validate
+ * @returns Object containing validation result and any errors
+ */
+export function validateTraceContent(content: string): {
+  success: boolean;
+  errors: TraceParseError[];
+  parseErrors?: z.ZodError;
+} {
+  const parsed = parseTrace(content);
+
+  // Check for parse errors first
+  if (parsed.errors.length > 0) {
+    return { success: false, errors: parsed.errors };
+  }
+
+  // Validate structure with Zod
+  const validation = validateParsedTrace(parsed);
+  if (!validation.success) {
+    return {
+      success: false,
+      errors: parsed.errors,
+      parseErrors: validation.error,
+    };
+  }
+
+  return { success: true, errors: [] };
 }
 
 // ============================================================================
@@ -646,17 +770,74 @@ export function findHostCallEntry(
   hostCallIndex: number,
   readMemory?: (address: number, length: number) => Uint8Array | null,
 ): HostCallLookupResult {
-  // Try to find an exact match by PC
-  const matchingEntries = trace.hostCalls.slice(indexInTrace).filter((hc) => hc.pc === pc && hc.gas <= gas);
+  // Get remaining entries from the current index
+  const remainingEntries = trace.hostCalls.slice(indexInTrace);
+
+  // Try to find an exact match by PC and host call index
+  const matchingEntries = remainingEntries.filter((hc) => hc.pc === pc && hc.gas <= gas);
 
   if (matchingEntries.length === 0) {
     return { entry: null, mismatches: [] };
   }
 
-  // First try to find an entry whose hostCallIndex matches and has acceptable gas
-  const exactMatch = matchingEntries.find((hc) => hc.index === hostCallIndex && hc.gas <= gas);
-  // Use exact match if found, otherwise fall back to the first matching entry
-  const entry = exactMatch ?? matchingEntries[0];
+  // First try to find an entry whose hostCallIndex matches exactly
+  // Prefer exact index match even if gas is slightly higher
+  const exactIndexMatch = remainingEntries.find((hc) => hc.index === hostCallIndex && hc.pc === pc);
+
+  // If we have an exact index match with acceptable gas, use it
+  if (exactIndexMatch && exactIndexMatch.gas <= gas) {
+    const mismatches: StateMismatch[] = [];
+
+    // Check gas
+    if (exactIndexMatch.gas !== gas) {
+      mismatches.push({
+        field: "gas",
+        expected: exactIndexMatch.gas.toString(),
+        actual: gas.toString(),
+      });
+    }
+
+    // Check registers
+    for (const [idx, expectedValue] of exactIndexMatch.registers) {
+      const actualValue = registers[idx] ?? 0n;
+      if (expectedValue !== actualValue) {
+        mismatches.push({
+          field: "register",
+          expected: `r${idx}=0x${expectedValue.toString(16)}`,
+          actual: `r${idx}=0x${actualValue.toString(16)}`,
+          details: `Register ${idx}`,
+        });
+      }
+    }
+
+    // Check memory reads if readMemory function is provided
+    if (readMemory) {
+      for (const mr of exactIndexMatch.memoryReads) {
+        const actualData = readMemory(mr.address, mr.length);
+        if (actualData) {
+          const expectedHex = Array.from(mr.data)
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+          const actualHex = Array.from(actualData)
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+          if (expectedHex !== actualHex) {
+            mismatches.push({
+              field: "memread",
+              expected: `0x${expectedHex}`,
+              actual: `0x${actualHex}`,
+              details: `Memory at 0x${mr.address.toString(16)} (${mr.length} bytes)`,
+            });
+          }
+        }
+      }
+    }
+
+    return { entry: exactIndexMatch, mismatches };
+  }
+
+  // Fall back to first matching entry by PC and gas
+  const entry = matchingEntries[0];
   const mismatches: StateMismatch[] = [];
 
   // Check PC

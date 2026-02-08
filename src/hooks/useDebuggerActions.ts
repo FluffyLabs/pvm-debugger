@@ -79,7 +79,8 @@ export const useDebuggerActions = () => {
       dispatch(resetHostCallIndex());
 
       // Save memory ranges before destroying workers
-      const memoryRanges = workers[0]?.memoryRanges ?? [];
+      // Guard: ensure memoryRanges is always an array
+      const memoryRanges = Array.isArray(workers[0]?.memoryRanges) ? workers[0].memoryRanges : [];
 
       // Destroy all existing workers to clear message listeners
       await Promise.all(workers.map((worker: WorkerState) => dispatch(destroyWorker(worker.id)).unwrap()));
@@ -176,7 +177,8 @@ export const useDebuggerActions = () => {
     async (selectedPvms: SelectedPvmWithPayload[]) => {
       logger.debug("selectedPvms vs workers ", selectedPvms, workers);
 
-      const memoryRanges = workers[0]?.memoryRanges ?? [];
+      // Guard: ensure memoryRanges is always an array
+      const memoryRanges = Array.isArray(workers[0]?.memoryRanges) ? workers[0].memoryRanges : [];
 
       // Destroy all existing workers
       await Promise.all(workers.map((worker: WorkerState) => dispatch(destroyWorker(worker.id)).unwrap()));

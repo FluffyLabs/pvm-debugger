@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test";
-import * as path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { FIXTURES, getFixturePath } from "./utils/fixtures";
 
 test.describe("Trace file loading", () => {
   test("should load io-trace-output.log without crashing", async ({ page }) => {
@@ -11,7 +7,7 @@ test.describe("Trace file loading", () => {
     await page.evaluate(() => window.localStorage.clear());
 
     const fileInput = page.locator('input[type="file"]');
-    const tracePath = path.join(__dirname, "../io-trace-output.log");
+    const tracePath = getFixturePath(FIXTURES.IO_TRACE_OUTPUT);
 
     await fileInput.setInputFiles(tracePath);
 
@@ -49,7 +45,7 @@ test.describe("Trace file loading", () => {
     await page.evaluate(() => window.localStorage.clear());
 
     const fileInput = page.locator('input[type="file"]');
-    const tracePath = path.join(__dirname, "../io-trace-output.log");
+    const tracePath = getFixturePath(FIXTURES.IO_TRACE_OUTPUT);
 
     await fileInput.setInputFiles(tracePath);
 

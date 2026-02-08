@@ -5,7 +5,12 @@ export const Links = () => {
     <ul className="list-none sm:text-sm">
       <li>
         <div className="flex gap-2 text-[11px]">
-          <a className="flex" href="https://github.com/w3f/jamtestvectors/pull/3/files" target="_blank">
+          <a
+            className="flex"
+            href="https://github.com/w3f/jamtestvectors/pull/3/files"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <ExternalLink className="inline w-4 mb-1 mr-2 text-xs text-brand-dark dark:text-brand" />
           </a>
           <div>
@@ -25,7 +30,7 @@ export const Links = () => {
 
       <li>
         <div className="flex gap-2 text-[11px] mt-3">
-          <a href="https://graypaper.fluffylabs.dev/#/5b732de/2a7e022a7e02" target="_blank">
+          <a href="https://graypaper.fluffylabs.dev/#/5b732de/2a7e022a7e02" target="_blank" rel="noopener noreferrer">
             <ExternalLink className="inline w-4 mb-1 mr-2 text-brand-dark dark:text-brand" />
           </a>
           <div>
@@ -46,7 +51,7 @@ export const Links = () => {
       </li>
       <li>
         <div className="flex gap-2 text-[11px] mt-3">
-          <a href="https://graypaper.fluffylabs.dev/#/5b732de/23c60023c600" target="_blank">
+          <a href="https://graypaper.fluffylabs.dev/#/5b732de/23c60023c600" target="_blank" rel="noopener noreferrer">
             <ExternalLink className="inline w-4 mb-1 mr-2 text-brand-dark dark:text-brand" />
           </a>
           <div>

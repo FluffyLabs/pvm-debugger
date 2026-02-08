@@ -358,10 +358,16 @@ export const handleHostCall = createAsyncThunk(
         }),
     );
 
-    logger.info("  [handleHostCall] Done - returning without opening dialog");
-    // Advance host call index for all workers and await resuming execution
+    logger.info("  [handleHostCall] Done - auto-continuing without opening dialog");
+    // Advance host call index before resuming execution
+    dispatch(
+      setPendingHostCall({
+        pendingHostCall: null,
+        nextHostCallIndex: nextHostCallIndex + 1,
+      }),
+    );
+    // Resume execution
     await dispatch(runAllWorkers()).unwrap();
-    return;
   },
 );
 
