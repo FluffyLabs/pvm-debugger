@@ -37,7 +37,13 @@ function getLogLevelStyle(level: number): string {
 const decoder = new TextDecoder("utf8");
 
 // eslint-disable-next-line react-refresh/only-export-components
-const LogHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, readMemory, onResume }) => {
+const LogHostCallComponent: React.FC<HostCallHandlerProps> = ({
+  currentState,
+  isLoading,
+  readMemory,
+  onResume,
+  onRestart,
+}) => {
   const [target, setTarget] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [isLoadingMemory, setIsLoadingMemory] = useState(true);
@@ -129,7 +135,7 @@ const LogHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, is
           </div>
         </div>
       </div>
-      <HostCallActionButtons onResume={handleResume} disabled={isLoading || isLoadingMemory} />
+      <HostCallActionButtons onResume={handleResume} onRestart={onRestart} disabled={isLoading || isLoadingMemory} />
     </>
   );
 };

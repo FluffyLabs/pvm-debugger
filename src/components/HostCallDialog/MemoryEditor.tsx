@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
+import type { MemoryEdit } from "@/store/workers/workersSlice";
 
 const MAX_LENGTH = 4096;
 const BYTES_PER_ROW = 16;
@@ -8,6 +9,9 @@ interface MemoryEditorProps {
   readMemory: (startAddress: number, length: number) => Promise<Uint8Array>;
   disabled?: boolean;
   onMemoryChange?: (address: number, data: Uint8Array) => void;
+  pendingWrites?: MemoryEdit[];
+  initialAddress?: number;
+  initialLength?: number;
 }
 
 function parseNumber(value: string): number | null {
@@ -34,12 +38,35 @@ function toAscii(byte: number): string {
   return ".";
 }
 
-export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled, onMemoryChange }) => {
-  const [addressInput, setAddressInput] = useState("0x1000");
-  const [lengthInput, setLengthInput] = useState("256");
-  const [address, setAddress] = useState<number | null>(0x1000);
-  const [length, setLength] = useState<number | null>(256);
+export const MemoryEditor: React.FC<MemoryEditorProps> = ({
+  readMemory,
+  disabled,
+  onMemoryChange,
+  pendingWrites,
+  initialAddress,
+  initialLength,
+}) => {
+  const defaultAddress = initialAddress ?? 0x1000;
+  const defaultLength = initialLength ?? 256;
+
+  const [addressInput, setAddressInput] = useState(`0x${defaultAddress.toString(16)}`);
+  const [lengthInput, setLengthInput] = useState(defaultLength.toString());
+  const [address, setAddress] = useState<number | null>(defaultAddress);
+  const [length, setLength] = useState<number | null>(defaultLength);
+
+  // Update state when initial values change (e.g., when trace is loaded)
+  useEffect(() => {
+    if (initialAddress !== undefined) {
+      setAddressInput(`0x${initialAddress.toString(16)}`);
+      setAddress(initialAddress);
+    }
+    if (initialLength !== undefined) {
+      setLengthInput(initialLength.toString());
+      setLength(initialLength);
+    }
+  }, [initialAddress, initialLength]);
   const [data, setData] = useState<Uint8Array | null>(null);
+  const [originalData, setOriginalData] = useState<Uint8Array | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [focusedByte, setFocusedByte] = useState<number | null>(null);
@@ -51,6 +78,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
     const loadMemory = async () => {
       if (address === null || length === null || length <= 0) {
         setData(null);
+        setOriginalData(null);
         return;
       }
 
@@ -63,17 +91,52 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
       setError(null);
       try {
         const memoryData = await readMemory(address, length);
-        setData(memoryData);
+        setOriginalData(new Uint8Array(memoryData));
+
+        // Apply pending writes from trace if any
+        const modifiedData = new Uint8Array(memoryData);
+        if (pendingWrites && pendingWrites.length > 0) {
+          for (const write of pendingWrites) {
+            const writeStart = write.address;
+            const writeEnd = write.address + write.data.length;
+            const viewStart = address;
+            const viewEnd = address + length;
+
+            // Check if this write overlaps with current view
+            if (writeStart < viewEnd && writeEnd > viewStart) {
+              const overlapStart = Math.max(writeStart, viewStart);
+              const overlapEnd = Math.min(writeEnd, viewEnd);
+
+              for (let addr = overlapStart; addr < overlapEnd; addr++) {
+                const dataIndex = addr - viewStart;
+                const writeIndex = addr - writeStart;
+                modifiedData[dataIndex] = write.data[writeIndex];
+              }
+            }
+          }
+        }
+
+        setData(modifiedData);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to read memory");
         setData(null);
+        setOriginalData(null);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadMemory();
-  }, [address, length, readMemory]);
+  }, [address, length, readMemory, pendingWrites]);
+
+  // Check if a byte at given index has been modified
+  const isByteModified = useCallback(
+    (byteIndex: number): boolean => {
+      if (!data || !originalData) return false;
+      return data[byteIndex] !== originalData[byteIndex];
+    },
+    [data, originalData],
+  );
 
   const updateAddress = useCallback((addressInput: string) => {
     setAddressInput(addressInput);
@@ -411,6 +474,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
                         {row.bytes.map((byte, i) => {
                           const byteIndex = row.offset + i;
                           const isActive = focusedByte === byteIndex;
+                          const isModified = isByteModified(byteIndex);
 
                           return (
                             <input
@@ -422,7 +486,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
                                 disabled
                                   ? "cursor-not-allowed opacity-50 bg-muted"
                                   : "cursor-text hover:border-brand focus-visible:ring-1 focus-visible:ring-brand bg-background"
-                              } ${isActive ? "border-brand" : "border-transparent"}`}
+                              } ${isActive ? "border-brand" : "border-transparent"} ${isModified ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200" : ""}`}
                               value={toHex(byte)}
                               onFocus={() => !disabled && setFocusedByte(byteIndex)}
                               onKeyDown={(e) => handleByteKeyDown(byteIndex, e)}
@@ -456,6 +520,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
                         {row.bytes.map((byte, i) => {
                           const byteIndex = row.offset + i;
                           const asciiChar = toAscii(byte);
+                          const isModified = isByteModified(byteIndex);
                           return (
                             <input
                               key={i}
@@ -466,7 +531,7 @@ export const MemoryEditor: React.FC<MemoryEditorProps> = ({ readMemory, disabled
                                 disabled
                                   ? "cursor-not-allowed opacity-50 bg-muted"
                                   : "cursor-text hover:border-brand focus-visible:ring-1 focus-visible:ring-brand bg-background"
-                              } ${focusedByte === byteIndex ? "border-brand" : "border-transparent"}`}
+                              } ${focusedByte === byteIndex ? "border-brand" : "border-transparent"} ${isModified ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-200" : ""}`}
                               value={asciiChar}
                               onFocus={() => {
                                 if (!disabled) {

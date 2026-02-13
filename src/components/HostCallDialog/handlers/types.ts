@@ -6,12 +6,14 @@ export interface HostCallHandlerProps {
   currentState: ExpectedState;
   /** Whether the handler is currently loading/processing */
   isLoading: boolean;
-  /** Configured service id used as the “current” service */
+  /** Configured service id used as the "current" service */
   serviceId: number | null;
   /** Function to read memory from PVM */
   readMemory: (startAddress: number, length: number) => Promise<Uint8Array>;
   /** Function to resume execution */
   onResume: (mode: HostCallResumeMode, regs?: bigint[], gas?: bigint, memoryEdits?: MemoryEdit[]) => void;
+  /** Function to restart execution from the beginning */
+  onRestart?: () => void;
 }
 
 export interface HostCallHandler {

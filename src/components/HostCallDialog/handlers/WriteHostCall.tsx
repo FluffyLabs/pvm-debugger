@@ -66,6 +66,7 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({
   isLoading,
   readMemory,
   onResume,
+  onRestart,
   serviceId,
 }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
@@ -286,7 +287,7 @@ const WriteHostCallComponent: React.FC<HostCallHandlerProps> = ({
           </div>
         )}
       </div>
-      <HostCallActionButtons onResume={handleResume} disabled={isLoading || isExecuting} />
+      <HostCallActionButtons onResume={handleResume} onRestart={onRestart} disabled={isLoading || isExecuting} />
     </>
   );
 };

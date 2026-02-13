@@ -14,7 +14,13 @@ interface GasResult {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume, serviceId }) => {
+const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({
+  currentState,
+  isLoading,
+  onResume,
+  onRestart,
+  serviceId,
+}) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
 
   const [result, setResult] = useState<GasResult | null>(null);
@@ -91,7 +97,7 @@ const GasHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, is
           </div>
         )}
       </div>
-      <HostCallActionButtons onResume={handleResume} disabled={isLoading || isExecuting} />
+      <HostCallActionButtons onResume={handleResume} onRestart={onRestart} disabled={isLoading || isExecuting} />
     </>
   );
 };

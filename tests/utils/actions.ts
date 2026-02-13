@@ -3,6 +3,7 @@ import { Page } from "@playwright/test";
 export const openDebugger = async (page: Page) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await page.evaluate(() => window.localStorage.clear());
+  await page.reload();
 };
 
 export const openProgram = async (page: Page, name: string) => {
@@ -22,20 +23,25 @@ export const selectPVM = async (page: Page, pvmType: string) => {
   await page.waitForSelector('[role="dialog"]');
 
   // Locate all options in the multi-select
-  const allPvmOptions = await page.locator('div[role="option"]');
+  const allPvmOptions = page.locator('div[role="option"]');
+  const count = await allPvmOptions.count();
 
-  // Check for selected options
-  const selectedPvmOptions = allPvmOptions.locator(".bg-brand"); // Adjust the class name as needed
-  const selectedPvmCount = await selectedPvmOptions.count();
+  for (let i = 0; i < count; i++) {
+    const option = allPvmOptions.nth(i);
+    const text = await option.textContent();
+    const isTarget = text?.match(new RegExp(pvmType, "i"));
+    const isSelected = (await option.locator(".bg-brand").count()) > 0;
 
-  for (let i = 0; i < selectedPvmCount; i++) {
-    const pvm = selectedPvmOptions.nth(i);
-    await pvm.click(); // Click to unselect the checkbox
+    if (isTarget) {
+      if (!isSelected) {
+        await option.click();
+      }
+    } else {
+      if (isSelected) {
+        await option.click();
+      }
+    }
   }
-
-  const pvmOption = page.locator('div[role="option"]', { hasText: new RegExp(pvmType, "i") });
-  await pvmOption.waitFor({ state: "visible" });
-  await pvmOption.click();
 
   await page.waitForTimeout(1000);
   await page.locator("html").click();

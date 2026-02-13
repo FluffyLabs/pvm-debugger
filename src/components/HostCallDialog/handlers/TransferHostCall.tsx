@@ -22,6 +22,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
   isLoading,
   readMemory,
   onResume,
+  onRestart,
   serviceId,
 }) => {
   const regs = useMemo(() => currentState.regs ?? DEFAULT_REGS, [currentState.regs]);
@@ -174,7 +175,7 @@ const TransferHostCallComponent: React.FC<HostCallHandlerProps> = ({
 
         {error && <div className="p-3 bg-destructive/10 text-destructive rounded-md text-sm">{error}</div>}
       </div>
-      <HostCallActionButtons onResume={handleResume} disabled={isLoading || isExecuting} />
+      <HostCallActionButtons onResume={handleResume} onRestart={onRestart} disabled={isLoading || isExecuting} />
     </>
   );
 };

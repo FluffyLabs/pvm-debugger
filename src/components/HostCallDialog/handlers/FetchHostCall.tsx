@@ -76,7 +76,13 @@ const FETCH_KIND_INFO: Record<number, { name: string; description: string; needs
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
-const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, isLoading, onResume, serviceId }) => {
+const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({
+  currentState,
+  isLoading,
+  onResume,
+  onRestart,
+  serviceId,
+}) => {
   const regs = currentState.regs ?? DEFAULT_REGS;
   const fetchKind = Number(regs[10] ?? 0n);
   const fetchInfo = FETCH_KIND_INFO[fetchKind] || {
@@ -202,7 +208,7 @@ const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({ currentState, 
           <div>ω₁₁: {regs[11]?.toString()}</div>
         </div>
       </div>
-      <HostCallActionButtons onResume={handleResume} disabled={isLoading} />
+      <HostCallActionButtons onResume={handleResume} onRestart={onRestart} disabled={isLoading} />
     </>
   );
 };

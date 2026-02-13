@@ -5,7 +5,6 @@ import { CommandStatus, PvmApiInterface } from "../types";
 export type StepParams = {
   pvm: PvmApiInterface | null;
   stepsToPerform: number;
-  serviceId: number | null;
 };
 export type StepResponse = {
   status: CommandStatus;
@@ -38,9 +37,9 @@ const step = async ({ pvm, stepsToPerform }: StepParams) => {
   return { state, isFinished, currentPc: state.pc ?? 0, exitArg: pvm.getExitArg() };
 };
 
-export const runStep = async ({ pvm, stepsToPerform, serviceId }: StepParams): Promise<StepResponse> => {
+export const runStep = async ({ pvm, stepsToPerform }: StepParams): Promise<StepResponse> => {
   try {
-    const data = await step({ pvm, stepsToPerform, serviceId });
+    const data = await step({ pvm, stepsToPerform });
     return { status: CommandStatus.SUCCESS, ...data };
   } catch (error) {
     return { status: CommandStatus.ERROR, error, isFinished: true, currentPc: 0, state: {}, exitArg: 0 };

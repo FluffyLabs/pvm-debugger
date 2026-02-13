@@ -20,11 +20,12 @@ export const asyncWorkerPostMessage = <C extends Commands>(
     const messageId = getMessageId();
     const timeoutId = setTimeout(() => {
       reject(`PVM ${id} reached max timeout ${RESPONSE_WAIT_TIMEOUT}ms for ${messageId}`);
+      worker.removeEventListener("message", messageHandler);
     }, RESPONSE_WAIT_TIMEOUT);
 
     const messageHandler = (event: MessageEvent<WorkerResponseParams>) => {
-      logger.info("📥 Debugger received message", event.data);
       if (event.data.messageId === messageId) {
+        logger.info(`📥 (${id}) Debugger received message`, event.data);
         clearTimeout(timeoutId);
         worker.removeEventListener("message", messageHandler);
         resolve(event.data as Extract<WorkerResponseParams, { command: C }>);
