@@ -92,7 +92,7 @@
     "postcss": "^8.4.39",
     "prettier": "3.3.3",
     "typescript": "^5.9.2",
-    "vite": "^7.1.12",
+    "vite": "^7.3.1",
     "vite-plugin-top-level-await": "^1.4.4",
     "vite-plugin-wasm": "^3.5.0",
     "vitest": "^4.0.14",
