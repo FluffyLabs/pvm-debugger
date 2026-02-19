@@ -7,6 +7,7 @@ export type ProgramUploadFileOutput = {
   exampleName?: string;
   kind: string;
   spiProgram: SpiProgram | null;
+  spiArgs?: Uint8Array;
 };
 
 export type ProgramUploadFileInput = {
