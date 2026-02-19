@@ -131,6 +131,7 @@ function tryParseTraceFile(content: string, fileName: string, initialState: Expe
           memory: chunks,
           gas,
         },
+        spiArgs,
       },
       traceContent: content,
     };

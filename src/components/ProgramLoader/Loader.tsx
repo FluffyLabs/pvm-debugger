@@ -61,6 +61,13 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
     setCurrentStep("upload");
   }, [programLoad]);
 
+  // Auto-switch to RAW mode when a trace is loaded
+  useEffect(() => {
+    if (traceContent !== null) {
+      setIsManualMode(true);
+    }
+  }, [traceContent]);
+
   const handleFileUpload = useCallback((output: ProgramUploadFileOutput, trace?: string) => {
     setProgramLoad(output);
     if (trace) {
@@ -120,11 +127,13 @@ export const Loader = ({ setIsDialogOpen }: { setIsDialogOpen?: (val: boolean) =
 
         // For SPI programs, update PC and encode parameters
         if (loadedProgram?.spiProgram) {
-          // Parse the encoded SPI arguments (either auto-generated or manually entered)
-          const parsedArgs = bytes.BytesBlob.parseBlob(encodedSpiArgs);
+          // Use SPI args from trace if available, otherwise use auto-generated/manual ones
+          const spiArgsToUse = loadedProgram.spiArgs
+            ? loadedProgram.spiArgs
+            : bytes.BytesBlob.parseBlob(encodedSpiArgs).raw;
 
-          // Set the encoded parameters as SPI arguments
-          dispatch(setSpiArgs(parsedArgs.raw));
+          // Set the SPI arguments
+          dispatch(setSpiArgs(spiArgsToUse));
 
           // Extract and set service ID from entrypoint parameters
           let serviceId: number;

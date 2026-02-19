@@ -761,95 +761,14 @@ function formatTermination(term: TerminationEntry): string {
  * @param hostCallIndex The ecalli index being executed
  * @param readMemory Function to read memory for comparison
  */
-export function findHostCallEntry(
-  trace: ParsedTrace,
-  indexInTrace: number,
-  pc: number,
-  gas: bigint,
+function collectStateMismatches(
+  entry: HostCallEntry,
   registers: bigint[],
-  hostCallIndex: number,
+  gas: bigint,
   readMemory?: (address: number, length: number) => Uint8Array | null,
-): HostCallLookupResult {
-  // Get remaining entries from the current index
-  const remainingEntries = trace.hostCalls.slice(indexInTrace);
-
-  // Try to find an exact match by PC and host call index
-  const matchingEntries = remainingEntries.filter((hc) => hc.pc === pc && hc.gas <= gas);
-
-  if (matchingEntries.length === 0) {
-    return { entry: null, mismatches: [] };
-  }
-
-  // First try to find an entry whose hostCallIndex matches exactly
-  // Prefer exact index match even if gas is slightly higher
-  const exactIndexMatch = remainingEntries.find((hc) => hc.index === hostCallIndex && hc.pc === pc);
-
-  // If we have an exact index match with acceptable gas, use it
-  if (exactIndexMatch && exactIndexMatch.gas <= gas) {
-    const mismatches: StateMismatch[] = [];
-
-    // Check gas
-    if (exactIndexMatch.gas !== gas) {
-      mismatches.push({
-        field: "gas",
-        expected: exactIndexMatch.gas.toString(),
-        actual: gas.toString(),
-      });
-    }
-
-    // Check registers
-    for (const [idx, expectedValue] of exactIndexMatch.registers) {
-      const actualValue = registers[idx] ?? 0n;
-      if (expectedValue !== actualValue) {
-        mismatches.push({
-          field: "register",
-          expected: `r${idx}=0x${expectedValue.toString(16)}`,
-          actual: `r${idx}=0x${actualValue.toString(16)}`,
-          details: `Register ${idx}`,
-        });
-      }
-    }
-
-    // Check memory reads if readMemory function is provided
-    if (readMemory) {
-      for (const mr of exactIndexMatch.memoryReads) {
-        const actualData = readMemory(mr.address, mr.length);
-        if (actualData) {
-          const expectedHex = Array.from(mr.data)
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-          const actualHex = Array.from(actualData)
-            .map((b) => b.toString(16).padStart(2, "0"))
-            .join("");
-          if (expectedHex !== actualHex) {
-            mismatches.push({
-              field: "memread",
-              expected: `0x${expectedHex}`,
-              actual: `0x${actualHex}`,
-              details: `Memory at 0x${mr.address.toString(16)} (${mr.length} bytes)`,
-            });
-          }
-        }
-      }
-    }
-
-    return { entry: exactIndexMatch, mismatches };
-  }
-
-  // Fall back to first matching entry by PC and gas
-  const entry = matchingEntries[0];
+): StateMismatch[] {
   const mismatches: StateMismatch[] = [];
 
-  // Check PC
-  if (entry.index !== hostCallIndex) {
-    mismatches.push({
-      field: "index",
-      expected: entry.index.toString(),
-      actual: hostCallIndex.toString(),
-    });
-  }
-
-  // Check gas
   if (entry.gas !== gas) {
     mismatches.push({
       field: "gas",
@@ -858,7 +777,6 @@ export function findHostCallEntry(
     });
   }
 
-  // Check registers
   for (const [idx, expectedValue] of entry.registers) {
     const actualValue = registers[idx] ?? 0n;
     if (expectedValue !== actualValue) {
@@ -871,7 +789,6 @@ export function findHostCallEntry(
     }
   }
 
-  // Check memory reads if readMemory function is provided
   if (readMemory) {
     for (const mr of entry.memoryReads) {
       const actualData = readMemory(mr.address, mr.length);
@@ -893,6 +810,46 @@ export function findHostCallEntry(
       }
     }
   }
+
+  return mismatches;
+}
+
+export function findHostCallEntry(
+  trace: ParsedTrace,
+  indexInTrace: number,
+  pc: number,
+  gas: bigint,
+  registers: bigint[],
+  hostCallIndex: number,
+  readMemory?: (address: number, length: number) => Uint8Array | null,
+): HostCallLookupResult {
+  const remainingEntries = trace.hostCalls.slice(indexInTrace);
+
+  const exactIndexMatch = remainingEntries.find((hc) => hc.index === hostCallIndex && hc.pc === pc);
+
+  if (exactIndexMatch) {
+    const mismatches = collectStateMismatches(exactIndexMatch, registers, gas, readMemory);
+    return { entry: exactIndexMatch, mismatches };
+  }
+
+  const matchingEntries = remainingEntries.filter((hc) => hc.pc === pc && hc.gas <= gas);
+
+  if (matchingEntries.length === 0) {
+    return { entry: null, mismatches: [] };
+  }
+
+  const entry = matchingEntries[0];
+  const mismatches: StateMismatch[] = [];
+
+  if (entry.index !== hostCallIndex) {
+    mismatches.push({
+      field: "index",
+      expected: entry.index.toString(),
+      actual: hostCallIndex.toString(),
+    });
+  }
+
+  mismatches.push(...collectStateMismatches(entry, registers, gas, readMemory));
 
   return { entry, mismatches };
 }
