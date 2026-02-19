@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { valueToNumeralSystem } from "@/components/Instructions/utils";
 import { DEFAULT_GAS, DEFAULT_REGS, ExpectedState, RegistersArray } from "@/types/pvm";
@@ -181,11 +181,15 @@ export const DefaultHostCallContent: React.FC<DefaultHostCallContentProps> = ({
     [onMemoryChange],
   );
 
-  // Extract memory writes from trace entry
-  const pendingMemoryWrites = traceEntry?.memoryWrites.map((mw) => ({
-    address: mw.address,
-    data: mw.data,
-  }));
+  // Extract memory writes from trace entry (memoized to prevent unnecessary re-renders)
+  const pendingMemoryWrites = useMemo(
+    () =>
+      traceEntry?.memoryWrites.map((mw) => ({
+        address: mw.address,
+        data: mw.data,
+      })),
+    [traceEntry?.memoryWrites],
+  );
 
   // Get initial address and length from first memory write in trace
   const firstMemWrite = traceEntry?.memoryWrites[0];

@@ -95,7 +95,8 @@
     "vite": "^7.1.12",
     "vite-plugin-top-level-await": "^1.4.4",
     "vite-plugin-wasm": "^3.5.0",
-    "vitest": "^4.0.14"
+    "vitest": "^4.0.14",
+    "@swc/core": "^1.13.5"
   },
   "lint-staged": {
     "**/*.{ts,tsx}": [

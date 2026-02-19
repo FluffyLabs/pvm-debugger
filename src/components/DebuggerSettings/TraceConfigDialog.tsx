@@ -9,7 +9,7 @@ import {
   selectHostCallsTrace,
   selectAutoContinueOnHostCalls,
 } from "@/store/debugger/debuggerSlice";
-import { validateTrace, getTraceSummary, parseTrace } from "@/lib/host-call-trace";
+import { validateTraceContent, getTraceSummary, parseTrace } from "@/lib/host-call-trace";
 import CodeMirror from "@uiw/react-codemirror";
 import { useIsDarkMode } from "@/packages/ui-kit/DarkMode/utils";
 import classNames from "classnames";
@@ -77,10 +77,10 @@ export const TraceConfigDialog = ({ open, onOpenChange }: TraceConfigDialogProps
       return;
     }
 
-    const errors = validateTrace(content);
-    setValidationErrors(errors.map((e) => `Line ${e.lineNumber}: ${e.message}`));
+    const validation = validateTraceContent(content);
+    setValidationErrors(validation.errors.map((e) => `Line ${e.lineNumber}: ${e.message}`));
 
-    if (errors.length === 0) {
+    if (validation.errors.length === 0) {
       const fullParsed = parseTrace(content);
       setSummary(getTraceSummary(fullParsed));
     } else {

@@ -5,12 +5,9 @@ import * as path from "path";
 describe("loadingUtils", () => {
   describe("tryParseTraceFile via loadFileFromUint8Array", () => {
     it("should load io-trace-output.log without throwing", async () => {
-      const tracePath = path.join(__dirname, "../../../io-trace-output.log");
+      const tracePath = path.join(__dirname, "../../../tests/io-trace-output.log");
 
-      if (!fs.existsSync(tracePath)) {
-        console.warn("Skipping test: io-trace-output.log not found");
-        return;
-      }
+      expect(fs.existsSync(tracePath), `Fixture file not found: ${tracePath}`).toBe(true);
 
       const content = fs.readFileSync(tracePath);
       const uint8Array = new Uint8Array(content);

@@ -64,12 +64,9 @@ start pc=0 gas=1000`;
 
   describe("io-trace-output.log", () => {
     it("should parse the real trace file", () => {
-      const tracePath = path.join(__dirname, "../../io-trace-output.log");
+      const tracePath = path.join(__dirname, "../../tests/io-trace-output.log");
 
-      if (!fs.existsSync(tracePath)) {
-        console.warn("Skipping test: io-trace-output.log not found");
-        return;
-      }
+      expect(fs.existsSync(tracePath), `Fixture file not found: ${tracePath}`).toBe(true);
 
       const content = fs.readFileSync(tracePath, "utf-8");
       const result = parseTrace(content);
