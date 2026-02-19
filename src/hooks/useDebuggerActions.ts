@@ -14,6 +14,7 @@ import {
   setPvmInitialized,
   setIsStepMode,
   setPvmLoaded,
+  resetHostCallIndex,
 } from "@/store/debugger/debuggerSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -35,9 +36,38 @@ import { useCallback } from "react";
 import { storageManager } from "@/components/HostCallDialog/handlers/storageManager";
 
 export const useDebuggerActions = () => {
-  const { breakpointAddresses, initialState } = useAppSelector((state) => state.debugger);
+  const { breakpointAddresses, initialState, pvmOptions } = useAppSelector((state) => state.debugger);
   const workers = useAppSelector((state) => state.workers);
   const dispatch = useAppDispatch();
+
+  const recreateWorker = useCallback(
+    async ({ id, type, params }: SelectedPvmWithPayload) => {
+      await dispatch(createWorker(id)).unwrap();
+
+      let pvmType: PvmTypes;
+      if (id === AvailablePvms.TYPEBERRY) {
+        pvmType = PvmTypes.BUILT_IN;
+      } else if (type === AvailablePvms.WASM_FILE) {
+        pvmType = PvmTypes.WASM_FILE;
+      } else if (type === AvailablePvms.WASM_WS) {
+        pvmType = PvmTypes.WASM_WS;
+      } else {
+        // Default to WASM_URL for POLKAVM and others
+        pvmType = PvmTypes.WASM_URL;
+      }
+
+      await dispatch(
+        loadWorker({
+          id,
+          payload: {
+            type: pvmType,
+            params,
+          },
+        }),
+      ).unwrap();
+    },
+    [dispatch],
+  );
 
   const restartProgram = useCallback(
     async (state: ExpectedState) => {
@@ -46,6 +76,23 @@ export const useDebuggerActions = () => {
       dispatch(setIsDebugFinished(false));
       dispatch(setIsRunMode(false));
       dispatch(setIsStepMode(false));
+      dispatch(resetHostCallIndex());
+
+      // Save memory ranges before destroying workers
+      // Guard: ensure memoryRanges is always an array
+      const memoryRanges = Array.isArray(workers[0]?.memoryRanges) ? workers[0].memoryRanges : [];
+
+      // Destroy all existing workers to clear message listeners
+      await Promise.all(workers.map((worker: WorkerState) => dispatch(destroyWorker(worker.id)).unwrap()));
+
+      // Recreate workers with the same PVM configurations
+      const selectedPvmConfigs = pvmOptions.allAvailablePvms.filter((pvm) => pvmOptions.selectedPvm.includes(pvm.id));
+      await Promise.all(selectedPvmConfigs.map(recreateWorker));
+
+      // Restore memory ranges and initialize (only if there are memory ranges)
+      if (memoryRanges.length > 0) {
+        await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      }
       dispatch(setAllWorkersCurrentState(state));
       dispatch(setAllWorkersPreviousState(state));
       await dispatch(initAllWorkers()).unwrap();
@@ -54,7 +101,7 @@ export const useDebuggerActions = () => {
       dispatch(setAllWorkersCurrentPc(state.pc));
       dispatch(setClickedInstruction(null));
     },
-    [dispatch],
+    [dispatch, workers, pvmOptions, recreateWorker],
   );
 
   const startProgram = useCallback(
@@ -130,83 +177,22 @@ export const useDebuggerActions = () => {
     async (selectedPvms: SelectedPvmWithPayload[]) => {
       logger.debug("selectedPvms vs workers ", selectedPvms, workers);
 
-      await Promise.all(
-        workers.map((worker: WorkerState) => {
-          return dispatch(destroyWorker(worker.id)).unwrap();
-        }),
-      );
+      // Guard: ensure memoryRanges is always an array
+      const memoryRanges = Array.isArray(workers[0]?.memoryRanges) ? workers[0].memoryRanges : [];
 
-      const memoryRanges = workers[0]?.memoryRanges;
+      // Destroy all existing workers
+      await Promise.all(workers.map((worker: WorkerState) => dispatch(destroyWorker(worker.id)).unwrap()));
 
-      await Promise.all(
-        selectedPvms.map(async ({ id, type, params }) => {
-          logger.info("Selected PVM type", id, type, params);
+      // TODO [ToDr] For some reason this must not be here, although it seems sensible.
+      // There is some other weird way how these workers become alive.
+      // Recreate workers with the same PVM configurations
+      //const selectedPvmConfigs = pvmOptions.allAvailablePvms.filter((pvm) => pvmOptions.selectedPvm.includes(pvm.id));
+      //await Promise.all(selectedPvmConfigs.map(recreateWorker));
 
-          if (workers.find((worker: WorkerState) => worker.id === id)) {
-            logger.info("Worker already initialized");
-            // TODO: for now just initialize the worker one more time
-          }
-          logger.info("Worker not initialized");
-
-          if (id === AvailablePvms.POLKAVM) {
-            await dispatch(createWorker(AvailablePvms.POLKAVM)).unwrap();
-            await dispatch(
-              loadWorker({
-                id,
-                payload: {
-                  type: PvmTypes.WASM_URL as PvmTypes,
-                  params,
-                },
-              }),
-            ).unwrap();
-          } else if (id === AvailablePvms.TYPEBERRY) {
-            await dispatch(createWorker(AvailablePvms.TYPEBERRY)).unwrap();
-            await dispatch(
-              loadWorker({
-                id,
-                payload: {
-                  type: PvmTypes.BUILT_IN,
-                },
-              }),
-            ).unwrap();
-          } else if (type === AvailablePvms.WASM_FILE) {
-            await dispatch(createWorker(id)).unwrap();
-            await dispatch(
-              loadWorker({
-                id,
-                payload: {
-                  type: PvmTypes.WASM_FILE,
-                  params,
-                },
-              }),
-            ).unwrap();
-          } else if (type === AvailablePvms.WASM_URL) {
-            await dispatch(createWorker(id)).unwrap();
-            await dispatch(
-              loadWorker({
-                id,
-                payload: {
-                  type: PvmTypes.WASM_URL,
-                  params,
-                },
-              }),
-            ).unwrap();
-          } else if (type === AvailablePvms.WASM_WS) {
-            await dispatch(createWorker(id)).unwrap();
-            await dispatch(
-              loadWorker({
-                id,
-                payload: {
-                  type: PvmTypes.WASM_WS,
-                  params,
-                },
-              }),
-            ).unwrap();
-          }
-        }),
-      );
-
-      await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      // Restore memory ranges only if there are any
+      if (memoryRanges.length > 0) {
+        await dispatch(syncMemoryRangeAllWorkers({ memoryRanges }));
+      }
       await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
       await restartProgram(initialState);
       dispatch(setPvmLoaded(true));
