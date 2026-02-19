@@ -6,15 +6,14 @@ import {
   setIsDebugFinished,
   setIsRunMode,
   setIsStepMode,
-  setHasHostCallOpen,
-  setPendingHostCallIndex,
+  setPendingHostCall,
 } from "@/store/debugger/debuggerSlice.ts";
+import { findHostCallEntry, HostCallEntry, StateMismatch } from "@/lib/host-call-trace";
 import PvmWorker from "@/packages/web-worker/worker?worker&inline";
 import { logger } from "@/utils/loggerService";
 import { Commands, PvmTypes } from "@/packages/web-worker/types";
 import { asyncWorkerPostMessage, hasCommandStatusError, LOAD_MEMORY_CHUNK_SIZE, MEMORY_SPLIT_STEP } from "../utils";
 import { chunk, inRange, isNumber } from "lodash";
-import { isInstructionError } from "@/types/type-guards";
 import { SerializedFile } from "@/lib/utils.ts";
 
 // TODO: remove this when found a workaround for BigInt support in JSON.stringify
@@ -114,40 +113,40 @@ export const loadWorker = createAsyncThunk(
   },
 );
 
-export const setAllWorkersServiceId = createAsyncThunk("workers/setAllStorage", async (_, { getState }) => {
-  const state = getState() as RootState;
-  const debuggerState = state.debugger;
-  const serviceId = debuggerState.serviceId;
-
-  if (serviceId === null) {
-    throw new Error("Service id is not set");
-  }
-
-  return Promise.all(
-    state.workers.map(async (worker) => {
-      await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.SET_SERVICE_ID,
-        payload: {
-          serviceId,
-        },
-      });
-    }),
-  );
-});
-
 export const initAllWorkers = createAsyncThunk("workers/initAllWorkers", async (_, { getState, dispatch }) => {
   const state = getState() as RootState;
-  const debuggerState = state.debugger;
+  const { program, initialState, spiProgram, spiArgs } = state.debugger;
 
-  return Promise.all(
-    state.workers.map(async (worker) => {
+  if (state.workers.length === 0) {
+    logger.warn("initAllWorkers: No workers to initialize. Waiting...");
+    // Retry a few times in case workers are being created
+    for (let i = 0; i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 500));
+      const newState = getState() as RootState;
+      if (newState.workers.length > 0) {
+        break;
+      }
+    }
+    const finalState = getState() as RootState;
+    if (finalState.workers.length === 0) {
+      logger.warn("initAllWorkers: Still no workers after wait. Aborting.");
+      return;
+    }
+  }
+
+  // Refresh state after wait
+  const currentState = getState() as RootState;
+  const currentWorkers = currentState.workers;
+
+  await Promise.all(
+    currentWorkers.map(async (worker) => {
       const initData = await asyncWorkerPostMessage(worker.id, worker.worker, {
         command: Commands.INIT,
         payload: {
-          spiProgram: state.debugger.spiProgram,
-          spiArgs: state.debugger.spiArgs,
-          initialState: debuggerState.initialState,
-          program: new Uint8Array(debuggerState.program),
+          spiProgram: spiProgram,
+          spiArgs: spiArgs || new Uint8Array(),
+          initialState: initialState,
+          program: new Uint8Array(program),
         },
       });
 
@@ -180,6 +179,12 @@ export const loadMemoryChunkAllWorkers = createAsyncThunk(
   ) => {
     const state = getState() as RootState;
 
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("loadMemoryChunkAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
+
     return Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
@@ -210,6 +215,12 @@ export const refreshPageAllWorkers = createAsyncThunk(
   "workers/refreshPageAllWorkers",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
+
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("refreshPageAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
 
     return Promise.all(
       state.workers.map(async (worker) => {
@@ -250,56 +261,113 @@ export const handleHostCall = createAsyncThunk(
   "workers/handleHostCall",
   async ({ workerId }: { workerId?: string }, { getState, dispatch }) => {
     const state = getState() as RootState;
+    const workerState = state.workers.filter(({ id }) => {
+      return workerId ? workerId === id : true;
+    })[0];
 
-    const instructionEnriched = state.debugger.programPreviewResult.find(
-      (instruction) => instruction.address === state.workers[0].previousState.pc,
-    );
+    const exitArg = workerState?.exitArg ?? -1;
+    const trace = state.debugger.hostCallsTrace;
+    const nextHostCallIndex = state.debugger.nextHostCallIndex;
+    const autoContinue = state.debugger.autoContinueOnHostCalls;
 
-    if (
-      !instructionEnriched ||
-      isInstructionError(instructionEnriched)
-      // !isOneImmediateArgs(instructionEnriched.args)
-    ) {
-      throw new Error("Invalid host call instruction");
+    const openDialog = (hcId: number, entry: HostCallEntry | null, mismatches: StateMismatch[] = []) => {
+      dispatch(
+        setPendingHostCall({
+          pendingHostCall: {
+            hostCallId: hcId,
+            entry,
+            mismatches,
+          },
+          nextHostCallIndex: nextHostCallIndex,
+        }),
+      );
+    };
+
+    // just open the dialog
+    if (trace === null || !trace.parsed) {
+      logger.info("  [handleHostCall] No trace -> opening dialog");
+      openDialog(exitArg, null);
+      return;
     }
+    const currentState = workerState?.currentState;
+    const pc = currentState?.pc ?? 0;
+    const gas = currentState?.gas ?? 0n;
+    const regs = (currentState?.regs ?? []) as bigint[];
 
-    // Open dialog if no traces are available, allowing user to manually set register values
-    if (state.debugger.hostCallsTrace === null) {
-      const exitArg = state.workers[0]?.exitArg ?? -1;
-      dispatch(setPendingHostCallIndex(exitArg));
-      dispatch(setHasHostCallOpen(true));
+    const result = findHostCallEntry(trace.parsed, nextHostCallIndex, pc, gas, regs, exitArg);
+
+    if (result.entry === null) {
+      logger.info("  [handleHostCall] No entry found -> opening dialog");
+      openDialog(exitArg, null);
       return;
     }
 
+    if (result.mismatches.length > 0) {
+      logger.info("  [handleHostCall] Mismatches found -> stopping, opening dialog");
+      openDialog(exitArg, result.entry, result.mismatches);
+      return;
+    }
+
+    if (!autoContinue) {
+      logger.debug("  [handleHostCall] autoContinue=false -> opening dialog");
+      openDialog(exitArg, result.entry, result.mismatches);
+      return;
+    }
+
+    logger.debug("  [handleHostCall] AUTO-CONTINUING with trace data");
+    // TODO [ToDr] This should be a separate method?
+    const newRegs = [...regs];
+    for (const rw of result.entry.registerWrites) {
+      newRegs[rw.index] = rw.value;
+    }
+    const newGas = result.entry.gasAfter ?? gas;
+    const memoryEdits = result.entry.memoryWrites.map((mw) => ({
+      address: mw.address,
+      data: mw.data,
+    }));
+
+    logger.debug(`  [handleHostCall] Setting state: gas=${newGas}, memEdits=${memoryEdits.length}`);
     await Promise.all(
       state.workers
         .filter(({ id }) => {
-          // Allow to call it for a single worker
           return workerId ? workerId === id : true;
         })
         .map(async (worker) => {
           const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
-            command: Commands.HOST_CALL,
-            payload: { hostCallIdentifier: worker.exitArg ?? -1 },
+            command: Commands.SET_STATE,
+            payload: { regs: newRegs, gas: newGas },
           });
-
-          // TODO [ToDr] Handle host call response?
-
-          if ((getState() as RootState).debugger.isRunMode) {
-            dispatch(continueAllWorkers());
-          }
 
           if (hasCommandStatusError(resp)) {
             throw new Error(resp.error.message);
           }
+
+          logger.info(`  [handleHostCall] dispatching setWorkerCurrentState for ${worker.id}`);
+          dispatch(setWorkerCurrentState({ id: worker.id, currentState: resp.payload.state }));
+
+          for (const mem of memoryEdits) {
+            const memResp = await asyncWorkerPostMessage(worker.id, worker.worker, {
+              command: Commands.SET_MEMORY,
+              payload: { address: mem.address, data: mem.data },
+            });
+
+            if (hasCommandStatusError(memResp)) {
+              throw new Error(memResp.error.message);
+            }
+          }
         }),
     );
 
-    if (selectShouldContinueRunning(state)) {
-      dispatch(continueAllWorkers());
-    }
-
-    return;
+    logger.info("  [handleHostCall] Done - auto-continuing without opening dialog");
+    // Advance host call index before resuming execution
+    dispatch(
+      setPendingHostCall({
+        pendingHostCall: null,
+        nextHostCallIndex: nextHostCallIndex + 1,
+      }),
+    );
+    // Resume execution
+    await dispatch(runAllWorkers()).unwrap();
   },
 );
 
@@ -374,6 +442,7 @@ export const stepAllWorkers = createAsyncThunk(
       return;
     }
 
+    let shouldOpenHostCalls;
     const responses = await Promise.all(
       state.workers.map(async (worker) => {
         const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
@@ -412,13 +481,10 @@ export const stepAllWorkers = createAsyncThunk(
         }
 
         if (state.status === Status.HOST) {
-          // break execution if host call trace is not provided
-          // and we the PVM stops.
-          if (debuggerState.hostCallsTrace === null) {
-            dispatch(setIsRunMode(false));
-          }
-
-          await dispatch(handleHostCall({ workerId: worker.id })).unwrap();
+          logger.group(`[HOST CALL] PVM stopped at pc=${state.pc}, exitArg=${exitArg}`);
+          dispatch(setIsRunMode(false));
+          shouldOpenHostCalls = true;
+          logger.groupEnd();
         }
 
         return {
@@ -429,6 +495,11 @@ export const stepAllWorkers = createAsyncThunk(
         };
       }),
     );
+
+    // we wait for all of the workers to reach the host call before handling it
+    if (shouldOpenHostCalls) {
+      await dispatch(handleHostCall({})).unwrap();
+    }
 
     const allFinished = responses.every((response) => response.isFinished);
 
@@ -459,6 +530,12 @@ export const refreshMemoryRangeAllWorkers = createAsyncThunk(
   "workers/refreshAllMemoryRanges",
   async (_, { getState, dispatch }) => {
     const state = getState() as RootState;
+
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("refreshMemoryRangeAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
 
     await Promise.all(
       state.workers.map(async (worker) => {
@@ -499,6 +576,13 @@ export const loadMemoryRangeAllWorkers = createAsyncThunk(
     { getState, dispatch },
   ) => {
     const state = getState() as RootState;
+
+    // Guard: skip if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("loadMemoryRangeAllWorkers: skipping - no workers or PVM not initialized");
+      return;
+    }
+
     const stopAddress = startAddress + length;
 
     return Promise.all(
@@ -606,6 +690,13 @@ export const readMemoryRange = createAsyncThunk(
   "workers/readMemoryRange",
   async ({ startAddress, length }: { startAddress: number; length: number }, { getState }) => {
     const state = getState() as RootState;
+
+    // Guard: return empty array if no workers or PVM not initialized
+    if (state.workers.length === 0 || !state.debugger.pvmInitialized) {
+      logger.info("readMemoryRange: skipping - no workers or PVM not initialized");
+      return new Uint8Array(length);
+    }
+
     const worker = state.workers[0];
 
     if (!worker) {
@@ -642,9 +733,10 @@ export const resumeAfterHostCall = createAsyncThunk(
     }: { regs: bigint[]; gas: bigint; mode: HostCallResumeMode; memoryEdits?: MemoryEdit[] },
     { getState, dispatch },
   ) => {
+    logger.group(`[resumeAfterHostCall] mode=${mode}, gas=${gas}, memEdits=${memoryEdits?.length ?? 0}`);
     const state = getState() as RootState;
 
-    // Set state for all workers
+    logger.info("Setting state for all workers...");
     await Promise.all(
       state.workers.map(async (worker) => {
         const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
@@ -656,16 +748,14 @@ export const resumeAfterHostCall = createAsyncThunk(
           throw resp.error;
         }
 
-        // Update Redux state with new values
         dispatch(setWorkerCurrentState({ id: worker.id, currentState: resp.payload.state }));
       }),
     );
 
-    // Write all memory edits to all workers if provided
+    logger.info(`Writing ${memoryEdits?.length} memory edits...`);
     if (memoryEdits && memoryEdits.length > 0) {
       await Promise.all(
         state.workers.map(async (worker) => {
-          // Write each memory edit sequentially for this worker
           for (const memory of memoryEdits) {
             const resp = await asyncWorkerPostMessage(worker.id, worker.worker, {
               command: Commands.SET_MEMORY,
@@ -680,11 +770,16 @@ export const resumeAfterHostCall = createAsyncThunk(
       );
     }
 
-    // Close the dialog
-    dispatch(setHasHostCallOpen(false));
-    dispatch(setPendingHostCallIndex(null));
+    logger.info("Closing dialog...");
+    dispatch(
+      setPendingHostCall({
+        pendingHostCall: null,
+        nextHostCallIndex: state.debugger.nextHostCallIndex + 1,
+      }),
+    );
 
     // Resume execution based on mode
+    logger.info(`Resuming execution in mode: ${mode}`);
     if (mode === "run") {
       dispatch(setIsRunMode(true));
       await dispatch(runAllWorkers()).unwrap();
@@ -692,12 +787,13 @@ export const resumeAfterHostCall = createAsyncThunk(
       const stepsToPerform = calculateStepsToExitBlockForAllWorkers(getState() as RootState);
       await dispatch(stepAllWorkers({ stepsToPerform })).unwrap();
     } else {
-      // step
       await dispatch(stepAllWorkers({ stepsToPerform: 1 })).unwrap();
     }
 
     await dispatch(refreshPageAllWorkers());
     await dispatch(refreshMemoryRangeAllWorkers()).unwrap();
+    logger.info("resumeAfterHostCall complete");
+    logger.groupEnd();
   },
 );
 
@@ -708,17 +804,18 @@ export const destroyWorker = createAsyncThunk("workers/destroyWorker", async (id
     return;
   }
 
-  await Promise.all(
-    state.workers.map(async (worker) => {
-      const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
-        command: Commands.UNLOAD,
-      });
+  // Send UNLOAD only to the specific worker being destroyed
+  try {
+    const data = await asyncWorkerPostMessage(worker.id, worker.worker, {
+      command: Commands.UNLOAD,
+    });
 
-      if (hasCommandStatusError(data)) {
-        throw data.error;
-      }
-    }),
-  );
+    if (hasCommandStatusError(data)) {
+      console.warn(`Worker ${id} UNLOAD error:`, data.error);
+    }
+  } catch (e) {
+    console.warn(`Failed to send UNLOAD to worker ${id}:`, e);
+  }
 
   worker.worker.terminate();
 
