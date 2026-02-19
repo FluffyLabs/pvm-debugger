@@ -1,6 +1,6 @@
 import { virtualTrapInstruction } from "@/utils/virtualTrapInstruction";
 import { byteToOpCodeMap } from "./assemblify";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 import { Instruction } from "./instruction";
 import { CurrentInstruction } from "@/types/pvm";
 

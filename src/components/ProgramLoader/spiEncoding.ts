@@ -1,4 +1,6 @@
-import { bytes, codec, numbers } from "@typeberry/lib";
+import * as bytes from "@typeberry/lib/bytes";
+import * as codec from "@typeberry/lib/codec";
+import * as numbers from "@typeberry/lib/numbers";
 import { RefineParams, AccumulateParams, IsAuthorizedParams } from "./EntrypointSelector";
 
 export function encodeRefineParams(params: RefineParams): Uint8Array {

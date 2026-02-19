@@ -1,7 +1,7 @@
 import { NumeralSystem } from "@/context/NumeralSystem";
 import { WorkerState } from "@/store/workers/workersSlice";
 import { valueToNumeralSystem } from "../Instructions/utils";
-import { codec } from "@typeberry/lib";
+import * as codec from "@typeberry/lib/codec";
 
 export type FindMemoryForWorkerType = (
   worker: WorkerState,

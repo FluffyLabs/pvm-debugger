@@ -1,7 +1,7 @@
 import { ExpectedState, InitialState, SpiProgram } from "@/types/pvm";
 import { WasmPvmShellInterface } from "./wasmBindgenShell";
 import { SerializedFile } from "@/lib/utils.ts";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 
 type CommonWorkerResponseParams = { status: CommandStatus; error?: unknown; messageId: string };
 

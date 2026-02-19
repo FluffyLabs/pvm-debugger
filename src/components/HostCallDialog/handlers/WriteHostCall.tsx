@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, block, utils } from "@typeberry/lib";
+import * as jam_host_calls from "@typeberry/lib/jam-host-calls";
+import * as block from "@typeberry/lib/block";
+import * as utils from "@typeberry/lib/utils";
 import { HostCallContext, hexToAscii, bytesToHex } from "./hostCallUtils";
 import { storageManager } from "./storageManager";
 import { HostCallActionButtons } from "./HostCallActionButtons";

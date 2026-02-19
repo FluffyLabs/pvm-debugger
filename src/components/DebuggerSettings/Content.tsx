@@ -18,7 +18,7 @@ import { Separator } from "../ui/separator";
 import { WithHelp } from "../WithHelp/WithHelp";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { bytes } from "@typeberry/lib";
+import * as bytes from "@typeberry/lib/bytes";
 import { Button } from "@/components/ui/button";
 import { SpiConfigDialog } from "./SpiConfigDialog";
 import { TraceConfigDialog } from "./TraceConfigDialog";

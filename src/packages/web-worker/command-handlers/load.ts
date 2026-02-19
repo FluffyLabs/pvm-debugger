@@ -1,7 +1,7 @@
 import { logger } from "@/utils/loggerService";
 import { getMemorySize, loadArrayBufferAsWasm } from "../utils";
 import { CommandStatus, PvmApiInterface, PvmTypes } from "../types";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 import { deserializeFile, SerializedFile } from "@/lib/utils.ts";
 import loadWasmFromWebsockets from "../wasmFromWebsockets";
 

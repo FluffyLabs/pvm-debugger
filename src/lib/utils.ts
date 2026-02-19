@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 import { MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
 
 export function cn(...inputs: ClassValue[]) {

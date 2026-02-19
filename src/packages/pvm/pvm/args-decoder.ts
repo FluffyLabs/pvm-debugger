@@ -1,4 +1,4 @@
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 
 const IMMEDIATE_AND_OFFSET_MAX_LENGTH = 4;
 const BITS_PER_BYTE = 8;

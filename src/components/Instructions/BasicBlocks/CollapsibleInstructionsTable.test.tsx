@@ -10,7 +10,7 @@ import { NumeralSystem } from "@/context/NumeralSystem";
 import workersReducer from "@/store/workers/workersSlice";
 import debuggerReducer from "@/store/debugger/debuggerSlice";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 
 // Mock the utils module to avoid program decoding issues
 vi.mock("../utils", async () => {

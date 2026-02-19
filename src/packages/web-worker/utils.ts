@@ -1,5 +1,5 @@
 import { ExpectedState, MemoryChunkItem, PageMapItem, RegistersArray } from "@/types/pvm.ts";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 import { createWasmPvmShell } from "@/packages/web-worker/wasmBindgenShell.ts";
 import "./goWasmExec.js";
 import "./goWasmExec.d.ts";
