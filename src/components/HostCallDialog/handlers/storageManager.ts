@@ -1,4 +1,4 @@
-import { bytes } from "@typeberry/lib";
+import * as bytes from "@typeberry/lib/bytes";
 
 type BytesBlob = ReturnType<typeof bytes.BytesBlob.blobFrom>;
 

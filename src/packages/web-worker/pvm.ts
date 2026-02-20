@@ -1,5 +1,5 @@
 import { InitialState } from "@/types/pvm";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 
 const { tryAsMemoryIndex, tryAsSbrkIndex, MemoryBuilder: InternalPvmMemoryBuilder, Registers } = pvm;
 

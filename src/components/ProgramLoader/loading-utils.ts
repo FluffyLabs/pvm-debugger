@@ -1,5 +1,6 @@
 import { mapUploadFileInputToOutput } from "./utils";
-import { bytes, pvm_interpreter as pvm } from "@typeberry/lib";
+import * as bytes from "@typeberry/lib/bytes";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 import { DEFAULT_GAS, DEFAULT_REGS, ExpectedState, MemoryChunkItem, PageMapItem } from "@/types/pvm.ts";
 import { type ZodSafeParseResult, z } from "zod";
 import { bigUint64ArrayToRegistersArray, getAsChunks, getAsPageMap } from "@/lib/utils.ts";

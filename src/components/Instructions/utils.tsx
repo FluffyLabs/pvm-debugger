@@ -1,5 +1,5 @@
 import { NumeralSystem } from "@/context/NumeralSystem.tsx";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 import { ArgumentBitLengths, ArgsDecoder } from "@/packages/pvm/pvm/args-decoder";
 
 export const valueToNumeralSystem = (

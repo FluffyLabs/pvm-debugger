@@ -1,5 +1,5 @@
 import { Instruction } from "./instruction";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 
 type Byte = number;
 type Gas = number;

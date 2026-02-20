@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { EntrypointSelector, Entrypoint } from "../ProgramLoader/EntrypointSelector";
 import { loadSpiConfig, saveSpiConfig } from "../ProgramLoader/spiConfig";
 import { encodeRefineParams, encodeAccumulateParams, encodeIsAuthorizedParams } from "../ProgramLoader/spiEncoding";
-import { bytes } from "@typeberry/lib";
+import * as bytes from "@typeberry/lib/bytes";
 import { Separator } from "../ui/separator";
 import { useAppSelector } from "@/store/hooks";
 

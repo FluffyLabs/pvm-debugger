@@ -1,4 +1,6 @@
-import { pvm, pvm_host_calls, utils } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interface";
+import * as pvm_host_calls from "@typeberry/lib/pvm-host-calls";
+import * as utils from "@typeberry/lib/utils";
 import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
 
 type IMemory = pvm.IMemory;

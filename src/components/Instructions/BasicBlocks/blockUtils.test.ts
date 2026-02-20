@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 import {
   groupInstructionsByBlocks,
   getVisibleInstructionCount,

@@ -12,7 +12,7 @@ import { useNavigate } from "react-router";
 import { Links } from "./Links";
 import { Separator } from "../ui/separator";
 import { TriangleAlert, FileText } from "lucide-react";
-import { bytes } from "@typeberry/lib";
+import * as bytes from "@typeberry/lib/bytes";
 import {
   EntrypointSelector,
   Entrypoint,

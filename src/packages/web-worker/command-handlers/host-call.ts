@@ -1,5 +1,7 @@
 import { CommandStatus, PvmApiInterface } from "../types";
-import { numbers, utils, pvm } from "@typeberry/lib";
+import * as numbers from "@typeberry/lib/numbers";
+import * as utils from "@typeberry/lib/utils";
+import * as pvm from "@typeberry/lib/pvm-interface";
 
 type HostCallParams = {
   pvm: PvmApiInterface | null;

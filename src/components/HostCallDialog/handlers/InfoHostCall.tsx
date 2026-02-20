@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, block, state, bytes, numbers } from "@typeberry/lib";
+import * as jam_host_calls from "@typeberry/lib/jam-host-calls";
+import * as block from "@typeberry/lib/block";
+import * as state from "@typeberry/lib/state";
+import * as bytes from "@typeberry/lib/bytes";
+import * as numbers from "@typeberry/lib/numbers";
 import { HostCallContext } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
 import { DEFAULT_REGS } from "@/types/pvm";

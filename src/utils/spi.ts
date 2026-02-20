@@ -1,4 +1,4 @@
-import { pvm_interpreter as pvm } from "@typeberry/lib";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
 
 export type DecodedSpiProgram = {
   code: Uint8Array;

@@ -16,6 +16,7 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
+      external: ["module"],
       treeshake: {
         moduleSideEffects: false,
         preset: "smallest",

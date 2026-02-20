@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { HostCallHandler, HostCallHandlerProps } from "./types";
-import { jam_host_calls, pvm_host_calls, bytes, block } from "@typeberry/lib";
+import * as jam_host_calls from "@typeberry/lib/jam-host-calls";
+import * as pvm_host_calls from "@typeberry/lib/pvm-host-calls";
+import * as bytes from "@typeberry/lib/bytes";
+import * as block from "@typeberry/lib/block";
 import { MockMemory, MockGasCounter, regsToBytes, bytesToRegs } from "./hostCallUtils";
 import { HostCallActionButtons } from "./HostCallActionButtons";
 import { DEFAULT_GAS, DEFAULT_REGS } from "@/types/pvm";
@@ -124,12 +127,8 @@ const FetchHostCallComponent: React.FC<HostCallHandlerProps> = ({
         allWorkItems: () => (fetchKind === FetchKind.AllWorkItems ? dataBlob : null),
         oneWorkItem: () => (fetchKind === FetchKind.OneWorkItem ? dataBlob : null),
         workItemPayload: () => (fetchKind === FetchKind.WorkItemPayload ? dataBlob : null),
-        allOperands: () => null, // deprecated
         allTransfersAndOperands: () => (fetchKind === FetchKind.AllTransfersAndOperands ? dataBlob : null),
-        oneOperand: () => null, // deprecated
         oneTransferOrOperand: () => (fetchKind === FetchKind.OneTransferOrOperand ? dataBlob : null),
-        allTransfers: () => null, // deprecated
-        oneTransfer: () => null, // deprecated
       };
 
       // Create mock memory and registers
