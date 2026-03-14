@@ -1,0 +1,191 @@
+{
+  "categories": [
+    {
+      "id": "generic",
+      "name": "Generic PVM Programs",
+      "description": "Manually crafted small programs demonstrating PVM instructions",
+      "examples": [
+        {
+          "id": "add",
+          "name": "ADD instruction",
+          "file": "generic/add.pvm",
+          "format": "generic_pvm",
+          "initialState": {
+            "pc": 0,
+            "gas": 10000,
+            "registers": [0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0]
+          }
+        },
+        {
+          "id": "fibonacci",
+          "name": "Fibonacci sequence",
+          "file": "generic/fibonacci.pvm",
+          "format": "generic_pvm",
+          "initialState": {
+            "pc": 0,
+            "gas": 10000,
+            "registers": [4294901760, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0]
+          }
+        },
+        {
+          "id": "game-of-life",
+          "name": "Conway's Game of Life",
+          "file": "generic/game-of-life.pvm",
+          "format": "generic_pvm",
+          "initialState": {
+            "pc": 0,
+            "gas": 10000000,
+            "registers": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "pageMap": [{ "address": 131072, "length": 4096, "isWritable": true }]
+          }
+        },
+        {
+          "id": "store-u16",
+          "name": "Store U16 instruction",
+          "file": "generic/store-u16.pvm",
+          "format": "generic_pvm",
+          "initialState": {
+            "pc": 0,
+            "gas": 10000,
+            "registers": [0, 0, 0, 0, 0, 0, 0, 305419896, 0, 0, 0, 0, 0],
+            "pageMap": [{ "address": 131072, "length": 4096, "isWritable": true }]
+          }
+        },
+        {
+          "id": "branch",
+          "name": "Branch instruction",
+          "file": "generic/branch.pvm",
+          "format": "generic_pvm",
+          "initialState": {
+            "pc": 0,
+            "gas": 10,
+            "registers": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        }
+      ]
+    },
+    {
+      "id": "wat",
+      "name": "WAT → PVM Compiled",
+      "description": "Programs compiled from WebAssembly Text format to PVM via wasm-pvm",
+      "sourceUrl": "https://github.com/aspect-build/wasm-pvm",
+      "examples": [
+        {
+          "id": "add-jam",
+          "name": "Add",
+          "file": "add.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        },
+        {
+          "id": "fibonacci-jam",
+          "name": "Fibonacci",
+          "file": "fibonacci.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        },
+        {
+          "id": "factorial-jam",
+          "name": "Factorial",
+          "file": "factorial.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        }
+      ]
+    },
+    {
+      "id": "assemblyscript",
+      "name": "AssemblyScript → PVM",
+      "description": "Programs compiled from AssemblyScript to PVM",
+      "sourceUrl": "https://github.com/aspect-build/wasm-pvm",
+      "examples": [
+        {
+          "id": "as-add",
+          "name": "AS Add",
+          "file": "as-add.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        },
+        {
+          "id": "as-fibonacci",
+          "name": "AS Fibonacci",
+          "file": "as-fibonacci.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        },
+        {
+          "id": "as-factorial",
+          "name": "AS Factorial",
+          "file": "as-factorial.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        }
+      ]
+    },
+    {
+      "id": "large",
+      "name": "Large Programs",
+      "description": "Full-size programs for performance testing",
+      "examples": [
+        {
+          "id": "doom",
+          "name": "Doom",
+          "file": "doom.bin",
+          "format": "generic_pvm"
+        },
+        {
+          "id": "gol-jamsdk",
+          "name": "Game of Life (JAM-SDK)",
+          "file": "gol-jamsdk.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        }
+      ]
+    },
+    {
+      "id": "json-test-vectors",
+      "name": "JSON PVM Test Vectors",
+      "description": "Standard PVM test vectors from jamtestvectors repository",
+      "sourceUrl": "https://github.com/FluffyLabs/jamtestvectors/tree/master/pvm/programs",
+      "examples": [
+        {
+          "id": "inst-add-32",
+          "name": "inst_add_32",
+          "file": "json/inst_add_32.json",
+          "format": "json_test_vector"
+        },
+        {
+          "id": "inst-add-64",
+          "name": "inst_add_64",
+          "url": "https://raw.githubusercontent.com/FluffyLabs/jamtestvectors/master/pvm/programs/inst_add_64.json",
+          "format": "json_test_vector"
+        },
+        {
+          "id": "riscv-simple",
+          "name": "riscv_rv64ui_simple",
+          "url": "https://raw.githubusercontent.com/FluffyLabs/jamtestvectors/master/pvm/programs/riscv_rv64ui_simple.json",
+          "format": "json_test_vector"
+        }
+      ]
+    },
+    {
+      "id": "traces",
+      "name": "Trace Files",
+      "description": "ECALLI trace files for replay. More traces available at https://github.com/tomusdrw/anan-as/tree/main/bench/traces",
+      "examples": [
+        {
+          "id": "trace-001",
+          "name": "Trace 001",
+          "file": "trace-001.log",
+          "format": "trace_file"
+        },
+        {
+          "id": "io-trace",
+          "name": "I/O Trace Output",
+          "file": "io-trace-output.log",
+          "format": "trace_file"
+        }
+      ]
+    }
+  ]
+}

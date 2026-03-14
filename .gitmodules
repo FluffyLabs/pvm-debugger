@@ -1,0 +1,6 @@
+[submodule "reference/pvm-debugger"]
+	path = reference/pvm-debugger
+	url = https://github.com/fluffylabs/pvm-debugger
+[submodule "reference/shared-ui"]
+	path = reference/shared-ui
+	url = https://github.com/fluffylabs/shared-ui
