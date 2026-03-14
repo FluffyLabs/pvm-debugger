@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { fileURLToPath } from "node:url";
 import { replay } from "./replay.js";
 
 export const CLI_NAME = "pvmdbg";
@@ -154,12 +155,10 @@ async function main(): Promise<void> {
 }
 
 // Only run main when executed directly (not when imported by tests)
-const isDirectExecution =
+if (
   typeof process !== "undefined" &&
   process.argv[1] &&
-  (import.meta.url.endsWith(process.argv[1]) ||
-    import.meta.url === `file://${process.argv[1]}`);
-
-if (isDirectExecution) {
+  fileURLToPath(import.meta.url) === process.argv[1]
+) {
   main();
 }

@@ -223,6 +223,82 @@ describe("compareFinalState", () => {
     expect(result).toEqual([]);
   });
 
+  it("handles panic termination kind", () => {
+    const trace: EcalliTrace = {
+      ...baseTrace,
+      termination: {
+        kind: "panic",
+        arg: 1,
+        pc: 5,
+        gas: 100n,
+        registers: new Map(),
+      },
+    };
+
+    const result = compareFinalState(
+      {
+        snapshot: { pc: 5, gas: 100n, status: "panic", registers: Array(13).fill(0n) },
+        lifecycle: "terminated",
+      },
+      trace,
+    );
+    expect(result).toEqual([]);
+  });
+
+  it("handles fault termination kind", () => {
+    const trace: EcalliTrace = {
+      ...baseTrace,
+      termination: {
+        kind: "fault",
+        arg: 2,
+        pc: 8,
+        gas: 200n,
+        registers: new Map(),
+      },
+    };
+
+    const result = compareFinalState(
+      {
+        snapshot: { pc: 8, gas: 200n, status: "fault", registers: Array(13).fill(0n) },
+        lifecycle: "terminated",
+      },
+      trace,
+    );
+    expect(result).toEqual([]);
+  });
+
+  it("reports mismatches for failed lifecycle with wrong status", () => {
+    // A PVM with 'failed' lifecycle is terminal but its snapshot status
+    // may not match the trace — this should produce mismatches
+    const result = compareFinalState(
+      {
+        snapshot: { pc: 0, gas: 0n, status: "ok", registers: Array(13).fill(0n) },
+        lifecycle: "failed",
+      },
+      baseTrace,
+    );
+    // Should report status, pc, gas, and register mismatches since the
+    // snapshot doesn't match the trace termination
+    expect(result.some((m) => m.field === "status")).toBe(true);
+    expect(result.some((m) => m.field === "pc")).toBe(true);
+  });
+
+  it("reports multiple mismatches simultaneously", () => {
+    const result = compareFinalState(
+      {
+        snapshot: { pc: 99, gas: 999n, status: "panic", registers: Array(13).fill(0n) },
+        lifecycle: "terminated",
+      },
+      baseTrace,
+    );
+    // Should have status + pc + gas + register mismatches
+    expect(result.length).toBeGreaterThanOrEqual(4);
+    expect(result.find((m) => m.field === "status")).toBeDefined();
+    expect(result.find((m) => m.field === "pc")).toBeDefined();
+    expect(result.find((m) => m.field === "gas")).toBeDefined();
+    expect(result.find((m) => m.field === "register[0]")).toBeDefined();
+  });
+
   it("returns empty mismatches when trace has no termination", () => {
     const traceNoTerm: EcalliTrace = {
       ...baseTrace,

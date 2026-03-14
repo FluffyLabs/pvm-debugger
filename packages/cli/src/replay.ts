@@ -8,7 +8,6 @@ import type {
   HostCallResumeEffects,
 } from "@pvmdbg/types";
 import { isTerminal } from "@pvmdbg/types";
-import { parseTrace, getHostCallName } from "@pvmdbg/trace";
 import { decodeTrace } from "@pvmdbg/content";
 import { Orchestrator } from "@pvmdbg/orchestrator";
 import {
@@ -152,11 +151,9 @@ export async function replay(
   // 1. Read trace file
   const content = await fs.readFile(tracePath, "utf-8");
 
-  // 2. Parse trace
-  const trace = parseTrace(content);
-
-  // 3. Build program envelope
+  // 2. Build program envelope (also parses the trace internally)
   const envelope = decodeTrace(content, "example", tracePath);
+  const trace = envelope.trace!;
 
   // 4. Create orchestrator
   const orchestrator = new Orchestrator({ stepTimeoutMs: options.timeoutMs });
