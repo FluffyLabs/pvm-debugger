@@ -11,6 +11,13 @@
     "build": "tsc",
     "lint": "tsc --noEmit"
   },
+  "dependencies": {
+    "@pvmdbg/types": "*",
+    "@pvmdbg/trace": "*",
+    "@pvmdbg/content": "*",
+    "@pvmdbg/orchestrator": "*",
+    "@pvmdbg/runtime-worker": "*"
+  },
   "devDependencies": {
     "typescript": "^5.7.3"
   }

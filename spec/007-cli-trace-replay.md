@@ -1,5 +1,7 @@
 # 007 - CLI Trace Replay
 
+Status: Implemented
+
 ## Purpose
 
 Implement `packages/cli` as a Node.js replay tool that validates the full debugger core outside the browser:
