@@ -1,0 +1,22 @@
+{
+  "name": "@pvmdbg/root",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "dev": "npm run dev --workspace=apps/web",
+    "test:e2e": "npm run test:e2e --workspace=apps/web",
+    "cli": "node packages/cli/dist/index.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

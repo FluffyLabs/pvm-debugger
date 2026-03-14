@@ -1,5 +1,7 @@
 # 001 - Workspace Bootstrap
 
+Status: Implemented
+
 ## Purpose
 
 Establish the monorepo skeleton for the PVM debugger rewrite, including package boundaries, shared TypeScript and test configuration, a minimal React web app, shared-ui integration, and Playwright smoke coverage.
