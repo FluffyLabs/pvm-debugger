@@ -8,6 +8,11 @@
     "build": "tsc",
     "lint": "tsc --noEmit"
   },
+  "dependencies": {
+    "@pvmdbg/types": "*",
+    "@typeberry/lib": "^0.5.9",
+    "@fluffylabs/anan-as": "^1.2.0"
+  },
   "devDependencies": {
     "typescript": "^5.7.3"
   }

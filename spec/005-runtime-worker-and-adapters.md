@@ -1,5 +1,7 @@
 # 005 - Runtime Worker Bridge And PVM Adapters
 
+Status: Implemented
+
 ## Purpose
 
 Implement `packages/runtime-worker` as the execution layer for real PVM interpreters:
