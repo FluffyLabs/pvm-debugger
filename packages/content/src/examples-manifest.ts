@@ -47,12 +47,23 @@ function loadManifest(): ExamplesManifest {
   );
 }
 
-/** Initialize the manifest from pre-loaded JSON data. */
+/**
+ * Initialize the manifest from pre-loaded JSON data.
+ *
+ * **Must be called before** `getExamplesManifest()`, `findExampleEntry()`,
+ * or `createProgramEnvelope()` with `sourceKind: "example"`.
+ *
+ * Typically called once at app startup:
+ * ```ts
+ * import manifest from "../../fixtures/examples.json";
+ * initManifest(manifest);
+ * ```
+ */
 export function initManifest(data: ExamplesManifest): void {
   _manifest = data;
 }
 
-/** Get the full examples manifest. */
+/** Get the full examples manifest. Throws if `initManifest()` has not been called. */
 export function getExamplesManifest(): ExamplesManifest {
   return loadManifest();
 }

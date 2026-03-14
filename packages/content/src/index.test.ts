@@ -24,6 +24,7 @@ import {
 } from "./index.js";
 import type { DetectedFormat, SpiEntrypointParams, RawPayload } from "./index.js";
 import type { ProgramEnvelope } from "@pvmdbg/types";
+import { decodeVarU32 } from "@pvmdbg/types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = resolve(__dirname, "../../../fixtures");
@@ -132,13 +133,27 @@ describe("detectFormat", () => {
   });
 
   it("handles multi-byte varU32 metadata prefix (145-byte prefix encoded as [0x80, 0x91])", () => {
-    // [0x80, 0x91] encodes (0x00 << 8) | 0x91 = 145 in 2-byte varU32
-    // Actually: (0x80 & 0x3f) << 8 | 0x91 = 0x00 << 8 | 0x91 = 0x91 = 145
+    // Construct a synthetic blob: [0x80, 0x91] + 145 bytes of fake metadata + real SPI payload
+    // [0x80, 0x91] decodes as (0x80 & 0x3f) << 8 | 0x91 = 0 << 8 | 0x91 = 145
     const addJam = readFixture("add.jam");
-    // The add.jam first byte is 0x1c = 28, meaning 28 bytes metadata (1-byte varU32)
-    // Let's verify that multi-byte varU32 support works by checking canDecodeSpi
-    const result = detectFormat(addJam);
+    // Strip the original 1-byte varU32 metadata from add.jam to get the raw SPI
+    const { value: origMetaLen, bytesRead } = decodeVarU32(addJam, 0);
+    const rawSpi = addJam.subarray(bytesRead + origMetaLen);
+
+    // Build new blob: 2-byte varU32(145) + 145 bytes of metadata + raw SPI
+    const fakeMetadata = new Uint8Array(145).fill(0x41); // 'A' repeated
+    const newBlob = new Uint8Array(2 + 145 + rawSpi.length);
+    newBlob[0] = 0x80; // 2-byte varU32 lead
+    newBlob[1] = 0x91; // = 145
+    newBlob.set(fakeMetadata, 2);
+    newBlob.set(rawSpi, 2 + 145);
+
+    const result = detectFormat(newBlob);
     expect(result.kind).toBe("jam_spi_with_metadata");
+    if (result.kind === "jam_spi_with_metadata") {
+      expect(result.metadata.length).toBe(145);
+      expect(result.spiPayload.length).toBe(rawSpi.length);
+    }
   });
 
   it("detects JSON test vector fixture file", () => {
@@ -161,6 +176,13 @@ describe("canDecodeSpi", () => {
 
   it("returns false for random bytes", () => {
     expect(canDecodeSpi(new Uint8Array([0xde, 0xad, 0xbe, 0xef]), false)).toBe(false);
+  });
+
+  it("validates with actual decode, not just prefix heuristics", () => {
+    // A blob that starts with valid varU32 prefix but isn't actually SPI
+    const fake = new Uint8Array([0x05, 0x00, 0x00, 0x00, 0x00, 0x42, 0x42, 0x42]);
+    expect(canDecodeSpi(fake, true)).toBe(false);
+    expect(canDecodeSpi(fake, false)).toBe(false);
   });
 });
 
@@ -258,6 +280,17 @@ describe("encodeSpiEntrypoint", () => {
     const result = encodeSpiEntrypoint(params);
     // core(0), index(0), id(0), blob(len=0), blob(len=0)
     expect(Array.from(result)).toEqual([0x00, 0x00, 0x00, 0x00, 0x00]);
+  });
+
+  it("encodes accumulate with 2-byte varU32 slot value (slot=200)", () => {
+    const params: SpiEntrypointParams = {
+      entrypoint: "accumulate",
+      pc: 5,
+      params: { slot: 200, id: 0, results: 0 },
+    };
+    const result = encodeSpiEntrypoint(params);
+    // 200 = 0xC8, which fits in 2-byte varU32: [0x80 | (200 >> 8), 200 & 0xff] = [0x80, 0xc8]
+    expect(Array.from(result)).toEqual([0x80, 0xc8, 0x00, 0x00]);
   });
 });
 

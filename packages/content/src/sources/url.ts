@@ -1,4 +1,3 @@
-import type { LoadSourceKind } from "@pvmdbg/types";
 import type { RawPayload } from "../program-envelope.js";
 
 /**
@@ -25,7 +24,7 @@ export async function loadUrl(url: string): Promise<RawPayload> {
   }
   const buffer = await response.arrayBuffer();
   return {
-    sourceKind: "url_payload" as LoadSourceKind,
+    sourceKind: "url_payload",
     sourceId: url,
     bytes: new Uint8Array(buffer),
   };
