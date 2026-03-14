@@ -449,21 +449,21 @@ describe("compareTraces", () => {
     const a = parseTrace(text);
     const b = parseTrace(serializeTrace(a));
 
-    // Find an entry with memory reads
+    // Find an entry with memory reads — assert it exists (trace-001 has log entries with memreads)
     const entryWithReads = b.entries.findIndex((e) => e.memoryReads.length > 0);
-    if (entryWithReads >= 0) {
-      b.entries[entryWithReads].memoryReads[0] = {
-        ...b.entries[entryWithReads].memoryReads[0],
-        dataHex: "deadbeef",
-      };
+    expect(entryWithReads).toBeGreaterThanOrEqual(0);
 
-      const mismatches = compareTraces(a, b);
-      expect(mismatches.length).toBeGreaterThan(0);
-      const readMismatch = mismatches.find((m) =>
-        m.path.startsWith(`entries[${entryWithReads}].memoryReads[0]`),
-      );
-      expect(readMismatch).toBeDefined();
-    }
+    b.entries[entryWithReads].memoryReads[0] = {
+      ...b.entries[entryWithReads].memoryReads[0],
+      dataHex: "deadbeef",
+    };
+
+    const mismatches = compareTraces(a, b);
+    expect(mismatches.length).toBeGreaterThan(0);
+    const readMismatch = mismatches.find((m) =>
+      m.path.startsWith(`entries[${entryWithReads}].memoryReads[0]`),
+    );
+    expect(readMismatch).toBeDefined();
   });
 
   it("reports entry-level mismatches for modified memory writes", () => {
@@ -471,17 +471,17 @@ describe("compareTraces", () => {
     const a = parseTrace(text);
     const b = parseTrace(serializeTrace(a));
 
-    // Find an entry with memory writes
+    // Find an entry with memory writes — assert it exists
     const entryWithWrites = b.entries.findIndex((e) => e.memoryWrites.length > 0);
-    if (entryWithWrites >= 0) {
-      b.entries[entryWithWrites].memoryWrites[0] = {
-        ...b.entries[entryWithWrites].memoryWrites[0],
-        dataHex: "feedface",
-      };
+    expect(entryWithWrites).toBeGreaterThanOrEqual(0);
 
-      const mismatches = compareTraces(a, b);
-      expect(mismatches.length).toBeGreaterThan(0);
-    }
+    b.entries[entryWithWrites].memoryWrites[0] = {
+      ...b.entries[entryWithWrites].memoryWrites[0],
+      dataHex: "feedface",
+    };
+
+    const mismatches = compareTraces(a, b);
+    expect(mismatches.length).toBeGreaterThan(0);
   });
 
   it("reports termination mismatches", () => {
@@ -527,6 +527,127 @@ describe("compareTraces", () => {
     };
     const mismatches = compareTraces(a, b);
     expect(mismatches[0].path).toBe("prelude.programHex");
+  });
+});
+
+// ===== SERIALIZER — io-trace-output.log deep comparator roundtrip =====
+
+describe("serializeTrace — io-trace-output.log comparator roundtrip", () => {
+  it("semantic roundtrip: parse(serialize(parse(input))) deep-equals parse(input)", () => {
+    const text = readFixture("io-trace-output.log");
+    const parsed1 = parseTrace(text);
+    const serialized = serializeTrace(parsed1);
+    const parsed2 = parseTrace(serialized);
+    const mismatches = compareTraces(parsed1, parsed2);
+    expect(mismatches).toEqual([]);
+  });
+});
+
+// ===== PARSER — edge cases =====
+
+describe("parseTrace — edge cases", () => {
+  it("handles entry with no sub-commands (no setreg/setgas/memread/memwrite)", () => {
+    const input = [
+      "program 0xaabb",
+      "start pc=0 gas=1000",
+      "ecalli=0 pc=50 gas=900 r07=0x1",
+      "HALT pc=100 gas=800",
+    ].join("\n");
+    const trace = parseTrace(input);
+    expect(trace.entries.length).toBe(1);
+    expect(trace.entries[0].index).toBe(0);
+    expect(trace.entries[0].registerWrites.size).toBe(0);
+    expect(trace.entries[0].gasAfter).toBeUndefined();
+    expect(trace.entries[0].memoryReads.length).toBe(0);
+    expect(trace.entries[0].memoryWrites.length).toBe(0);
+  });
+
+  it("handles single-digit register index in setreg (r7 vs r07)", () => {
+    const input = [
+      "program 0xaabb",
+      "start pc=0 gas=1000",
+      "ecalli=0 pc=50 gas=900",
+      "setreg r7 <- 0xff",
+      "HALT pc=100 gas=800",
+    ].join("\n");
+    const trace = parseTrace(input);
+    expect(trace.entries[0].registerWrites.get(7)).toBe(0xffn);
+  });
+
+  it("handles trace with no termination (unterminated execution)", () => {
+    const input = [
+      "program 0xaabb",
+      "start pc=0 gas=1000",
+      "ecalli=1 pc=50 gas=900",
+      "setreg r07 <- 0x10",
+    ].join("\n");
+    const trace = parseTrace(input);
+    expect(trace.entries.length).toBe(1);
+    expect(trace.termination).toBeUndefined();
+  });
+
+  it("handles trace with no entries (immediate termination)", () => {
+    const input = [
+      "program 0xaabb",
+      "start pc=0 gas=1000",
+      "HALT pc=0 gas=1000",
+    ].join("\n");
+    const trace = parseTrace(input);
+    expect(trace.entries.length).toBe(0);
+    expect(trace.termination!.kind).toBe("halt");
+  });
+
+  it("handles multiple consecutive ecalli entries", () => {
+    const input = [
+      "program 0xaabb",
+      "start pc=0 gas=1000",
+      "ecalli=0 pc=10 gas=900",
+      "ecalli=1 pc=20 gas=800",
+      "ecalli=100 pc=30 gas=700",
+      "HALT pc=40 gas=600",
+    ].join("\n");
+    const trace = parseTrace(input);
+    expect(trace.entries.length).toBe(3);
+    expect(trace.entries[0].index).toBe(0);
+    expect(trace.entries[1].index).toBe(1);
+    expect(trace.entries[2].index).toBe(100);
+  });
+
+  it("ignores blank lines and unrecognized lines", () => {
+    const input = [
+      "some random header text",
+      "",
+      "program 0xaabb",
+      "INFO: loading program...",
+      "start pc=0 gas=100",
+      "   ",
+      "HALT pc=0 gas=100",
+      "some footer",
+    ].join("\n");
+    const trace = parseTrace(input);
+    expect(trace.prelude.programHex).toBe("aabb");
+    expect(trace.termination!.kind).toBe("halt");
+  });
+});
+
+// ===== COMPARATOR — entry count mismatch =====
+
+describe("compareTraces — entry count mismatch", () => {
+  it("reports when trace B has more entries", () => {
+    const a: EcalliTrace = {
+      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      entries: [],
+    };
+    const b: EcalliTrace = {
+      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      entries: [{
+        index: 0, pc: 10, gas: 90n, registers: new Map(),
+        memoryReads: [], memoryWrites: [], registerWrites: new Map(),
+      }],
+    };
+    const mismatches = compareTraces(a, b);
+    expect(mismatches.find((m) => m.path === "entries.length")).toBeDefined();
+    expect(mismatches.find((m) => m.path === "entries[0]")).toBeDefined();
   });
 });
 

@@ -100,14 +100,12 @@ export function compareTraces(
 
     // gasAfter
     if (ea.gasAfter !== eb.gasAfter) {
-      if (ea.gasAfter === undefined || eb.gasAfter === undefined || ea.gasAfter !== eb.gasAfter) {
-        mismatches.push({
-          path: `${prefix}.gasAfter`,
-          message: `gasAfter differs`,
-          expected: ea.gasAfter === undefined ? undefined : ea.gasAfter.toString(),
-          actual: eb.gasAfter === undefined ? undefined : eb.gasAfter.toString(),
-        });
-      }
+      mismatches.push({
+        path: `${prefix}.gasAfter`,
+        message: `gasAfter differs`,
+        expected: ea.gasAfter === undefined ? undefined : ea.gasAfter.toString(),
+        actual: eb.gasAfter === undefined ? undefined : eb.gasAfter.toString(),
+      });
     }
   }
 
