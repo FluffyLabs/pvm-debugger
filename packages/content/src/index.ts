@@ -1,46 +1,48 @@
-/** Detected container formats for loaded program data. */
-export type ContainerFormat =
-  | "trace_file"
-  | "json_test_vector"
-  | "jam_spi_with_metadata"
-  | "jam_spi"
-  | "generic_pvm";
+// Format detection
+export { detectFormat, canDecodeSpi } from "./detect.js";
+export type { DetectedFormat, JsonTestVector } from "./detect.js";
 
-/**
- * Detect the container format of raw bytes.
- * Returns the most specific format that matches.
- */
-export function detectFormat(data: Uint8Array): ContainerFormat {
-  // Try to decode as text for text-based formats
-  let text: string | null = null;
-  try {
-    text = new TextDecoder("utf-8", { fatal: true }).decode(data.slice(0, 1024));
-  } catch {
-    // Not valid UTF-8, skip text-based detection
-  }
+// Decoders
+export { decodeGeneric, buildGenericInitialState } from "./decode-generic.js";
+export { decodeJsonTestVector } from "./decode-json-test-vector.js";
+export { decodeSpi, tryDecodeSpi, stripMetadata } from "./decode-spi.js";
+export type { SpiDecodeResult } from "./decode-spi.js";
+export { decodeTrace } from "./decode-trace.js";
 
-  if (text !== null) {
-    // Trace files contain "program 0x"
-    if (text.includes("program 0x")) {
-      return "trace_file";
-    }
+// SPI entrypoint encoding
+export { encodeSpiEntrypoint } from "./spi-entrypoint.js";
+export type {
+  SpiEntrypointParams,
+  RefineParams,
+  AccumulateParams,
+  IsAuthorizedParams,
+} from "./spi-entrypoint.js";
 
-    // JSON test vectors parse as JSON with "program" and "initial-regs" fields
-    try {
-      const json: unknown = JSON.parse(new TextDecoder().decode(data));
-      if (
-        typeof json === "object" &&
-        json !== null &&
-        "program" in json &&
-        "initial-regs" in json
-      ) {
-        return "json_test_vector";
-      }
-    } catch {
-      // Not JSON
-    }
-  }
+// Program envelope
+export { createProgramEnvelope } from "./program-envelope.js";
+export type { RawPayload } from "./program-envelope.js";
 
-  // Binary fallback
-  return "generic_pvm";
-}
+// Source adapters
+export { loadExample } from "./sources/example.js";
+export { loadUpload } from "./sources/upload.js";
+export { loadManualInput } from "./sources/manual-input.js";
+export { loadUrl, rewriteGitHubBlobUrl } from "./sources/url.js";
+export {
+  loadLocalStorage,
+  persistPayload,
+  clearPersistedPayload,
+} from "./sources/local-storage.js";
+
+// Examples manifest
+export {
+  getExamplesManifest,
+  findExampleEntry,
+  initManifest,
+  manifestEntrypointToParams,
+  manifestInitialStateOverrides,
+} from "./examples-manifest.js";
+export type {
+  ExampleEntry,
+  ExampleCategory,
+  ExamplesManifest,
+} from "./examples-manifest.js";

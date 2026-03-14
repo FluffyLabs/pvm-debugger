@@ -1,5 +1,7 @@
 # 004 - Content Pipeline
 
+Status: Implemented
+
 ## Purpose
 
 Implement `packages/content` as the canonical source-loading and format-detection pipeline that converts user-provided bytes into a `ProgramEnvelope`.

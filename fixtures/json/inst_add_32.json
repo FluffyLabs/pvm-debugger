@@ -1,0 +1,46 @@
+{
+  "name": "inst_add_32",
+  "initial-regs": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    7,
+    3,
+    0,
+    0,
+    0,
+    0
+  ],
+  "initial-pc": 0,
+  "initial-gas": 10000,
+  "initial-page-map": [],
+  "initial-memory": [],
+  "program": [
+    4,
+    135,
+    3
+  ],
+  "expected-status": "halt",
+  "expected-regs": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    10,
+    3,
+    0,
+    0,
+    0,
+    0
+  ],
+  "expected-pc": 3,
+  "expected-gas": 9999,
+  "expected-memory": []
+}

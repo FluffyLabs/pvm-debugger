@@ -10,5 +10,10 @@
   },
   "devDependencies": {
     "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@pvmdbg/trace": "*",
+    "@pvmdbg/types": "*",
+    "@typeberry/lib": "^0.5.8"
   }
 }
