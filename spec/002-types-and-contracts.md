@@ -297,6 +297,14 @@ Critical detail:
 - `npm run build -w packages/types` succeeds.
 - `npm test -w packages/types` succeeds.
 
+### Edge cases discovered during implementation
+
+- `decodeVarU32` throws on empty buffer (offset out of bounds).
+- `decodeVarU32` throws on truncated buffers for each encoding class (2/3/4/5-byte).
+- `decodeVarU32` throws on invalid lead bytes `0xf8..0xff` (only `0xf0..0xf7` are valid 5-byte leads).
+- `uint8ToRegs` must use `DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)` — not `DataView(bytes.buffer)` — to handle sliced `Uint8Array` inputs where `byteOffset > 0`. This is a common bug source when adapter code returns `subarray()` slices.
+- The vitest workspace config (`include: packages/*/src/**/*.test.ts`) resolves paths from the project root; a package-local `vitest.config.ts` is needed so `npm test -w packages/types` finds test files.
+
 ## Verification
 
 ```bash

@@ -173,6 +173,35 @@ describe("encodeVarU32 / decodeVarU32", () => {
     const decoded = decodeVarU32(combined, prefix.length);
     expect(decoded.value).toBe(12345);
   });
+
+  it("decodeVarU32 throws on empty buffer", () => {
+    expect(() => decodeVarU32(new Uint8Array(0))).toThrow("offset out of bounds");
+  });
+
+  it("decodeVarU32 throws on truncated 2-byte encoding", () => {
+    // Lead byte 0x80 signals 2-byte encoding but no second byte
+    expect(() => decodeVarU32(new Uint8Array([0x80]))).toThrow("not enough bytes");
+  });
+
+  it("decodeVarU32 throws on truncated 3-byte encoding", () => {
+    expect(() => decodeVarU32(new Uint8Array([0xc0, 0x01]))).toThrow("not enough bytes");
+  });
+
+  it("decodeVarU32 throws on truncated 4-byte encoding", () => {
+    expect(() => decodeVarU32(new Uint8Array([0xe0, 0x01, 0x02]))).toThrow("not enough bytes");
+  });
+
+  it("decodeVarU32 throws on truncated 5-byte encoding", () => {
+    expect(() => decodeVarU32(new Uint8Array([0xf0, 0x01, 0x02, 0x03]))).toThrow("not enough bytes");
+  });
+
+  it("decodeVarU32 throws on invalid lead byte 0xf8", () => {
+    expect(() => decodeVarU32(new Uint8Array([0xf8, 0x00, 0x00, 0x00, 0x00]))).toThrow("invalid lead byte");
+  });
+
+  it("decodeVarU32 throws on invalid lead byte 0xff", () => {
+    expect(() => decodeVarU32(new Uint8Array([0xff, 0x00, 0x00, 0x00, 0x00]))).toThrow("invalid lead byte");
+  });
 });
 
 describe("regsToUint8 / uint8ToRegs", () => {
@@ -225,5 +254,17 @@ describe("regsToUint8 / uint8ToRegs", () => {
     expect(bytes[5]).toBe(0x03);
     expect(bytes[6]).toBe(0x02);
     expect(bytes[7]).toBe(0x01);
+  });
+
+  it("uint8ToRegs works with a sliced Uint8Array (non-zero byteOffset)", () => {
+    const regs = [1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n, 11n, 12n, 13n];
+    const encoded = regsToUint8(regs);
+    // Create a larger buffer with the register bytes at a non-zero offset
+    const padded = new Uint8Array(10 + encoded.length);
+    padded.set(encoded, 10);
+    const slice = padded.subarray(10, 10 + encoded.length);
+    // slice has byteOffset=10, which exercises the DataView constructor path
+    expect(slice.byteOffset).toBe(10);
+    expect(uint8ToRegs(slice)).toEqual(regs);
   });
 });
