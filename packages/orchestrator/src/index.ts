@@ -1,40 +1,4 @@
-/**
- * Strictly-typed event listener management.
- * Browser-agnostic: works in both Node.js and browser environments.
- */
-
-type Listener<T extends unknown[]> = (...args: T) => void;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export class TypedEventEmitter<
-  TEvents extends Record<string, (...args: any[]) => void>,
-> {
-  private listeners = new Map<keyof TEvents, Set<Listener<never[]>>>();
-
-  on<K extends keyof TEvents>(event: K, listener: TEvents[K]): void {
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, new Set());
-    }
-    this.listeners.get(event)!.add(listener as Listener<never[]>);
-  }
-
-  off<K extends keyof TEvents>(event: K, listener: TEvents[K]): void {
-    this.listeners.get(event)?.delete(listener as Listener<never[]>);
-  }
-
-  protected emit<K extends keyof TEvents>(
-    event: K,
-    ...args: Parameters<TEvents[K]>
-  ): void {
-    const set = this.listeners.get(event);
-    if (set) {
-      for (const listener of set) {
-        (listener as (...a: unknown[]) => void)(...args);
-      }
-    }
-  }
-
-  removeAllListeners(): void {
-    this.listeners.clear();
-  }
-}
+export { TypedEventEmitter } from "./typed-event-emitter.js";
+export { Orchestrator, type OrchestratorConfig } from "./orchestrator.js";
+export { buildHostCallInfo, serializeRecordedTrace } from "./host-call-handler.js";
+export type { Session } from "./session.js";

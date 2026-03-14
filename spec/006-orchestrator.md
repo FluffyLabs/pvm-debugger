@@ -1,5 +1,7 @@
 # 006 - Orchestrator
 
+Status: Implemented
+
 ## Purpose
 
 Implement `packages/orchestrator` as the multi-PVM execution coordinator:
