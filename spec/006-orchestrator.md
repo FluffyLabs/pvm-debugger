@@ -169,6 +169,38 @@ Rules:
 - `getPvmIds()`, `getProgramBytes()`, `getPageMap()`, `getPendingHostCall()`, `getRecordedTrace()`, and `getReferenceTrace()` expose the current orchestrator state correctly.
 - Recorded traces serialize to ECALLI text, including host-call entries and termination records.
 
+## Implementation Notes
+
+Pitfalls and edge cases discovered during implementation:
+
+### TypedEventEmitter generic constraint
+
+The generic constraint must use `{ [K in keyof TEvents]: (...args: any[]) => void }` instead of `Record<string, ...>`. TypeScript interfaces (like `OrchestratorEvents`) don't satisfy `Record<string, ...>` because they lack an implicit index signature. This was caught during the first build attempt.
+
+### loadContext must be deep-cloned
+
+When passing `loadContext` to `adapter.load()`, the nested `spiProgram.program` (Uint8Array) and `spiArgs` (Uint8Array) must be individually cloned with `new Uint8Array(...)`. A shallow spread (`{ ...envelope.loadContext }`) only copies references to these buffers, violating the clone-on-boundaries rule.
+
+### stepsExecuted is approximate without breakpoints
+
+In non-breakpoint mode, `adapter.step(n)` runs all n steps internally. The adapter's `AdapterStepResult` does not report how many steps were actually executed before a terminal status. The orchestrator reports `stepsExecuted = n` in this case, even if the PVM halted earlier. With breakpoints, the count is exact because single-stepping is used.
+
+### reset() must clear hostCallCounter
+
+The `hostCallCounter` is the index into the reference trace entries array. `reset()` must set it back to 0, or the Nth host call after reset will try to match trace entry N+M (where M was the pre-reset count). This is critical for re-running a program after reset with the same reference trace.
+
+### Host call beyond trace entries
+
+When `hostCallCounter` exceeds the number of reference trace entries, `referenceTrace.entries[hostCallCounter]` is undefined. The `buildHostCallInfo` function correctly returns `resumeProposal: undefined` in this case (no proposal available), so the UI can fall back to manual editing.
+
+### No re-entrancy guard on step()
+
+The `step()` method is not re-entrant. Calling `step()` while a previous `step()` is still in-flight would corrupt session state. The UI layer is responsible for serializing step calls (e.g., disabling buttons while stepping). This is acceptable for v1.
+
+### OrchestratorConfig
+
+The constructor accepts `OrchestratorConfig` with `stepTimeoutMs` (default: 10,000ms). This controls the per-PVM timeout in `Promise.race`. For tests, use a shorter timeout (e.g., 500ms) to avoid slow test runs.
+
 ## Verification
 
 ```bash

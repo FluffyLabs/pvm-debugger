@@ -108,7 +108,19 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
           data: new Uint8Array(c.data),
         })),
       },
-      envelope.loadContext ? { ...envelope.loadContext } : undefined,
+      envelope.loadContext
+        ? {
+            spiProgram: envelope.loadContext.spiProgram
+              ? {
+                  program: new Uint8Array(envelope.loadContext.spiProgram.program),
+                  hasMetadata: envelope.loadContext.spiProgram.hasMetadata,
+                }
+              : undefined,
+            spiArgs: envelope.loadContext.spiArgs
+              ? new Uint8Array(envelope.loadContext.spiArgs)
+              : undefined,
+          }
+        : undefined,
     );
 
     session.lifecycle = "paused";

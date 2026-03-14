@@ -763,6 +763,49 @@ describe("Orchestrator", () => {
   });
 
   // -----------------------------------------------------------------------
+  // Breakpoint + terminal interplay
+  // -----------------------------------------------------------------------
+
+  describe("step — breakpoints with terminal status", () => {
+    it("terminal status during breakpoint stepping transitions correctly", async () => {
+      const adapter = new MockAdapter("pvm-a", "A");
+      adapter.setStepSequence([
+        { status: "ok", pc: 1, gas: 999n },
+        { status: "halt", pc: 2, gas: 998n },
+      ]);
+
+      orchestrator.addPvm(adapter);
+      await orchestrator.loadProgram(makeEnvelope());
+      orchestrator.setBreakpoints([5]); // breakpoint that won't be reached
+
+      const result = await orchestrator.step(10);
+      const report = result.results.get("pvm-a")!;
+
+      expect(report.lifecycle).toBe("terminated");
+      expect(report.hitBreakpoint).toBe(false);
+      expect(report.stepsExecuted).toBe(2);
+    });
+
+    it("host call during breakpoint stepping pauses correctly", async () => {
+      const adapter = new MockAdapter("pvm-a", "A");
+      adapter.setStepSequence([
+        { status: "ok", pc: 1, gas: 999n },
+        { status: "host", pc: 2, gas: 998n, exitArg: 0 },
+      ]);
+
+      orchestrator.addPvm(adapter);
+      await orchestrator.loadProgram(makeEnvelope());
+      orchestrator.setBreakpoints([5]);
+
+      const result = await orchestrator.step(10);
+      const report = result.results.get("pvm-a")!;
+
+      expect(report.lifecycle).toBe("paused_host_call");
+      expect(report.stepsExecuted).toBe(2);
+    });
+  });
+
+  // -----------------------------------------------------------------------
   // Error isolation
   // -----------------------------------------------------------------------
 
@@ -1025,6 +1068,157 @@ describe("Orchestrator", () => {
 
     it("getProgramBytes returns undefined before load", () => {
       expect(orchestrator.getProgramBytes()).toBeUndefined();
+    });
+
+    it("requireSession throws for unknown pvmId", () => {
+      expect(() => orchestrator.getRecordedTrace("ghost")).toThrow("Unknown PVM");
+      expect(() => orchestrator.getPendingHostCall("ghost")).toThrow("Unknown PVM");
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // loadContext forwarding
+  // -----------------------------------------------------------------------
+
+  describe("loadProgram — loadContext forwarding", () => {
+    it("forwards loadContext to adapter.load()", async () => {
+      const adapter = new MockAdapter("pvm-a", "A");
+      let receivedContext: unknown;
+      adapter.load = async (_prog, _state, ctx) => {
+        receivedContext = ctx;
+      };
+      orchestrator.addPvm(adapter);
+
+      const envelope = makeEnvelope({
+        loadContext: {
+          spiProgram: { program: new Uint8Array([0x01, 0x02]), hasMetadata: false },
+          spiArgs: new Uint8Array([0x03]),
+        },
+      });
+      await orchestrator.loadProgram(envelope);
+
+      expect(receivedContext).toBeDefined();
+      const ctx = receivedContext as { spiProgram: { program: Uint8Array }; spiArgs: Uint8Array };
+      expect(ctx.spiProgram.program).toEqual(new Uint8Array([0x01, 0x02]));
+      expect(ctx.spiArgs).toEqual(new Uint8Array([0x03]));
+
+      // Verify deep clone — mutating original should not affect forwarded copy
+      envelope.loadContext!.spiProgram!.program[0] = 0xff;
+      expect(ctx.spiProgram.program[0]).toBe(0x01);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Host call edge cases
+  // -----------------------------------------------------------------------
+
+  describe("host call — edge cases", () => {
+    it("host call beyond trace entries yields no proposal", async () => {
+      const adapter = new MockAdapter("pvm-a", "A", {
+        stepBehavior: () => ({ status: "host", pc: 10, gas: 900n, exitArg: 0 }),
+      });
+      adapter.setSnapshot({ pc: 10, gas: 900n });
+      orchestrator.addPvm(adapter);
+
+      // Reference trace with 0 entries
+      const referenceTrace: EcalliTrace = {
+        prelude: {
+          programHex: "000102",
+          memoryWrites: [],
+          startPc: 0,
+          startGas: 1_000_000n,
+          startRegisters: new Map(),
+        },
+        entries: [], // empty — no entries at any counter position
+      };
+
+      await orchestrator.loadProgram(makeEnvelope({ trace: referenceTrace }));
+      const result = await orchestrator.step(1);
+
+      const info = result.results.get("pvm-a")!.hostCall!;
+      expect(info.resumeProposal).toBeUndefined();
+    });
+
+    it("reset clears host call counter for fresh trace matching", async () => {
+      const adapter = new MockAdapter("pvm-a", "A");
+      orchestrator.addPvm(adapter);
+
+      const referenceTrace: EcalliTrace = {
+        prelude: {
+          programHex: "000102",
+          memoryWrites: [],
+          startPc: 0,
+          startGas: 1_000_000n,
+          startRegisters: new Map(),
+        },
+        entries: [
+          {
+            index: 0,
+            pc: 10,
+            gas: 900n,
+            registers: new Map(),
+            memoryReads: [],
+            memoryWrites: [],
+            registerWrites: new Map([[7, 99n]]),
+          },
+        ],
+      };
+
+      await orchestrator.loadProgram(makeEnvelope({ trace: referenceTrace }));
+
+      // Trigger first host call — consumes entry[0]
+      adapter.setStepBehavior(() => ({ status: "host", pc: 10, gas: 900n, exitArg: 0 }));
+      adapter.setSnapshot({ pc: 10, gas: 900n });
+      await orchestrator.step(1);
+      await orchestrator.resumeHostCall("pvm-a", {});
+
+      // Reset — should reset counter to 0
+      await orchestrator.reset();
+
+      // Trigger host call again — should match entry[0] again
+      adapter.setStepBehavior(() => ({ status: "host", pc: 10, gas: 900n, exitArg: 0 }));
+      adapter.setSnapshot({ pc: 10, gas: 900n });
+      const result = await orchestrator.step(1);
+
+      const info = result.results.get("pvm-a")!.hostCall!;
+      expect(info.resumeProposal).toBeDefined();
+      expect(info.resumeProposal!.registerWrites.get(7)).toBe(99n);
+    });
+
+    it("getPendingHostCall returns null when not in host call state", async () => {
+      const adapter = new MockAdapter("pvm-a", "A");
+      orchestrator.addPvm(adapter);
+      await orchestrator.loadProgram(makeEnvelope());
+
+      expect(orchestrator.getPendingHostCall("pvm-a")).toBeNull();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Reload scenario
+  // -----------------------------------------------------------------------
+
+  describe("loadProgram — reload", () => {
+    it("re-loading resets all session state", async () => {
+      const adapter = new MockAdapter("pvm-a", "A", {
+        stepBehavior: () => ({ status: "ok", pc: 50, gas: 500n }),
+      });
+      orchestrator.addPvm(adapter);
+      await orchestrator.loadProgram(makeEnvelope());
+      await orchestrator.step(1);
+
+      // Re-load with different program
+      const newEnvelope = makeEnvelope({
+        programBytes: new Uint8Array([0xaa, 0xbb]),
+      });
+      await orchestrator.loadProgram(newEnvelope);
+
+      expect(orchestrator.getProgramBytes()).toEqual(new Uint8Array([0xaa, 0xbb]));
+      expect(orchestrator.getSnapshot("pvm-a")!.lifecycle).toBe("paused");
+
+      const trace = orchestrator.getRecordedTrace("pvm-a");
+      expect(trace.prelude.programHex).toBe("aabb");
+      expect(trace.entries).toEqual([]);
     });
   });
 });
