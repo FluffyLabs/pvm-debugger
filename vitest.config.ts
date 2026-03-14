@@ -2,15 +2,26 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: [
-      "packages/*/src/**/*.test.ts",
-      "apps/web/src/**/*.test.ts",
-      "apps/web/src/**/*.test.tsx",
+    projects: [
+      {
+        test: {
+          name: "packages",
+          include: [
+            "packages/*/src/**/*.test.ts",
+            "apps/web/src/**/*.test.ts",
+          ],
+          environment: "node",
+          setupFiles: ["./vitest.setup.ts"],
+        },
+      },
+      {
+        test: {
+          name: "web",
+          include: ["apps/web/src/**/*.test.tsx"],
+          environment: "jsdom",
+          setupFiles: ["./vitest.setup.ts"],
+        },
+      },
     ],
-    environment: "node",
-    environmentMatchGlobs: [
-      ["apps/web/src/**/*.test.tsx", "jsdom"],
-    ],
-    setupFiles: ["./vitest.setup.ts"],
   },
 });

@@ -10,7 +10,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "vitest run",
-    "lint": "tsc --noEmit",
+    "lint": "npm run lint --workspaces --if-present",
     "dev": "npm run dev --workspace=apps/web",
     "test:e2e": "npm run test:e2e --workspace=apps/web",
     "cli": "node packages/cli/dist/index.js"
