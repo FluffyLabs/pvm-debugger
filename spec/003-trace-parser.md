@@ -1,5 +1,7 @@
 # 003 - ECALLI Trace Parser
 
+Status: Implemented
+
 ## Purpose
 
 Implement `packages/trace` as the canonical package for parsing, serializing, comparing, and inspecting ECALLI traces in JIP-6 text format.

@@ -1,14 +1,20 @@
-/** Canonical host call index → name mapping. Single source of truth. */
-export const HOST_CALL_NAMES: ReadonlyMap<number, string> = new Map([
-  [0, "gas"],
-  [1, "fetch"],
-  [2, "lookup"],
-  [3, "read"],
-  [4, "write"],
-  [100, "log"],
-]);
+// Types — re-exported from @pvmdbg/types and local
+export type {
+  EcalliTrace,
+  TracePrelude,
+  TraceEntry,
+  TraceTermination,
+} from "./types.js";
+export type { TraceMismatch } from "./types.js";
 
-/** Resolve a host call name by index, returning "unknown" for unmapped indices. */
-export function hostCallName(index: number): string {
-  return HOST_CALL_NAMES.get(index) ?? "unknown";
-}
+// Host call names — single source of truth
+export { HOST_CALL_NAMES, getHostCallName } from "./host-call-names.js";
+
+// Parser
+export { parseTrace } from "./parser.js";
+
+// Serializer
+export { serializeTrace } from "./serializer.js";
+
+// Comparator + helper
+export { compareTraces, traceMemoryWriteToBytes } from "./comparator.js";
