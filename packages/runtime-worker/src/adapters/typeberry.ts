@@ -1,7 +1,6 @@
 import * as pvm from "@typeberry/lib/pvm-interpreter";
 import type { InitialMachineState, ProgramLoadContext } from "@pvmdbg/types";
-import { regsToUint8 } from "../utils.js";
-import { getMemoryRange } from "../utils.js";
+import { regsToUint8, getMemoryRange } from "../utils.js";
 import type { SyncPvmInterpreter } from "./types.js";
 
 const { DebuggerAdapter, MemoryBuilder, Registers, tryAsMemoryIndex, tryAsSbrkIndex } = pvm;

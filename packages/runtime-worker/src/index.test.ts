@@ -496,6 +496,37 @@ describe("WorkerBridge", () => {
     await bridge.shutdown();
   });
 
+  it("getMemory and setMemory work through worker protocol", async () => {
+    const worker = createMockWorker(new TypeberrySyncInterpreter());
+    const bridge = new WorkerBridge("wb-5", "WB-Typeberry", worker);
+    await bridge.load(createStoreProgram(), storeState);
+    // Read from the writable page (should not throw)
+    const mem = await bridge.getMemory(131072, 4);
+    expect(mem).toBeInstanceOf(Uint8Array);
+    expect(mem.length).toBe(4);
+    // Write to memory
+    await bridge.setMemory(131072, new Uint8Array([0xAA, 0xBB]));
+    const mem2 = await bridge.getMemory(131072, 2);
+    expect(mem2[0]).toBe(0xAA);
+    expect(mem2[1]).toBe(0xBB);
+    await bridge.shutdown();
+  });
+
+  it("reset via worker protocol restores initial state", async () => {
+    const worker = createMockWorker(new TypeberrySyncInterpreter());
+    const bridge = new WorkerBridge("wb-6", "WB-Typeberry", worker);
+    await bridge.load(createAddProgram(), addState);
+    await bridge.step(1);
+    const afterStep = await bridge.getState();
+    expect(afterStep.registers[0]).toBe(8n);
+
+    await bridge.reset();
+    const afterReset = await bridge.getState();
+    expect(afterReset.status).toBe("ok");
+    expect(afterReset.registers[0]).toBe(0n); // Back to initial
+    await bridge.shutdown();
+  });
+
   it("rejects stalled commands with TimeoutError", async () => {
     const silentWorker = { postMessage() {}, addEventListener() {}, removeEventListener() {} };
     const bridge = new WorkerBridge("wb-timeout", "Timeout", silentWorker, 50);
@@ -528,6 +559,20 @@ describe("installWorkerEntry", () => {
     mockSelf.onmessage!({ data: { type: "step", messageId: "2", n: 1 } });
     expect(responses.length).toBe(2);
     expect(responses[1].type).toBe("ok");
+  });
+});
+
+// ===== Worker entry error handling =====
+describe("createWorkerCommandHandler error handling", () => {
+  it("returns error response when interpreter throws", () => {
+    const interpreter = new TypeberrySyncInterpreter();
+    const handler = createWorkerCommandHandler(interpreter);
+    // Trying to reset before loading should throw
+    const response = handler({ type: "reset", messageId: "err-1" });
+    expect(response.type).toBe("error");
+    if (response.type === "error") {
+      expect(response.message).toContain("Cannot reset");
+    }
   });
 });
 

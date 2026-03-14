@@ -208,20 +208,47 @@ Requirements:
 3. Tests may use an in-memory worker harness for protocol verification as long as the underlying interpreter is real.
 4. Package-local verification must build any workspace dependencies it relies on, especially `@pvmdbg/content`.
 
+## Pitfalls Discovered During Implementation
+
+### Fixture `.pvm` files are NOT PVM blobs
+
+The `fixtures/generic/*.pvm` files contain **raw instruction bytes** using opcodes from an older PVM specification. Both `@typeberry/lib` v0.5.9 and `@fluffylabs/anan-as` expect **PVM program blobs** (jumpTable + code + mask encoding). Key differences:
+
+- **Opcode mismatch**: The old fixtures use opcode 4 for ADD, but v0.5.9 uses opcode 190 (0xBE) for `ADD_32`.
+- **Blob format**: Both interpreters decode programs via `ProgramDecoder` which expects: `varU32(jumpTableLen) + u8(jumpTableItemLen) + varU32(codeLen) + jumpTable + code + mask(bitvec)`.
+- **Mask requirement**: The instruction boundary mask is essential for correct argument decoding — it determines how many immediate bytes each instruction consumes.
+
+**Solution**: `encodePvmBlob(code, instructionStarts)` in `blob-encoder.ts` creates valid PVM blobs from raw instruction bytes with correct mask encoding. Tests build programs inline using correct v0.5.9 opcodes. SPI `.jam` fixtures work unchanged (the interpreters handle SPI decoding internally via `resetJAM`).
+
+**Impact on downstream specs**: The orchestrator and CLI specs that reference `fixtures/generic/*.pvm` must either regenerate these files as proper PVM blobs or wrap them through `encodePvmBlob()` at load time.
+
+### Typeberry register encoding for THREE_REGISTERS instructions
+
+The register argument encoding for THREE_REGISTERS instructions is:
+- `byte1`: lowNibble = **src1**, highNibble = **src2**
+- `byte2`: lowNibble = **dest**
+
+This is NOT `dest, src1, src2` order. The `addU32(first, second, result)` function signature makes the ordering: `first=src1, second=src2, result=dest`.
+
+### Ananas priming step
+
+After every `resetGenericWithMemory()` or `resetJAM()`, Ananas requires calling `setNextProgramCounter(pc)`, `setGasLeft(gas)`, and `nextStep()` to prime the interpreter state. Without this, the first step result will be incorrect.
+
 ## Acceptance Criteria
 
 - `mapStatus()` covers all six known statuses and throws on unknown codes.
 - `regsToUint8` and `uint8ToRegs` roundtrip correctly through runtime-worker exports.
 - `getMemoryRange()` correctly reads across page boundaries.
-- `DirectAdapter` with Typeberry executes `fixtures/generic/add.pvm` correctly.
-- `DirectAdapter` with Ananas executes `fixtures/generic/add.pvm` correctly.
-- Typeberry and Ananas produce the same final state for `fixtures/generic/fibonacci.pvm`.
-- Ananas respects writable page permissions for `fixtures/generic/store-u16.pvm`, proving the page-map encoding is correct.
+- `DirectAdapter` with Typeberry executes an ADD_32 program correctly (using inline PVM blobs with correct v0.5.9 opcodes).
+- `DirectAdapter` with Ananas executes an ADD_32 program correctly.
+- Typeberry and Ananas produce the same final state for a multi-instruction program.
+- Ananas respects writable page permissions, proving the page-map encoding is correct.
 - SPI `.jam` loads work on both interpreters using `loadContext.spiProgram` and `loadContext.spiArgs`.
 - Ananas `reset()` restores the full SPI load context and reproduces the same post-reset step result as a fresh load.
 - `setRegisters()` rejects indices `>= 13`.
-- `WorkerBridge` applies real `setPc`, `setGas`, and `setRegisters` updates through the worker protocol.
+- `WorkerBridge` applies real `setPc`, `setGas`, `setRegisters`, `getMemory`, `setMemory`, and `reset` through the worker protocol.
 - `WorkerBridge` rejects stalled commands with `TimeoutError`.
+- Worker command handler returns structured error responses when interpreter throws.
 - `npm run build -w packages/runtime-worker` succeeds.
 - `npm test -w packages/runtime-worker` succeeds.
 - `npm run build` succeeds for the workspace.
