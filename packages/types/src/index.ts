@@ -1,36 +1,63 @@
-/** All possible PVM execution statuses. */
-export type PvmStatus = "ok" | "halt" | "panic" | "fault" | "host" | "out_of_gas";
+// PVM status and lifecycle
+export {
+  type PvmStatus,
+  PVM_STATUSES,
+  type PvmLifecycle,
+  TERMINAL_LIFECYCLES,
+  isTerminal,
+} from "./pvm-status.js";
 
-/** All valid PVM status values as a readonly array. */
-export const PVM_STATUSES: readonly PvmStatus[] = [
-  "ok",
-  "halt",
-  "panic",
-  "fault",
-  "host",
-  "out_of_gas",
-] as const;
+// Machine state
+export {
+  type InitialMachineState,
+  type PageMapEntry,
+  type MemoryChunk,
+  type MachineStateSnapshot,
+} from "./machine-state.js";
 
-/** PVM lifecycle states. */
-export type PvmLifecycle =
-  | "paused"
-  | "running"
-  | "paused_host_call"
-  | "terminated"
-  | "failed"
-  | "timed_out";
+// PVM adapter
+export {
+  type PvmAdapter,
+  type AdapterStepResult,
+} from "./pvm-adapter.js";
 
-/** Terminal lifecycle states where the PVM cannot step further. */
-export const TERMINAL_LIFECYCLES: readonly PvmLifecycle[] = [
-  "terminated",
-  "failed",
-  "timed_out",
-] as const;
+// Program envelope and related types
+export {
+  type SpiProgram,
+  type ProgramLoadContext,
+  type ExpectedState,
+  type SpiEntrypoint,
+  type LoadSourceKind,
+  type ProgramEnvelope,
+} from "./program.js";
 
-/** Check if a lifecycle state is terminal. */
-export function isTerminal(lifecycle: PvmLifecycle): boolean {
-  return (TERMINAL_LIFECYCLES as readonly string[]).includes(lifecycle);
-}
+// Trace types
+export {
+  type TracePrelude,
+  type TraceEntry,
+  type TraceTermination,
+  type EcalliTrace,
+} from "./trace-types.js";
 
-/** Source kinds for program loading. */
-export type LoadSourceKind = "example" | "url_payload" | "local_storage" | "upload" | "manual_input";
+// Orchestrator types
+export {
+  type HostCallMismatch,
+  type HostCallResumeEffects,
+  type HostCallResumeProposal,
+  type HostCallInfo,
+  type PvmStepReport,
+  type StepResult,
+  type OrchestratorEvents,
+} from "./orchestrator.js";
+
+// Encoding helpers
+export {
+  toHex,
+  fromHex,
+  bigintToDecStr,
+  decStrToBigint,
+  encodeVarU32,
+  decodeVarU32,
+  regsToUint8,
+  uint8ToRegs,
+} from "./encoding.js";

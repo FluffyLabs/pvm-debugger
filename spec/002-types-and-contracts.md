@@ -1,5 +1,7 @@
 # 002 - Types and Interface Contracts
 
+Status: Implemented
+
 ## Purpose
 
 Define the canonical shared domain model in `packages/types`. All downstream packages must import these contracts instead of duplicating them.
