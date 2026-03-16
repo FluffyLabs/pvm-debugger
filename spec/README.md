@@ -7,7 +7,9 @@ Each spec file documents the **what** and **why** of a feature — interfaces, b
 ## Structure
 
 - `spec/*.md` — core package specs (types, trace parser, content pipeline, orchestrator, etc.)
-- `spec/ui/*.md` — UI feature specs (panels, wizard, drawer tabs, etc.)
+- `spec/ui/sprint-NN-*.md` — UI sprint specs, 37 thin vertical slices organized in 7 phases
+
+The UI specs follow a sprint-based iterative process. Each sprint delivers a functional, end-to-end testable feature. Sprints are ordered by dependency — later sprints build on earlier ones.
 
 ## After implementation
 
@@ -18,4 +20,5 @@ When a spec is implemented and verified:
 
 ## File naming
 
-`NNN-short-title.md`.
+- Core specs: `NNN-short-title.md`
+- UI sprints: `sprint-NN-short-title.md`

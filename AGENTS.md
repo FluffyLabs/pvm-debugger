@@ -45,7 +45,7 @@ Each ticket lists specific reference files to read. Study the behavior, then wri
 
 - **No duplicate utilities.** `hexToBytes`, `HOST_CALL_NAMES`, register byte conversion, and memory page access helpers are defined ONCE in their respective packages. Import, don't copy. See `docs/rewrite-architecture.md` section 12.1.
 - **No placeholder tests.** `expect(true).toBe(true)` is not acceptable. See section 12.4 for minimum test scenarios per package.
-- **`data-testid` attributes** on all interactive UI elements for E2E test selection. See `spec/ui/015-integration-smoke-test.md`.
+- **`data-testid` attributes** on all interactive UI elements for E2E test selection. See `spec/ui/sprint-36-integration-smoke-test.md`.
 - **Ananas has initialization quirks.** Must prime with `nextStep()` after reset. See `spec/005-runtime-worker-and-adapters.md`.
 - **Trace matching is by sequential position** (Nth host call → Nth trace entry). NOT by value, NOT by PC. See `docs/rewrite-architecture.md` section 8.3.
 

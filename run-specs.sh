@@ -1,13 +1,22 @@
 #!/bin/bash
 set -euo pipefail
 
-# Kill all child processes on exit (Ctrl+C, etc.)
+# ── Signal handling ───────────────────────────────────────────────────────
+# Use a temp file for child output so the child runs as a direct child of
+# this script (not inside a command-substitution subshell). This lets
+# SIGINT propagate cleanly when the user presses Ctrl+C.
+CL_OUTPUT=$(mktemp)
+
 cleanup() {
-  printf "\n\033[1;31mInterrupted — killing child processes...\033[0m\n"
+  set +e  # don't exit on errors during cleanup
+  printf "\n\033[1;31mInterrupted — stopping...\033[0m\n"
+  # Kill all children in our process group
   kill -- -$$ 2>/dev/null || true
+  rm -f "$CL_OUTPUT"
   exit 130
 }
 trap cleanup INT TERM
+trap 'rm -f "$CL_OUTPUT"' EXIT
 
 # ── Configuration ──────────────────────────────────────────────────────────
 MAGIC="XYZZY_SPEC_DONE"
@@ -21,6 +30,7 @@ LOG_DIR="${LOG_DIR:-logs}"                   # directory for per-spec log files
 
 # ── Spec list (order matters) ──────────────────────────────────────────────
 SPECS=(
+  # Core package specs (sequential)
   spec/001-workspace-bootstrap.md
   spec/002-types-and-contracts.md
   spec/003-trace-parser.md
@@ -28,23 +38,57 @@ SPECS=(
   spec/005-runtime-worker-and-adapters.md
   spec/006-orchestrator.md
   spec/007-cli-trace-replay.md
-  spec/ui/001-app-shell-and-routing.md
-  spec/ui/002-load-wizard-step1.md
-  spec/ui/003-load-wizard-step2.md
-  spec/ui/004-debugger-layout.md
-  spec/ui/005-instructions-panel.md
-  spec/ui/006-registers-and-status.md
-  spec/ui/007-memory-panel.md
-  spec/ui/008-execution-controls.md
-  spec/ui/009-pvm-tabs-and-divergence.md
-  spec/ui/010-drawer-settings-tab.md
-  spec/ui/011-drawer-trace-log-tab.md
-  spec/ui/011b-drawer-logs-tab.md
-  spec/ui/012-drawer-host-call-tab.md
-  spec/ui/013-persistence-and-reload.md
-  spec/ui/014-block-stepping.md
-  spec/ui/015-integration-smoke-test.md
-  spec/ui/016-user-documentation.md
+
+  # UI sprints — Phase 1: Minimal Viable Debugger
+  spec/ui/sprint-01-app-shell-and-routing.md
+  spec/ui/sprint-02-load-bundled-example.md
+  spec/ui/sprint-03-flat-instruction-list.md
+  spec/ui/sprint-04-registers-and-status.md
+  spec/ui/sprint-05-single-step.md
+  spec/ui/sprint-06-memory-panel.md
+  spec/ui/sprint-07-debugger-layout.md
+  spec/ui/sprint-08-run-pause-reset-load.md
+
+  # UI sprints — Phase 2: Complete Load Wizard
+  spec/ui/sprint-09-full-example-browser.md
+  spec/ui/sprint-10-file-upload.md
+  spec/ui/sprint-11-url-and-manual-hex.md
+  spec/ui/sprint-12-detection-summary.md
+  spec/ui/sprint-13-spi-entrypoint-config.md
+
+  # UI sprints — Phase 3: Drawer + Settings
+  spec/ui/sprint-14-bottom-drawer-shell.md
+  spec/ui/sprint-15-settings-tab.md
+  spec/ui/sprint-16-stepping-modes.md
+  spec/ui/sprint-17-keyboard-shortcuts.md
+
+  # UI sprints — Phase 4: Host Calls + Traces
+  spec/ui/sprint-18-host-call-resume.md
+  spec/ui/sprint-19-host-call-drawer-tab.md
+  spec/ui/sprint-20-host-call-storage.md
+  spec/ui/sprint-21-ecalli-trace-tab.md
+  spec/ui/sprint-22-ecalli-trace-raw-and-download.md
+  spec/ui/sprint-23-logs-tab.md
+
+  # UI sprints — Phase 5: Multi-PVM
+  spec/ui/sprint-24-multi-pvm-tabs.md
+  spec/ui/sprint-25-divergence-detection.md
+
+  # UI sprints — Phase 6: Panel Polish
+  spec/ui/sprint-26-instructions-breakpoints.md
+  spec/ui/sprint-27-instructions-blocks-and-virtualization.md
+  spec/ui/sprint-28-instructions-asm-raw-and-popover.md
+  spec/ui/sprint-29-registers-inline-editing.md
+  spec/ui/sprint-30-registers-change-highlighting.md
+  spec/ui/sprint-31-memory-spi-labels-and-editing.md
+  spec/ui/sprint-32-memory-change-highlighting.md
+
+  # UI sprints — Phase 7: Cross-Cutting + Wrap-Up
+  spec/ui/sprint-33-block-stepping.md
+  spec/ui/sprint-34-persistence-and-reload.md
+  spec/ui/sprint-35-mobile-responsive.md
+  spec/ui/sprint-36-integration-smoke-test.md
+  spec/ui/sprint-37-user-documentation.md
 )
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -60,14 +104,19 @@ err()  { printf "\033[1;31mERR %s\033[0m\n" "$*"; }
 current_log=""
 
 run_cl() {
-  # $1 = prompt, rest = extra args
+  # $1 = prompt, rest = extra args. Writes JSON output to $CL_OUTPUT.
   local prompt="$1"; shift
   if [[ -n "$DRY_RUN" ]]; then
     echo "[DRY RUN] $CL ${cl_args[*]} $* ..." >&2
-    echo "{\"result\":\"$MAGIC\",\"session_id\":\"dry-run\"}"
-    return
+    echo "{\"result\":\"$MAGIC\",\"session_id\":\"dry-run\"}" > "$CL_OUTPUT"
+    return 0
   fi
-  "$CL" "${cl_args[@]}" "$@" --output-format json "$prompt" 2> >(tee -a "$current_log" >&2)
+  # Run child in foreground (not inside $(...) subshell) so Ctrl+C
+  # propagates SIGINT directly to both the script and the child.
+  "$CL" "${cl_args[@]}" "$@" --output-format json "$prompt" \
+    > "$CL_OUTPUT" \
+    2> >(tee -a "$current_log" >&2) \
+    || true  # don't let set -e kill us on non-zero exit
 }
 
 extract_json_field() {
@@ -127,7 +176,8 @@ Do NOT output $MAGIC until everything is committed and verified.
 EOF
 )"
 
-  json_out=$(run_cl "$impl_prompt")
+  run_cl "$impl_prompt"
+  json_out=$(cat "$CL_OUTPUT")
   session_id=$(extract_json_field "$json_out" "session_id")
   result=$(extract_json_field "$json_out" "result")
 
@@ -156,7 +206,8 @@ $MAGIC
 EOF
 )"
 
-    json_out=$(run_cl "$nudge_prompt" --resume "$session_id")
+    run_cl "$nudge_prompt" --resume "$session_id"
+    json_out=$(cat "$CL_OUTPUT")
     result=$(extract_json_field "$json_out" "result")
   done
 
@@ -164,7 +215,7 @@ EOF
   log "Reflecting on $spec..."
 
   reflect_prompt="Reflect on the implementation of $spec using /reflect"
-  run_cl "$reflect_prompt" --resume "$session_id" >/dev/null
+  run_cl "$reflect_prompt" --resume "$session_id"
 
   log "Completed: $spec"
   echo "────────────────────────────────────────────────────────────"

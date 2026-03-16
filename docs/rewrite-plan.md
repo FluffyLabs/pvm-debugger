@@ -43,28 +43,19 @@ Sequential implementation. See `spec/README.md` for dependency graph.
 | 006 | Orchestrator | Multi-PVM orchestrator with events, host calls, breakpoints |
 | 007 | CLI Trace Replay | Node.js CLI that validates orchestrator works without browser |
 
-### UI Feature Specs (`spec/ui/001-016`)
+### UI Sprint Specs (`spec/ui/sprint-01` through `sprint-37`)
 
-Granular per-feature specs. See `spec/ui/` for the full list.
+37 thin vertical sprint slices. Each sprint delivers a functional, testable end-to-end feature with full E2E coverage. See `spec/ui/` for the full list.
 
-| # | Title |
-|---|---|
-| 001 | App Shell and Routing |
-| 002 | Load Wizard — Step 1: Source Selection |
-| 003 | Load Wizard — Step 2: Detection Preview + Config |
-| 004 | Debugger Layout (3-column + drawer) |
-| 005 | Instructions Panel |
-| 006 | Registers and Status Panel |
-| 007 | Memory Panel |
-| 008 | Execution Controls |
-| 009 | PVM Tabs and Divergence Indicators |
-| 010 | Bottom Drawer — Settings Tab |
-| 011 | Bottom Drawer — Trace Log Tab |
-| 012 | Bottom Drawer — Host Call Tab |
-| 013 | Persistence and Reload |
-| 014 | Block Stepping Integration |
-| 015 | Integration Smoke Test (E2E) |
-| 016 | User Documentation |
+| Phase | Sprints | Focus |
+|---|---|---|
+| 1 — Minimal Viable Debugger | 01–08 | Shell, load example, instructions, registers, step, memory, layout, run/pause/reset |
+| 2 — Complete Load Wizard | 09–13 | Full examples, upload, URL, hex, detection summary, SPI config |
+| 3 — Drawer + Settings | 14–17 | Drawer shell, settings, stepping modes, keyboard shortcuts |
+| 4 — Host Calls + Traces | 18–23 | Host-call resume, drawer tabs (host call, trace, logs) |
+| 5 — Multi-PVM | 24–25 | PVM tabs, divergence detection |
+| 6 — Panel Polish | 26–32 | Breakpoints, blocks, virtualization, ASM/Raw, editing, change highlighting |
+| 7 — Cross-Cutting + Wrap-Up | 33–37 | Block stepping, persistence, responsive, smoke test, docs |
 
 ## 4. Key Design Decisions
 
