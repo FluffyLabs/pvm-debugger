@@ -31,6 +31,7 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
       orchestratorRef.current.shutdown().catch(() => {});
       orchestratorRef.current = null;
       setOrchestrator(null);
+      setEnvelope(null);
     }
   }, []);
 

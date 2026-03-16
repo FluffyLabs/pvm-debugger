@@ -2,9 +2,11 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Sprint 03 — Flat Instruction List", () => {
   test("empty state shows 'No program loaded' before a program is loaded", async ({ page }) => {
-    // Navigate directly to debugger — should redirect to /load since no program is loaded
+    // Without a loaded program, / redirects to /load (route guard).
+    // Verify the redirect happens and no instructions panel is visible.
     await page.goto("/#/");
     await expect(page.getByTestId("load-page")).toBeVisible();
+    await expect(page.getByTestId("instructions-panel")).not.toBeVisible();
   });
 
   test("instructions render after loading a program", async ({ page }) => {

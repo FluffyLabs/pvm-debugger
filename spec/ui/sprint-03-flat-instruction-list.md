@@ -88,6 +88,22 @@ If no program envelope is available, show: `No program loaded`.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
 
+## Implementation Notes
+
+- **Mask-based iteration**: disassembly uses the PVM blob mask to find instruction boundaries.
+  SPI programs have a full mask from the blob decoder; generic programs wrapped by `encodePvmBlob`
+  have only byte 0 marked as instruction start (producing a single instruction entry). The
+  `ArgsDecoder` depends on the mask for immediate value byte widths, so opcode-width-based fallback
+  is not reliable without a proper mask.
+- **`ProgramEnvelope` is stored in the orchestrator React context** (not inside the Orchestrator
+  class itself). The context clears the envelope on `teardown()` to prevent stale state.
+- **Omega notation**: register arguments use `ω0`–`ω12`. The `ecalli` operand uses unsigned
+  formatting (`getU32`) since it represents a host call index; all other immediates use signed
+  formatting (`getI32`).
+- **Result API**: `ProgramDecoder.deblob()` returns a `Result` with `.ok` (not `.value`).
+- **`Instruction` enum is not exported** from `@typeberry/lib/pvm-interpreter`. The canonical
+  opcode→mnemonic map in `instruction-names.ts` uses numeric keys matching the enum values.
+
 ## Verification
 
 ```bash
