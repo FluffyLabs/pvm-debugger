@@ -6,8 +6,8 @@ test("redirects / to /load and shows header", async ({ page }) => {
   // Verify redirect to /load (path-based or hash-based)
   await expect(page).toHaveURL(/\/load/);
 
-  // Verify the load screen container is visible
-  await expect(page.getByTestId("load-screen")).toBeVisible();
+  // Verify the load page container is visible
+  await expect(page.getByTestId("load-page")).toBeVisible();
 
   // Verify the shared-ui Header is rendered (contains FluffyLabs logo image)
   await expect(page.getByAltText("FluffyLabs logo")).toBeVisible();

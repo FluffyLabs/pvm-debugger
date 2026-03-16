@@ -47,6 +47,8 @@ test.describe("Sprint 01 — App Shell + Routing", () => {
     // The toggle button is within the sidebar, rendered by ToggleDarkModeIcon as a Button
     const toggleButton = sidebar.getByRole("button");
     await expect(toggleButton.first()).toBeVisible();
+
+    // Click the toggle and verify it doesn't crash (theme behavior owned by shared-ui)
     await toggleButton.first().click();
   });
 });
