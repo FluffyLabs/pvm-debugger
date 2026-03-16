@@ -1,5 +1,7 @@
 # Sprint 03 — Flat Instruction List
 
+Status: Implemented
+
 ## Goal
 
 After loading a program, display the disassembled instructions as a flat, dense, monospace list on the debugger page. The current PC row is highlighted and auto-scrolled into view.

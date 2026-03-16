@@ -1,15 +1,20 @@
 import { createContext, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Orchestrator } from "@pvmdbg/orchestrator";
+import type { ProgramEnvelope } from "@pvmdbg/types";
 import { createPvmAdapter } from "../lib/runtime";
 
 export interface OrchestratorContextValue {
   orchestrator: Orchestrator | null;
+  envelope: ProgramEnvelope | null;
+  setEnvelope: (envelope: ProgramEnvelope) => void;
   initialize: (pvmIds: string[]) => Orchestrator;
   teardown: () => void;
 }
 
 export const OrchestratorContext = createContext<OrchestratorContextValue>({
   orchestrator: null,
+  envelope: null,
+  setEnvelope: () => {},
   initialize: () => {
     throw new Error("OrchestratorProvider not mounted");
   },
@@ -18,6 +23,7 @@ export const OrchestratorContext = createContext<OrchestratorContextValue>({
 
 export function OrchestratorProvider({ children }: { children: ReactNode }) {
   const [orchestrator, setOrchestrator] = useState<Orchestrator | null>(null);
+  const [envelope, setEnvelope] = useState<ProgramEnvelope | null>(null);
   const orchestratorRef = useRef<Orchestrator | null>(null);
 
   const teardown = useCallback(() => {
@@ -54,7 +60,7 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrchestratorContext.Provider value={{ orchestrator, initialize, teardown }}>
+    <OrchestratorContext.Provider value={{ orchestrator, envelope, setEnvelope, initialize, teardown }}>
       {children}
     </OrchestratorContext.Provider>
   );

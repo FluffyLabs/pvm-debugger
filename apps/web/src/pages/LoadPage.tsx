@@ -11,7 +11,7 @@ import { useOrchestrator } from "../hooks/useOrchestrator";
 
 export function LoadPage() {
   const navigate = useNavigate();
-  const { initialize } = useOrchestrator();
+  const { initialize, setEnvelope } = useOrchestrator();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +31,7 @@ export function LoadPage() {
       const envelope = createProgramEnvelope(rawPayload);
       const orch = initialize(["typeberry"]);
       await orch.loadProgram(envelope);
+      setEnvelope(envelope);
       navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
