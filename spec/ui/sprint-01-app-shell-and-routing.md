@@ -1,5 +1,7 @@
 # Sprint 01 — App Shell + Routing Skeleton
 
+Status: Implemented
+
 ## Goal
 
 Deliver the baseline web shell for `apps/web` with shared-ui chrome and route structure. After this sprint the app renders in a browser with header, sidebar, dark theme, and two placeholder routes.

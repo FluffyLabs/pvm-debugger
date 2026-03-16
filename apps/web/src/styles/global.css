@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@fluffylabs/shared-ui/theme.css";
 @import "@fluffylabs/shared-ui/style.css";
+@import "./layout.css";
 
 body {
   margin: 0;

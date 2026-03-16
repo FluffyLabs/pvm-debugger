@@ -1,0 +1,31 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.app-content {
+  flex: 1;
+  overflow: auto;
+}
+
+/* All clickable elements use pointer cursor */
+button,
+a,
+[role="button"],
+[role="tab"],
+[role="link"],
+[role="menuitem"],
+[role="switch"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+summary {
+  cursor: pointer;
+}

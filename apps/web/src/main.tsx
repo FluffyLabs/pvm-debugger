@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router";
 import { setColorMode } from "@fluffylabs/shared-ui";
 import App from "./App";
-import "./globals.css";
+import "./styles/global.css";
 
 // Enable dark mode by default
 setColorMode(true);
