@@ -1,4 +1,5 @@
 import type { ProgramEnvelope, LoadSourceKind, ExpectedState, PageMapEntry, MemoryChunk } from "@pvmdbg/types";
+import { encodePvmBlob } from "@pvmdbg/types";
 import type { JsonTestVector } from "./detect.js";
 
 /** Decode a JSON test vector into a ProgramEnvelope. */
@@ -7,7 +8,8 @@ export function decodeJsonTestVector(
   sourceKind: LoadSourceKind,
   sourceId: string,
 ): ProgramEnvelope {
-  const programBytes = Uint8Array.from(data.program);
+  // JSON test vectors contain raw instruction bytes — wrap in PVM blob format
+  const programBytes = encodePvmBlob(Uint8Array.from(data.program));
 
   const pageMap: PageMapEntry[] = (data["initial-page-map"] ?? []).map((p) => ({
     address: p.address,

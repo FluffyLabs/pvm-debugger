@@ -9,6 +9,7 @@ import {
   decStrToBigint,
   encodeVarU32,
   decodeVarU32,
+  encodePvmBlob,
   regsToUint8,
   uint8ToRegs,
 } from "./index.js";
@@ -201,6 +202,37 @@ describe("encodeVarU32 / decodeVarU32", () => {
 
   it("decodeVarU32 throws on invalid lead byte 0xff", () => {
     expect(() => decodeVarU32(new Uint8Array([0xff, 0x00, 0x00, 0x00, 0x00]))).toThrow("invalid lead byte");
+  });
+});
+
+describe("encodePvmBlob", () => {
+  it("wraps 3 instruction bytes into a valid PVM blob", () => {
+    const code = new Uint8Array([0x04, 0x87, 0x03]);
+    const blob = encodePvmBlob(code);
+    // [jtLen=0, jtItemLen=0, codeLen=3, code..., mask=0x01]
+    expect(Array.from(blob)).toEqual([0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01]);
+  });
+
+  it("wraps empty code into a minimal blob", () => {
+    const blob = encodePvmBlob(new Uint8Array());
+    // [jtLen=0, jtItemLen=0, codeLen=0] — no code, no mask
+    expect(Array.from(blob)).toEqual([0x00, 0x00, 0x00]);
+  });
+
+  it("respects custom instruction starts in the mask", () => {
+    const code = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09]);
+    const blob = encodePvmBlob(code, [0, 3, 8]);
+    // mask byte 0: bits 0 and 3 set = 0b00001001 = 0x09
+    // mask byte 1: bit 0 set (offset 8 mod 8 = 0) = 0x01
+    const mask = blob.slice(-2);
+    expect(Array.from(mask)).toEqual([0x09, 0x01]);
+  });
+
+  it("defaults to marking only byte 0 as instruction start", () => {
+    const code = new Uint8Array([0x01, 0x02, 0x03]);
+    const blob = encodePvmBlob(code);
+    const maskByte = blob[blob.length - 1];
+    expect(maskByte).toBe(0x01); // only bit 0 set
   });
 });
 

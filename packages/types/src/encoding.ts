@@ -119,6 +119,57 @@ export function decodeVarU32(bytes: Uint8Array, offset: number = 0): { value: nu
   throw new Error(`decodeVarU32: invalid lead byte 0x${lead.toString(16)}`);
 }
 
+/**
+ * Encode raw PVM instruction bytes into a proper PVM program blob.
+ *
+ * PVM blob format:
+ * 1. jumpTableLength (varU32) - number of jump table entries
+ * 2. jumpTableItemLength (u8) - bytes per entry
+ * 3. codeLength (varU32) - length of code section
+ * 4. jumpTable data
+ * 5. code bytes
+ * 6. mask (bitVecFixLen(codeLength)) - instruction boundary mask
+ *
+ * **Important:** Generic PVM programs and JSON test vectors contain raw
+ * instruction bytes. They MUST be wrapped in a PVM blob before passing to
+ * adapters like typeberry, which expect the blob format.
+ *
+ * @param code - Raw instruction bytes
+ * @param instructionStarts - Array of byte offsets that are instruction starts.
+ *   If omitted, only byte 0 is marked as an instruction start.
+ */
+export function encodePvmBlob(
+  code: Uint8Array,
+  instructionStarts?: number[],
+): Uint8Array {
+  const codeLength = code.length;
+  const maskByteLength = Math.ceil(codeLength / 8);
+
+  const mask = new Uint8Array(maskByteLength);
+  const starts = instructionStarts ?? [0];
+  for (const start of starts) {
+    if (start < codeLength) {
+      mask[Math.floor(start / 8)] |= 1 << (start % 8);
+    }
+  }
+
+  const jtLenBytes = encodeVarU32(0);
+  const jtItemLenByte = new Uint8Array([0]);
+  const codeLenBytes = encodeVarU32(codeLength);
+
+  const totalLength = jtLenBytes.length + jtItemLenByte.length + codeLenBytes.length + codeLength + maskByteLength;
+  const blob = new Uint8Array(totalLength);
+  let offset = 0;
+
+  blob.set(jtLenBytes, offset); offset += jtLenBytes.length;
+  blob.set(jtItemLenByte, offset); offset += jtItemLenByte.length;
+  blob.set(codeLenBytes, offset); offset += codeLenBytes.length;
+  blob.set(code, offset); offset += codeLength;
+  blob.set(mask, offset);
+
+  return blob;
+}
+
 const REGISTER_COUNT = 13;
 const BYTES_PER_REGISTER = 8;
 const TOTAL_REGISTER_BYTES = REGISTER_COUNT * BYTES_PER_REGISTER; // 104

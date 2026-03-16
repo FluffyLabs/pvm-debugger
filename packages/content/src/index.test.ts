@@ -441,6 +441,19 @@ describe("decodeGeneric", () => {
     expect(envelope.initialState.pc).toBe(10);
     expect(envelope.initialState.gas).toBe(500n);
   });
+
+  it("wraps raw instruction bytes in a PVM blob", () => {
+    const rawCode = new Uint8Array([0x04, 0x87, 0x03]);
+    const envelope = decodeGeneric(rawCode, "manual_input", "test");
+    // PVM blob: [jtLen=0, jtItemLen=0, codeLen=3, code..., mask=0x01]
+    expect(Array.from(envelope.programBytes)).toEqual([0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01]);
+  });
+
+  it("wraps empty program in a valid PVM blob", () => {
+    const envelope = decodeGeneric(new Uint8Array(), "manual_input", "test");
+    // PVM blob: [jtLen=0, jtItemLen=0, codeLen=0] — no code, no mask
+    expect(Array.from(envelope.programBytes)).toEqual([0x00, 0x00, 0x00]);
+  });
 });
 
 // ============================================================================
@@ -454,7 +467,9 @@ describe("decodeJsonTestVector", () => {
     const envelope = decodeJsonTestVector(data, "example", "inst-add-32");
 
     expect(envelope.programKind).toBe("generic");
-    expect(Array.from(envelope.programBytes)).toEqual([0x04, 0x87, 0x03]);
+    // programBytes is a PVM blob wrapping the raw instruction bytes [0x04, 0x87, 0x03]:
+    // [jtLen=0, jtItemLen=0, codeLen=3, code..., mask=0x01]
+    expect(Array.from(envelope.programBytes)).toEqual([0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01]);
     expect(envelope.initialState.pc).toBe(0);
     expect(envelope.initialState.gas).toBe(10000n);
     expect(envelope.initialState.registers.length).toBe(13);

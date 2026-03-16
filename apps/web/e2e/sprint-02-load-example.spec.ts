@@ -35,6 +35,16 @@ test.describe("Sprint 02 — Load a Bundled Example", () => {
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
   });
 
+  test("loading a JAM SPI example (add.jam) shows OK status", async ({ page }) => {
+    await page.goto("/#/load");
+    const jamCard = page.getByTestId("example-card-add-jam");
+    await expect(jamCard).toBeVisible();
+    await jamCard.click();
+
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
+  });
+
   test("/ without a loaded program redirects to /load", async ({ page }) => {
     await page.goto("/#/");
     await expect(page.getByTestId("load-page")).toBeVisible();

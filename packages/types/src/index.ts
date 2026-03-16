@@ -58,6 +58,7 @@ export {
   decStrToBigint,
   encodeVarU32,
   decodeVarU32,
+  encodePvmBlob,
   regsToUint8,
   uint8ToRegs,
 } from "./encoding.js";
