@@ -9,9 +9,11 @@
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
     "isolatedModules": true,
+    "resolveJsonModule": true,
     "declaration": false,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@fixtures/*": ["../../fixtures/*"]
     }
   },
   "include": ["src"]

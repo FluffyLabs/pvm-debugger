@@ -1,5 +1,7 @@
 # Sprint 02 — Load a Bundled Example (Happy Path)
 
+Status: Implemented
+
 ## Goal
 
 Enable loading a bundled example program through the simplest possible path: show a few example cards on the load page, click one, initialize the orchestrator, and navigate to the debugger page showing "Program loaded — OK."
@@ -92,6 +94,13 @@ The full example browser (categories, remote examples, loading states) comes in 
 - Route guard redirects to `/load` when no program is loaded.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+## Implementation Notes
+
+- **Generic PVM blob encoding**: Raw `.pvm` fixture files contain bare instruction bytes, not PVM blobs. The `decodeGeneric` function in `@pvmdbg/content` now wraps raw bytes into a proper PVM blob (with jump table length, code length, mask) before storing in `ProgramEnvelope.programBytes`. Without this, the typeberry adapter fails with a decode error.
+- **Fixtures base URL**: The `loadExample()` function needs a full base URL (not just `/fixtures/`) because `new URL(path, base)` requires the base to be a complete URL. The LoadPage passes `window.location.origin + "/fixtures/"`.
+- **Vite alias for fixtures**: The `@fixtures` alias is configured in both `vite.config.ts` and `vitest.config.ts` (web project) to resolve `@fixtures/examples.json` imports.
+- **Fixtures served via public symlink**: `apps/web/public/fixtures` is a symlink to `../../fixtures`, making fixture files available at `/fixtures/` in both dev and preview modes.
 
 ## Verification
 

@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import path from "node:path";
 
 export default defineConfig({
   test: {
@@ -15,6 +16,11 @@ export default defineConfig({
         },
       },
       {
+        resolve: {
+          alias: {
+            "@fixtures": path.resolve(__dirname, "fixtures"),
+          },
+        },
         test: {
           name: "web",
           include: ["apps/web/src/**/*.test.tsx"],

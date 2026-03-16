@@ -8,6 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@fixtures": path.resolve(__dirname, "../../fixtures"),
     },
   },
 });
