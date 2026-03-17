@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MachineStateSnapshot, PvmLifecycle, PvmStatus, HostCallInfo } from "@pvmdbg/types";
 import { useOrchestrator } from "./useOrchestrator";
 
@@ -8,6 +8,8 @@ export interface OrchestratorReactiveState {
   hostCallInfo: Map<string, HostCallInfo>;
   isStepInProgress: boolean;
   setIsStepInProgress: (value: boolean) => void;
+  /** Monotonic counter incremented on every snapshot change. Useful for cache invalidation. */
+  snapshotVersion: number;
 }
 
 /**
@@ -26,6 +28,8 @@ export function useOrchestratorState(): OrchestratorReactiveState {
   const [selectedPvmId, setSelectedPvmId] = useState<string | null>(null);
   const [hostCallInfo, setHostCallInfo] = useState<Map<string, HostCallInfo>>(new Map());
   const [isStepInProgress, setIsStepInProgress] = useState(false);
+  const [snapshotVersion, setSnapshotVersion] = useState(0);
+  const versionRef = useRef(0);
 
   useEffect(() => {
     if (!orchestrator) {
@@ -55,6 +59,8 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       // Keep selectedPvmId stable — only set if null
       setSelectedPvmId((prev) => prev ?? pvmId);
       setIsStepInProgress(false);
+      versionRef.current += 1;
+      setSnapshotVersion(versionRef.current);
     };
 
     const onHostCallPaused = (_pvmId: string, info: HostCallInfo) => {
@@ -107,5 +113,5 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     };
   }, [orchestrator]);
 
-  return { snapshots, selectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress };
+  return { snapshots, selectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion };
 }

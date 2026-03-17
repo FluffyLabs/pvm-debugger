@@ -5,12 +5,13 @@ import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
 import { RegistersPanel } from "../components/debugger/RegistersPanel";
+import { MemoryPanel } from "../components/debugger/MemoryPanel";
 import { ExecutionControls } from "../components/debugger/ExecutionControls";
 import { lifecycleLabel } from "../components/debugger/value-format";
 
 export function DebuggerPage() {
   const { orchestrator, envelope } = useOrchestrator();
-  const { snapshots, selectedPvmId, isStepInProgress, setIsStepInProgress } =
+  const { snapshots, selectedPvmId, isStepInProgress, setIsStepInProgress, snapshotVersion } =
     useOrchestratorState();
   const instructions = useDisassembly(envelope);
 
@@ -65,7 +66,14 @@ export function DebuggerPage() {
             lifecycle={selectedEntry?.lifecycle ?? null}
           />
         </div>
-        <div className="flex-1" />
+        <div className="flex-1 min-w-0">
+          <MemoryPanel
+            orchestrator={orchestrator}
+            pvmId={selectedPvmId}
+            pageMap={orchestrator.getPageMap()}
+            snapshotVersion={snapshotVersion}
+          />
+        </div>
       </div>
     </div>
   );

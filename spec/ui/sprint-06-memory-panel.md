@@ -1,5 +1,7 @@
 # Sprint 06 — Memory Panel (Basic, Read-Only)
 
+Status: Implemented
+
 ## Goal
 
 Add a read-only memory inspector to the debugger page. Memory is split into individual 4 KiB pages from the page map, all collapsed by default. Expanding a page shows a dense 16-byte hex dump with ASCII sidebar.
@@ -90,6 +92,14 @@ When the memory panel body is a CSS grid, collapsed sections can overlap if auto
 - Empty state renders `No memory pages.`
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+### Implementation Notes & Edge Cases
+
+- **Cache invalidation**: `useOrchestratorState` exposes a `snapshotVersion` counter (monotonic, incremented on every `pvmStateChanged` event) that `useMemoryReader` uses to invalidate its page cache. This ensures memory contents refresh after stepping.
+- **Overlapping page map segments**: `expandPages()` deduplicates addresses via `Set` after expanding segments, so overlapping entries don't produce duplicate collapsible sections.
+- **Flex layout over CSS grid**: Used flex column layout instead of CSS grid to avoid the collapsed-section overlap pitfall noted in the spec. Each `MemoryRange` is a self-contained block element.
+- **Lazy re-fetch on expand after invalidation**: If a page is expanded and the cache is invalidated (due to stepping), `MemoryRange` triggers a re-fetch via `useEffect` so the user sees updated data without needing to collapse/re-expand.
+- **Test fixture selection**: `store-u16` (has `pageMap` with one writable page at `0x20000`) is used for memory-present tests; `step-test` (no `pageMap`) is used for the empty-state test.
 
 ## Verification
 
