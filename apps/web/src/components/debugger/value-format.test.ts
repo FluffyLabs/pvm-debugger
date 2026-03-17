@@ -161,6 +161,16 @@ describe("parseBigintInput", () => {
     expect(parseBigintInput("12.5")).toBeNull();
   });
 
+  it("rejects bare hex prefix with no digits", () => {
+    expect(parseBigintInput("0x")).toBeNull();
+    expect(parseBigintInput("0X")).toBeNull();
+  });
+
+  it("rejects hex with mixed invalid chars", () => {
+    expect(parseBigintInput("0x1g")).toBeNull();
+    expect(parseBigintInput("0x-1")).toBeNull();
+  });
+
   it("trims whitespace", () => {
     expect(parseBigintInput("  42  ")).toBe(42n);
     expect(parseBigintInput(" 0xff ")).toBe(255n);
@@ -182,6 +192,14 @@ describe("parsePcInput", () => {
   it("rejects invalid input", () => {
     expect(parsePcInput("")).toBeNull();
     expect(parsePcInput("abc")).toBeNull();
+  });
+
+  it("rejects values beyond MAX_SAFE_INTEGER", () => {
+    expect(parsePcInput("9007199254740992")).toBeNull(); // MAX_SAFE_INTEGER + 1
+  });
+
+  it("accepts MAX_SAFE_INTEGER exactly", () => {
+    expect(parsePcInput("9007199254740991")).toBe(9007199254740991);
   });
 });
 

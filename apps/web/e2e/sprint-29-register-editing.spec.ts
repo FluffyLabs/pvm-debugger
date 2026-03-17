@@ -76,6 +76,41 @@ test.describe("Sprint 29 — Registers Inline Editing", () => {
     await expect(hexSpan).toHaveText(/0x0{14}ff/i, { timeout: 5000 });
   });
 
+  test("editing PC with a valid value updates it", async ({ page }) => {
+    await loadProgram(page);
+
+    const pcValue = page.getByTestId("pc-value");
+    await expect(pcValue).toHaveText("0x0000");
+
+    await pcValue.click();
+    const pcEdit = page.getByTestId("pc-value-edit");
+    await expect(pcEdit).toBeVisible();
+
+    await pcEdit.fill("0x0010");
+    await pcEdit.press("Enter");
+
+    await expect(pcEdit).not.toBeVisible();
+    await expect(pcValue).toHaveText(/0x0*10/i, { timeout: 5000 });
+  });
+
+  test("editing gas with a valid value updates it", async ({ page }) => {
+    await loadProgram(page);
+
+    const gasValue = page.getByTestId("gas-value");
+    const originalGas = await gasValue.textContent();
+
+    await gasValue.click();
+    const gasEdit = page.getByTestId("gas-value-edit");
+    await expect(gasEdit).toBeVisible();
+
+    await gasEdit.fill("500000");
+    await gasEdit.press("Enter");
+
+    await expect(gasEdit).not.toBeVisible();
+    // 500,000 with thousands separator
+    await expect(gasValue).toHaveText("500,000", { timeout: 5000 });
+  });
+
   test("PC rejects negative values", async ({ page }) => {
     await loadProgram(page);
 

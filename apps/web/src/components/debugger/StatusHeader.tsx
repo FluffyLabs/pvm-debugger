@@ -37,13 +37,11 @@ function InlineEdit({
   displayValue,
   editable,
   onCommit,
-  parse,
 }: {
   testId: string;
   displayValue: string;
   editable: boolean;
   onCommit: (raw: string) => boolean;
-  parse: (raw: string) => unknown;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -172,7 +170,6 @@ export function StatusHeader({ snapshot, lifecycle, editable, onPcCommit, onGasC
             displayValue={`0x${formatPc(snapshot.pc)}`}
             editable={editable}
             onCommit={handlePcCommit}
-            parse={parsePcInput}
           />
         </div>
         <div className="flex items-center gap-1">
@@ -184,7 +181,6 @@ export function StatusHeader({ snapshot, lifecycle, editable, onPcCommit, onGasC
                 displayValue={formatGas(snapshot.gas)}
                 editable={editable}
                 onCommit={handleGasCommit}
-                parse={parseBigintInput}
               />
             </span>
           </WithTooltip>
