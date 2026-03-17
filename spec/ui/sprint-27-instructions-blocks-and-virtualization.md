@@ -1,5 +1,7 @@
 # Sprint 27 — Instructions — Block Folding + Virtualization
 
+Status: Implemented
+
 ## Goal
 
 Group instructions into basic blocks with collapsible headers and add `@tanstack/react-virtual` so large programs stay performant. This sprint transforms the flat instruction list into a structured, scalable view.
@@ -81,3 +83,12 @@ Implementation pitfall: if the debugger shell grows with content instead of bein
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-27-blocks-virtual.spec.ts
 ```
+
+## Implementation Notes
+
+- `useBasicBlocks` auto-expands any collapsed block that contains the current PC, so the user always sees the active instruction.
+- The virtualizer uses `overscan: 15` and different estimated heights for headers (28px) vs instruction rows (24px).
+- Block grouping reuses the `blockIndex` field already computed in `useDisassembly` via `@typeberry/lib`'s `BasicBlocks` class — no duplicate block analysis.
+- A new `BlockHeader` component (`apps/web/src/components/debugger/BlockHeader.tsx`) renders the collapsible header with chevron icons and instruction count.
+- Scroll-to-current-PC uses `virtualizer.scrollToIndex()` instead of the previous `scrollIntoView` ref approach.
+- E2E tests also verify no regressions in sprint-03 (flat list rendering) and sprint-26 (breakpoints).

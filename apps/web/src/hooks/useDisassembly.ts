@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import type { ProgramEnvelope } from "@pvmdbg/types";
 import {
   ProgramDecoder,
+  BasicBlocks,
   args as argsModule,
 } from "@typeberry/lib/pvm-interpreter";
 import { INSTRUCTION_NAMES } from "../components/debugger/instruction-names";
@@ -14,6 +15,8 @@ export interface DecodedInstruction {
   mnemonic: string;
   rawBytes: Uint8Array;
   args: string;
+  /** Index of the basic block this instruction belongs to (0-based). */
+  blockIndex: number;
 }
 
 function regName(index: number): string {
@@ -117,11 +120,15 @@ function disassemble(programBytes: Uint8Array): DecodedInstruction[] {
   const code = decoder.getCode();
   const mask = decoder.getMask();
 
+  const blocks = new BasicBlocks();
+  blocks.reset(code, mask);
+
   const argsDecoder = new ArgsDecoder();
   argsDecoder.reset(code, mask);
   const results = createResults();
 
   const instructions: DecodedInstruction[] = [];
+  let currentBlockIndex = -1;
 
   // Use the mask to find instruction boundaries (consistent with the blob format).
   // For generic programs wrapped by encodePvmBlob, only byte 0 is marked
@@ -132,6 +139,10 @@ function disassemble(programBytes: Uint8Array): DecodedInstruction[] {
     if (!mask.isInstruction(pc)) {
       pc++;
       continue;
+    }
+
+    if (blocks.isBeginningOfBasicBlock(pc)) {
+      currentBlockIndex++;
     }
 
     const opcode = code[pc];
@@ -166,6 +177,7 @@ function disassemble(programBytes: Uint8Array): DecodedInstruction[] {
       mnemonic,
       rawBytes,
       args: argsStr,
+      blockIndex: Math.max(0, currentBlockIndex),
     });
 
     pc = nextPc;
