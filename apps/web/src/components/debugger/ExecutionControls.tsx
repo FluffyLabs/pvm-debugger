@@ -1,5 +1,4 @@
 import { ArrowLeft, RotateCcw, StepForward, Play, Pause, ListOrdered } from "lucide-react";
-import type { SteppingMode } from "../../lib/debugger-settings";
 
 interface ExecutionControlsProps {
   onNext: () => void;
@@ -11,19 +10,8 @@ interface ExecutionControlsProps {
   canStep: boolean;
   isRunning: boolean;
   isTerminated: boolean;
-  steppingMode: SteppingMode;
-  nInstructionsCount: number;
-}
-
-function stepTooltip(mode: SteppingMode, n: number): string {
-  switch (mode) {
-    case "instruction":
-      return "Step 1 instruction";
-    case "block":
-      return "Step to block boundary";
-    case "n_instructions":
-      return `Step ${n} instructions`;
-  }
+  /** Dynamic tooltip describing the current stepping mode behavior. */
+  stepTooltip: string;
 }
 
 const btnClass =
@@ -39,10 +27,8 @@ export function ExecutionControls({
   canStep,
   isRunning,
   isTerminated,
-  steppingMode,
-  nInstructionsCount,
+  stepTooltip: tooltip,
 }: ExecutionControlsProps) {
-  const tooltip = stepTooltip(steppingMode, nInstructionsCount);
   return (
     <div data-testid="execution-controls" className="flex items-center gap-2">
       <button

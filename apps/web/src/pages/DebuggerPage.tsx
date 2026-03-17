@@ -4,6 +4,7 @@ import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
 import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
+import { stepTooltip } from "../lib/debugger-settings";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { isTerminal } from "@pvmdbg/types";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
@@ -98,8 +99,7 @@ export function DebuggerPage() {
               canStep={canStep}
               isRunning={isRunning}
               isTerminated={allTerminal}
-              steppingMode={settings.steppingMode}
-              nInstructionsCount={settings.nInstructionsCount}
+              stepTooltip={stepTooltip(settings.steppingMode, settings.nInstructionsCount)}
             />
             <div className="flex items-center gap-2">
               {allTerminal && (

@@ -4,6 +4,7 @@ import {
   loadSettings,
   saveSettings,
   DEFAULT_SETTINGS,
+  stepTooltip,
   type DebuggerSettings,
 } from "./debugger-settings";
 
@@ -112,5 +113,21 @@ describe("debugger-settings validators", () => {
   it("rejects invalid auto-continue policy", () => {
     localStorage.setItem("pvmdbg.settings", JSON.stringify({ autoContinuePolicy: "yolo" }));
     expect(loadSettings().autoContinuePolicy).toBe(DEFAULT_SETTINGS.autoContinuePolicy);
+  });
+});
+
+describe("stepTooltip", () => {
+  it("returns instruction tooltip", () => {
+    expect(stepTooltip("instruction", 10)).toBe("Step 1 instruction");
+  });
+
+  it("returns block tooltip", () => {
+    expect(stepTooltip("block", 10)).toBe("Step to block boundary");
+  });
+
+  it("returns n_instructions tooltip with configured count", () => {
+    expect(stepTooltip("n_instructions", 10)).toBe("Step 10 instructions");
+    expect(stepTooltip("n_instructions", 25)).toBe("Step 25 instructions");
+    expect(stepTooltip("n_instructions", 1)).toBe("Step 1 instructions");
   });
 });

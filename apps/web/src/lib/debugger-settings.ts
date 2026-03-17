@@ -38,6 +38,18 @@ export const DEFAULT_SETTINGS: DebuggerSettings = {
   autoContinuePolicy: "continue_when_trace_matches",
 };
 
+/** Human-readable tooltip for the current stepping mode. */
+export function stepTooltip(mode: SteppingMode, n: number): string {
+  switch (mode) {
+    case "instruction":
+      return "Step 1 instruction";
+    case "block":
+      return "Step to block boundary";
+    case "n_instructions":
+      return `Step ${n} instructions`;
+  }
+}
+
 const STORAGE_KEY = "pvmdbg.settings";
 const PER_KEY_PREFIX = "pvmdbg.settings.";
 

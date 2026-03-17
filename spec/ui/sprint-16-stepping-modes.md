@@ -72,9 +72,19 @@ Rules:
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
 
+## Implementation Notes
+
+- `stepsForMode(mode, n)` in `useDebuggerActions.ts` maps stepping mode to step count. Exported for unit testing.
+- `stepTooltip(mode, n)` in `debugger-settings.ts` produces the human-readable tooltip string. Computed in `DebuggerPage` and passed as a single `stepTooltip` prop to `ExecutionControls` — the component has no dependency on settings types.
+- The `run` loop captures `stepSize` at loop start. Changing stepping mode mid-run has no effect until Pause + Run again. This is intentional.
+- Block mode uses `orchestrator.step(10)` as a temporary placeholder. Sprint 33 replaces this with real block-boundary stepping.
+- Sprint-08 E2E test `sprint-08-execution-controls.spec.ts` was updated to account for the new Step button at toolbar index 3 (Run moved to index 4).
+- Pre-existing issue: Run/Pause E2E tests using `game-of-life` are flaky because the fixture `fixtures/generic/game-of-life.pvm` is only 1 byte, causing instant termination.
+
 ## Verification
 
 ```bash
 cd apps/web && npx vite build
+npx vitest run src/lib/debugger-settings.test.ts src/hooks/useDebuggerActions.test.ts
 npx playwright test e2e/sprint-16-stepping-modes.spec.ts
 ```

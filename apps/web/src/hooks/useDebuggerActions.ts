@@ -31,7 +31,7 @@ interface DebuggerActions {
 }
 
 /** Resolve stepping mode to the number of steps to execute. */
-function stepsForMode(mode: SteppingMode, nInstructionsCount: number): number {
+export function stepsForMode(mode: SteppingMode, nInstructionsCount: number): number {
   switch (mode) {
     case "instruction":
       return 1;

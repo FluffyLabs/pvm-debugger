@@ -38,7 +38,8 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     await expect(buttons.nth(0)).toHaveAttribute("data-testid", "load-button");
     await expect(buttons.nth(1)).toHaveAttribute("data-testid", "reset-button");
     await expect(buttons.nth(2)).toHaveAttribute("data-testid", "next-button");
-    await expect(buttons.nth(3)).toHaveAttribute("data-testid", "run-button");
+    await expect(buttons.nth(3)).toHaveAttribute("data-testid", "step-button");
+    await expect(buttons.nth(4)).toHaveAttribute("data-testid", "run-button");
   });
 
   test("Run starts continuous execution and becomes Pause", async ({ page }) => {
