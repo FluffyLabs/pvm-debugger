@@ -162,6 +162,34 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await expect(page.getByTestId("config-step-load")).toBeDisabled();
   });
 
+  test("switching entrypoint types preserves field values", async ({ page }) => {
+    const fileInput = page.getByTestId("file-upload-input");
+    await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
+    await expect(page.getByTestId("file-upload-selected")).toBeVisible();
+    await page.getByTestId("source-step-continue").click();
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+
+    // Set a custom slot value for Accumulate
+    await page.getByTestId("spi-field-slot").fill("777");
+
+    // Switch to Refine
+    await page.getByTestId("spi-entrypoint-refine").click();
+    await expect(page.getByTestId("spi-field-core")).toBeVisible();
+
+    // Set a custom core value for Refine
+    await page.getByTestId("spi-field-core").fill("55");
+
+    // Switch back to Accumulate — slot should be preserved
+    await page.getByTestId("spi-entrypoint-accumulate").click();
+    const slotValue = await page.getByTestId("spi-field-slot").inputValue();
+    expect(slotValue).toBe("777");
+
+    // Switch back to Refine — core should be preserved
+    await page.getByTestId("spi-entrypoint-refine").click();
+    const coreValue = await page.getByTestId("spi-field-core").inputValue();
+    expect(coreValue).toBe("55");
+  });
+
   test("persisted values survive page reload", async ({ page }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
@@ -172,11 +200,11 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     // Change slot to a distinctive value
     await page.getByTestId("spi-field-slot").fill("999");
 
-    // Verify localStorage has the value
+    // Verify localStorage has the value (stored per-entrypoint in allFields)
     const stored = await page.evaluate(() => localStorage.getItem("pvmdbg:spi-config"));
     expect(stored).toBeTruthy();
     const parsed = JSON.parse(stored!);
-    expect(parsed.fields.slot).toBe("999");
+    expect(parsed.allFields.accumulate.slot).toBe("999");
 
     // Reload the page and navigate back to step 2 with same file
     await page.reload();

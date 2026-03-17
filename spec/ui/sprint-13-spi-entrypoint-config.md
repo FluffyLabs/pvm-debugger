@@ -96,11 +96,19 @@ Rules:
 
 ## Implementation Notes
 
-- `decodeSpiEntrypoint()` added to `packages/content/src/spi-entrypoint.ts` for RAW→builder decoding.
+- `decodeSpiEntrypoint()` added to `packages/content/src/spi-entrypoint.ts` for RAW→builder decoding. Roundtrip unit tests in `packages/content/src/index.test.ts`.
 - Playwright cannot fill non-numeric text into `input[type=number]`; invalid-input E2E test uses RAW mode with invalid hex instead.
 - `SpiEntrypointConfig` uses a `spiConfigReady` flag to avoid disabling Load before the component mounts and reports initial state.
-- localStorage key: `pvmdbg:spi-config` — stores entrypoint type, field values, RAW mode state, and encoded hex.
+- localStorage key: `pvmdbg:spi-config` — stores per-entrypoint fields so switching types doesn't lose data.
+  ```json
+  { "entrypoint": "accumulate",
+    "allFields": { "accumulate": {"slot":"42","id":"0","results":"0"},
+                   "refine": {"core":"0","index":"0","id":"0","payload":"","package":"0x00..."},
+                   "is_authorized": {"core":"0"} },
+    "isRawMode": false, "rawHex": "0x2a0000" }
+  ```
 - ConfigStep re-creates the envelope whenever `spiParams` changes, passing them to `createProgramEnvelope(payload, { entrypoint })`.
+- Old flat `fields` shape in localStorage is auto-migrated to `allFields` on load (backwards compatible).
 
 ## Verification
 

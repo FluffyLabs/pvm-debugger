@@ -12,11 +12,11 @@ import { toHex, fromHex } from "@pvmdbg/types";
 
 const SPI_CONFIG_STORAGE_KEY = "pvmdbg:spi-config";
 
-/** Serialisable shape stored in localStorage. */
+/** Serialisable shape stored in localStorage. Stores fields for ALL entrypoint types. */
 interface PersistedSpiConfig {
   entrypoint: SpiEntrypointParams["entrypoint"];
-  /** All field values stored as strings (to preserve user input exactly). */
-  fields: Record<string, string>;
+  /** Per-entrypoint field values (keyed by entrypoint type). */
+  allFields: Record<string, Record<string, string>>;
   isRawMode: boolean;
   rawHex: string;
 }
@@ -25,7 +25,17 @@ function loadPersistedConfig(): PersistedSpiConfig | null {
   try {
     const raw = localStorage.getItem(SPI_CONFIG_STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as PersistedSpiConfig;
+    const parsed = JSON.parse(raw);
+    // Migrate from old flat `fields` shape to per-entrypoint `allFields`
+    if (parsed.fields && !parsed.allFields) {
+      return {
+        entrypoint: parsed.entrypoint,
+        allFields: { [parsed.entrypoint]: parsed.fields },
+        isRawMode: parsed.isRawMode ?? false,
+        rawHex: parsed.rawHex ?? "",
+      };
+    }
+    return parsed as PersistedSpiConfig;
   } catch {
     return null;
   }
@@ -198,31 +208,41 @@ interface SpiEntrypointConfigProps {
 }
 
 export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointConfigProps) {
+  // Load persisted config once for all initializers
+  const [persistedSnapshot] = useState(() => loadPersistedConfig());
+
   // Determine initial state: example overrides > persisted > defaults
   const [entrypoint, setEntrypoint] = useState<SpiEntrypointParams["entrypoint"]>(() => {
     if (exampleEntry?.entrypoint) return exampleEntry.entrypoint.type;
-    const persisted = loadPersistedConfig();
-    if (persisted) return persisted.entrypoint;
+    if (persistedSnapshot) return persistedSnapshot.entrypoint;
     return "accumulate";
   });
 
-  const [fields, setFields] = useState<Record<string, string>>(() => {
+  // Store fields for ALL entrypoint types so switching doesn't lose data
+  const [allFields, setAllFields] = useState<Record<string, Record<string, string>>>(() => {
+    const base = { ...DEFAULT_FIELDS };
+    // Merge persisted fields for each entrypoint type
+    if (persistedSnapshot?.allFields) {
+      for (const ep of ["accumulate", "refine", "is_authorized"] as const) {
+        if (persistedSnapshot.allFields[ep]) {
+          base[ep] = { ...base[ep], ...persistedSnapshot.allFields[ep] };
+        }
+      }
+    }
+    // Example entrypoint overrides for its specific type
     if (exampleEntry?.entrypoint) {
-      // Convert example manifest params (string values) to our field map
       const ep = exampleEntry.entrypoint;
-      return { ...DEFAULT_FIELDS[ep.type], ...ep.params };
+      base[ep.type] = { ...base[ep.type], ...ep.params };
     }
-    const persisted = loadPersistedConfig();
-    if (persisted && persisted.entrypoint === entrypoint) {
-      return { ...DEFAULT_FIELDS[entrypoint], ...persisted.fields };
-    }
-    return { ...DEFAULT_FIELDS[entrypoint] };
+    return base;
   });
+
+  // Current entrypoint's fields (derived view)
+  const fields = allFields[entrypoint] ?? DEFAULT_FIELDS[entrypoint];
 
   const [isRawMode, setIsRawMode] = useState(() => {
     if (exampleEntry?.entrypoint) return false;
-    const persisted = loadPersistedConfig();
-    return persisted?.isRawMode ?? false;
+    return persistedSnapshot?.isRawMode ?? false;
   });
 
   const [rawHex, setRawHex] = useState("");
@@ -274,7 +294,7 @@ export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointCon
       try {
         const bytes = fromHex(rawHex);
         const decoded = decodeSpiEntrypoint(entrypoint, bytes);
-        setFields(paramsToFields(decoded));
+        setAllFields((prev) => ({ ...prev, [entrypoint]: paramsToFields(decoded) }));
         setValidationError(null);
         onChange(decoded);
       } catch (e) {
@@ -286,22 +306,19 @@ export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointCon
 
   // Persist to localStorage on every state change
   useEffect(() => {
-    persistConfig({ entrypoint, fields, isRawMode, rawHex });
-  }, [entrypoint, fields, isRawMode, rawHex]);
+    persistConfig({ entrypoint, allFields, isRawMode, rawHex });
+  }, [entrypoint, allFields, isRawMode, rawHex]);
 
   function handleEntrypointChange(ep: SpiEntrypointParams["entrypoint"]) {
     setEntrypoint(ep);
-    // Load persisted fields for this entrypoint or use defaults
-    const persisted = loadPersistedConfig();
-    if (persisted && persisted.entrypoint === ep) {
-      setFields({ ...DEFAULT_FIELDS[ep], ...persisted.fields });
-    } else {
-      setFields({ ...DEFAULT_FIELDS[ep] });
-    }
+    // Fields for the new entrypoint are already stored in allFields — no data loss
   }
 
   function handleFieldChange(key: string, value: string) {
-    setFields((prev) => ({ ...prev, [key]: value }));
+    setAllFields((prev) => ({
+      ...prev,
+      [entrypoint]: { ...prev[entrypoint], [key]: value },
+    }));
   }
 
   function handleRawModeToggle(checked: boolean) {

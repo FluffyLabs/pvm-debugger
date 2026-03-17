@@ -7,6 +7,7 @@ import {
   canDecodeSpi,
   createProgramEnvelope,
   encodeSpiEntrypoint,
+  decodeSpiEntrypoint,
   rewriteGitHubBlobUrl,
   loadManualInput,
   loadLocalStorage,
@@ -291,6 +292,132 @@ describe("encodeSpiEntrypoint", () => {
     const result = encodeSpiEntrypoint(params);
     // 200 = 0xC8, which fits in 2-byte varU32: [0x80 | (200 >> 8), 200 & 0xff] = [0x80, 0xc8]
     expect(Array.from(result)).toEqual([0x80, 0xc8, 0x00, 0x00]);
+  });
+});
+
+// ============================================================================
+// SPI Entrypoint Decoding & Roundtrip
+// ============================================================================
+
+describe("decodeSpiEntrypoint", () => {
+  it("decodes accumulate bytes back to params", () => {
+    const bytes = new Uint8Array([0x2a, 0x00, 0x00]);
+    const result = decodeSpiEntrypoint("accumulate", bytes);
+    expect(result.entrypoint).toBe("accumulate");
+    expect(result.pc).toBe(5);
+    if (result.entrypoint === "accumulate") {
+      expect(result.params.slot).toBe(42);
+      expect(result.params.id).toBe(0);
+      expect(result.params.results).toBe(0);
+    }
+  });
+
+  it("decodes refine bytes back to params", () => {
+    const bytes = new Uint8Array([0x01, 0x02, 0x03, 0x01, 0xaa, 0x02, 0xbb, 0xcc]);
+    const result = decodeSpiEntrypoint("refine", bytes);
+    expect(result.entrypoint).toBe("refine");
+    expect(result.pc).toBe(0);
+    if (result.entrypoint === "refine") {
+      expect(result.params.core).toBe(1);
+      expect(result.params.index).toBe(2);
+      expect(result.params.id).toBe(3);
+      expect(Array.from(result.params.payload)).toEqual([0xaa]);
+      expect(Array.from(result.params.package)).toEqual([0xbb, 0xcc]);
+    }
+  });
+
+  it("decodes is_authorized bytes back to params", () => {
+    const bytes = new Uint8Array([0x05]);
+    const result = decodeSpiEntrypoint("is_authorized", bytes);
+    expect(result.entrypoint).toBe("is_authorized");
+    expect(result.pc).toBe(0);
+    if (result.entrypoint === "is_authorized") {
+      expect(result.params.core).toBe(5);
+    }
+  });
+
+  it("throws on truncated accumulate bytes", () => {
+    expect(() => decodeSpiEntrypoint("accumulate", new Uint8Array([0x2a]))).toThrow();
+  });
+
+  it("throws on empty bytes for refine", () => {
+    expect(() => decodeSpiEntrypoint("refine", new Uint8Array())).toThrow();
+  });
+});
+
+describe("SPI entrypoint encode/decode roundtrip", () => {
+  it("roundtrips accumulate params", () => {
+    const params: SpiEntrypointParams = {
+      entrypoint: "accumulate",
+      pc: 5,
+      params: { slot: 42, id: 7, results: 3 },
+    };
+    const encoded = encodeSpiEntrypoint(params);
+    const decoded = decodeSpiEntrypoint("accumulate", encoded);
+    expect(decoded).toEqual(params);
+  });
+
+  it("roundtrips refine params with blobs", () => {
+    const params: SpiEntrypointParams = {
+      entrypoint: "refine",
+      pc: 0,
+      params: {
+        core: 10,
+        index: 20,
+        id: 30,
+        payload: new Uint8Array([0xde, 0xad, 0xbe, 0xef]),
+        package: new Uint8Array([0xca, 0xfe]),
+      },
+    };
+    const encoded = encodeSpiEntrypoint(params);
+    const decoded = decodeSpiEntrypoint("refine", encoded);
+    expect(decoded.entrypoint).toBe("refine");
+    if (decoded.entrypoint === "refine") {
+      expect(decoded.params.core).toBe(10);
+      expect(decoded.params.index).toBe(20);
+      expect(decoded.params.id).toBe(30);
+      expect(Array.from(decoded.params.payload)).toEqual([0xde, 0xad, 0xbe, 0xef]);
+      expect(Array.from(decoded.params.package)).toEqual([0xca, 0xfe]);
+    }
+  });
+
+  it("roundtrips refine with empty blobs", () => {
+    const params: SpiEntrypointParams = {
+      entrypoint: "refine",
+      pc: 0,
+      params: {
+        core: 0,
+        index: 0,
+        id: 0,
+        payload: new Uint8Array(),
+        package: new Uint8Array(),
+      },
+    };
+    const encoded = encodeSpiEntrypoint(params);
+    const decoded = decodeSpiEntrypoint("refine", encoded);
+    expect(decoded).toEqual(params);
+  });
+
+  it("roundtrips is_authorized params", () => {
+    const params: SpiEntrypointParams = {
+      entrypoint: "is_authorized",
+      pc: 0,
+      params: { core: 99 },
+    };
+    const encoded = encodeSpiEntrypoint(params);
+    const decoded = decodeSpiEntrypoint("is_authorized", encoded);
+    expect(decoded).toEqual(params);
+  });
+
+  it("roundtrips accumulate with large 2-byte varU32 values", () => {
+    const params: SpiEntrypointParams = {
+      entrypoint: "accumulate",
+      pc: 5,
+      params: { slot: 200, id: 500, results: 1000 },
+    };
+    const encoded = encodeSpiEntrypoint(params);
+    const decoded = decodeSpiEntrypoint("accumulate", encoded);
+    expect(decoded).toEqual(params);
   });
 });
 
