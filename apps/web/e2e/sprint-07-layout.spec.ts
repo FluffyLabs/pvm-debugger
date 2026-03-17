@@ -78,9 +78,9 @@ test.describe("Sprint 07 — 3-Column Debugger Layout", () => {
   test("each panel scrolls independently", async ({ page }) => {
     await loadProgram(page);
 
-    // The instructions panel body is the scrollable area
-    const instructionsScroll = page.getByTestId("instructions-panel").locator(".overflow-auto");
-    const registersScroll = page.getByTestId("registers-panel").locator(".overflow-auto");
+    // Use explicit data-testid selectors (not CSS class names) for scroll containers
+    const instructionsScroll = page.getByTestId("instructions-scroll");
+    const registersScroll = page.getByTestId("registers-scroll");
 
     // Scroll the instructions panel
     await instructionsScroll.evaluate((el) => {

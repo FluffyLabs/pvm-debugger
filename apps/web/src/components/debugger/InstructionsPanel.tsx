@@ -40,7 +40,7 @@ export function InstructionsPanel({ instructions, currentPc }: InstructionsPanel
       <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border shrink-0">
         Instructions
       </div>
-      <div ref={scrollRef} className="flex-1 overflow-auto font-mono text-xs">
+      <div ref={scrollRef} data-testid="instructions-scroll" className="flex-1 overflow-auto font-mono text-xs">
         {instructions.map((instr) => {
           const isCurrent = instr.pc === currentPc;
           return (
