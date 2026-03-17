@@ -1,4 +1,4 @@
-import { encodeVarU32 } from "@pvmdbg/types";
+import { encodeVarU32, decodeVarU32 } from "@pvmdbg/types";
 
 export interface RefineParams {
   core: number;
@@ -69,5 +69,57 @@ export function encodeSpiEntrypoint(params: SpiEntrypointParams): Uint8Array {
       );
     case "is_authorized":
       return concat(encodeVarU32(params.params.core));
+  }
+}
+
+/** Decode a varU32-length-prefixed blob from bytes at offset. Returns the data and total bytes consumed. */
+function decodeBlob(bytes: Uint8Array, offset: number): { data: Uint8Array; bytesRead: number } {
+  const { value: length, bytesRead: lenBytes } = decodeVarU32(bytes, offset);
+  const data = bytes.slice(offset + lenBytes, offset + lenBytes + length);
+  return { data, bytesRead: lenBytes + length };
+}
+
+/**
+ * Decode SPI entrypoint bytes back into typed parameters.
+ * Requires knowing which entrypoint type to decode as.
+ * Throws if the bytes are too short or malformed.
+ */
+export function decodeSpiEntrypoint(
+  entrypoint: SpiEntrypointParams["entrypoint"],
+  bytes: Uint8Array,
+): SpiEntrypointParams {
+  let offset = 0;
+
+  function readVarU32(): number {
+    const { value, bytesRead } = decodeVarU32(bytes, offset);
+    offset += bytesRead;
+    return value;
+  }
+
+  function readBlob(): Uint8Array {
+    const { data, bytesRead } = decodeBlob(bytes, offset);
+    offset += bytesRead;
+    return data;
+  }
+
+  switch (entrypoint) {
+    case "refine": {
+      const core = readVarU32();
+      const index = readVarU32();
+      const id = readVarU32();
+      const payload = readBlob();
+      const pkg = readBlob();
+      return { entrypoint: "refine", pc: 0, params: { core, index, id, payload, package: pkg } };
+    }
+    case "accumulate": {
+      const slot = readVarU32();
+      const id = readVarU32();
+      const results = readVarU32();
+      return { entrypoint: "accumulate", pc: 5, params: { slot, id, results } };
+    }
+    case "is_authorized": {
+      const core = readVarU32();
+      return { entrypoint: "is_authorized", pc: 0, params: { core } };
+    }
   }
 }

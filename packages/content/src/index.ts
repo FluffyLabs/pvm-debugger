@@ -10,7 +10,7 @@ export type { SpiDecodeResult } from "./decode-spi.js";
 export { decodeTrace } from "./decode-trace.js";
 
 // SPI entrypoint encoding
-export { encodeSpiEntrypoint } from "./spi-entrypoint.js";
+export { encodeSpiEntrypoint, decodeSpiEntrypoint } from "./spi-entrypoint.js";
 export type {
   SpiEntrypointParams,
   RefineParams,

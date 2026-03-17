@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { Button, Alert } from "@fluffylabs/shared-ui";
 import { ArrowLeft, Loader2, Play } from "lucide-react";
@@ -8,16 +8,23 @@ import {
   type RawPayload,
   type DetectedFormat,
   type ExampleEntry,
+  type SpiEntrypointParams,
 } from "@pvmdbg/content";
 import type { ProgramEnvelope } from "@pvmdbg/types";
 import { useOrchestrator } from "../../hooks/useOrchestrator";
 import { DetectionSummary } from "./DetectionSummary";
+import { SpiEntrypointConfig } from "./SpiEntrypointConfig";
 
 interface ConfigStepProps {
   rawPayload: RawPayload;
   detectedFormat: DetectedFormat;
   exampleEntry: ExampleEntry | null;
   onBack: () => void;
+}
+
+/** Formats that show the SPI entrypoint configuration. */
+function isSpiFormat(kind: DetectedFormat["kind"]): boolean {
+  return kind === "jam_spi" || kind === "jam_spi_with_metadata";
 }
 
 export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }: ConfigStepProps) {
@@ -27,14 +34,32 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
   const [loadError, setLoadError] = useState<string | null>(null);
   const [forceGeneric, setForceGeneric] = useState(false);
 
-  // Try creating the envelope eagerly for the summary display
+  // SPI entrypoint params from the config component (null = invalid)
+  const [spiParams, setSpiParams] = useState<SpiEntrypointParams | null>(null);
+  // Track whether the SPI config has reported at least once (to avoid disabling Load before mount)
+  const [spiConfigReady, setSpiConfigReady] = useState(false);
+
+  const handleSpiChange = useCallback((params: SpiEntrypointParams | null) => {
+    setSpiParams(params);
+    setSpiConfigReady(true);
+  }, []);
+
+  const effectiveFormat: DetectedFormat = forceGeneric
+    ? { kind: "generic_pvm", payload: rawPayload.bytes }
+    : detectedFormat;
+
+  const showSpiConfig = isSpiFormat(effectiveFormat.kind);
+
+  // Create envelope eagerly for summary display.
+  // For SPI formats, use the current entrypoint params.
   const { envelope, decodeError } = useMemo(() => {
     try {
       let env: ProgramEnvelope;
       if (forceGeneric) {
         env = decodeGeneric(rawPayload.bytes, rawPayload.sourceKind, rawPayload.sourceId);
       } else {
-        env = createProgramEnvelope(rawPayload);
+        const options = showSpiConfig && spiParams ? { entrypoint: spiParams } : undefined;
+        env = createProgramEnvelope(rawPayload, options);
       }
       return { envelope: env, decodeError: null };
     } catch (err) {
@@ -43,11 +68,13 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
         decodeError: err instanceof Error ? err.message : String(err),
       };
     }
-  }, [rawPayload, forceGeneric]);
+  }, [rawPayload, forceGeneric, showSpiConfig, spiParams]);
 
-  const effectiveFormat: DetectedFormat = forceGeneric
-    ? { kind: "generic_pvm", payload: rawPayload.bytes }
-    : detectedFormat;
+  // Load button is disabled when:
+  // - No envelope (decode error)
+  // - Loading in progress
+  // - SPI config is shown but has validation error (spiParams === null after config reported)
+  const loadDisabled = !envelope || loading || (showSpiConfig && spiConfigReady && spiParams === null);
 
   async function handleLoad() {
     if (!envelope) return;
@@ -108,6 +135,14 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
           />
         )}
 
+        {/* SPI entrypoint configuration — only for SPI formats */}
+        {showSpiConfig && (
+          <SpiEntrypointConfig
+            exampleEntry={exampleEntry}
+            onChange={handleSpiChange}
+          />
+        )}
+
         {/* Load error */}
         {loadError && (
           <Alert intent="destructive" data-testid="config-step-load-error">
@@ -130,7 +165,7 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
 
           <Button
             data-testid="config-step-load"
-            disabled={!envelope || loading}
+            disabled={loadDisabled}
             onClick={handleLoad}
             className="cursor-pointer gap-1.5"
           >

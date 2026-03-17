@@ -1,5 +1,7 @@
 # Sprint 13 — SPI Entrypoint Configuration
 
+Status: Implemented
+
 ## Goal
 
 Add SPI entrypoint configuration to wizard step 2 for JAM SPI programs. Users can select an entrypoint (Refine, Accumulate, Is Authorized), configure it via a builder or RAW hex mode, and persist their choices to localStorage.
@@ -91,6 +93,14 @@ Rules:
 - Config persists to localStorage.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+## Implementation Notes
+
+- `decodeSpiEntrypoint()` added to `packages/content/src/spi-entrypoint.ts` for RAW→builder decoding.
+- Playwright cannot fill non-numeric text into `input[type=number]`; invalid-input E2E test uses RAW mode with invalid hex instead.
+- `SpiEntrypointConfig` uses a `spiConfigReady` flag to avoid disabling Load before the component mounts and reports initial state.
+- localStorage key: `pvmdbg:spi-config` — stores entrypoint type, field values, RAW mode state, and encoded hex.
+- ConfigStep re-creates the envelope whenever `spiParams` changes, passing them to `createProgramEnvelope(payload, { entrypoint })`.
 
 ## Verification
 
