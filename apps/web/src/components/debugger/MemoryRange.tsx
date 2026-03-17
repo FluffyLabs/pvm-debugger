@@ -10,6 +10,7 @@ interface MemoryRangeProps {
   isLoading: boolean;
   onExpand: () => void;
   onWriteBytes: (address: number, data: Uint8Array) => void;
+  changedOffsets?: Set<number>;
 }
 
 export function MemoryRange({
@@ -21,6 +22,7 @@ export function MemoryRange({
   isLoading,
   onExpand,
   onWriteBytes,
+  changedOffsets,
 }: MemoryRangeProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -66,6 +68,7 @@ export function MemoryRange({
               baseAddress={address}
               editable={editable}
               onWriteBytes={onWriteBytes}
+              changedOffsets={changedOffsets}
             />
           )}
         </div>

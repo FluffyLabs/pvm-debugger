@@ -7,6 +7,8 @@ interface HexDumpProps {
   baseAddress: number;
   editable?: boolean;
   onWriteBytes?: (address: number, data: Uint8Array) => void;
+  /** Set of byte offsets (within the page) that changed since the previous snapshot. */
+  changedOffsets?: Set<number>;
 }
 
 function isPrintable(byte: number): boolean {
@@ -32,6 +34,7 @@ interface ByteCellProps {
   byte: number;
   offset: number;
   editable: boolean;
+  isChanged: boolean;
   editingOffset: number | null;
   onStartEdit: (offset: number) => void;
   onCommit: (offset: number, value: number, advance: boolean) => void;
@@ -44,6 +47,7 @@ function ByteCell({
   byte,
   offset,
   editable,
+  isChanged,
   editingOffset,
   onStartEdit,
   onCommit,
@@ -105,8 +109,9 @@ function ByteCell({
     <span
       data-testid={`hex-byte-${offset}`}
       className={`inline-block ${editable ? "cursor-pointer hover:bg-accent/50 rounded" : "cursor-default"} ${
-        byte === 0 ? "text-muted-foreground/40" : "text-foreground"
+        isChanged ? "text-yellow-300 bg-yellow-500/20 rounded" : byte === 0 ? "text-muted-foreground/40" : "text-foreground"
       }`}
+      data-changed={isChanged ? "true" : undefined}
       style={{ width: "1.5em", textAlign: "center" }}
       onClick={editable ? () => onStartEdit(offset) : undefined}
     >
@@ -115,7 +120,7 @@ function ByteCell({
   );
 }
 
-export function HexDump({ data, baseAddress, editable = false, onWriteBytes }: HexDumpProps) {
+export function HexDump({ data, baseAddress, editable = false, onWriteBytes, changedOffsets }: HexDumpProps) {
   const [editingOffset, setEditingOffset] = useState<number | null>(null);
   const inputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
   const rowCount = Math.ceil(data.length / BYTES_PER_ROW);
@@ -220,6 +225,7 @@ export function HexDump({ data, baseAddress, editable = false, onWriteBytes }: H
                     byte={byte}
                     offset={byteOffset}
                     editable={editable}
+                    isChanged={changedOffsets?.has(byteOffset) ?? false}
                     editingOffset={editingOffset}
                     onStartEdit={startEdit}
                     onCommit={commitByte}

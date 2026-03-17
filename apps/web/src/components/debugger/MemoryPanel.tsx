@@ -85,7 +85,7 @@ export function MemoryPanel({
 }: MemoryPanelProps) {
   const pages = useMemo(() => expandPages(pageMap), [pageMap]);
   const initializedPages = useMemo(() => computeInitializedPages(memoryChunks), [memoryChunks]);
-  const { getPage, isLoading, expandPage } = useMemoryReader(orchestrator, pvmId, snapshotVersion);
+  const { getPage, isLoading, expandPage, getChangedOffsets } = useMemoryReader(orchestrator, pvmId, snapshotVersion);
 
   const onWriteBytes = useCallback(
     (address: number, data: Uint8Array) => {
@@ -128,6 +128,7 @@ export function MemoryPanel({
             isLoading={isLoading(pg.address)}
             onExpand={() => expandPage(pg.address)}
             onWriteBytes={onWriteBytes}
+            changedOffsets={getChangedOffsets(pg.address)}
           />
         ))}
       </div>

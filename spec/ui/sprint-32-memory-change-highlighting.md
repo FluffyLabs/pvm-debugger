@@ -1,5 +1,7 @@
 # Sprint 32 — Memory — Change Highlighting
 
+Status: Implemented
+
 ## Goal
 
 Add change tracking to the memory panel. After stepping, host-call resume, or state editing, bytes that changed are visually highlighted. This helps users quickly spot the effects of execution on memory.
@@ -59,6 +61,13 @@ Extend `useMemoryReader`:
 - Highlights clear on the next read cycle.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+### Edge Cases & Pitfalls (discovered during implementation)
+
+- **Previous snapshot ordering**: The stale cache entry must be promoted to `prevCacheRef` *before* computing the diff against `prevData`. Reversing this causes the first post-step diff to compare against `undefined` and miss all highlights.
+- **First fetch has no highlights**: When a page is fetched for the first time (no previous snapshot), `changedOffsets` is `undefined` (not an empty set) so no bytes are highlighted.
+- **Terminal steps clear highlights**: A terminal step (fault/halt/panic) that doesn't modify memory produces an empty changed-offsets set, correctly clearing all highlights from the previous step.
+- **`data-changed` attribute**: The `data-changed="true"` attribute on byte cells is the E2E test hook for locating highlighted bytes. It is only set when the byte actually changed.
 
 ## Verification
 

@@ -15,12 +15,34 @@ interface MemoryReaderResult {
   isLoading: (address: number) => boolean;
   /** Expand a page — triggers fetch if not cached or stale. */
   expandPage: (address: number) => void;
+  /** Get the set of byte offsets (within the page) that changed since the previous snapshot. */
+  getChangedOffsets: (address: number) => Set<number> | undefined;
+}
+
+/** Compare two page buffers and return the set of byte offsets that differ. */
+function computeChangedOffsets(prev: Uint8Array, curr: Uint8Array): Set<number> {
+  const changed = new Set<number>();
+  const len = Math.min(prev.length, curr.length);
+  for (let i = 0; i < len; i++) {
+    if (prev[i] !== curr[i]) {
+      changed.add(i);
+    }
+  }
+  // Bytes beyond the shorter array are considered changed
+  const maxLen = Math.max(prev.length, curr.length);
+  for (let i = len; i < maxLen; i++) {
+    changed.add(i);
+  }
+  return changed;
 }
 
 /**
  * Hook that lazily fetches memory page contents via the orchestrator.
  * Keeps stale data visible while re-fetching on version change
  * to avoid flashing "Loading…" during execution.
+ *
+ * Tracks changed byte offsets between consecutive page snapshots
+ * so that consumers can highlight bytes that changed after a step/edit.
  *
  * All callbacks are stable (do not change identity between renders)
  * to prevent re-render loops in consuming components.
@@ -33,6 +55,8 @@ export function useMemoryReader(
   // Use refs for mutable state that callbacks read, and a single
   // render-trigger counter to tell React when the cache has changed.
   const cacheRef = useRef<Map<number, CacheEntry>>(new Map());
+  const prevCacheRef = useRef<Map<number, Uint8Array>>(new Map());
+  const changedOffsetsRef = useRef<Map<number, Set<number>>>(new Map());
   const fetchingRef = useRef<Set<number>>(new Set());
   const versionRef = useRef(snapshotVersion);
   const orchestratorRef = useRef(orchestrator);
@@ -64,6 +88,21 @@ export function useMemoryReader(
           fetchingRef.current.delete(address);
           // Only update if still current version
           if (versionRef.current === ver) {
+            // Promote the stale cached page to the previous-snapshot slot
+            const oldEntry = cacheRef.current.get(address);
+            if (oldEntry && oldEntry.version !== ver) {
+              prevCacheRef.current.set(address, oldEntry.data);
+            }
+
+            // Compute changed offsets by comparing against the previous snapshot
+            const prevData = prevCacheRef.current.get(address);
+            if (prevData) {
+              changedOffsetsRef.current.set(address, computeChangedOffsets(prevData, data));
+            } else {
+              // First fetch — no previous data, so no highlights
+              changedOffsetsRef.current.delete(address);
+            }
+
             cacheRef.current.set(address, { data, version: ver });
             bump();
           }
@@ -88,5 +127,11 @@ export function useMemoryReader(
     [snapshotVersion],
   );
 
-  return { getPage, isLoading, expandPage };
+  const getChangedOffsets = useCallback(
+    (address: number) => changedOffsetsRef.current.get(address),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [snapshotVersion],
+  );
+
+  return { getPage, isLoading, expandPage, getChangedOffsets };
 }
