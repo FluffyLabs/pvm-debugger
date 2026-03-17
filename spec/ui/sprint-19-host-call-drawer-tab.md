@@ -1,5 +1,7 @@
 # Sprint 19 — Host Call Drawer Tab
 
+Status: Implemented
+
 ## Goal
 
 Replace the Host Call drawer placeholder with a real inspection panel. When the PVM pauses on a host call, the drawer auto-opens to this tab showing host-call details. The tab provides information only — execution continues through the toolbar controls.
@@ -93,6 +95,15 @@ The tab never renders a dedicated resume/continue button. The hint text directs 
 - Auto-continued host calls keep the tab closed.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+## Implementation Notes
+
+- `useHostCallState` derives the active host call by checking both the `hostCallInfo` map AND the PVM's current lifecycle (`paused_host_call`). This ensures auto-continued host calls (where lifecycle transitions away quickly) don't trigger the drawer.
+- Auto-open uses a prev-ref pattern: only opens the drawer when transitioning from null → non-null active host call, avoiding re-opens on host call info updates.
+- Log host call decoding first tries trace `memoryWrites` (for trace-backed replays), then falls back to `orchestrator.getMemory()` to read message bytes at runtime.
+- Storage host calls (index 1-4) fall through to the GenericHostCall view — Sprint 20 will add dedicated views.
+- The sprint-14 drawer E2E test was updated to expect the new empty-state text instead of the old "coming soon" placeholder.
+- `BottomDrawer` now receives `hostCallInfo`, `selectedPvmId`, `snapshots`, and `orchestrator` as props from `DebuggerPage`.
 
 ## Verification
 

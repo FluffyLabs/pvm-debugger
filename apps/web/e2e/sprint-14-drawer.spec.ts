@@ -76,7 +76,7 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
 
     // Switch to Host Call
     await page.getByTestId("drawer-tab-host_call").click();
-    await expect(page.getByTestId("drawer-content")).toContainText("Host Call — coming soon");
+    await expect(page.getByTestId("drawer-content")).toContainText("No host call is currently active");
   });
 
   test("dragging the resize handle changes drawer height", async ({ page }) => {

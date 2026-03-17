@@ -1,6 +1,10 @@
 import { useCallback, useRef } from "react";
 import { useDrawer, type DrawerTab } from "./DrawerContext";
 import { SettingsTab } from "../drawer/SettingsTab";
+import { HostCallTab } from "../drawer/HostCallTab";
+import type { HostCallInfo, MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
+import type { Orchestrator } from "@pvmdbg/orchestrator";
+import { useHostCallState } from "../../hooks/useHostCallState";
 
 const TABS: { id: DrawerTab; label: string }[] = [
   { id: "settings", label: "Settings" },
@@ -18,10 +22,15 @@ function clampHeight(h: number, maxHeight: number): number {
 
 interface BottomDrawerProps {
   onPvmChange: (ids: string[]) => void;
+  hostCallInfo: Map<string, HostCallInfo>;
+  selectedPvmId: string | null;
+  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
+  orchestrator: Orchestrator | null;
 }
 
-export function BottomDrawer({ onPvmChange }: BottomDrawerProps) {
+export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapshots, orchestrator }: BottomDrawerProps) {
   const { activeTab, height, setActiveTab, setHeight } = useDrawer();
+  const { activeHostCall } = useHostCallState(hostCallInfo, selectedPvmId, snapshots);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
   const isExpanded = activeTab !== null;
@@ -92,7 +101,7 @@ export function BottomDrawer({ onPvmChange }: BottomDrawerProps) {
         >
           {activeTab === "settings" && <SettingsTab onPvmChange={onPvmChange} />}
           {activeTab === "ecalli_trace" && <p>Ecalli Trace — coming soon</p>}
-          {activeTab === "host_call" && <p>Host Call — coming soon</p>}
+          {activeTab === "host_call" && <HostCallTab activeHostCall={activeHostCall} orchestrator={orchestrator} />}
           {activeTab === "logs" && <p>Logs — coming soon</p>}
         </div>
       )}

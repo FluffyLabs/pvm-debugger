@@ -20,7 +20,7 @@ export function DebuggerPage() {
   const { orchestrator, envelope, teardown, initialize, setEnvelope } = useOrchestrator();
   const navigate = useNavigate();
   const isReloadingRef = useRef(false);
-  const { snapshots, selectedPvmId, isStepInProgress, setIsStepInProgress, snapshotVersion } =
+  const { snapshots, selectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion } =
     useOrchestratorState();
   const instructions = useDisassembly(envelope);
 
@@ -160,7 +160,15 @@ export function DebuggerPage() {
             snapshotVersion={snapshotVersion}
           />
         }
-        drawer={<BottomDrawer onPvmChange={onPvmChange} />}
+        drawer={
+          <BottomDrawer
+            onPvmChange={onPvmChange}
+            hostCallInfo={hostCallInfo}
+            selectedPvmId={selectedPvmId}
+            snapshots={snapshots}
+            orchestrator={orchestrator}
+          />
+        }
       />
     </div>
     </DrawerProvider>
