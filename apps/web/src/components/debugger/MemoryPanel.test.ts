@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { PageMapEntry, MemoryChunk } from "@pvmdbg/types";
 import { expandPages, computeInitializedPages, getPageLabel } from "./MemoryPanel";
 import { sanitizeHexInput } from "./HexDump";
+import { computeChangedOffsets } from "../../hooks/useMemoryReader";
 
 describe("expandPages", () => {
   it("returns empty array for empty page map", () => {
@@ -160,5 +161,51 @@ describe("sanitizeHexInput", () => {
 
   it("handles multiple 0x prefixes", () => {
     expect(sanitizeHexInput("0xAB 0xCD")).toBe("ABCD");
+  });
+});
+
+describe("computeChangedOffsets", () => {
+  it("returns empty set for identical buffers", () => {
+    const a = new Uint8Array([1, 2, 3, 4]);
+    const b = new Uint8Array([1, 2, 3, 4]);
+    expect(computeChangedOffsets(a, b)).toEqual(new Set());
+  });
+
+  it("returns offsets where bytes differ", () => {
+    const a = new Uint8Array([1, 2, 3, 4]);
+    const b = new Uint8Array([1, 0, 3, 0]);
+    expect(computeChangedOffsets(a, b)).toEqual(new Set([1, 3]));
+  });
+
+  it("returns all offsets when buffers are completely different", () => {
+    const a = new Uint8Array([0, 0, 0]);
+    const b = new Uint8Array([1, 1, 1]);
+    expect(computeChangedOffsets(a, b)).toEqual(new Set([0, 1, 2]));
+  });
+
+  it("returns empty set for two empty buffers", () => {
+    const a = new Uint8Array(0);
+    const b = new Uint8Array(0);
+    expect(computeChangedOffsets(a, b)).toEqual(new Set());
+  });
+
+  it("treats extra bytes in longer buffer as changed", () => {
+    const a = new Uint8Array([1, 2]);
+    const b = new Uint8Array([1, 2, 3, 4]);
+    const result = computeChangedOffsets(a, b);
+    expect(result).toEqual(new Set([2, 3]));
+  });
+
+  it("treats extra bytes in shorter new buffer as changed", () => {
+    const a = new Uint8Array([1, 2, 3, 4]);
+    const b = new Uint8Array([1, 2]);
+    const result = computeChangedOffsets(a, b);
+    expect(result).toEqual(new Set([2, 3]));
+  });
+
+  it("detects single byte change at offset 0", () => {
+    const a = new Uint8Array([0x00, 0xFF]);
+    const b = new Uint8Array([0x01, 0xFF]);
+    expect(computeChangedOffsets(a, b)).toEqual(new Set([0]));
   });
 });

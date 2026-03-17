@@ -20,7 +20,7 @@ interface MemoryReaderResult {
 }
 
 /** Compare two page buffers and return the set of byte offsets that differ. */
-function computeChangedOffsets(prev: Uint8Array, curr: Uint8Array): Set<number> {
+export function computeChangedOffsets(prev: Uint8Array, curr: Uint8Array): Set<number> {
   const changed = new Set<number>();
   const len = Math.min(prev.length, curr.length);
   for (let i = 0; i < len; i++) {
