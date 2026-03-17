@@ -63,19 +63,28 @@ export function useDebuggerActions({
     const loop = async () => {
       try {
         while (!stopFlagRef.current) {
-          const result = await orchestrator.step(1);
+          // Batch multiple steps before yielding to React.
+          // This reduces render frequency and keeps the Pause button
+          // stable/clickable during continuous execution.
+          const BATCH_SIZE = 100;
+          for (let i = 0; i < BATCH_SIZE && !stopFlagRef.current; i++) {
+            const result = await orchestrator.step(1);
 
-          // Check if all PVMs are terminal
-          let allTerminal = true;
-          for (const [, report] of result.results) {
-            if (!isTerminal(report.lifecycle)) {
-              allTerminal = false;
-              break;
+            // Check if all PVMs are terminal
+            let allTerminal = true;
+            for (const [, report] of result.results) {
+              if (!isTerminal(report.lifecycle)) {
+                allTerminal = false;
+                break;
+              }
+            }
+            if (allTerminal) {
+              setIsRunning(false);
+              return;
             }
           }
-          if (allTerminal) break;
 
-          // Yield to React for UI updates
+          // Yield to React for UI updates between batches
           await new Promise<void>((resolve) => setTimeout(resolve, 0));
         }
       } catch (err) {

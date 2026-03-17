@@ -40,35 +40,39 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
   });
 
   test("Run starts continuous execution and becomes Pause", async ({ page }) => {
-    await loadProgram(page);
+    // Use game-of-life — runs for many thousands of steps (gas=10M)
+    await loadProgram(page, "game-of-life");
 
     const runBtn = page.getByTestId("run-button");
     await expect(runBtn).toBeVisible();
-
-    // For the step-test program (single LOAD_IMM), Run will execute and complete quickly.
-    // But we should see the Pause button appear briefly or the run completes.
     await runBtn.click();
 
-    // After Run completes on a small program, execution should finish and show terminal state
-    // The run button should return (since program terminates quickly)
-    // Wait for terminal state
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 10000 });
+    // The Pause button should appear while running
+    const pauseBtn = page.getByTestId("pause-button");
+    await expect(pauseBtn).toBeVisible({ timeout: 5000 });
+    await expect(pauseBtn).toHaveAttribute("aria-label", "Pause");
+
+    // Stop the run so it doesn't keep going after the test.
+    // force:true bypasses stability checks during rapid re-renders.
+    await pauseBtn.click({ force: true });
   });
 
-  test("Pause stops execution", async ({ page }) => {
-    await loadProgram(page);
+  test("Pause stops execution and the run loop exits", async ({ page }) => {
+    // Use game-of-life — gas=10M, runs for many steps
+    await loadProgram(page, "game-of-life");
 
-    // We need a program that runs for a while. step-test terminates in 2 steps.
-    // After clicking Run, if the program terminates quickly, Pause won't be visible.
-    // We'll verify the behavior by checking the final state is terminal.
-    const runBtn = page.getByTestId("run-button");
-    await runBtn.click();
+    await page.getByTestId("run-button").click();
 
-    // Program should terminate quickly since step-test is short
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 10000 });
+    // Wait for Pause button to appear, then click it.
+    // force:true bypasses stability checks during rapid re-renders.
+    const pauseBtn = page.getByTestId("pause-button");
+    await expect(pauseBtn).toBeVisible({ timeout: 5000 });
+    await pauseBtn.click({ force: true });
 
-    // Run button should be disabled after terminal
-    await expect(page.getByTestId("run-button")).toBeDisabled();
+    // After pausing, Run button should reappear (the loop has exited).
+    // It may be enabled (program paused mid-execution) or disabled
+    // (program terminated during the final batch), both are valid.
+    await expect(page.getByTestId("run-button")).toBeVisible({ timeout: 5000 });
   });
 
   test("Reset returns PC, gas, and registers to initial values", async ({ page }) => {
@@ -130,5 +134,35 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     // Reset and Load should still be enabled
     await expect(page.getByTestId("reset-button")).toBeEnabled();
     await expect(page.getByTestId("load-button")).toBeEnabled();
+  });
+
+  test("Reset after completion restores state and allows re-execution", async ({ page }) => {
+    await loadProgram(page);
+
+    const pcValue = page.getByTestId("pc-value");
+    const initialPc = await pcValue.textContent();
+
+    // Run to completion
+    await page.getByTestId("run-button").click();
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 10000 });
+
+    // Next/Run should be disabled
+    await expect(page.getByTestId("next-button")).toBeDisabled();
+
+    // Reset
+    await page.getByTestId("reset-button").click();
+
+    // PC should return to initial value
+    await expect(pcValue).toHaveText(initialPc!, { timeout: 5000 });
+
+    // Completion badge should disappear
+    await expect(page.getByTestId("execution-complete-badge")).not.toBeVisible();
+
+    // Next button should be re-enabled (PVM is paused, not terminal)
+    await expect(page.getByTestId("next-button")).toBeEnabled({ timeout: 5000 });
+
+    // Can step again
+    await page.getByTestId("next-button").click();
+    await expect(pcValue).not.toHaveText(initialPc!, { timeout: 5000 });
   });
 });

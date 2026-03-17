@@ -63,6 +63,7 @@ export function ExecutionControls({
 
       {isRunning ? (
         <button
+          key="pause"
           data-testid="pause-button"
           aria-label="Pause"
           onClick={onPause}
@@ -73,6 +74,7 @@ export function ExecutionControls({
         </button>
       ) : (
         <button
+          key="run"
           data-testid="run-button"
           aria-label="Run"
           onClick={onRun}

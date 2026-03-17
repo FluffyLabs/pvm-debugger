@@ -99,6 +99,16 @@ Rules:
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
 
+## Implementation Notes
+
+### Edge Cases Discovered
+
+- **Pause test requires a long-running program**: the `step-test` fixture terminates in 2 steps, making it impossible to observe the Pause button. Use `fibonacci` (gas=10000, many iterations) for Pause E2E tests.
+- **Reset after completion**: after Run completes and the "Execution Complete" badge shows, Reset must clear both the terminal lifecycle *and* the badge, re-enabling Next/Run. The orchestrator's `reset()` emits `pvmStateChanged` with lifecycle `"paused"`, which triggers the UI update automatically.
+- **`isRunning` vs `isStepInProgress`**: the run loop manages its own `isRunning` state separate from the shared `isStepInProgress`. During a run, `useOrchestratorState` sets `isStepInProgress=false` after each step event — this is harmless since `isRunning` is the controlling flag.
+- **Host call during Run (Sprint 18 concern)**: the current run loop does not break on `paused_host_call`. When Sprint 18 adds host call support, the run loop must also stop when any PVM enters `paused_host_call` state. Without this, the loop would spin indefinitely since `step()` skips non-paused PVMs.
+- **Reset and Load stop in-flight runs**: both `reset()` and `load()` set the stop flag before proceeding, ensuring the run loop exits cleanly.
+
 ## Verification
 
 ```bash
