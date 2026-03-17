@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useMemo } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
@@ -6,6 +6,7 @@ import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
 import { stepTooltip } from "../lib/debugger-settings";
 import { useDisassembly } from "../hooks/useDisassembly";
+import { useStorageTable } from "../hooks/useStorageTable";
 import { isTerminal } from "@pvmdbg/types";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
 import { RegistersPanel } from "../components/debugger/RegistersPanel";
@@ -23,6 +24,20 @@ export function DebuggerPage() {
   const { snapshots, selectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion } =
     useOrchestratorState();
   const instructions = useDisassembly(envelope);
+
+  // Derive a stable orchestrator identity for the storage table.
+  // Each new orchestrator reference gets a unique id so storage resets.
+  const orchIdCounter = useRef(0);
+  const prevOrchRef = useRef<typeof orchestrator>(null);
+  const orchestratorId = useMemo(() => {
+    if (orchestrator !== prevOrchRef.current) {
+      prevOrchRef.current = orchestrator;
+      orchIdCounter.current++;
+    }
+    return orchestrator ? `orch-${orchIdCounter.current}` : null;
+  }, [orchestrator]);
+
+  const storageTable = useStorageTable(orchestratorId);
 
   // Get current PVM state (must be before early return — hooks below depend on it)
   const selectedEntry = selectedPvmId ? snapshots.get(selectedPvmId) : undefined;
@@ -68,6 +83,7 @@ export function DebuggerPage() {
       steppingMode: settings.steppingMode,
       nInstructionsCount: settings.nInstructionsCount,
       autoContinuePolicy: settings.autoContinuePolicy,
+      storageTable,
     });
 
   // Route guard: redirect to /load when no program is loaded.
@@ -167,6 +183,7 @@ export function DebuggerPage() {
             selectedPvmId={selectedPvmId}
             snapshots={snapshots}
             orchestrator={orchestrator}
+            storageTable={storageTable}
           />
         }
       />

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { PvmLifecycle, HostCallResumeEffects, HostCallResumeProposal, StepResult } from "@pvmdbg/types";
+import type { PvmLifecycle, HostCallResumeEffects, HostCallResumeProposal, HostCallInfo, StepResult } from "@pvmdbg/types";
 import { isTerminal } from "@pvmdbg/types";
 import type { SteppingMode, AutoContinuePolicy } from "../lib/debugger-settings";
+import type { UseStorageTable } from "./useStorageTable";
 
 interface UseDebuggerActionsParams {
   orchestrator: Orchestrator | null;
@@ -17,6 +18,8 @@ interface UseDebuggerActionsParams {
   nInstructionsCount: number;
   /** Auto-continue policy for host calls during run mode. */
   autoContinuePolicy: AutoContinuePolicy;
+  /** Session-scoped storage table for storage host call overrides. */
+  storageTable: UseStorageTable;
 }
 
 interface DebuggerActions {
@@ -54,12 +57,127 @@ export function proposalToEffects(proposal?: HostCallResumeProposal): HostCallRe
   };
 }
 
+/**
+ * Build resume effects for a storage host call, merging custom storage values.
+ *
+ * For read (index 3): if the storage table has a custom value for the key,
+ * override the trace proposal's memory write at the destination address.
+ *
+ * For write (index 4): after resume, the written k/v should be persisted to
+ * the storage table (done in the caller after resume).
+ */
+function storageAwareEffects(
+  hc: HostCallInfo,
+  storageTable: UseStorageTable,
+): HostCallResumeEffects {
+  const base = proposalToEffects(hc.resumeProposal);
+
+  // Only apply storage overrides for read/write host calls
+  if (hc.hostCallIndex !== 3 && hc.hostCallIndex !== 4) {
+    return base;
+  }
+
+  // Try to derive the key hex for this host call
+  const keyHex = deriveStorageKeyHex(hc);
+  if (!keyHex) return base;
+
+  // Check if there's a custom value in the storage table
+  if (hc.hostCallIndex === 3 && storageTable.hasEntry(keyHex)) {
+    const override = storageTable.store.buildReadOverride(
+      keyHex,
+      // For read, the destination address comes from the trace memory writes
+      // or we use the existing memory write address from the proposal
+      base.memoryWrites?.[0]?.address ?? 0,
+    );
+    if (override) {
+      return {
+        ...base,
+        memoryWrites: override.memoryWrites,
+      };
+    }
+  }
+
+  return base;
+}
+
+/** Derive a hex key string from a storage host call's register state. */
+function deriveStorageKeyHex(hc: HostCallInfo): string | null {
+  const proposal = hc.resumeProposal;
+  if (!proposal) return null;
+
+  let keyPtr: number;
+  let keyLen: number;
+
+  if (hc.hostCallIndex === 3) {
+    // read: key at ω8, len at ω9
+    keyPtr = Number(hc.currentState.registers[8] ?? 0n);
+    keyLen = Number(hc.currentState.registers[9] ?? 0n);
+  } else if (hc.hostCallIndex === 4) {
+    // write: key at ω7, len at ω8
+    keyPtr = Number(hc.currentState.registers[7] ?? 0n);
+    keyLen = Number(hc.currentState.registers[8] ?? 0n);
+  } else {
+    return null;
+  }
+
+  // Look for the key data in memory writes (trace data)
+  for (const mw of proposal.memoryWrites) {
+    if (mw.address === keyPtr && mw.data.length >= keyLen) {
+      const keyData = mw.data.slice(0, keyLen);
+      return (
+        "0x" +
+        Array.from(keyData)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("")
+      );
+    }
+  }
+
+  return null;
+}
+
+/** Persist write host call data to the storage table after resume. */
+function persistWriteToStorage(
+  hc: HostCallInfo,
+  storageTable: UseStorageTable,
+): void {
+  if (hc.hostCallIndex !== 4) return;
+  const proposal = hc.resumeProposal;
+  if (!proposal) return;
+
+  const keyHex = deriveStorageKeyHex(hc);
+  if (!keyHex) return;
+
+  // For write, value is at ω9/ω10
+  const valPtr = Number(hc.currentState.registers[9] ?? 0n);
+  const valLen = Number(hc.currentState.registers[10] ?? 0n);
+
+  for (const mw of proposal.memoryWrites) {
+    if (mw.address === valPtr && mw.data.length >= valLen) {
+      const valData = mw.data.slice(0, valLen);
+      const valHex =
+        "0x" +
+        Array.from(valData)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      storageTable.setEntry(keyHex, valHex);
+      return;
+    }
+  }
+}
+
 /** Resume all PVMs that are currently paused on a host call. */
-async function resumeAllHostCalls(orch: Orchestrator): Promise<void> {
+async function resumeAllHostCalls(
+  orch: Orchestrator,
+  storageTable: UseStorageTable,
+): Promise<void> {
   for (const pvmId of orch.getPvmIds()) {
     const hc = orch.getPendingHostCall(pvmId);
     if (hc) {
-      await orch.resumeHostCall(pvmId, proposalToEffects(hc.resumeProposal));
+      const effects = storageAwareEffects(hc, storageTable);
+      await orch.resumeHostCall(pvmId, effects);
+      // After write host call resumes, persist to storage table
+      persistWriteToStorage(hc, storageTable);
     }
   }
 }
@@ -103,6 +221,7 @@ export function useDebuggerActions({
   steppingMode,
   nInstructionsCount,
   autoContinuePolicy,
+  storageTable,
 }: UseDebuggerActionsParams): DebuggerActions {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +243,7 @@ export function useDebuggerActions({
     setIsStepInProgress(true);
 
     const doStep = async () => {
-      await resumeAllHostCalls(orchestrator);
+      await resumeAllHostCalls(orchestrator, storageTable);
       await orchestrator.step(1);
     };
 
@@ -132,7 +251,7 @@ export function useDebuggerActions({
       setError(err instanceof Error ? err.message : String(err));
       setIsStepInProgress(false);
     });
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress]);
+  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, storageTable]);
 
   const step = useCallback(() => {
     if (!orchestrator || isStepInProgress || isRunning) return;
@@ -142,7 +261,7 @@ export function useDebuggerActions({
     setIsStepInProgress(true);
 
     const doStep = async () => {
-      await resumeAllHostCalls(orchestrator);
+      await resumeAllHostCalls(orchestrator, storageTable);
       await orchestrator.step(n);
     };
 
@@ -150,7 +269,7 @@ export function useDebuggerActions({
       setError(err instanceof Error ? err.message : String(err));
       setIsStepInProgress(false);
     });
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount]);
+  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount, storageTable]);
 
   const run = useCallback(() => {
     if (!orchestrator || isRunning || isRunningRef.current) return;
@@ -166,7 +285,7 @@ export function useDebuggerActions({
       try {
         // Resume any pending host calls before starting the run loop
         // (user explicitly clicked Run, so always resume).
-        await resumeAllHostCalls(orchestrator);
+        await resumeAllHostCalls(orchestrator, storageTable);
 
         while (!stopFlagRef.current) {
           // Batch multiple steps before yielding to React.
@@ -185,7 +304,7 @@ export function useDebuggerActions({
                 return;
               }
               // Auto-continue: resume all host calls and keep going
-              await resumeAllHostCalls(orchestrator);
+              await resumeAllHostCalls(orchestrator, storageTable);
             }
 
             // Check if all PVMs are terminal
@@ -215,7 +334,7 @@ export function useDebuggerActions({
     };
 
     loop();
-  }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount, autoContinuePolicy]);
+  }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount, autoContinuePolicy, storageTable]);
 
   const pause = useCallback(() => {
     stopFlagRef.current = true;

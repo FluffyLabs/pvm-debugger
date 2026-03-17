@@ -148,10 +148,11 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
     // At minimum, one of the contextual views should be rendered.
     const gasVisible = await page.getByTestId("gas-host-call").isVisible().catch(() => false);
     const logVisible = await page.getByTestId("log-host-call").isVisible().catch(() => false);
+    const storageVisible = await page.getByTestId("storage-host-call").isVisible().catch(() => false);
     const genericVisible = await page.getByTestId("generic-host-call").isVisible().catch(() => false);
 
     // Exactly one should be visible
-    expect(gasVisible || logVisible || genericVisible).toBe(true);
+    expect(gasVisible || logVisible || storageVisible || genericVisible).toBe(true);
   });
 
   test("no resume button is present in the tab", async ({ page }) => {

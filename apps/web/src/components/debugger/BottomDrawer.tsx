@@ -4,6 +4,7 @@ import { SettingsTab } from "../drawer/SettingsTab";
 import { HostCallTab } from "../drawer/HostCallTab";
 import type { HostCallInfo, MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import type { UseStorageTable } from "../../hooks/useStorageTable";
 import { useHostCallState } from "../../hooks/useHostCallState";
 
 const TABS: { id: DrawerTab; label: string }[] = [
@@ -26,9 +27,10 @@ interface BottomDrawerProps {
   selectedPvmId: string | null;
   snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
   orchestrator: Orchestrator | null;
+  storageTable: UseStorageTable;
 }
 
-export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapshots, orchestrator }: BottomDrawerProps) {
+export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapshots, orchestrator, storageTable }: BottomDrawerProps) {
   const { activeTab, height, setActiveTab, setHeight } = useDrawer();
   const { activeHostCall } = useHostCallState(hostCallInfo, selectedPvmId, snapshots);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -101,7 +103,7 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
         >
           {activeTab === "settings" && <SettingsTab onPvmChange={onPvmChange} />}
           {activeTab === "ecalli_trace" && <p>Ecalli Trace — coming soon</p>}
-          {activeTab === "host_call" && <HostCallTab activeHostCall={activeHostCall} orchestrator={orchestrator} />}
+          {activeTab === "host_call" && <HostCallTab activeHostCall={activeHostCall} orchestrator={orchestrator} storageTable={storageTable} />}
           {activeTab === "logs" && <p>Logs — coming soon</p>}
         </div>
       )}

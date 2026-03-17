@@ -1,12 +1,15 @@
 import type { HostCallInfo } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import type { UseStorageTable } from "../../hooks/useStorageTable";
 import { GasHostCall } from "./hostcalls/GasHostCall";
 import { LogHostCall } from "./hostcalls/LogHostCall";
+import { StorageHostCall } from "./hostcalls/StorageHostCall";
 import { GenericHostCall } from "./hostcalls/GenericHostCall";
 
 interface HostCallTabProps {
   activeHostCall: HostCallInfo | null;
   orchestrator: Orchestrator | null;
+  storageTable: UseStorageTable;
 }
 
 function HostCallHeader({ info }: { info: HostCallInfo }) {
@@ -41,13 +44,20 @@ function HostCallHeader({ info }: { info: HostCallInfo }) {
 function ContextualView({
   info,
   orchestrator,
+  storageTable,
 }: {
   info: HostCallInfo;
   orchestrator: Orchestrator | null;
+  storageTable: UseStorageTable;
 }) {
   switch (info.hostCallIndex) {
     case 0:
       return <GasHostCall info={info} />;
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+      return <StorageHostCall info={info} storageTable={storageTable} />;
     case 100:
       return <LogHostCall info={info} orchestrator={orchestrator} />;
     default:
@@ -55,7 +65,7 @@ function ContextualView({
   }
 }
 
-export function HostCallTab({ activeHostCall, orchestrator }: HostCallTabProps) {
+export function HostCallTab({ activeHostCall, orchestrator, storageTable }: HostCallTabProps) {
   if (!activeHostCall) {
     return (
       <div data-testid="host-call-tab" className="flex flex-col gap-2">
@@ -70,7 +80,7 @@ export function HostCallTab({ activeHostCall, orchestrator }: HostCallTabProps) 
     <div data-testid="host-call-tab" className="flex flex-col gap-3">
       <HostCallHeader info={activeHostCall} />
       <div className="border-t border-border" />
-      <ContextualView info={activeHostCall} orchestrator={orchestrator} />
+      <ContextualView info={activeHostCall} orchestrator={orchestrator} storageTable={storageTable} />
     </div>
   );
 }

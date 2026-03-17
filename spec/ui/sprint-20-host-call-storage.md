@@ -1,5 +1,7 @@
 # Sprint 20 — Host Call — Storage Table
 
+Status: Implemented
+
 ## Goal
 
 Add the storage contextual view for host-call indexes 3 (read) and 4 (write). The view includes an editable storage table that persists across host calls within the same execution session, allowing users to supply custom storage values that override trace-based memory writes.
@@ -75,6 +77,15 @@ Shared storage helpers should be reusable by both the Host Call tab and the exec
 - The table resets on orchestrator replacement.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+## Implementation Notes
+
+- `useStorageTable` uses a `StorageStore` class outside React with `useSyncExternalStore` to avoid snapshot churn. A revision counter drives re-renders.
+- Orchestrator identity is tracked via a ref-based counter in `DebuggerPage`; when the orchestrator reference changes, a new store is created.
+- `StorageHostCall` component handles all four storage-type host calls (1=fetch, 2=lookup, 3=read, 4=write) with specific detail decoders per type.
+- Key derivation from trace data looks for memory writes matching the key pointer/length from registers.
+- The sprint-19 E2E test for "generic fallback" was updated to also check for `storage-host-call` visibility since indexes 1-4 now route to the storage view.
+- `resumeAllHostCalls` in `useDebuggerActions` was extended to apply storage-aware effects: custom read overrides and post-write persistence.
 
 ## Verification
 
