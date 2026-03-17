@@ -1,7 +1,9 @@
-import { ArrowLeft, RotateCcw, StepForward, Play, Pause } from "lucide-react";
+import { ArrowLeft, RotateCcw, StepForward, Play, Pause, ListOrdered } from "lucide-react";
+import type { SteppingMode } from "../../lib/debugger-settings";
 
 interface ExecutionControlsProps {
   onNext: () => void;
+  onStep: () => void;
   onRun: () => void;
   onPause: () => void;
   onReset: () => void;
@@ -9,6 +11,19 @@ interface ExecutionControlsProps {
   canStep: boolean;
   isRunning: boolean;
   isTerminated: boolean;
+  steppingMode: SteppingMode;
+  nInstructionsCount: number;
+}
+
+function stepTooltip(mode: SteppingMode, n: number): string {
+  switch (mode) {
+    case "instruction":
+      return "Step 1 instruction";
+    case "block":
+      return "Step to block boundary";
+    case "n_instructions":
+      return `Step ${n} instructions`;
+  }
 }
 
 const btnClass =
@@ -16,6 +31,7 @@ const btnClass =
 
 export function ExecutionControls({
   onNext,
+  onStep,
   onRun,
   onPause,
   onReset,
@@ -23,7 +39,10 @@ export function ExecutionControls({
   canStep,
   isRunning,
   isTerminated,
+  steppingMode,
+  nInstructionsCount,
 }: ExecutionControlsProps) {
+  const tooltip = stepTooltip(steppingMode, nInstructionsCount);
   return (
     <div data-testid="execution-controls" className="flex items-center gap-2">
       <button
@@ -57,6 +76,18 @@ export function ExecutionControls({
       >
         <StepForward className="h-3.5 w-3.5" />
         Next
+      </button>
+
+      <button
+        data-testid="step-button"
+        aria-label={tooltip}
+        title={tooltip}
+        onClick={onStep}
+        disabled={!canStep || isRunning}
+        className={btnClass}
+      >
+        <ListOrdered className="h-3.5 w-3.5" />
+        Step
       </button>
 
       <div className="h-4 w-px bg-border" />

@@ -1,5 +1,7 @@
 # Sprint 16 — Stepping Modes (Step Button)
 
+Status: Implemented
+
 ## Goal
 
 Add the `Step` button to the toolbar that uses the configured stepping mode from Settings. The button's tooltip dynamically describes the current mode. Block stepping uses a temporary placeholder batch step until Sprint 33 implements real block-aware stepping.

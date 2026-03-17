@@ -3,6 +3,7 @@ import { Navigate, useNavigate } from "react-router";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
 import { useDebuggerActions } from "../hooks/useDebuggerActions";
+import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { isTerminal } from "@pvmdbg/types";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
@@ -25,6 +26,8 @@ export function DebuggerPage() {
   // Get current PVM state (must be before early return — hooks below depend on it)
   const selectedEntry = selectedPvmId ? snapshots.get(selectedPvmId) : undefined;
   const selectedLifecycle = selectedEntry?.lifecycle ?? null;
+
+  const { settings } = useDebuggerSettings();
 
   const onLoad = useCallback(() => {
     teardown();
@@ -54,13 +57,15 @@ export function DebuggerPage() {
   );
 
   // useDebuggerActions must be called before any early return (React rules of hooks)
-  const { next, run, pause, reset, load, canStep, isRunning, error, clearError } =
+  const { next, step, run, pause, reset, load, canStep, isRunning, error, clearError } =
     useDebuggerActions({
       orchestrator,
       isStepInProgress,
       setIsStepInProgress,
       selectedLifecycle,
       onLoad,
+      steppingMode: settings.steppingMode,
+      nInstructionsCount: settings.nInstructionsCount,
     });
 
   // Route guard: redirect to /load when no program is loaded.
@@ -85,6 +90,7 @@ export function DebuggerPage() {
             <h1 className="text-sm font-semibold text-foreground">Debugger</h1>
             <ExecutionControls
               onNext={next}
+              onStep={step}
               onRun={run}
               onPause={pause}
               onReset={reset}
@@ -92,6 +98,8 @@ export function DebuggerPage() {
               canStep={canStep}
               isRunning={isRunning}
               isTerminated={allTerminal}
+              steppingMode={settings.steppingMode}
+              nInstructionsCount={settings.nInstructionsCount}
             />
             <div className="flex items-center gap-2">
               {allTerminal && (
