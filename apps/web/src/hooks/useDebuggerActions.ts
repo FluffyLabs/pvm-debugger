@@ -162,6 +162,16 @@ export function shouldAutoContinue(
   return true;
 }
 
+/** Check whether any PVM in the step result hit a breakpoint. */
+export function hasBreakpointHit(result: StepResult): boolean {
+  for (const [, report] of result.results) {
+    if (report.hitBreakpoint) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Check whether any PVM in the step result is paused on a host call. */
 export function hasHostCallPause(result: StepResult): boolean {
   for (const [, report] of result.results) {
@@ -254,6 +264,13 @@ export function useDebuggerActions({
           const BATCH_SIZE = 100;
           for (let i = 0; i < BATCH_SIZE && !stopFlagRef.current; i++) {
             const result = await orchestrator.step(stepSize);
+
+            // Check if any PVM hit a breakpoint
+            if (hasBreakpointHit(result)) {
+              isRunningRef.current = false;
+              setIsRunning(false);
+              return;
+            }
 
             // Handle host call pauses based on auto-continue policy
             if (hasHostCallPause(result)) {

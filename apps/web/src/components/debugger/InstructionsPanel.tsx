@@ -1,19 +1,44 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { DecodedInstruction } from "../../hooks/useDisassembly";
+import type { Orchestrator } from "@pvmdbg/orchestrator";
+import { InstructionRow } from "./InstructionRow";
 
 interface InstructionsPanelProps {
   instructions: DecodedInstruction[];
   currentPc: number;
+  orchestrator: Orchestrator | null;
 }
 
-function padHexPc(pc: number, maxPc: number): string {
-  const minWidth = maxPc > 0xffff ? Math.max(4, maxPc.toString(16).length) : 4;
-  return pc.toString(16).toUpperCase().padStart(minWidth, "0");
-}
-
-export function InstructionsPanel({ instructions, currentPc }: InstructionsPanelProps) {
+export function InstructionsPanel({ instructions, currentPc, orchestrator }: InstructionsPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRowRef = useRef<HTMLDivElement>(null);
+  const [breakpoints, setBreakpoints] = useState<Set<number>>(new Set());
+
+  // Rehydrate breakpoints from orchestrator when it changes
+  useEffect(() => {
+    if (orchestrator) {
+      const existing = orchestrator.getBreakpoints();
+      setBreakpoints(new Set(existing));
+    } else {
+      setBreakpoints(new Set());
+    }
+  }, [orchestrator]);
+
+  const toggleBreakpoint = useCallback(
+    (pc: number) => {
+      setBreakpoints((prev) => {
+        const next = new Set(prev);
+        if (next.has(pc)) {
+          next.delete(pc);
+        } else {
+          next.add(pc);
+        }
+        orchestrator?.setBreakpoints([...next]);
+        return next;
+      });
+    },
+    [orchestrator],
+  );
 
   useEffect(() => {
     activeRowRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -31,6 +56,7 @@ export function InstructionsPanel({ instructions, currentPc }: InstructionsPanel
   }
 
   const maxPc = instructions[instructions.length - 1].pc;
+  const padWidth = maxPc > 0xffff ? Math.max(4, maxPc.toString(16).length) : 4;
 
   return (
     <div
@@ -44,27 +70,14 @@ export function InstructionsPanel({ instructions, currentPc }: InstructionsPanel
         {instructions.map((instr) => {
           const isCurrent = instr.pc === currentPc;
           return (
-            <div
-              key={instr.pc}
-              ref={isCurrent ? activeRowRef : undefined}
-              data-testid={`instruction-row-${instr.pc}`}
-              className={`flex gap-2 px-2 py-0.5 whitespace-nowrap ${
-                isCurrent
-                  ? "bg-primary/20 text-foreground"
-                  : "text-muted-foreground hover:bg-muted/50"
-              }`}
-            >
-              <span className="text-muted-foreground/70 select-none" data-testid="instruction-pc">
-                {padHexPc(instr.pc, maxPc)}
-              </span>
-              <span className="text-foreground font-medium" data-testid="instruction-mnemonic">
-                {instr.mnemonic}
-              </span>
-              {instr.args && (
-                <span className="text-muted-foreground" data-testid="instruction-args">
-                  {instr.args}
-                </span>
-              )}
+            <div key={instr.pc} ref={isCurrent ? activeRowRef : undefined}>
+              <InstructionRow
+                instruction={instr}
+                isCurrent={isCurrent}
+                isBreakpoint={breakpoints.has(instr.pc)}
+                padWidth={padWidth}
+                onToggleBreakpoint={toggleBreakpoint}
+              />
             </div>
           );
         })}

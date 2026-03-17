@@ -160,7 +160,7 @@ export function DebuggerPage() {
           </>
         }
         instructions={
-          <InstructionsPanel instructions={instructions} currentPc={currentPc} />
+          <InstructionsPanel instructions={instructions} currentPc={currentPc} orchestrator={orchestrator} />
         }
         registers={
           <RegistersPanel

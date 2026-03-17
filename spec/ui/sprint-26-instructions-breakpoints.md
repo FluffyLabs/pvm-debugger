@@ -1,5 +1,7 @@
 # Sprint 26 — Instructions — Breakpoints
 
+Status: Implemented
+
 ## Goal
 
 Add breakpoint support to the instructions panel. Users click the left gutter to toggle breakpoints, which appear as red dots. The orchestrator receives the updated breakpoint list, and `Run` stops when a breakpoint is hit.
