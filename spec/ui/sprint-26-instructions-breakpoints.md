@@ -69,5 +69,16 @@ The existing Run loop (Sprint 08) must respect breakpoints:
 
 ```bash
 cd apps/web && npx vite build
-npx playwright test e2e/sprint-26-breakpoints.spec.ts
+cd apps/web && npx playwright test e2e/sprint-26-breakpoints.spec.ts
+npx vitest run apps/web/src/hooks/useDebuggerActions.test.ts   # unit tests for hasBreakpointHit
 ```
+
+## Implementation Notes
+
+Key decisions and pitfalls discovered during implementation:
+
+- **Run loop integration**: The `hasBreakpointHit()` helper in `useDebuggerActions.ts` checks `report.hitBreakpoint` on each `StepResult`. This check must come *before* the host-call pause check in the run loop, because the orchestrator sets `hitBreakpoint: true` on the `PvmStepReport` when a breakpoint PC is matched — the run loop must exit immediately.
+- **Breakpoint state lives in InstructionsPanel** (not in a context or settings). It's local React state (`Set<number>`) synced to the orchestrator via `setBreakpoints()`. This avoids over-engineering — breakpoints are UI-only state that doesn't need persistence across sessions.
+- **Side-effect in setState updater**: `toggleBreakpoint` calls `orchestrator.setBreakpoints()` inside the `setBreakpoints` updater to guarantee the orchestrator is updated atomically with the React state. Using a `useEffect` instead would add a render cycle delay and risk a rehydration loop on orchestrator change.
+- **Hover affordance**: The gutter shows a dimmed red dot on hover (30% opacity) to hint that it's clickable. Uses Tailwind `group-hover/bp` with a named group to scope the hover.
+- **InstructionsPanel now requires `orchestrator` prop**: `DebuggerPage` passes the orchestrator down. If working on this panel in tests, you need to provide or mock this prop.

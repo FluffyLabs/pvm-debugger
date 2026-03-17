@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { stepsForMode, proposalToEffects, shouldAutoContinue, hasHostCallPause, storageAwareEffects, persistWriteToStorage } from "./useDebuggerActions";
+import { stepsForMode, proposalToEffects, shouldAutoContinue, hasHostCallPause, hasBreakpointHit, storageAwareEffects, persistWriteToStorage } from "./useDebuggerActions";
 import type { StepResult, PvmStepReport, HostCallResumeProposal, HostCallInfo, MachineStateSnapshot } from "@pvmdbg/types";
 import type { UseStorageTable } from "./useStorageTable";
 
@@ -129,6 +129,35 @@ describe("hasHostCallPause", () => {
   it("returns false for an empty result set", () => {
     const result = makeStepResult([]);
     expect(hasHostCallPause(result)).toBe(false);
+  });
+});
+
+// --- hasBreakpointHit ---
+
+describe("hasBreakpointHit", () => {
+  it("returns false when no PVMs hit a breakpoint", () => {
+    const result = makeStepResult([makeReport({ hitBreakpoint: false })]);
+    expect(hasBreakpointHit(result)).toBe(false);
+  });
+
+  it("returns true when a PVM hit a breakpoint", () => {
+    const result = makeStepResult([
+      makeReport({ pvmId: "pvm1", hitBreakpoint: true }),
+    ]);
+    expect(hasBreakpointHit(result)).toBe(true);
+  });
+
+  it("returns true when one of multiple PVMs hit a breakpoint", () => {
+    const result = makeStepResult([
+      makeReport({ pvmId: "pvm1", hitBreakpoint: false }),
+      makeReport({ pvmId: "pvm2", hitBreakpoint: true }),
+    ]);
+    expect(hasBreakpointHit(result)).toBe(true);
+  });
+
+  it("returns false for an empty result set", () => {
+    const result = makeStepResult([]);
+    expect(hasBreakpointHit(result)).toBe(false);
   });
 });
 
