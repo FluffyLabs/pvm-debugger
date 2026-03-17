@@ -79,3 +79,19 @@ Enable both Typeberry and Ananas in Settings before testing.
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-24-pvm-tabs.spec.ts
 ```
+
+## Implementation Notes
+
+### Files modified (beyond Required Files)
+
+- `apps/web/src/hooks/useOrchestratorState.ts` — exposed `setSelectedPvmId` in `OrchestratorReactiveState` so tabs can change the selected PVM. The new `selectPvm` callback calls the React setter directly (synchronous), bypassing the buffered rAF flush. This is correct because user-initiated selection should be immediate, and the flush guard `(prev) => prev ?? pending` ensures event-driven updates never override user selection (only applies when `prev` is null during initial load).
+- `apps/web/src/pages/DebuggerPage.tsx` — replaced the inline `pvm-status-*` status badges with the `PvmTabs` component.
+- `apps/web/src/components/debugger/PvmTabs.test.tsx` — unit tests for rendering, selection, click handler, dot colors, and backward-compat status text.
+
+### Backward-compatible `pvm-status-*` test IDs
+
+The old inline status badges (removed by this sprint) had `data-testid="pvm-status-${pvmId}"` used by 8+ existing e2e tests. To avoid breaking them, each tab button includes a `<span className="sr-only" data-testid="pvm-status-${pvmId}">` containing the lifecycle label text. This preserves both `toBeVisible()` (sr-only elements still have a 1×1 bounding box) and `toHaveText("OK")` assertions. A future cleanup should update those tests to use `pvm-tab-*` or `pvm-dot-*` instead.
+
+### Edge case: selected PVM removed
+
+If the selected PVM is disabled in settings, the orchestrator is re-created with the remaining PVMs. `useOrchestratorState` seeds `selectedPvmId` from the first key in `orchestrator.getSnapshots()`, so selection falls back to the remaining PVM automatically.

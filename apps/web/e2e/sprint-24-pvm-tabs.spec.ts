@@ -83,6 +83,24 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     expect(typeberryTextAfter).toBe(typeberryText);
   });
 
+  test("removed PVM disappears from tab bar", async ({ page }) => {
+    await loadProgram(page);
+    await enableAnanas(page);
+
+    // Both tabs should be visible
+    await expect(page.getByTestId("pvm-tab-typeberry")).toBeVisible();
+    await expect(page.getByTestId("pvm-tab-ananas")).toBeVisible();
+
+    // Disable ananas via settings (it should still be visible in the drawer)
+    await openSettings(page);
+    const ananasSwitch = page.getByTestId("pvm-switch-ananas");
+    await ananasSwitch.click();
+
+    // Ananas tab should disappear
+    await expect(page.getByTestId("pvm-tab-ananas")).not.toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("pvm-tab-typeberry")).toBeVisible();
+  });
+
   test("status dots reflect PVM lifecycle", async ({ page }) => {
     await loadProgram(page);
 
