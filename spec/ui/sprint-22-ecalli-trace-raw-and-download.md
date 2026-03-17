@@ -1,5 +1,7 @@
 # Sprint 22 — Ecalli Trace — Raw Mode + Download
 
+Status: Implemented
+
 ## Goal
 
 Add raw mode and download capability to the Ecalli Trace tab. Users can switch between formatted and raw views and download the execution trace as a `.log` file.
