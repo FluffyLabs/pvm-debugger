@@ -9,10 +9,10 @@ interface DevBridge {
   getPvmIds(): string[];
   getSnapshot(pvmId: string): object;
   step(count: number): Promise<void>;
-  setRegister(pvmId: string, index: number, value: string): void;
-  setPc(pvmId: string, value: string): void;
-  setGas(pvmId: string, value: string): void;
-  setMemory(pvmId: string, address: number, bytes: number[]): void;
+  setRegister(pvmId: string, index: number, value: string): Promise<void>;
+  setPc(pvmId: string, value: string): Promise<void>;
+  setGas(pvmId: string, value: string): Promise<void>;
+  setMemory(pvmId: string, address: number, bytes: number[]): Promise<void>;
   resumeHostCall(pvmId: string): Promise<void>;
   getHostCallInfo(pvmId: string): object | null;
 }
@@ -82,28 +82,28 @@ export function installDevBridge(getOrchestrator: () => Orchestrator | null): vo
       await orch.step(count);
     },
 
-    setRegister(pvmId: string, index: number, value: string) {
+    async setRegister(pvmId: string, index: number, value: string) {
       const orch = getOrchestrator();
       if (!orch) throw new Error("Orchestrator not initialized");
-      orch.setRegisters(pvmId, new Map([[index, BigInt(value)]]));
+      await orch.setRegisters(pvmId, new Map([[index, BigInt(value)]]));
     },
 
-    setPc(pvmId: string, value: string) {
+    async setPc(pvmId: string, value: string) {
       const orch = getOrchestrator();
       if (!orch) throw new Error("Orchestrator not initialized");
-      orch.setPc(pvmId, Number(value));
+      await orch.setPc(pvmId, Number(value));
     },
 
-    setGas(pvmId: string, value: string) {
+    async setGas(pvmId: string, value: string) {
       const orch = getOrchestrator();
       if (!orch) throw new Error("Orchestrator not initialized");
-      orch.setGas(pvmId, BigInt(value));
+      await orch.setGas(pvmId, BigInt(value));
     },
 
-    setMemory(pvmId: string, address: number, bytes: number[]) {
+    async setMemory(pvmId: string, address: number, bytes: number[]) {
       const orch = getOrchestrator();
       if (!orch) throw new Error("Orchestrator not initialized");
-      orch.setMemory(pvmId, address, new Uint8Array(bytes));
+      await orch.setMemory(pvmId, address, new Uint8Array(bytes));
     },
 
     async resumeHostCall(pvmId: string) {

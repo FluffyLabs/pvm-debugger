@@ -125,37 +125,31 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
   });
 
   test("register edit changes execution result", async ({ page }) => {
-    // Load "step-test" (LOAD_IMM r0=42). We'll edit r7 to prove
-    // the edit is applied and persists through execution.
-    await loadExample(page, "step-test");
+    // The "add" program encodes: add_64 r9, r7, r8 (r9 = r7 + r8).
+    // Initial state: r7=1, r8=2 → r9 should become 3 after one step.
+    // We edit r7 to 100 and verify r9 = 100 + 2 = 102 instead.
+    await loadExample(page, "add");
 
-    // Verify initial register 7 is 0
+    // Verify initial r7 = 1
     const regHex7 = page.getByTestId("register-hex-7");
-    await expect(regHex7).toBeVisible();
-    const initialR7 = await regHex7.textContent();
-    expect(initialR7).toMatch(/0x0{16}/i);
+    await expect(regHex7).toHaveText(/0x0{14}01/i);
 
-    // Edit register 7 to 0xff while paused
+    // Edit r7 to 100 (0x64) while paused
     await regHex7.click();
     const editInput = page.getByTestId("register-edit-7");
     await expect(editInput).toBeVisible();
-    await editInput.fill("0xff");
+    await editInput.fill("100");
     await editInput.press("Enter");
     await expect(editInput).not.toBeVisible();
+    await expect(regHex7).toHaveText(/0x0{14}64/i, { timeout: 5000 });
 
-    // Verify register 7 shows the edited value
-    await expect(regHex7).toHaveText(/0x0{14}ff/i, { timeout: 5000 });
-
-    // Step once — LOAD_IMM r0=42 executes; r7 should remain 0xff
+    // Step once — add_64 executes: r9 = r7(100) + r8(2) = 102 (0x66)
     await page.getByTestId("next-button").click();
     await expect(page.getByTestId("pc-value")).not.toHaveText("0x0000", { timeout: 5000 });
 
-    // r0 should have changed to 42 (0x2a) — proving execution happened
-    const regHex0 = page.getByTestId("register-hex-0");
-    await expect(regHex0).toHaveText(/0x0{14}2a/i, { timeout: 5000 });
-
-    // r7 should still be 0xff — proving the edit persisted through execution
-    await expect(regHex7).toHaveText(/0x0{14}ff/i);
+    // r9 should be 102 (0x66) — proving editing ω7 changed the downstream result
+    const regHex9 = page.getByTestId("register-hex-9");
+    await expect(regHex9).toHaveText(/0x0{14}66/i, { timeout: 5000 });
   });
 
   test("reset restores initial state", async ({ page }) => {
