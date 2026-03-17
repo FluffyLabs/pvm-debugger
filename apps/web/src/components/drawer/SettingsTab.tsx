@@ -8,11 +8,9 @@ interface SettingsTabProps {
 
 export function SettingsTab({ onPvmChange }: SettingsTabProps) {
   return (
-    <div data-testid="settings-tab" className="flex flex-col gap-4">
+    <div data-testid="settings-tab" className="grid grid-cols-3 gap-4">
       <PvmSelectionConfig onPvmChange={onPvmChange} />
-      <div className="border-t border-border" />
       <SteppingModeConfig />
-      <div className="border-t border-border" />
       <AutoContinueConfig />
     </div>
   );

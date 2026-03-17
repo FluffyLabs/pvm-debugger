@@ -59,8 +59,8 @@ function loadManifest(): ExamplesManifest {
  * initManifest(manifest);
  * ```
  */
-export function initManifest(data: ExamplesManifest): void {
-  _manifest = data;
+export function initManifest(data: ExamplesManifest | { categories: unknown[] }): void {
+  _manifest = data as ExamplesManifest;
 }
 
 /** Get the full examples manifest. Throws if `initManifest()` has not been called. */

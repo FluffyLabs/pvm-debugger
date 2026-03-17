@@ -23,12 +23,12 @@ export function MemoryRange({ address, getData, isLoading, onExpand }: MemoryRan
     }
   };
 
-  // Re-fetch when expanding after data was invalidated
+  // Re-fetch when expanded and data may be stale (expandPage handles staleness check)
   useEffect(() => {
-    if (expanded && !getData() && !isLoading) {
+    if (expanded) {
       onExpand();
     }
-  }, [expanded, getData, isLoading, onExpand]);
+  }, [expanded, onExpand]);
 
   const data = getData();
 

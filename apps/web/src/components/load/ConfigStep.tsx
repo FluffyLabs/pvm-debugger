@@ -116,7 +116,7 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
 
         {decodeError && !forceGeneric && (
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             data-testid="config-step-force-generic"
             onClick={handleForceGeneric}
@@ -154,7 +154,7 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
         {/* Action buttons */}
         <div className="flex items-center gap-3 mt-2">
           <Button
-            variant="outline"
+            variant="secondary"
             data-testid="config-step-back"
             onClick={onBack}
             className="cursor-pointer gap-1.5"

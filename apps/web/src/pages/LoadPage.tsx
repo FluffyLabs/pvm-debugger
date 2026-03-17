@@ -66,7 +66,7 @@ export function LoadPage() {
             {formatByteCount(rawPayload.bytes.length)}
           </span>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             data-testid="load-page-candidate-continue"
             onClick={() => setStep(2)}

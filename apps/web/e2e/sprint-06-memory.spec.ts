@@ -105,8 +105,10 @@ test.describe("Sprint 06 — Memory Panel", () => {
     // Step — this triggers snapshot version change, cache invalidation, and re-fetch
     const nextBtn = page.getByTestId("next-button");
     await nextBtn.click();
-
-    // Wait for the step to complete (PVM enters terminal state on fault)
+    // First step executes the store_u16 instruction (succeeds). PC advances past code.
+    await expect(nextBtn).toBeEnabled({ timeout: 5000 });
+    await nextBtn.click();
+    // Second step faults (PC past code end) → terminal state
     await expect(nextBtn).toBeDisabled({ timeout: 5000 });
 
     // The hex dump should still be visible (re-fetch succeeded, not stuck on "Loading…")

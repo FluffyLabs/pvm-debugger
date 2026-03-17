@@ -175,7 +175,7 @@ export function DebuggerPage() {
           <MemoryPanel
             orchestrator={orchestrator}
             pvmId={selectedPvmId}
-            pageMap={orchestrator.getPageMap()}
+            pageMap={orchestrator?.getPageMap() ?? []}
             snapshotVersion={snapshotVersion}
           />
         }
