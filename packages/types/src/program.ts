@@ -32,5 +32,6 @@ export interface ProgramEnvelope {
   loadContext?: ProgramLoadContext;
   trace?: EcalliTrace;
   expectedState?: ExpectedState;
+  jumpTableEntryCount?: number;
   sourceMeta: { sourceKind: LoadSourceKind; sourceId: string };
 }

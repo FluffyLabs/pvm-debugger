@@ -130,6 +130,8 @@ Step 2 must not expose gas editing. Gas comes from source defaults.
 - **Register preview**: Non-zero registers shown with omega notation (e.g., `ω7=0x1a`), up to 4 shown with "+N more" overflow indicator.
 - **Memory summary for SPI**: Shows page counts from the envelope's pageMap (readable vs writable), not raw SPI segment counts. This is the data readily available after envelope creation.
 - **All prior sprint E2E tests updated**: Tests from sprints 02-11 that navigated directly to the debugger after clicking an example/Continue now go through step 2 (`config-step` → click `config-step-load` → `debugger-page`).
+- **Jump-table entry count**: Extracted via `ProgramDecoder.deblob(code)` from `@typeberry/lib` after SPI decode. The typeberry `Result` type uses `.ok` (not `.value`) to access the success value. Added as `jumpTableEntryCount?: number` on `ProgramEnvelope`.
+- **E2E tests use direct fixture uploads**: SPI, JSON vector, and trace tests upload fixture files directly (`add.jam`, `json/inst_add_32.json`, `trace-001.log`) rather than relying on example category UI, making tests deterministic and independent of example manifest ordering.
 
 ## Verification
 

@@ -76,6 +76,7 @@ export interface SpiDecodeResult {
   memory: pvm.spi.SpiMemory;
   registers: BigUint64Array;
   metadata?: Uint8Array;
+  jumpTableEntryCount: number;
 }
 
 /** Strip varU32 metadata prefix and return metadata + SPI payload. */
@@ -107,11 +108,20 @@ export function tryDecodeSpi(
   }
 
   const program = pvm.spi.decodeStandardProgram(spiPayload, args);
+
+  // Extract jump table entry count from the decoded code blob
+  let jumpTableEntryCount = 0;
+  const deblobResult = pvm.ProgramDecoder.deblob(program.code);
+  if (deblobResult.isOk) {
+    jumpTableEntryCount = deblobResult.ok.getJumpTable().getSize();
+  }
+
   return {
     code: program.code,
     memory: program.memory,
     registers: program.registers,
     metadata,
+    jumpTableEntryCount,
   };
 }
 
@@ -129,7 +139,7 @@ export function decodeSpi(
   },
 ): ProgramEnvelope {
   const decoded = tryDecodeSpi(rawBytes, spiArgs, hasMetadata);
-  const { code, memory, registers, metadata } = decoded;
+  const { code, memory, registers, metadata, jumpTableEntryCount } = decoded;
 
   const readablePages = segmentsToPageMap(memory.readable, false);
   const writeablePages = segmentsToPageMap(memory.writeable, true);
@@ -161,6 +171,7 @@ export function decodeSpi(
       memoryChunks,
     },
     metadata,
+    jumpTableEntryCount,
     loadContext: {
       spiProgram: {
         program: rawBytes,

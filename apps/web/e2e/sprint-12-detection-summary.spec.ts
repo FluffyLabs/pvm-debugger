@@ -28,70 +28,61 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await expect(page.getByTestId("config-step-back")).toBeVisible();
   });
 
-  test("SPI example shows structural details", async ({ page }) => {
-    // Find and click an SPI example (first JAM SPI example available)
-    const spiExample = page.locator('[data-testid^="example-card-"]').filter({ hasText: "SPI" }).first();
-    // If no SPI example by text, try any example from the JAM SPI category
-    const spiCategory = page.getByTestId("example-category-jam-spi");
-    const hasSpiCategory = await spiCategory.isVisible().catch(() => false);
+  test("SPI example shows structural details and jump table count", async ({ page }) => {
+    // Upload an SPI fixture file directly
+    const fileInput = page.getByTestId("file-upload-input");
+    await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
+    await expect(page.getByTestId("file-upload-selected")).toBeVisible();
+    await page.getByTestId("source-step-continue").click();
 
-    if (hasSpiCategory) {
-      // Click first example in JAM SPI category
-      const firstSpiCard = spiCategory.locator('[data-testid^="example-card-"]').first();
-      await firstSpiCard.click();
-    } else {
-      // Fallback: use a file upload with an SPI fixture if available
-      const fileInput = page.getByTestId("file-upload-input");
-      await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
-      await page.getByTestId("source-step-continue").click();
-    }
-
-    // Step 2 should render with summary
+    // Step 2 should render with SPI-specific summary
     await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
     await expect(page.getByTestId("detection-summary")).toBeVisible();
-    await expect(page.getByTestId("detection-summary-format")).toBeVisible();
+    await expect(page.getByTestId("detection-summary-spi")).toBeVisible();
 
-    // Should show structural details
-    await expect(page.getByTestId("summary-code-size").or(page.getByTestId("summary-program-size"))).toBeVisible();
+    // Should show SPI structural details
+    await expect(page.getByTestId("summary-code-size")).toBeVisible();
+    await expect(page.getByTestId("summary-binary-size")).toBeVisible();
+    await expect(page.getByTestId("summary-jump-table")).toBeVisible();
+    await expect(page.getByTestId("summary-memory")).toBeVisible();
     await expect(page.getByTestId("summary-pc")).toBeVisible();
     await expect(page.getByTestId("summary-gas")).toBeVisible();
+    await expect(page.getByTestId("summary-registers")).toBeVisible();
   });
 
   test("JSON vector shows expected terminal status", async ({ page }) => {
-    // Look for a JSON test vector category
-    const jsonCategory = page.getByTestId("example-category-json-test-vectors");
-    const hasJsonCategory = await jsonCategory.isVisible().catch(() => false);
+    // Upload a JSON test vector fixture directly
+    const fileInput = page.getByTestId("file-upload-input");
+    await fileInput.setInputFiles(path.join(fixturesDir, "json/inst_add_32.json"));
+    await expect(page.getByTestId("file-upload-selected")).toBeVisible();
+    await page.getByTestId("source-step-continue").click();
 
-    if (hasJsonCategory) {
-      const firstJsonCard = jsonCategory.locator('[data-testid^="example-card-"]').first();
-      await firstJsonCard.click();
+    // Step 2 should render with JSON-specific summary
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("detection-summary")).toBeVisible();
+    await expect(page.getByTestId("detection-summary-json")).toBeVisible();
+    await expect(page.getByTestId("summary-expected-status")).toBeVisible();
+    await expect(page.getByTestId("summary-pc")).toBeVisible();
+    await expect(page.getByTestId("summary-gas")).toBeVisible();
+    await expect(page.getByTestId("summary-registers")).toBeVisible();
+  });
 
-      await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-      await expect(page.getByTestId("detection-summary")).toBeVisible();
-      await expect(page.getByTestId("detection-summary-json")).toBeVisible();
-      await expect(page.getByTestId("summary-expected-status")).toBeVisible();
-    } else {
-      // Fallback: load a JSON fixture file directly
-      const jsonFixture = path.join(fixturesDir, "json-vectors");
-      const fileInput = page.getByTestId("file-upload-input");
+  test("trace file shows host-call entry count and program kind", async ({ page }) => {
+    // Upload a trace fixture file
+    const fileInput = page.getByTestId("file-upload-input");
+    await fileInput.setInputFiles(path.join(fixturesDir, "trace-001.log"));
+    await expect(page.getByTestId("file-upload-selected")).toBeVisible();
+    await page.getByTestId("source-step-continue").click();
 
-      // Try to find a JSON fixture
-      const fs = await import("fs");
-      const jsonDir = path.join(fixturesDir, "json-vectors");
-      if (fs.existsSync(jsonDir)) {
-        const files = fs.readdirSync(jsonDir).filter((f: string) => f.endsWith(".json"));
-        if (files.length > 0) {
-          await fileInput.setInputFiles(path.join(jsonDir, files[0]));
-          await expect(page.getByTestId("file-upload-selected")).toBeVisible();
-          await page.getByTestId("source-step-continue").click();
-
-          await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-          await expect(page.getByTestId("detection-summary")).toBeVisible();
-          await expect(page.getByTestId("detection-summary-json")).toBeVisible();
-          await expect(page.getByTestId("summary-expected-status")).toBeVisible();
-        }
-      }
-    }
+    // Step 2 should render with trace-specific summary
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("detection-summary")).toBeVisible();
+    await expect(page.getByTestId("detection-summary-trace")).toBeVisible();
+    await expect(page.getByTestId("summary-trace-entries")).toBeVisible();
+    await expect(page.getByTestId("summary-program-kind")).toBeVisible();
+    await expect(page.getByTestId("summary-code-size")).toBeVisible();
+    await expect(page.getByTestId("summary-pc")).toBeVisible();
+    await expect(page.getByTestId("summary-gas")).toBeVisible();
   });
 
   test("Load Program navigates to debugger with OK status", async ({ page }) => {

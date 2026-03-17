@@ -63,6 +63,13 @@ function SpiSummary({
       )}
       <SummaryRow label="Binary size" value={formatByteCount(rawByteCount)} data-testid="summary-binary-size" />
       <SummaryRow label="Code size" value={formatByteCount(envelope.programBytes.length)} data-testid="summary-code-size" />
+      {envelope.jumpTableEntryCount != null && (
+        <SummaryRow
+          label="Jump table"
+          value={`${envelope.jumpTableEntryCount} entries`}
+          data-testid="summary-jump-table"
+        />
+      )}
       <SummaryRow
         label="Memory"
         value={`${readablePages} readable / ${writablePages} writable pages`}
