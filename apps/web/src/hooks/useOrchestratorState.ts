@@ -5,6 +5,7 @@ import { useOrchestrator } from "./useOrchestrator";
 export interface OrchestratorReactiveState {
   snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
   selectedPvmId: string | null;
+  setSelectedPvmId: (pvmId: string) => void;
   hostCallInfo: Map<string, HostCallInfo>;
   isStepInProgress: boolean;
   setIsStepInProgress: (value: boolean) => void;
@@ -151,5 +152,9 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orchestrator, scheduleFlush]);
 
-  return { snapshots, selectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion };
+  const selectPvm = useCallback((pvmId: string) => {
+    setSelectedPvmId(pvmId);
+  }, []);
+
+  return { snapshots, selectedPvmId, setSelectedPvmId: selectPvm, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion };
 }

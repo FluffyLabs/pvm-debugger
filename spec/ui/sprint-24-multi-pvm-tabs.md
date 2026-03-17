@@ -1,5 +1,7 @@
 # Sprint 24 — Multi-PVM Tabs
 
+Status: Implemented
+
 ## Goal
 
 Add PVM tabs to the right side of the debugger toolbar. When multiple PVMs are active (e.g., Typeberry and Ananas), each gets its own tab with a status dot. Clicking a tab switches the selected PVM across all debugger panels.

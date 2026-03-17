@@ -15,13 +15,13 @@ import { ExecutionControls } from "../components/debugger/ExecutionControls";
 import { DebuggerLayout } from "../components/debugger/DebuggerLayout";
 import { BottomDrawer } from "../components/debugger/BottomDrawer";
 import { DrawerProvider } from "../components/debugger/DrawerContext";
-import { lifecycleLabel } from "../components/debugger/value-format";
+import { PvmTabs } from "../components/debugger/PvmTabs";
 
 export function DebuggerPage() {
   const { orchestrator, envelope, teardown, initialize, setEnvelope } = useOrchestrator();
   const navigate = useNavigate();
   const isReloadingRef = useRef(false);
-  const { snapshots, selectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion } =
+  const { snapshots, selectedPvmId, setSelectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion } =
     useOrchestratorState();
   const instructions = useDisassembly(envelope);
 
@@ -145,20 +145,11 @@ export function DebuggerPage() {
                   </button>
                 </div>
               )}
-              {[...snapshots.entries()].map(([pvmId, { lifecycle, snapshot }]) => (
-                <div
-                  key={pvmId}
-                  className="flex items-center gap-1.5 rounded border border-border px-2 py-0.5 text-xs"
-                >
-                  <span className="font-mono text-muted-foreground">{pvmId}</span>
-                  <span
-                    data-testid={`pvm-status-${pvmId}`}
-                    className="font-semibold text-foreground"
-                  >
-                    {lifecycleLabel(lifecycle, snapshot.status)}
-                  </span>
-                </div>
-              ))}
+              <PvmTabs
+                snapshots={snapshots}
+                selectedPvmId={selectedPvmId}
+                onSelect={setSelectedPvmId}
+              />
             </div>
           </>
         }
