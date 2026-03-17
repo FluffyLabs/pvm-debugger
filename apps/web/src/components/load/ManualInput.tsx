@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { Alert } from "@fluffylabs/shared-ui";
 import { Check } from "lucide-react";
 import { loadManualInput, detectFormat, type RawPayload, type DetectedFormat } from "@pvmdbg/content";
+import { formatByteCount } from "./format";
 
 export interface ManualInputResult {
   rawPayload: RawPayload;
@@ -88,10 +89,4 @@ export function ManualInput({ onParsed, onClear, result }: ManualInputProps) {
       )}
     </div>
   );
-}
-
-function formatByteCount(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

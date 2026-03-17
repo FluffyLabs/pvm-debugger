@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { Alert } from "@fluffylabs/shared-ui";
 import { Loader2, Globe, Check } from "lucide-react";
 import { loadUrl, detectFormat, type RawPayload, type DetectedFormat } from "@pvmdbg/content";
+import { formatByteCount } from "./format";
 
 export interface UrlInputResult {
   rawPayload: RawPayload;
@@ -104,10 +105,4 @@ export function UrlInput({ onLoaded, onClear, result }: UrlInputProps) {
       )}
     </div>
   );
-}
-
-function formatByteCount(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

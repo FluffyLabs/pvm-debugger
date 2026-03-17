@@ -2,7 +2,7 @@ import { useCallback, useRef, useState, type DragEvent, type ChangeEvent } from 
 import { Badge } from "@fluffylabs/shared-ui";
 import { Upload, FileUp, X } from "lucide-react";
 import { loadUpload, detectFormat, type DetectedFormat, type RawPayload } from "@pvmdbg/content";
-import { formatLabel, formatBadgeIntent } from "./format";
+import { formatLabel, formatBadgeIntent, formatByteCount } from "./format";
 
 const ACCEPTED_EXTENSIONS = [".jam", ".pvm", ".bin", ".log", ".json"];
 const ACCEPT_STRING = ACCEPTED_EXTENSIONS.join(",");
@@ -162,10 +162,4 @@ export function FileUpload({ onFileSelected, onClear, selectedFile }: FileUpload
       )}
     </div>
   );
-}
-
-function formatByteCount(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

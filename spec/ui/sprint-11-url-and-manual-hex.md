@@ -93,6 +93,8 @@ Rules:
 - **URL text change clears result**: Editing the URL field immediately clears any fetched result and disables Continue, forcing re-fetch. This prevents submitting stale bytes from a previously fetched URL.
 - **Hex with 0x prefix**: `loadManualInput` strips whitespace but `fromHex` from `@pvmdbg/types` handles the `0x` prefix. Verified with E2E test.
 - **Manual hex validates on blur only**: Does not validate on every keystroke to avoid noisy errors while typing.
+- **Empty hex on blur**: Correctly does nothing — no error, no success, Continue stays disabled.
+- **`formatByteCount` deduplication**: Initially duplicated across FileUpload, UrlInput, and ManualInput. Extracted to `format.ts` as a shared utility per the "No duplicate utilities" guardrail.
 
 ### Test IDs added
 

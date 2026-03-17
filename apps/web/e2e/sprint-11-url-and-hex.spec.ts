@@ -87,13 +87,7 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await expect(page.getByTestId("source-step-continue")).toBeEnabled();
   });
 
-  test("selecting URL clears previous file selection", async ({ page }) => {
-    // First select a file via upload
-    const fileInput = page.getByTestId("file-upload-input");
-    const { resolve } = await import("path");
-    const { fileURLToPath } = await import("url");
-    // We can't use file upload in this test easily, so instead verify
-    // that selecting a URL source enables Continue independently
+  test("selecting hex source clears previous URL selection", async ({ page }) => {
     const urlField = page.getByTestId("url-input-field");
     const fetchBtn = page.getByTestId("url-input-fetch");
 
@@ -135,6 +129,69 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await hexField.blur();
 
     await expect(page.getByTestId("manual-input-success")).toBeVisible();
+    await expect(page.getByTestId("source-step-continue")).toBeEnabled();
+  });
+
+  // --- Edge case tests added during reflection ---
+
+  test("empty hex on blur does not show error or enable Continue", async ({ page }) => {
+    const hexField = page.getByTestId("manual-input-field");
+
+    // Focus and blur with empty text
+    await hexField.focus();
+    await hexField.blur();
+
+    await expect(page.getByTestId("manual-input-error")).not.toBeVisible();
+    await expect(page.getByTestId("manual-input-success")).not.toBeVisible();
+    await expect(page.getByTestId("source-step-continue")).toBeDisabled();
+  });
+
+  test("Continue with manual hex navigates to debugger", async ({ page }) => {
+    const hexField = page.getByTestId("manual-input-field");
+
+    await hexField.fill("00030001000d0008000200070001");
+    await hexField.blur();
+
+    await expect(page.getByTestId("source-step-continue")).toBeEnabled();
+    await page.getByTestId("source-step-continue").click();
+
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+  });
+
+  test("Continue with URL fetch navigates to debugger", async ({ page }) => {
+    const urlField = page.getByTestId("url-input-field");
+    const fetchBtn = page.getByTestId("url-input-fetch");
+
+    await urlField.fill("http://localhost:4199/fixtures/generic/add.pvm");
+    await fetchBtn.click();
+    await expect(page.getByTestId("url-input-success")).toBeVisible({ timeout: 10000 });
+
+    await page.getByTestId("source-step-continue").click();
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+  });
+
+  test("file upload clears previous hex selection", async ({ page }) => {
+    const hexField = page.getByTestId("manual-input-field");
+
+    // First, set valid hex
+    await hexField.fill("00030001000d");
+    await hexField.blur();
+    await expect(page.getByTestId("manual-input-success")).toBeVisible();
+    await expect(page.getByTestId("source-step-continue")).toBeEnabled();
+
+    // Upload a file — should clear hex result
+    const fileInput = page.getByTestId("file-upload-input");
+    const path = await import("path");
+    const url = await import("url");
+    const __filename = url.fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const fixturesDir = path.resolve(__dirname, "../../../fixtures");
+    await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
+
+    // File should now be the active source
+    await expect(page.getByTestId("file-upload-selected")).toBeVisible();
+    // Hex success should be cleared
+    await expect(page.getByTestId("manual-input-success")).not.toBeVisible();
     await expect(page.getByTestId("source-step-continue")).toBeEnabled();
   });
 });
