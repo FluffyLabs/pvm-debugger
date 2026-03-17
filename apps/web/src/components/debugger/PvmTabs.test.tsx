@@ -91,4 +91,97 @@ describe("PvmTabs", () => {
     const status = screen.getByTestId("pvm-status-typeberry");
     expect(status.textContent).toBe("OK");
   });
+
+  it("shows divergence summary when provided", () => {
+    const snapshots = makeSnapshots([
+      ["typeberry", "paused"],
+      ["ananas", "paused"],
+    ]);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={() => {}}
+        divergenceSummary="PC, Gas"
+        divergenceDetails="PC: typeberry=0x4, ananas=0x8\nGas: typeberry=999996, ananas=999998"
+      />,
+    );
+
+    const summary = screen.getByTestId("divergence-summary");
+    expect(summary.textContent).toContain("Divergence: PC, Gas");
+    expect(summary.getAttribute("title")).toContain("PC:");
+    expect(summary.getAttribute("title")).toContain("Gas:");
+  });
+
+  it("does not show divergence when summary is null", () => {
+    const snapshots = makeSnapshots([
+      ["typeberry", "paused"],
+      ["ananas", "paused"],
+    ]);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={() => {}}
+        divergenceSummary={null}
+        divergenceDetails={null}
+      />,
+    );
+
+    expect(screen.queryByTestId("divergence-summary")).toBeNull();
+  });
+
+  it("shows inline error text for failed PVM", () => {
+    const snapshots = makeSnapshots([
+      ["typeberry", "paused"],
+      ["ananas", "failed"],
+    ]);
+    const errors = new Map([["ananas", "something broke"]]);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={() => {}}
+        perPvmErrors={errors}
+      />,
+    );
+
+    const errorEl = screen.getByTestId("pvm-error-ananas");
+    expect(errorEl.textContent).toBe("Error: something broke");
+  });
+
+  it("shows Timeout for timed-out PVM", () => {
+    const snapshots = makeSnapshots([
+      ["typeberry", "paused"],
+      ["ananas", "timed_out"],
+    ]);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={() => {}}
+        perPvmErrors={new Map([["ananas", "step timeout"]])}
+      />,
+    );
+
+    const errorEl = screen.getByTestId("pvm-error-ananas");
+    expect(errorEl.textContent).toBe("Timeout");
+  });
+
+  it("does not show error text for healthy PVMs", () => {
+    const snapshots = makeSnapshots([
+      ["typeberry", "paused"],
+      ["ananas", "paused"],
+    ]);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={() => {}}
+      />,
+    );
+
+    expect(screen.queryByTestId("pvm-error-typeberry")).toBeNull();
+    expect(screen.queryByTestId("pvm-error-ananas")).toBeNull();
+  });
 });

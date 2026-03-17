@@ -5,6 +5,12 @@ interface PvmTabsProps {
   snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
   selectedPvmId: string | null;
   onSelect: (pvmId: string) => void;
+  /** Concise divergence summary text (e.g. "PC, Gas, 2 registers"). */
+  divergenceSummary?: string | null;
+  /** Full per-field divergence details for tooltip. */
+  divergenceDetails?: string | null;
+  /** Per-PVM error messages from orchestrator error events. */
+  perPvmErrors?: Map<string, string>;
 }
 
 /** Compact lifecycle status dot color. */
@@ -24,14 +30,37 @@ function dotColor(lifecycle: PvmLifecycle): string {
   }
 }
 
+/** Format error text for inline display. */
+function formatErrorText(lifecycle: PvmLifecycle, errorMsg?: string): string | null {
+  if (lifecycle === "timed_out") return "Timeout";
+  if (lifecycle === "failed") return `Error: ${errorMsg ?? "unknown"}`;
+  return null;
+}
+
 /**
  * PVM tab bar for the debugger toolbar. One tab per active PVM with a lifecycle
- * status dot. Clicking a tab switches the globally selected PVM.
+ * status dot. Shows divergence summary inline and error text for failed PVMs.
  */
-export function PvmTabs({ snapshots, selectedPvmId, onSelect }: PvmTabsProps) {
+export function PvmTabs({
+  snapshots,
+  selectedPvmId,
+  onSelect,
+  divergenceSummary,
+  divergenceDetails,
+  perPvmErrors,
+}: PvmTabsProps) {
   const entries = [...snapshots.entries()];
 
   if (entries.length === 0) return null;
+
+  // Collect inline error messages for failed/timed-out PVMs
+  const errorEntries: Array<{ pvmId: string; text: string }> = [];
+  for (const [pvmId, { lifecycle }] of entries) {
+    const errorText = formatErrorText(lifecycle, perPvmErrors?.get(pvmId));
+    if (errorText) {
+      errorEntries.push({ pvmId, text: errorText });
+    }
+  }
 
   return (
     <div data-testid="pvm-tabs" className="flex items-center gap-1" role="tablist">
@@ -61,6 +90,28 @@ export function PvmTabs({ snapshots, selectedPvmId, onSelect }: PvmTabsProps) {
           </button>
         );
       })}
+
+      {/* Inline error text for failed/timed-out PVMs */}
+      {errorEntries.map(({ pvmId, text }) => (
+        <span
+          key={`error-${pvmId}`}
+          data-testid={`pvm-error-${pvmId}`}
+          className="text-xs text-red-500 font-mono"
+        >
+          {text}
+        </span>
+      ))}
+
+      {/* Divergence summary with tooltip */}
+      {divergenceSummary && (
+        <span
+          data-testid="divergence-summary"
+          title={divergenceDetails ?? undefined}
+          className="text-xs text-amber-500 font-mono cursor-help"
+        >
+          Divergence: {divergenceSummary}
+        </span>
+      )}
     </div>
   );
 }

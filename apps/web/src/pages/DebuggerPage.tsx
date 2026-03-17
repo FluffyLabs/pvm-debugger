@@ -16,13 +16,16 @@ import { DebuggerLayout } from "../components/debugger/DebuggerLayout";
 import { BottomDrawer } from "../components/debugger/BottomDrawer";
 import { DrawerProvider } from "../components/debugger/DrawerContext";
 import { PvmTabs } from "../components/debugger/PvmTabs";
+import { useDivergenceCheck } from "../hooks/useDivergenceCheck";
 
 export function DebuggerPage() {
   const { orchestrator, envelope, teardown, initialize, setEnvelope } = useOrchestrator();
   const navigate = useNavigate();
   const isReloadingRef = useRef(false);
-  const { snapshots, selectedPvmId, setSelectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion } =
+  const { snapshots, selectedPvmId, setSelectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion, perPvmErrors } =
     useOrchestratorState();
+  const { summary: divergenceSummary, details: divergenceDetails } =
+    useDivergenceCheck(snapshots, selectedPvmId, snapshotVersion);
   const instructions = useDisassembly(envelope);
 
   // Derive a stable orchestrator identity for the storage table.
@@ -149,6 +152,9 @@ export function DebuggerPage() {
                 snapshots={snapshots}
                 selectedPvmId={selectedPvmId}
                 onSelect={setSelectedPvmId}
+                divergenceSummary={divergenceSummary}
+                divergenceDetails={divergenceDetails}
+                perPvmErrors={perPvmErrors}
               />
             </div>
           </>

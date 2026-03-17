@@ -11,6 +11,8 @@ export interface OrchestratorReactiveState {
   setIsStepInProgress: (value: boolean) => void;
   /** Monotonic counter incremented on every snapshot change. Useful for cache invalidation. */
   snapshotVersion: number;
+  /** Per-PVM error messages from orchestrator error events. */
+  perPvmErrors: Map<string, string>;
 }
 
 /**
@@ -31,6 +33,7 @@ export function useOrchestratorState(): OrchestratorReactiveState {
   const [hostCallInfo, setHostCallInfo] = useState<Map<string, HostCallInfo>>(new Map());
   const [isStepInProgress, setIsStepInProgress] = useState(false);
   const [snapshotVersion, setSnapshotVersion] = useState(0);
+  const [perPvmErrors, setPerPvmErrors] = useState<Map<string, string>>(new Map());
   const versionRef = useRef(0);
 
   // --- Buffered flush mechanism ---
@@ -38,6 +41,7 @@ export function useOrchestratorState(): OrchestratorReactiveState {
   const pendingSnapshots = useRef<Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }> | null>(null);
   const pendingSelectedPvmId = useRef<string | null>(null);
   const pendingHostCallInfo = useRef<Map<string, HostCallInfo> | null>(null);
+  const pendingPerPvmErrors = useRef<Map<string, string> | null>(null);
   const pendingStepDone = useRef(false);
   const rafId = useRef<number | null>(null);
 
@@ -57,6 +61,10 @@ export function useOrchestratorState(): OrchestratorReactiveState {
         setHostCallInfo(pendingHostCallInfo.current);
         pendingHostCallInfo.current = null;
       }
+      if (pendingPerPvmErrors.current) {
+        setPerPvmErrors(pendingPerPvmErrors.current);
+        pendingPerPvmErrors.current = null;
+      }
       if (pendingStepDone.current) {
         setIsStepInProgress(false);
         pendingStepDone.current = false;
@@ -71,6 +79,7 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       setSelectedPvmId(null);
       setHostCallInfo(new Map());
       setIsStepInProgress(false);
+      setPerPvmErrors(new Map());
       return;
     }
 
@@ -92,6 +101,16 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       pendingSelectedPvmId.current = pvmId;
       pendingStepDone.current = true;
       versionRef.current += 1;
+
+      // Clear per-PVM error when PVM returns to paused (e.g. after reset)
+      if (lifecycle === "paused") {
+        const errBase = pendingPerPvmErrors.current ?? new Map(perPvmErrors);
+        if (errBase.has(pvmId)) {
+          errBase.delete(pvmId);
+          pendingPerPvmErrors.current = errBase;
+        }
+      }
+
       scheduleFlush();
     };
 
@@ -118,17 +137,23 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       scheduleFlush();
     };
 
-    const onError = (pvmId: string, _error: Error) => {
+    const onError = (pvmId: string, error: Error) => {
+      const isTimeout = /timeout/i.test(error.message);
+      const lifecycle: PvmLifecycle = isTimeout ? "timed_out" : "failed";
+
       const base = pendingSnapshots.current ?? new Map(snapshots);
       const entry = base.get(pvmId);
       if (entry) {
-        base.set(pvmId, {
-          snapshot: entry.snapshot,
-          lifecycle: "failed",
-        });
+        base.set(pvmId, { snapshot: entry.snapshot, lifecycle });
         pendingSnapshots.current = base;
       }
+
+      const errBase = pendingPerPvmErrors.current ?? new Map(perPvmErrors);
+      errBase.set(pvmId, error.message);
+      pendingPerPvmErrors.current = errBase;
+
       pendingStepDone.current = true;
+      versionRef.current += 1;
       scheduleFlush();
     };
 
@@ -156,5 +181,5 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     setSelectedPvmId(pvmId);
   }, []);
 
-  return { snapshots, selectedPvmId, setSelectedPvmId: selectPvm, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion };
+  return { snapshots, selectedPvmId, setSelectedPvmId: selectPvm, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion, perPvmErrors };
 }
