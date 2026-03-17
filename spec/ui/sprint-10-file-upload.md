@@ -85,3 +85,21 @@ Non-example sources use a `Continue` button:
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-10-file-upload.spec.ts
 ```
+
+## Implementation Notes
+
+_Added during implementation for future agents._
+
+### Architecture decisions
+- **`SourceStep.tsx`** owns the load-navigate flow (`createProgramEnvelope → initialize → loadProgram → setEnvelope → navigate`). When Sprint 12 adds wizard step 2, modify `handleContinue()` in SourceStep to route to the config step instead of going directly to the debugger.
+- **`FileUpload.tsx`** is a pure presentation component — it reports `FileUploadResult` upward and has no routing or orchestrator knowledge. Future source types (URL, hex input) should follow the same pattern: report a `RawPayload + DetectedFormat` to SourceStep.
+- **`format.ts`** contains shared format label/badge maps used by both FileUpload and ExampleList. ExampleList indexes these maps by the manifest's `format` string (which uses the same keys as `DetectedFormat["kind"]`).
+
+### Known DRY opportunity
+Both `ExampleList.handleSelect` and `SourceStep.handleContinue` contain nearly identical load flows. A shared `useLoadProgram()` hook could extract the common `createProgramEnvelope → initialize → loadProgram → setEnvelope → navigate` sequence. Deferred since it crosses sprint boundaries — consider when adding the third source type.
+
+### Edge cases verified
+- File extension validation rejects unsupported types before calling `loadUpload()`.
+- Clearing a file resets to the dropzone state and disables Continue.
+- Re-uploading a different file after clearing correctly updates format badge and filename.
+- All four format types tested via E2E: Generic (.pvm), JAM SPI (.jam), JSON test vector (.json), Trace (.log).

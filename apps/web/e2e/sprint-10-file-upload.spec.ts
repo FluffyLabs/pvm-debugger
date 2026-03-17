@@ -121,4 +121,49 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await card.click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
+
+  // --- Edge case tests added during reflection ---
+
+  test("JAM SPI file is detected as JAM SPI format", async ({ page }) => {
+    const fileInput = page.getByTestId("file-upload-input");
+    await fileInput.setInputFiles(path.join(FIXTURES_DIR, "add.jam"));
+
+    await expect(page.getByTestId("file-upload-format")).toHaveText("JAM SPI");
+  });
+
+  test("trace file (.log) is detected as Trace format", async ({ page }) => {
+    const fileInput = page.getByTestId("file-upload-input");
+    await fileInput.setInputFiles(path.join(FIXTURES_DIR, "trace-001.log"));
+
+    await expect(page.getByTestId("file-upload-format")).toHaveText("Trace");
+  });
+
+  test("clearing and re-uploading a different file updates the display", async ({ page }) => {
+    const fileInput = page.getByTestId("file-upload-input");
+
+    // Upload a generic PVM file first
+    await fileInput.setInputFiles(path.join(FIXTURES_DIR, "generic/add.pvm"));
+    await expect(page.getByTestId("file-upload-name")).toHaveText("add.pvm");
+    await expect(page.getByTestId("file-upload-format")).toHaveText("Generic");
+
+    // Clear it
+    await page.getByTestId("file-upload-clear").click();
+    await expect(page.getByTestId("file-upload-dropzone")).toBeVisible();
+
+    // Upload a JSON test vector
+    await fileInput.setInputFiles(path.join(FIXTURES_DIR, "json/inst_add_32.json"));
+    await expect(page.getByTestId("file-upload-name")).toHaveText("inst_add_32.json");
+    await expect(page.getByTestId("file-upload-format")).toHaveText("JSON");
+  });
+
+  test("uploading a JAM SPI file and clicking Continue navigates to debugger", async ({ page }) => {
+    const fileInput = page.getByTestId("file-upload-input");
+    await fileInput.setInputFiles(path.join(FIXTURES_DIR, "add.jam"));
+
+    const continueBtn = page.getByTestId("source-step-continue");
+    await expect(continueBtn).toBeEnabled();
+    await continueBtn.click();
+
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+  });
 });

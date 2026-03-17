@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, type DragEvent, type ChangeEvent } from "react";
-import { Button, Badge } from "@fluffylabs/shared-ui";
+import { Badge } from "@fluffylabs/shared-ui";
 import { Upload, FileUp, X } from "lucide-react";
 import { loadUpload, detectFormat, type DetectedFormat, type RawPayload } from "@pvmdbg/content";
 import { formatLabel, formatBadgeIntent } from "./format";
