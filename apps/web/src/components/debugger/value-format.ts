@@ -4,7 +4,10 @@
  * - Registers: hex (at least 16 digits) plus decimal, always together
  * - PC: hex only, zero-padded, width expands past 4 digits as needed
  * - Gas: decimal with thousands separators
+ * - Lifecycle/status: user-facing labels and badge info
  */
+
+import type { PvmLifecycle, PvmStatus } from "@pvmdbg/types";
 
 /** Format a register value as "0x{hex} ({decimal})". Hex is at least 16 digits. */
 export function formatRegister(value: bigint): { hex: string; decimal: string } {
@@ -32,4 +35,33 @@ export function formatGas(gas: bigint): string {
     parts.unshift(str.slice(start, i));
   }
   return parts.join(",");
+}
+
+/** Map PvmLifecycle (+ PvmStatus for terminal states) to a user-facing label. */
+export function lifecycleLabel(lifecycle: PvmLifecycle, status?: PvmStatus): string {
+  switch (lifecycle) {
+    case "paused":
+      return "OK";
+    case "running":
+      return "Running";
+    case "paused_host_call":
+      return "Host Call";
+    case "terminated":
+      switch (status) {
+        case "halt":
+          return "Halt";
+        case "panic":
+          return "Panic";
+        case "fault":
+          return "Fault";
+        case "out_of_gas":
+          return "Out of Gas";
+        default:
+          return "Terminated";
+      }
+    case "failed":
+      return "Error";
+    case "timed_out":
+      return "Timeout";
+  }
 }

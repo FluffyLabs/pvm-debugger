@@ -4,25 +4,7 @@ import { useOrchestratorState } from "../hooks/useOrchestratorState";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
 import { RegistersPanel } from "../components/debugger/RegistersPanel";
-
-function lifecycleLabel(lifecycle: string): string {
-  switch (lifecycle) {
-    case "paused":
-      return "OK";
-    case "running":
-      return "Running";
-    case "paused_host_call":
-      return "Host Call";
-    case "terminated":
-      return "Terminated";
-    case "failed":
-      return "Failed";
-    case "timed_out":
-      return "Timed Out";
-    default:
-      return lifecycle;
-  }
-}
+import { lifecycleLabel } from "../components/debugger/value-format";
 
 export function DebuggerPage() {
   const { orchestrator, envelope } = useOrchestrator();
@@ -43,7 +25,7 @@ export function DebuggerPage() {
       <div className="flex items-center gap-4 px-4 py-2 border-b border-border shrink-0">
         <h1 className="text-sm font-semibold text-foreground">Debugger</h1>
         <div className="flex gap-2">
-          {[...snapshots.entries()].map(([pvmId, { lifecycle }]) => (
+          {[...snapshots.entries()].map(([pvmId, { lifecycle, snapshot }]) => (
             <div
               key={pvmId}
               className="flex items-center gap-1.5 rounded border border-border px-2 py-0.5 text-xs"
@@ -53,7 +35,7 @@ export function DebuggerPage() {
                 data-testid={`pvm-status-${pvmId}`}
                 className="font-semibold text-foreground"
               >
-                {lifecycleLabel(lifecycle)}
+                {lifecycleLabel(lifecycle, snapshot.status)}
               </span>
             </div>
           ))}

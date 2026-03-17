@@ -9,6 +9,14 @@ export interface OrchestratorReactiveState {
   isStepInProgress: boolean;
 }
 
+/**
+ * Shared reactive hook for orchestrator state. Call this once at the page level
+ * (e.g. in DebuggerPage) and pass results down via props — do NOT call from
+ * individual panels, as each call creates independent event subscriptions.
+ *
+ * `isStepInProgress` is set to false by event handlers but must be set to true
+ * externally when initiating a step (wired in the execution controls sprint).
+ */
 export function useOrchestratorState(): OrchestratorReactiveState {
   const { orchestrator } = useOrchestrator();
   const [snapshots, setSnapshots] = useState<
