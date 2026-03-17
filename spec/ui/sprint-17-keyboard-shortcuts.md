@@ -1,5 +1,7 @@
 # Sprint 17 — Keyboard Shortcuts
 
+Status: Implemented
+
 ## Goal
 
 Add keyboard shortcuts for the primary execution controls. Power users can drive execution entirely from the keyboard.
@@ -58,6 +60,13 @@ Rules:
 - Shortcuts do not fire during text input.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+### Implementation Notes & Edge Cases
+
+- **Stale closure pitfall**: The F5 Run/Pause toggle uses `isRunningRef` (a synchronous ref) instead of the `isRunning` React state to decide between `run()` and `pause()`. React state updates asynchronously, so the keyboard handler closure could hold a stale `isRunning` value when F5 is pressed twice rapidly. The ref tracks running state synchronously and is updated at every run/pause/reset/load entry point and loop exit.
+- **Double-invocation guard**: `run()` checks both `isRunning` (React state) and `isRunningRef.current` (synchronous ref) to prevent launching two concurrent run loops if F5 is pressed twice before React re-renders.
+- **E2E keyboard dispatch**: Playwright's `page.keyboard.press("F5")` triggers CDP-level key events that may cause browser-level refresh before JS `preventDefault()` runs. Tests use `page.evaluate` to dispatch synthetic `KeyboardEvent`s directly through the DOM pipeline, bypassing browser shortcut handling.
+- **Pause button visibility timing**: The Pause button may not appear in the DOM if the run loop completes before React re-renders. E2E tests account for this by accepting either Pause button visibility, execution completion badge, or PC change as proof that F5 triggered execution.
 
 ## Verification
 

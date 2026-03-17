@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
 import type { PvmLifecycle } from "@pvmdbg/types";
 import { isTerminal } from "@pvmdbg/types";
@@ -54,6 +54,8 @@ export function useDebuggerActions({
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const stopFlagRef = useRef(false);
+  // Synchronous running-state tracker for keyboard handler (avoids stale React state in closures).
+  const isRunningRef = useRef(false);
 
   const canStep =
     !!orchestrator &&
@@ -86,10 +88,11 @@ export function useDebuggerActions({
   }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount]);
 
   const run = useCallback(() => {
-    if (!orchestrator || isRunning) return;
+    if (!orchestrator || isRunning || isRunningRef.current) return;
     if (selectedLifecycle && isTerminal(selectedLifecycle)) return;
 
     stopFlagRef.current = false;
+    isRunningRef.current = true;
     setIsRunning(true);
 
     const stepSize = stepsForMode(steppingMode, nInstructionsCount);
@@ -113,6 +116,7 @@ export function useDebuggerActions({
               }
             }
             if (allTerminal) {
+              isRunningRef.current = false;
               setIsRunning(false);
               return;
             }
@@ -124,6 +128,7 @@ export function useDebuggerActions({
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
+        isRunningRef.current = false;
         setIsRunning(false);
       }
     };
@@ -139,6 +144,7 @@ export function useDebuggerActions({
     if (!orchestrator) return;
 
     stopFlagRef.current = true;
+    isRunningRef.current = false;
     setIsRunning(false);
     setIsStepInProgress(true);
 
@@ -157,11 +163,47 @@ export function useDebuggerActions({
 
   const load = useCallback(() => {
     stopFlagRef.current = true;
+    isRunningRef.current = false;
     setIsRunning(false);
     onLoad();
   }, [onLoad]);
 
   const clearError = useCallback(() => setError(null), []);
+
+  // Keyboard shortcuts — registered at document level.
+  // F10 → Next, F5 → Run/Pause toggle, Ctrl+Shift+R → Reset
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Skip when focus is inside an input or textarea to avoid editing conflicts.
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+      if (e.key === "F10") {
+        e.preventDefault();
+        next();
+        return;
+      }
+
+      if (e.key === "F5") {
+        e.preventDefault();
+        if (isRunningRef.current) {
+          pause();
+        } else {
+          run();
+        }
+        return;
+      }
+
+      if (e.key === "R" && e.ctrlKey && e.shiftKey) {
+        e.preventDefault();
+        reset();
+        return;
+      }
+    };
+
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [next, run, pause, reset]);
 
   return { next, step, run, pause, reset, load, canStep, isRunning, error, clearError };
 }
