@@ -48,7 +48,7 @@ export function GenericHostCall({ info }: GenericHostCallProps) {
           <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 font-mono">
             {[...pendingRegs.entries()].map(([idx, val]) => (
               <div key={idx} className="contents">
-                <span className="text-muted-foreground">{REGISTER_NAMES[idx] ?? `r${idx}`} &larr;:</span>
+                <span className="text-muted-foreground">{REGISTER_NAMES[idx] ?? `r${idx}`} ←:</span>
                 <span className="text-amber-400">{val.toString()}</span>
               </div>
             ))}

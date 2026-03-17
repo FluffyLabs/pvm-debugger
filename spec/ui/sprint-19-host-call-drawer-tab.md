@@ -104,6 +104,8 @@ The tab never renders a dedicated resume/continue button. The hint text directs 
 - Storage host calls (index 1-4) fall through to the GenericHostCall view — Sprint 20 will add dedicated views.
 - The sprint-14 drawer E2E test was updated to expect the new empty-state text instead of the old "coming soon" placeholder.
 - `BottomDrawer` now receives `hostCallInfo`, `selectedPvmId`, `snapshots`, and `orchestrator` as props from `DebuggerPage`.
+- `useHostCallState` must be called inside `DrawerProvider` (it uses `useDrawer()` for auto-open). It is called from `BottomDrawer`, which is already inside the provider.
+- The io-trace fixture contains ecalli=1 (fetch), ecalli=100 (log), and ecalli=4 (write), so all three contextual views (gas-only lacks a fixture, but is covered by code path) are exercised during E2E tests.
 
 ## Verification
 

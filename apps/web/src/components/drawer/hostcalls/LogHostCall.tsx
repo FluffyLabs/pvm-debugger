@@ -35,6 +35,14 @@ function toHexString(data: Uint8Array): string {
  * when available, otherwise reads memory from the orchestrator using the
  * current register pointers.
  */
+const LEVEL_LABELS: Record<number, string> = {
+  0: "Error",
+  1: "Warn",
+  2: "Info",
+  3: "Debug",
+  4: "Trace",
+};
+
 export function LogHostCall({ info, orchestrator }: LogHostCallProps) {
   const { currentState, resumeProposal } = info;
   const regs = currentState.registers;
@@ -94,14 +102,7 @@ export function LogHostCall({ info, orchestrator }: LogHostCallProps) {
     };
   }, [orchestrator, info.pvmId, resumeProposal, msgPtr, msgLen, targetPtr, targetLen]);
 
-  const levelLabels: Record<number, string> = {
-    0: "Error",
-    1: "Warn",
-    2: "Info",
-    3: "Debug",
-    4: "Trace",
-  };
-  const levelLabel = levelLabels[level] ?? `Level ${level}`;
+  const levelLabel = LEVEL_LABELS[level] ?? `Level ${level}`;
 
   return (
     <div data-testid="log-host-call" className="flex flex-col gap-2 text-xs">

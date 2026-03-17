@@ -21,7 +21,7 @@ export function GasHostCall({ info }: GasHostCallProps) {
         <span className="text-muted-foreground">Current gas:</span>
         <span className="text-foreground">{currentGas.toString()}</span>
 
-        <span className="text-muted-foreground">&omega;7 (gas context):</span>
+        <span className="text-muted-foreground">ω7 (gas context):</span>
         <span className="text-foreground">{omega7?.toString() ?? "—"}</span>
       </div>
 
@@ -38,7 +38,7 @@ export function GasHostCall({ info }: GasHostCallProps) {
             )}
             {pendingOmega7 !== undefined && (
               <>
-                <span className="text-muted-foreground">&omega;7 &larr;:</span>
+                <span className="text-muted-foreground">ω7 ←:</span>
                 <span className="text-amber-400">{pendingOmega7.toString()}</span>
               </>
             )}
