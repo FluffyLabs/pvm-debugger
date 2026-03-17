@@ -1,5 +1,7 @@
 # Sprint 08 — Run / Pause / Reset / Load Controls
 
+Status: Implemented
+
 ## Goal
 
 Complete the basic execution control toolbar: continuous run with pause, reset to initial state, and a load button that tears down the orchestrator and returns to the loader. After this sprint the full execution lifecycle works end-to-end.

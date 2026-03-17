@@ -1,8 +1,10 @@
-import { Navigate } from "react-router";
+import { useCallback } from "react";
+import { Navigate, useNavigate } from "react-router";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
 import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDisassembly } from "../hooks/useDisassembly";
+import { isTerminal } from "@pvmdbg/types";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
 import { RegistersPanel } from "../components/debugger/RegistersPanel";
 import { MemoryPanel } from "../components/debugger/MemoryPanel";
@@ -11,7 +13,8 @@ import { DebuggerLayout } from "../components/debugger/DebuggerLayout";
 import { lifecycleLabel } from "../components/debugger/value-format";
 
 export function DebuggerPage() {
-  const { orchestrator, envelope } = useOrchestrator();
+  const { orchestrator, envelope, teardown } = useOrchestrator();
+  const navigate = useNavigate();
   const { snapshots, selectedPvmId, isStepInProgress, setIsStepInProgress, snapshotVersion } =
     useOrchestratorState();
   const instructions = useDisassembly(envelope);
@@ -20,13 +23,20 @@ export function DebuggerPage() {
   const selectedEntry = selectedPvmId ? snapshots.get(selectedPvmId) : undefined;
   const selectedLifecycle = selectedEntry?.lifecycle ?? null;
 
+  const onLoad = useCallback(() => {
+    teardown();
+    navigate("/load");
+  }, [teardown, navigate]);
+
   // useDebuggerActions must be called before any early return (React rules of hooks)
-  const { next, canStep } = useDebuggerActions({
-    orchestrator,
-    isStepInProgress,
-    setIsStepInProgress,
-    selectedLifecycle,
-  });
+  const { next, run, pause, reset, load, canStep, isRunning, error, clearError } =
+    useDebuggerActions({
+      orchestrator,
+      isStepInProgress,
+      setIsStepInProgress,
+      selectedLifecycle,
+      onLoad,
+    });
 
   // Route guard: redirect to /load when no program is loaded
   if (!orchestrator || !orchestrator.getProgramBytes()) {
@@ -35,14 +45,51 @@ export function DebuggerPage() {
 
   const currentPc = selectedEntry?.snapshot.pc ?? 0;
 
+  // Check if all PVMs are in a terminal state
+  const allTerminal =
+    snapshots.size > 0 &&
+    [...snapshots.values()].every(({ lifecycle }) => isTerminal(lifecycle));
+
   return (
     <div data-testid="debugger-page" className="h-full">
       <DebuggerLayout
         toolbar={
           <>
             <h1 className="text-sm font-semibold text-foreground">Debugger</h1>
-            <ExecutionControls onNext={next} canStep={canStep} />
-            <div className="flex gap-2">
+            <ExecutionControls
+              onNext={next}
+              onRun={run}
+              onPause={pause}
+              onReset={reset}
+              onLoad={load}
+              canStep={canStep}
+              isRunning={isRunning}
+              isTerminated={allTerminal}
+            />
+            <div className="flex items-center gap-2">
+              {allTerminal && (
+                <span
+                  data-testid="execution-complete-badge"
+                  className="rounded bg-green-800 px-2 py-0.5 text-xs font-semibold text-green-100"
+                >
+                  Execution Complete
+                </span>
+              )}
+              {error && (
+                <div
+                  data-testid="error-alert"
+                  className="flex items-center gap-2 rounded bg-destructive/20 border border-destructive px-2 py-0.5 text-xs text-destructive"
+                >
+                  <span>{error}</span>
+                  <button
+                    aria-label="Dismiss error"
+                    onClick={clearError}
+                    className="font-bold cursor-pointer hover:opacity-70"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
               {[...snapshots.entries()].map(([pvmId, { lifecycle, snapshot }]) => (
                 <div
                   key={pvmId}
