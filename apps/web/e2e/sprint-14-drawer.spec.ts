@@ -110,6 +110,35 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     expect(afterBox!.height).toBeGreaterThan(initialHeight + 50);
   });
 
+  test("drawer height clamps to 60% of viewport maximum", async ({ page }) => {
+    await loadProgram(page);
+
+    // Open a tab to enable dragging
+    await page.getByTestId("drawer-tab-settings").click();
+    await expect(page.getByTestId("drawer-drag-handle")).toBeVisible();
+
+    const handle = page.getByTestId("drawer-drag-handle");
+    const handleBox = await handle.boundingBox();
+    expect(handleBox).toBeTruthy();
+
+    const startX = handleBox!.x + handleBox!.width / 2;
+    const startY = handleBox!.y + handleBox!.height / 2;
+
+    // Drag far upward — well beyond 60% of viewport
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX, 10, { steps: 20 });
+    await page.mouse.up();
+
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    const maxAllowed = Math.floor(viewportHeight * 0.6) + 36 + 10; // content + tab bar + tolerance
+
+    const drawer = page.getByTestId("bottom-drawer");
+    const box = await drawer.boundingBox();
+    expect(box).toBeTruthy();
+    expect(box!.height).toBeLessThanOrEqual(maxAllowed);
+  });
+
   test("drawer is positioned below the panel area", async ({ page }) => {
     await loadProgram(page);
 

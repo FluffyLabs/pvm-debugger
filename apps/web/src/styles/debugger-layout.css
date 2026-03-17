@@ -1,8 +1,8 @@
 /*
  * Sprint 07+14 — 3-column debugger layout with bottom drawer
  *
- * Grid rows:  toolbar (auto) | panel area (1fr) | drawer (auto)
- * Grid cols:  instructions (3fr) | registers (3.5fr) | memory (3.5fr)
+ * Flexbox column: toolbar (shrink-0) | panel area (flex-1) | drawer (shrink-0)
+ * Panel area grid cols: instructions (3fr) | registers (3.5fr) | memory (3.5fr)
  *
  * The height chain is pinned at .debugger-shell so that panels
  * can scroll independently without the page itself scrolling.
