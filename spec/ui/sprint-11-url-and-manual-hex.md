@@ -1,5 +1,7 @@
 # Sprint 11 — URL + Manual Hex Sources
 
+Status: Implemented
+
 ## Goal
 
 Add the remaining two source types to the load page: URL fetch and manual hex input. After this sprint all four source methods are available.
@@ -81,6 +83,21 @@ Rules:
 - Continue is shared across non-example sources.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+## Implementation Notes
+
+### Edge cases discovered during implementation
+
+- **Vite preview SPA fallback**: The vite preview server serves `index.html` as a 200 response for non-existent paths (SPA fallback). This means using `http://localhost:4199/nonexistent.pvm` in URL error tests will succeed with HTML content instead of 404. E2E tests for URL errors must use a dead port (e.g., `localhost:19876`) to trigger genuine network errors.
+- **Source exclusivity**: `SourceStep` tracks an `activeSource` discriminant (`"file" | "url" | "hex" | null`). When any source produces a result, the other two results are cleared to prevent stale payloads from being sent to `createProgramEnvelope`.
+- **URL text change clears result**: Editing the URL field immediately clears any fetched result and disables Continue, forcing re-fetch. This prevents submitting stale bytes from a previously fetched URL.
+- **Hex with 0x prefix**: `loadManualInput` strips whitespace but `fromHex` from `@pvmdbg/types` handles the `0x` prefix. Verified with E2E test.
+- **Manual hex validates on blur only**: Does not validate on every keystroke to avoid noisy errors while typing.
+
+### Test IDs added
+
+- `url-input`, `url-input-field`, `url-input-fetch`, `url-input-loading`, `url-input-success`, `url-input-bytecount`, `url-input-error`
+- `manual-input`, `manual-input-field`, `manual-input-success`, `manual-input-bytecount`, `manual-input-error`
 
 ## Verification
 

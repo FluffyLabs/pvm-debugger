@@ -6,7 +6,7 @@ export function LoadPage() {
     <div data-testid="load-page" className="flex flex-col items-center p-8 h-full overflow-auto">
       <h1 className="text-lg font-semibold text-foreground mb-1">Load Program</h1>
       <p className="text-sm text-muted-foreground mb-6">
-        Upload a file or select an example to begin debugging.
+        Upload a file, fetch from URL, paste hex, or select an example to begin debugging.
       </p>
       <div
         data-testid="load-page-columns"
