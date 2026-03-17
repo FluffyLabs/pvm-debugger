@@ -1,5 +1,7 @@
 # Sprint 09 — Full Example Browser
 
+Status: Implemented
+
 ## Goal
 
 Replace the minimal example list from Sprint 02 with the full example browser: all six manifest categories, collapsible sections, remote examples with loading states, format badges, and error handling.
