@@ -3,6 +3,7 @@ import { useDrawer, type DrawerTab } from "./DrawerContext";
 import { SettingsTab } from "../drawer/SettingsTab";
 import { HostCallTab } from "../drawer/HostCallTab";
 import { EcalliTraceTab } from "../drawer/EcalliTraceTab";
+import { LogsTab } from "../drawer/LogsTab";
 import type { HostCallInfo, MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
 import type { UseStorageTable } from "../../hooks/useStorageTable";
@@ -106,7 +107,7 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
           {activeTab === "settings" && <SettingsTab onPvmChange={onPvmChange} />}
           {activeTab === "ecalli_trace" && <EcalliTraceTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} />}
           {activeTab === "host_call" && <HostCallTab activeHostCall={activeHostCall} orchestrator={orchestrator} storageTable={storageTable} />}
-          {activeTab === "logs" && <p>Logs — coming soon</p>}
+          {activeTab === "logs" && <LogsTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} />}
         </div>
       )}
 

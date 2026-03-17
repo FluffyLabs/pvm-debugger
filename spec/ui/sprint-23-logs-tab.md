@@ -1,5 +1,7 @@
 # Sprint 23 — Logs Tab
 
+Status: Implemented
+
 ## Goal
 
 Replace the Logs drawer placeholder with a focused log message viewer. The tab shows only decoded `ecalli 100` log host-call messages with step numbers, providing a readable output stream from program execution.
