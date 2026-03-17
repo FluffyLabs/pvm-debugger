@@ -92,6 +92,27 @@ test.describe("Sprint 06 — Memory Panel", () => {
     await expect(dimmedSpans.first()).toBeVisible();
   });
 
+  test("expanded hex dump remains visible after stepping", async ({ page }) => {
+    // store-u16 has a writable page at 0x20000
+    await loadProgram(page, "store-u16");
+
+    // Expand the page
+    await page.getByTestId("memory-range-header-131072").click();
+    await expect(page.getByTestId("hex-dump")).toBeVisible({ timeout: 5000 });
+
+    // Step — this triggers snapshot version change, cache invalidation, and re-fetch
+    const nextBtn = page.getByTestId("next-button");
+    await nextBtn.click();
+
+    // Wait for the step to complete (PVM enters terminal state on fault)
+    await expect(nextBtn).toBeDisabled({ timeout: 5000 });
+
+    // The hex dump should still be visible (re-fetch succeeded, not stuck on "Loading…")
+    await expect(page.getByTestId("hex-dump")).toBeVisible();
+    // Address column should still show the correct base address
+    await expect(page.getByTestId("hex-address").first()).toContainText("00020000");
+  });
+
   test("a program with empty page map shows 'No memory pages.'", async ({ page }) => {
     // step-test has no pageMap
     await loadProgram(page, "step-test");
