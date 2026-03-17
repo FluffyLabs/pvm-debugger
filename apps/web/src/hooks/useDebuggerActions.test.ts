@@ -8,8 +8,8 @@ describe("stepsForMode", () => {
     expect(stepsForMode("instruction", 99)).toBe(1);
   });
 
-  it("returns 10 for block mode (temporary placeholder)", () => {
-    expect(stepsForMode("block", 99)).toBe(10);
+  it("returns 1 for block mode fallback (real stepping uses computeBlockStepSize)", () => {
+    expect(stepsForMode("block", 99)).toBe(1);
   });
 
   it("returns the configured count for n_instructions mode", () => {

@@ -90,6 +90,8 @@ export function DebuggerPage() {
       nInstructionsCount: settings.nInstructionsCount,
       autoContinuePolicy: settings.autoContinuePolicy,
       storageTable,
+      instructions,
+      snapshots,
     });
 
   // Route guard: redirect to /load when no program is loaded.

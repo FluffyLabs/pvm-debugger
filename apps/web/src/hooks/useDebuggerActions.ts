@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { PvmLifecycle, HostCallResumeEffects, HostCallResumeProposal, HostCallInfo, StepResult } from "@pvmdbg/types";
+import type { PvmLifecycle, MachineStateSnapshot, HostCallResumeEffects, HostCallResumeProposal, HostCallInfo, StepResult } from "@pvmdbg/types";
 import { isTerminal, toHex } from "@pvmdbg/types";
 import type { SteppingMode, AutoContinuePolicy } from "../lib/debugger-settings";
 import type { UseStorageTable } from "./useStorageTable";
 import { deriveKeyHex } from "../lib/storage-utils";
+import type { DecodedInstruction } from "./useDisassembly";
+import { buildBlocksFromInstructions, computeMultiPvmBlockStepCount } from "./useBlockStepping";
 
 interface UseDebuggerActionsParams {
   orchestrator: Orchestrator | null;
@@ -21,6 +23,10 @@ interface UseDebuggerActionsParams {
   autoContinuePolicy: AutoContinuePolicy;
   /** Session-scoped storage table for storage host call overrides. */
   storageTable: UseStorageTable;
+  /** Decoded instructions for block stepping (from useDisassembly). */
+  instructions?: DecodedInstruction[];
+  /** Current PVM snapshots for multi-PVM block stepping. */
+  snapshots?: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
 }
 
 interface DebuggerActions {
@@ -36,13 +42,17 @@ interface DebuggerActions {
   clearError: () => void;
 }
 
-/** Resolve stepping mode to the number of steps to execute. */
+/** Resolve stepping mode to the number of steps to execute.
+ *  For block mode, use computeBlockStepSize() instead — it needs
+ *  disassembly + snapshot data that this simple resolver doesn't have. */
 export function stepsForMode(mode: SteppingMode, nInstructionsCount: number): number {
   switch (mode) {
     case "instruction":
       return 1;
     case "block":
-      return 10; // temporary placeholder until Sprint 33
+      // Block mode is handled dynamically via computeBlockStepSize();
+      // fall back to 1 if called without block context.
+      return 1;
     case "n_instructions":
       return nInstructionsCount;
   }
@@ -192,12 +202,31 @@ export function useDebuggerActions({
   nInstructionsCount,
   autoContinuePolicy,
   storageTable,
+  instructions,
+  snapshots,
 }: UseDebuggerActionsParams): DebuggerActions {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const stopFlagRef = useRef(false);
   // Synchronous running-state tracker for keyboard handler (avoids stale React state in closures).
   const isRunningRef = useRef(false);
+
+  // Pre-compute blocks from instructions for block stepping (stable across renders via ref).
+  const blocksRef = useRef(buildBlocksFromInstructions(instructions ?? []));
+  blocksRef.current = buildBlocksFromInstructions(instructions ?? []);
+  // Keep a ref to snapshots so the run loop can read the latest value.
+  const snapshotsRef = useRef(snapshots);
+  snapshotsRef.current = snapshots;
+
+  /** Compute the step size for the current mode, using block data when in block mode. */
+  function computeStepSize(): number {
+    if (steppingMode === "block") {
+      const snaps = snapshotsRef.current;
+      if (!snaps || snaps.size === 0) return 1;
+      return computeMultiPvmBlockStepCount(blocksRef.current, snaps);
+    }
+    return stepsForMode(steppingMode, nInstructionsCount);
+  }
 
   const canStep =
     !!orchestrator &&
@@ -227,7 +256,7 @@ export function useDebuggerActions({
     if (!orchestrator || isStepInProgress || isRunning) return;
     if (selectedLifecycle && isTerminal(selectedLifecycle)) return;
 
-    const n = stepsForMode(steppingMode, nInstructionsCount);
+    const n = computeStepSize();
     setIsStepInProgress(true);
 
     const doStep = async () => {
@@ -239,7 +268,8 @@ export function useDebuggerActions({
       setError(err instanceof Error ? err.message : String(err));
       setIsStepInProgress(false);
     });
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount, storageTable]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount, storageTable, instructions, snapshots]);
 
   const run = useCallback(() => {
     if (!orchestrator || isRunning || isRunningRef.current) return;
@@ -248,8 +278,6 @@ export function useDebuggerActions({
     stopFlagRef.current = false;
     isRunningRef.current = true;
     setIsRunning(true);
-
-    const stepSize = stepsForMode(steppingMode, nInstructionsCount);
 
     const loop = async () => {
       try {
@@ -263,6 +291,9 @@ export function useDebuggerActions({
           // stable/clickable during continuous execution.
           const BATCH_SIZE = 100;
           for (let i = 0; i < BATCH_SIZE && !stopFlagRef.current; i++) {
+            // Recalculate step size on every iteration for block mode
+            // (block boundaries change as the PC moves).
+            const stepSize = computeStepSize();
             const result = await orchestrator.step(stepSize);
 
             // Check if any PVM hit a breakpoint
@@ -311,6 +342,7 @@ export function useDebuggerActions({
     };
 
     loop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount, autoContinuePolicy, storageTable]);
 
   const pause = useCallback(() => {

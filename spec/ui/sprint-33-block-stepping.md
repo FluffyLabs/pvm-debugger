@@ -1,5 +1,7 @@
 # Sprint 33 — Block Stepping (Real)
 
+Status: Implemented
+
 ## Goal
 
 Replace the temporary block-step placeholder (Sprint 16) with real basic-block-aware stepping. When the stepping mode is `Block`, the Step button and run loop advance to the next basic-block boundary using the disassembly-derived block map.
