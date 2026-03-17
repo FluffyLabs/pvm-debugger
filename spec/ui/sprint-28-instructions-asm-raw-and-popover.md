@@ -1,5 +1,7 @@
 # Sprint 28 — Instructions — ASM/Raw Toggle + Binary Popover
 
+Status: Implemented
+
 ## Goal
 
 Add a display mode toggle (ASM / Raw) to the instructions panel header and a binary inspection popover that opens when clicking an instruction row.

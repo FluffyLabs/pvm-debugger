@@ -10,6 +10,7 @@ function makeInstr(pc: number, blockIndex: number): DecodedInstruction {
     mnemonic: "nop",
     rawBytes: new Uint8Array([0]),
     args: "",
+    rawArgs: "",
     blockIndex,
   };
 }

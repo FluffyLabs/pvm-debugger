@@ -15,6 +15,8 @@ export interface DecodedInstruction {
   mnemonic: string;
   rawBytes: Uint8Array;
   args: string;
+  /** Numeric-only argument string (register indices as numbers, no omega notation). */
+  rawArgs: string;
   /** Index of the basic block this instruction belongs to (0-based). */
   blockIndex: number;
 }
@@ -39,7 +41,11 @@ function formatOffset(pc: number): string {
   return `@0x${pc.toString(16)}`;
 }
 
-function formatArgs(argType: number, results: ReturnType<typeof createResults>): string {
+function formatArgsWithReg(
+  argType: number,
+  results: ReturnType<typeof createResults>,
+  reg: (index: number) => string,
+): string {
   const r = results[argType];
   switch (argType) {
     case ArgumentType.NO_ARGUMENTS:
@@ -62,52 +68,60 @@ function formatArgs(argType: number, results: ReturnType<typeof createResults>):
 
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE: {
       const a = r as argsModule.OneRegisterOneImmediateArgs;
-      return `${regName(a.registerIndex)}, ${formatImm(a.immediateDecoder)}`;
+      return `${reg(a.registerIndex)}, ${formatImm(a.immediateDecoder)}`;
     }
 
     case ArgumentType.ONE_REGISTER_TWO_IMMEDIATES: {
       const a = r as argsModule.OneRegisterTwoImmediatesArgs;
-      return `${regName(a.registerIndex)}, ${formatImm(a.firstImmediateDecoder)}, ${formatImm(a.secondImmediateDecoder)}`;
+      return `${reg(a.registerIndex)}, ${formatImm(a.firstImmediateDecoder)}, ${formatImm(a.secondImmediateDecoder)}`;
     }
 
     case ArgumentType.ONE_REGISTER_ONE_IMMEDIATE_ONE_OFFSET: {
       const a = r as argsModule.OneRegisterOneImmediateOneOffsetArgs;
-      return `${regName(a.registerIndex)}, ${formatImm(a.immediateDecoder)}, ${formatOffset(a.nextPc)}`;
+      return `${reg(a.registerIndex)}, ${formatImm(a.immediateDecoder)}, ${formatOffset(a.nextPc)}`;
     }
 
     case ArgumentType.TWO_REGISTERS: {
       const a = r as argsModule.TwoRegistersArgs;
-      return `${regName(a.firstRegisterIndex)}, ${regName(a.secondRegisterIndex)}`;
+      return `${reg(a.firstRegisterIndex)}, ${reg(a.secondRegisterIndex)}`;
     }
 
     case ArgumentType.TWO_REGISTERS_ONE_IMMEDIATE: {
       const a = r as argsModule.TwoRegistersOneImmediateArgs;
-      return `${regName(a.firstRegisterIndex)}, ${regName(a.secondRegisterIndex)}, ${formatImm(a.immediateDecoder)}`;
+      return `${reg(a.firstRegisterIndex)}, ${reg(a.secondRegisterIndex)}, ${formatImm(a.immediateDecoder)}`;
     }
 
     case ArgumentType.TWO_REGISTERS_ONE_OFFSET: {
       const a = r as argsModule.TwoRegistersOneOffsetArgs;
-      return `${regName(a.firstRegisterIndex)}, ${regName(a.secondRegisterIndex)}, ${formatOffset(a.nextPc)}`;
+      return `${reg(a.firstRegisterIndex)}, ${reg(a.secondRegisterIndex)}, ${formatOffset(a.nextPc)}`;
     }
 
     case ArgumentType.TWO_REGISTERS_TWO_IMMEDIATES: {
       const a = r as argsModule.TwoRegistersTwoImmediatesArgs;
-      return `${regName(a.firstRegisterIndex)}, ${regName(a.secondRegisterIndex)}, ${formatImm(a.firstImmediateDecoder)}, ${formatImm(a.secondImmediateDecoder)}`;
+      return `${reg(a.firstRegisterIndex)}, ${reg(a.secondRegisterIndex)}, ${formatImm(a.firstImmediateDecoder)}, ${formatImm(a.secondImmediateDecoder)}`;
     }
 
     case ArgumentType.THREE_REGISTERS: {
       const a = r as argsModule.ThreeRegistersArgs;
-      return `${regName(a.firstRegisterIndex)}, ${regName(a.secondRegisterIndex)}, ${regName(a.thirdRegisterIndex)}`;
+      return `${reg(a.firstRegisterIndex)}, ${reg(a.secondRegisterIndex)}, ${reg(a.thirdRegisterIndex)}`;
     }
 
     case ArgumentType.ONE_REGISTER_ONE_EXTENDED_WIDTH_IMMEDIATE: {
       const a = r as argsModule.OneRegisterOneExtendedWidthImmediateArgs;
-      return `${regName(a.registerIndex)}, ${formatExtImm(a.immediateDecoder)}`;
+      return `${reg(a.registerIndex)}, ${formatExtImm(a.immediateDecoder)}`;
     }
 
     default:
       return "";
   }
+}
+
+function formatArgs(argType: number, results: ReturnType<typeof createResults>): string {
+  return formatArgsWithReg(argType, results, regName);
+}
+
+function formatRawArgs(argType: number, results: ReturnType<typeof createResults>): string {
+  return formatArgsWithReg(argType, results, String);
 }
 
 function disassemble(programBytes: Uint8Array): DecodedInstruction[] {
@@ -158,12 +172,14 @@ function disassemble(programBytes: Uint8Array): DecodedInstruction[] {
 
     const argType = instructionArgumentTypeMap[opcode];
     let argsStr = "";
+    let rawArgsStr = "";
 
     if (argType !== undefined) {
       try {
         const argResult = results[argType];
         argsDecoder.fillArgs(pc, argResult);
         argsStr = formatArgs(argType, results);
+        rawArgsStr = formatRawArgs(argType, results);
       } catch {
         // If arg decoding fails, show instruction without decoded args
       }
@@ -177,6 +193,7 @@ function disassemble(programBytes: Uint8Array): DecodedInstruction[] {
       mnemonic,
       rawBytes,
       args: argsStr,
+      rawArgs: rawArgsStr,
       blockIndex: Math.max(0, currentBlockIndex),
     });
 

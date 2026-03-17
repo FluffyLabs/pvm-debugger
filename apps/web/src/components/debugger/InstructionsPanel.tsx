@@ -5,6 +5,7 @@ import type { Orchestrator } from "@pvmdbg/orchestrator";
 import { useBasicBlocks } from "../../hooks/useBasicBlocks";
 import type { VirtualRow } from "../../hooks/useBasicBlocks";
 import { InstructionRow } from "./InstructionRow";
+import type { DisplayMode } from "./InstructionRow";
 import { BlockHeader } from "./BlockHeader";
 
 const HEADER_HEIGHT = 28;
@@ -19,6 +20,7 @@ interface InstructionsPanelProps {
 export function InstructionsPanel({ instructions, currentPc, orchestrator }: InstructionsPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [breakpoints, setBreakpoints] = useState<Set<number>>(new Set());
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("asm");
 
   const { rows, toggleBlock } = useBasicBlocks(instructions, currentPc);
 
@@ -88,8 +90,32 @@ export function InstructionsPanel({ instructions, currentPc, orchestrator }: Ins
       data-testid="instructions-panel"
       className="flex flex-col h-full overflow-hidden"
     >
-      <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border shrink-0">
-        Instructions
+      <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border shrink-0 flex items-center justify-between">
+        <span>Instructions</span>
+        <div className="flex text-xs font-normal" data-testid="display-mode-toggle">
+          <button
+            data-testid="display-mode-asm"
+            className={`px-2 py-0.5 rounded-l border cursor-pointer ${
+              displayMode === "asm"
+                ? "bg-primary/20 text-foreground border-primary/40"
+                : "bg-transparent text-muted-foreground border-border hover:bg-muted/50"
+            }`}
+            onClick={() => setDisplayMode("asm")}
+          >
+            ASM
+          </button>
+          <button
+            data-testid="display-mode-raw"
+            className={`px-2 py-0.5 rounded-r border border-l-0 cursor-pointer ${
+              displayMode === "raw"
+                ? "bg-primary/20 text-foreground border-primary/40"
+                : "bg-transparent text-muted-foreground border-border hover:bg-muted/50"
+            }`}
+            onClick={() => setDisplayMode("raw")}
+          >
+            Raw
+          </button>
+        </div>
       </div>
       <div
         ref={scrollRef}
@@ -129,6 +155,7 @@ export function InstructionsPanel({ instructions, currentPc, orchestrator }: Ins
                     isCurrent={row.instruction.pc === currentPc}
                     isBreakpoint={breakpoints.has(row.instruction.pc)}
                     padWidth={padWidth}
+                    displayMode={displayMode}
                     onToggleBreakpoint={toggleBreakpoint}
                   />
                 )}
