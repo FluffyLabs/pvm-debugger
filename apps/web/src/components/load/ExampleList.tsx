@@ -10,22 +10,7 @@ import {
   type ExampleCategory,
 } from "@pvmdbg/content";
 import { useOrchestrator } from "../../hooks/useOrchestrator";
-
-const FORMAT_LABELS: Record<string, string> = {
-  generic_pvm: "Generic",
-  jam_spi: "JAM SPI",
-  jam_spi_with_metadata: "JAM SPI",
-  json_test_vector: "JSON",
-  trace_file: "Trace",
-};
-
-const FORMAT_BADGE_INTENT: Record<string, "info" | "success" | "warning" | "primary"> = {
-  generic_pvm: "info",
-  jam_spi: "success",
-  jam_spi_with_metadata: "success",
-  json_test_vector: "warning",
-  trace_file: "primary",
-};
+import { FORMAT_LABELS, FORMAT_BADGE_INTENT } from "./format";
 
 function isRemote(example: ExampleEntry): boolean {
   return !!example.url && !example.file;

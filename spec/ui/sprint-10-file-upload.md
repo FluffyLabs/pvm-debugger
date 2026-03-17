@@ -1,5 +1,7 @@
 # Sprint 10 — File Upload Source
 
+Status: Implemented
+
 ## Goal
 
 Add file upload as a program source on the load page. Users can drag-and-drop or use a file picker to load local program files. This introduces the two-column load page layout and the `Continue` button flow for non-example sources.
