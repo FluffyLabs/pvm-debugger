@@ -1,5 +1,7 @@
 # Sprint 30 — Registers — Change Highlighting + Pending Changes
 
+Status: Implemented
+
 ## Goal
 
 Add visual feedback for state changes on the registers panel: delta markers on changed registers, a brief flash animation, and a pending-changes preview when a host call is paused with a resume proposal.

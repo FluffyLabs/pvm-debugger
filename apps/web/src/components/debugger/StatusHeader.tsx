@@ -7,6 +7,8 @@ interface StatusHeaderProps {
   snapshot: MachineStateSnapshot;
   lifecycle: PvmLifecycle;
   editable: boolean;
+  pcChanged?: boolean;
+  gasChanged?: boolean;
   onPcCommit?: (pc: number) => void;
   onGasCommit?: (gas: bigint) => void;
 }
@@ -36,11 +38,13 @@ function InlineEdit({
   testId,
   displayValue,
   editable,
+  changed,
   onCommit,
 }: {
   testId: string;
   displayValue: string;
   editable: boolean;
+  changed?: boolean;
   onCommit: (raw: string) => boolean;
 }) {
   const [editing, setEditing] = useState(false);
@@ -118,7 +122,7 @@ function InlineEdit({
   return (
     <span
       data-testid={testId}
-      className={`text-foreground ${editable ? "cursor-pointer hover:underline" : ""}`}
+      className={`text-foreground ${editable ? "cursor-pointer hover:underline" : ""} ${changed ? "border-b border-yellow-400/60" : ""}`}
       onClick={startEditing}
     >
       {displayValue}
@@ -126,7 +130,7 @@ function InlineEdit({
   );
 }
 
-export function StatusHeader({ snapshot, lifecycle, editable, onPcCommit, onGasCommit }: StatusHeaderProps) {
+export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChanged, onPcCommit, onGasCommit }: StatusHeaderProps) {
   const label = lifecycleLabel(lifecycle, snapshot.status);
   const className = badgeClassName(lifecycle, snapshot.status);
 
@@ -163,16 +167,20 @@ export function StatusHeader({ snapshot, lifecycle, editable, onPcCommit, onGasC
         </span>
       </div>
       <div className="flex items-center gap-4 font-mono text-xs">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" data-testid="pc-field">
           <span className="text-muted-foreground">PC:</span>
           <InlineEdit
             testId="pc-value"
             displayValue={`0x${formatPc(snapshot.pc)}`}
             editable={editable}
+            changed={pcChanged}
             onCommit={handlePcCommit}
           />
+          {pcChanged && (
+            <span data-testid="pc-delta" className="text-yellow-400 font-semibold select-none">Δ</span>
+          )}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" data-testid="gas-field">
           <span className="text-muted-foreground">Gas:</span>
           <WithTooltip tooltip={gasHex}>
             <span data-testid="gas-hex-tooltip-trigger">
@@ -180,10 +188,14 @@ export function StatusHeader({ snapshot, lifecycle, editable, onPcCommit, onGasC
                 testId="gas-value"
                 displayValue={formatGas(snapshot.gas)}
                 editable={editable}
+                changed={gasChanged}
                 onCommit={handleGasCommit}
               />
             </span>
           </WithTooltip>
+          {gasChanged && (
+            <span data-testid="gas-delta" className="text-yellow-400 font-semibold select-none">Δ</span>
+          )}
         </div>
       </div>
     </div>

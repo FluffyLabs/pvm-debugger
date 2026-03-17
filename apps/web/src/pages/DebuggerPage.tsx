@@ -167,6 +167,9 @@ export function DebuggerPage() {
             snapshot={selectedEntry?.snapshot ?? null}
             lifecycle={selectedEntry?.lifecycle ?? null}
             orchestrator={orchestrator}
+            selectedPvmId={selectedPvmId}
+            snapshots={snapshots}
+            hostCallInfo={hostCallInfo}
           />
         }
         memory={

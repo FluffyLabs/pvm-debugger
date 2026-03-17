@@ -15,3 +15,12 @@ body {
   flex-direction: column;
   overflow: hidden;
 }
+
+/* Sprint-30: register change flash animation */
+@keyframes register-flash {
+  0% { background-color: rgba(250, 204, 21, 0.3); }
+  100% { background-color: transparent; }
+}
+.register-flash {
+  animation: register-flash 0.6s ease-out forwards;
+}
