@@ -47,7 +47,7 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
 
     // Content should now be visible
     await expect(page.getByTestId("drawer-content")).toBeVisible();
-    await expect(page.getByTestId("drawer-content")).toContainText("Settings — coming soon");
+    await expect(page.getByTestId("drawer-content")).toContainText("PVM Selection");
 
     // Drawer should be taller than just the tab bar
     const box = await drawer.boundingBox();
@@ -72,7 +72,7 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
 
     // Open Settings
     await page.getByTestId("drawer-tab-settings").click();
-    await expect(page.getByTestId("drawer-content")).toContainText("Settings — coming soon");
+    await expect(page.getByTestId("drawer-content")).toContainText("PVM Selection");
 
     // Switch to Host Call
     await page.getByTestId("drawer-tab-host_call").click();

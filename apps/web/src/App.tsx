@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router";
 import { Header, AppsSidebar, Content } from "@fluffylabs/shared-ui";
 import { initManifest } from "@pvmdbg/content";
 import { OrchestratorProvider } from "./context/orchestrator";
+import { DebuggerSettingsProvider } from "./context/debugger-settings";
 import { LoadPage } from "./pages/LoadPage";
 import { DebuggerPage } from "./pages/DebuggerPage";
 import manifest from "@fixtures/examples.json";
@@ -11,6 +12,7 @@ initManifest(manifest);
 
 export default function App() {
   return (
+    <DebuggerSettingsProvider>
     <OrchestratorProvider>
       <div className="app-shell" data-testid="app-shell">
         <Header toolNameSrc="" ghRepoName="pvm-debugger" />
@@ -26,5 +28,6 @@ export default function App() {
         </div>
       </div>
     </OrchestratorProvider>
+    </DebuggerSettingsProvider>
   );
 }

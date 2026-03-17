@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
@@ -15,8 +15,9 @@ import { DrawerProvider } from "../components/debugger/DrawerContext";
 import { lifecycleLabel } from "../components/debugger/value-format";
 
 export function DebuggerPage() {
-  const { orchestrator, envelope, teardown } = useOrchestrator();
+  const { orchestrator, envelope, teardown, initialize, setEnvelope } = useOrchestrator();
   const navigate = useNavigate();
+  const isReloadingRef = useRef(false);
   const { snapshots, selectedPvmId, isStepInProgress, setIsStepInProgress, snapshotVersion } =
     useOrchestratorState();
   const instructions = useDisassembly(envelope);
@@ -30,6 +31,26 @@ export function DebuggerPage() {
     navigate("/load");
   }, [teardown, navigate]);
 
+  /** Handle PVM selection changes: re-create orchestrator and reload program. */
+  const onPvmChange = useCallback(
+    (pvmIds: string[]) => {
+      if (!envelope) return;
+      // Capture envelope before teardown clears it
+      const savedEnvelope = envelope;
+      isReloadingRef.current = true;
+      const orch = initialize(pvmIds);
+      // Restore envelope in context (teardown clears it)
+      setEnvelope(savedEnvelope);
+      orch
+        .loadProgram(savedEnvelope)
+        .catch(() => {})
+        .finally(() => {
+          isReloadingRef.current = false;
+        });
+    },
+    [envelope, initialize, setEnvelope],
+  );
+
   // useDebuggerActions must be called before any early return (React rules of hooks)
   const { next, run, pause, reset, load, canStep, isRunning, error, clearError } =
     useDebuggerActions({
@@ -40,8 +61,9 @@ export function DebuggerPage() {
       onLoad,
     });
 
-  // Route guard: redirect to /load when no program is loaded
-  if (!orchestrator || !orchestrator.getProgramBytes()) {
+  // Route guard: redirect to /load when no program is loaded.
+  // Skip during PVM reload to avoid a brief redirect.
+  if (!isReloadingRef.current && (!orchestrator || !orchestrator.getProgramBytes())) {
     return <Navigate to="/load" replace />;
   }
 
@@ -127,7 +149,7 @@ export function DebuggerPage() {
             snapshotVersion={snapshotVersion}
           />
         }
-        drawer={<BottomDrawer />}
+        drawer={<BottomDrawer onPvmChange={onPvmChange} />}
       />
     </div>
     </DrawerProvider>

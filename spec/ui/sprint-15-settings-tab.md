@@ -1,5 +1,7 @@
 # Sprint 15 — Settings Tab
 
+Status: Implemented
+
 ## Goal
 
 Replace the Settings placeholder in the bottom drawer with a real settings panel: PVM selection, stepping mode, and host-call auto-continue policy. Settings persist to localStorage independently of any loaded program.

@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import { useDrawer, type DrawerTab } from "./DrawerContext";
+import { SettingsTab } from "../drawer/SettingsTab";
 
 const TABS: { id: DrawerTab; label: string }[] = [
   { id: "settings", label: "Settings" },
@@ -15,7 +16,11 @@ function clampHeight(h: number, maxHeight: number): number {
   return Math.max(MIN_EXPANDED_HEIGHT, Math.min(h, maxHeight));
 }
 
-export function BottomDrawer() {
+interface BottomDrawerProps {
+  onPvmChange: (ids: string[]) => void;
+}
+
+export function BottomDrawer({ onPvmChange }: BottomDrawerProps) {
   const { activeTab, height, setActiveTab, setHeight } = useDrawer();
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
@@ -85,7 +90,7 @@ export function BottomDrawer() {
           data-testid="drawer-content"
           className="flex-1 overflow-auto px-3 py-2 text-sm text-muted-foreground min-h-0"
         >
-          {activeTab === "settings" && <p>Settings — coming soon</p>}
+          {activeTab === "settings" && <SettingsTab onPvmChange={onPvmChange} />}
           {activeTab === "ecalli_trace" && <p>Ecalli Trace — coming soon</p>}
           {activeTab === "host_call" && <p>Host Call — coming soon</p>}
           {activeTab === "logs" && <p>Logs — coming soon</p>}
