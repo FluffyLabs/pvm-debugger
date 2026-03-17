@@ -142,4 +142,60 @@ describe("useDivergenceCheck", () => {
     const { result } = renderHook(() => useDivergenceCheck(snapshots, "missing", 0));
     expect(result.current.summary).toBeNull();
   });
+
+  it("handles 3+ PVMs with mixed divergence patterns", () => {
+    const regsA = Array(13).fill(0n);
+    regsA[3] = 10n;
+    const regsB = Array(13).fill(0n);
+    regsB[3] = 20n;
+    const regsC = Array(13).fill(0n);
+    regsC[3] = 30n;
+
+    const snapshots = makeSnapshots([
+      ["typeberry", "paused", { pc: 4, gas: 100n, registers: regsA }],
+      ["ananas", "paused", { pc: 4, gas: 200n, registers: regsB }],
+      ["polkavm", "paused", { pc: 8, gas: 100n, registers: regsC }],
+    ]);
+    const { result } = renderHook(() => useDivergenceCheck(snapshots, "typeberry", 0));
+
+    // PC diverges (typeberry vs polkavm), Gas diverges (typeberry vs ananas),
+    // register ω3 diverges (typeberry vs both)
+    expect(result.current.summary).toBe("PC, Gas, 1 register");
+
+    // Details should have entries for each diverging PVM
+    const details = result.current.details!;
+    expect(details).toContain("ananas");
+    expect(details).toContain("polkavm");
+    // Gas diverges only with ananas, PC only with polkavm
+    expect(details).toContain("Gas:");
+    expect(details).toContain("PC:");
+    // ω3 diverges with both
+    const omega3Lines = details.split("\n").filter((l) => l.startsWith("ω3:"));
+    expect(omega3Lines.length).toBe(2);
+  });
+
+  it("reports divergence from perspective of selected PVM", () => {
+    // ananas and polkavm agree, typeberry differs
+    const snapshots = makeSnapshots([
+      ["typeberry", "paused", { pc: 100 }],
+      ["ananas", "paused", { pc: 200 }],
+      ["polkavm", "paused", { pc: 200 }],
+    ]);
+
+    // From typeberry's perspective: PC diverges against both
+    const { result: fromTypeberry } = renderHook(() =>
+      useDivergenceCheck(snapshots, "typeberry", 0),
+    );
+    expect(fromTypeberry.current.summary).toBe("PC");
+    const tbDetails = fromTypeberry.current.details!;
+    expect(tbDetails.split("\n").filter((l) => l.startsWith("PC:")).length).toBe(2);
+
+    // From ananas's perspective: PC diverges only against typeberry
+    const { result: fromAnanas } = renderHook(() =>
+      useDivergenceCheck(snapshots, "ananas", 0),
+    );
+    expect(fromAnanas.current.summary).toBe("PC");
+    const anDetails = fromAnanas.current.details!;
+    expect(anDetails.split("\n").filter((l) => l.startsWith("PC:")).length).toBe(1);
+  });
 });
