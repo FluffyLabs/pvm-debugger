@@ -1,5 +1,7 @@
 # Sprint 18 — Host Call Resume Flow
 
+Status: Implemented
+
 ## Goal
 
 Enable execution to continue past paused host calls. When the PVM pauses on a host call, the existing `Next`, `Step`, and `Run` buttons seamlessly resume it and continue stepping. There is no separate resume button — execution controls handle everything.

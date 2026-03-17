@@ -67,6 +67,7 @@ export function DebuggerPage() {
       onLoad,
       steppingMode: settings.steppingMode,
       nInstructionsCount: settings.nInstructionsCount,
+      autoContinuePolicy: settings.autoContinuePolicy,
     });
 
   // Route guard: redirect to /load when no program is loaded.

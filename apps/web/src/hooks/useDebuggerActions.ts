@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { PvmLifecycle } from "@pvmdbg/types";
+import type { PvmLifecycle, HostCallResumeEffects, HostCallResumeProposal, StepResult } from "@pvmdbg/types";
 import { isTerminal } from "@pvmdbg/types";
-import type { SteppingMode } from "../lib/debugger-settings";
+import type { SteppingMode, AutoContinuePolicy } from "../lib/debugger-settings";
 
 interface UseDebuggerActionsParams {
   orchestrator: Orchestrator | null;
@@ -15,6 +15,8 @@ interface UseDebuggerActionsParams {
   steppingMode: SteppingMode;
   /** Number of instructions for n_instructions mode. */
   nInstructionsCount: number;
+  /** Auto-continue policy for host calls during run mode. */
+  autoContinuePolicy: AutoContinuePolicy;
 }
 
 interface DebuggerActions {
@@ -42,6 +44,56 @@ export function stepsForMode(mode: SteppingMode, nInstructionsCount: number): nu
   }
 }
 
+/** Convert a trace-backed resume proposal to effects, or return empty effects. */
+function proposalToEffects(proposal?: HostCallResumeProposal): HostCallResumeEffects {
+  if (!proposal) return {};
+  return {
+    registerWrites: proposal.registerWrites,
+    memoryWrites: proposal.memoryWrites,
+    gasAfter: proposal.gasAfter,
+  };
+}
+
+/** Resume all PVMs that are currently paused on a host call. */
+async function resumeAllHostCalls(orch: Orchestrator): Promise<void> {
+  for (const pvmId of orch.getPvmIds()) {
+    const hc = orch.getPendingHostCall(pvmId);
+    if (hc) {
+      await orch.resumeHostCall(pvmId, proposalToEffects(hc.resumeProposal));
+    }
+  }
+}
+
+/** Determine whether to auto-continue past host calls during run mode. */
+function shouldAutoContinue(
+  policy: AutoContinuePolicy,
+  result: StepResult,
+): boolean {
+  if (policy === "never") return false;
+  if (policy === "always_continue") return true;
+
+  // "continue_when_trace_matches" — only continue if all host-call-paused
+  // PVMs have a matching trace proposal.
+  for (const [, report] of result.results) {
+    if (report.lifecycle === "paused_host_call" && report.hostCall) {
+      if (!report.hostCall.resumeProposal?.traceMatches) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+/** Check whether any PVM in the step result is paused on a host call. */
+function hasHostCallPause(result: StepResult): boolean {
+  for (const [, report] of result.results) {
+    if (report.lifecycle === "paused_host_call") {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function useDebuggerActions({
   orchestrator,
   isStepInProgress,
@@ -50,6 +102,7 @@ export function useDebuggerActions({
   onLoad,
   steppingMode,
   nInstructionsCount,
+  autoContinuePolicy,
 }: UseDebuggerActionsParams): DebuggerActions {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +122,13 @@ export function useDebuggerActions({
     if (selectedLifecycle && isTerminal(selectedLifecycle)) return;
 
     setIsStepInProgress(true);
-    orchestrator.step(1).catch((err) => {
+
+    const doStep = async () => {
+      await resumeAllHostCalls(orchestrator);
+      await orchestrator.step(1);
+    };
+
+    doStep().catch((err) => {
       setError(err instanceof Error ? err.message : String(err));
       setIsStepInProgress(false);
     });
@@ -81,7 +140,13 @@ export function useDebuggerActions({
 
     const n = stepsForMode(steppingMode, nInstructionsCount);
     setIsStepInProgress(true);
-    orchestrator.step(n).catch((err) => {
+
+    const doStep = async () => {
+      await resumeAllHostCalls(orchestrator);
+      await orchestrator.step(n);
+    };
+
+    doStep().catch((err) => {
       setError(err instanceof Error ? err.message : String(err));
       setIsStepInProgress(false);
     });
@@ -99,6 +164,10 @@ export function useDebuggerActions({
 
     const loop = async () => {
       try {
+        // Resume any pending host calls before starting the run loop
+        // (user explicitly clicked Run, so always resume).
+        await resumeAllHostCalls(orchestrator);
+
         while (!stopFlagRef.current) {
           // Batch multiple steps before yielding to React.
           // This reduces render frequency and keeps the Pause button
@@ -106,6 +175,18 @@ export function useDebuggerActions({
           const BATCH_SIZE = 100;
           for (let i = 0; i < BATCH_SIZE && !stopFlagRef.current; i++) {
             const result = await orchestrator.step(stepSize);
+
+            // Handle host call pauses based on auto-continue policy
+            if (hasHostCallPause(result)) {
+              if (!shouldAutoContinue(autoContinuePolicy, result)) {
+                // Policy says stop — exit the run loop
+                isRunningRef.current = false;
+                setIsRunning(false);
+                return;
+              }
+              // Auto-continue: resume all host calls and keep going
+              await resumeAllHostCalls(orchestrator);
+            }
 
             // Check if all PVMs are terminal
             let allTerminal = true;
@@ -134,7 +215,7 @@ export function useDebuggerActions({
     };
 
     loop();
-  }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount]);
+  }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount, autoContinuePolicy]);
 
   const pause = useCallback(() => {
     stopFlagRef.current = true;
