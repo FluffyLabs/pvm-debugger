@@ -12,6 +12,7 @@ import {
 } from "@pvmdbg/content";
 import type { ProgramEnvelope } from "@pvmdbg/types";
 import { useOrchestrator } from "../../hooks/useOrchestrator";
+import { persistSession } from "../../hooks/usePersistence";
 import { DetectionSummary } from "./DetectionSummary";
 import { SpiEntrypointConfig } from "./SpiEntrypointConfig";
 
@@ -87,6 +88,15 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
         orch.setTrace("typeberry", envelope.trace);
       }
       setEnvelope(envelope);
+      // Persist session for reload recovery
+      persistSession(
+        rawPayload.bytes,
+        { sourceKind: rawPayload.sourceKind, sourceId: rawPayload.sourceId },
+        effectiveFormat.kind,
+        forceGeneric,
+        showSpiConfig ? spiParams : null,
+        envelope.initialState.gas,
+      );
       navigate("/");
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : String(err));

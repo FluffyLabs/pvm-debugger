@@ -1,5 +1,7 @@
 # Sprint 34 — Persistence + Reload
 
+Status: Implemented
+
 ## Goal
 
 Persist the loaded program session to localStorage so a browser refresh restores the debugger instead of losing the session. The restored state matches a fresh `Reset` — no mid-execution mutations survive.

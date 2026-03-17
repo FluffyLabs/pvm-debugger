@@ -7,6 +7,7 @@ import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
 import { stepTooltip } from "../lib/debugger-settings";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { useStorageTable } from "../hooks/useStorageTable";
+import { clearProgramSession } from "../hooks/usePersistence";
 import { isTerminal } from "@pvmdbg/types";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
 import { RegistersPanel } from "../components/debugger/RegistersPanel";
@@ -52,6 +53,7 @@ export function DebuggerPage() {
   const { settings } = useDebuggerSettings();
 
   const onLoad = useCallback(() => {
+    clearProgramSession();
     teardown();
     navigate("/load");
   }, [teardown, navigate]);
