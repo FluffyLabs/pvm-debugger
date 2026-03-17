@@ -1,5 +1,7 @@
 # Sprint 37 — User Documentation
 
+Status: Implemented
+
 ## Goal
 
 Publish the user-facing documentation set: a practical usage guide, screenshot set, and an updated README. The documentation describes how to use the shipped app, not how the code is implemented.
