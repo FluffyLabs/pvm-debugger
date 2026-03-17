@@ -105,6 +105,13 @@ export function DebuggerPage() {
     snapshots.size > 0 &&
     [...snapshots.values()].every(({ lifecycle }) => isTerminal(lifecycle));
 
+  // Editing allowed when all active PVMs are paused with ok status
+  const allPausedOk =
+    snapshots.size > 0 &&
+    [...snapshots.values()].every(
+      ({ lifecycle, snapshot }) => lifecycle === "paused" && snapshot.status === "ok",
+    );
+
   return (
     <DrawerProvider>
     <div data-testid="debugger-page" className="h-full">
@@ -178,6 +185,9 @@ export function DebuggerPage() {
             pvmId={selectedPvmId}
             pageMap={orchestrator?.getPageMap() ?? []}
             snapshotVersion={snapshotVersion}
+            programKind={envelope?.programKind ?? "generic"}
+            memoryChunks={envelope?.initialState.memoryChunks ?? []}
+            editable={allPausedOk}
           />
         }
         drawer={

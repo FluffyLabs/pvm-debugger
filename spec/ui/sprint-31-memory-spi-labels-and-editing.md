@@ -1,5 +1,7 @@
 # Sprint 31 — Memory — SPI Labels + Inline Editing
 
+Status: Implemented
+
 ## Goal
 
 Enhance the memory panel with SPI-aware page labels and inline byte editing. Users can identify memory sections by name (RO Data, Stack, etc.) and edit individual bytes directly in the hex dump.

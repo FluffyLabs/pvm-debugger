@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { PageMapEntry } from "@pvmdbg/types";
+import type { PageMapEntry, MemoryChunk } from "@pvmdbg/types";
 import { useMemoryReader } from "../../hooks/useMemoryReader";
 import { MemoryRange } from "./MemoryRange";
 
@@ -12,25 +12,93 @@ interface MemoryPanelProps {
   pageMap: PageMapEntry[];
   /** Monotonic counter that increments on each snapshot change, used to invalidate cache. */
   snapshotVersion: number;
+  programKind: "generic" | "jam_spi";
+  memoryChunks: MemoryChunk[];
+  /** True when all active PVMs are paused with ok status. */
+  editable: boolean;
 }
 
-/** Expand page map segments into individual 4 KiB page addresses, sorted ascending. */
-function expandPages(pageMap: PageMapEntry[]): number[] {
-  const addresses: number[] = [];
+interface ExpandedPage {
+  address: number;
+  isWritable: boolean;
+}
+
+/** Expand page map segments into individual 4 KiB pages with writable info, sorted ascending. */
+function expandPages(pageMap: PageMapEntry[]): ExpandedPage[] {
+  const pageMap_ = new Map<number, boolean>();
   for (const entry of pageMap) {
     const pageCount = Math.ceil(entry.length / PAGE_SIZE);
     for (let i = 0; i < pageCount; i++) {
-      addresses.push(entry.address + i * PAGE_SIZE);
+      const addr = entry.address + i * PAGE_SIZE;
+      // If any segment marks this page writable, it's writable
+      pageMap_.set(addr, pageMap_.get(addr) || entry.isWritable);
     }
   }
-  addresses.sort((a, b) => a - b);
-  // Deduplicate (segments can overlap)
-  return [...new Set(addresses)];
+  return [...pageMap_.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([address, isWritable]) => ({ address, isWritable }));
 }
 
-export function MemoryPanel({ orchestrator, pvmId, pageMap, snapshotVersion }: MemoryPanelProps) {
+/** Compute the set of page addresses that overlap with any memory chunk (initialized data). */
+function computeInitializedPages(memoryChunks: MemoryChunk[]): Set<number> {
+  const pages = new Set<number>();
+  for (const chunk of memoryChunks) {
+    const start = chunk.address;
+    const end = start + chunk.data.length;
+    // Find all page-aligned addresses that overlap [start, end)
+    const firstPage = Math.floor(start / PAGE_SIZE) * PAGE_SIZE;
+    for (let addr = firstPage; addr < end; addr += PAGE_SIZE) {
+      pages.add(addr);
+    }
+  }
+  return pages;
+}
+
+/** Get an SPI-aware label for a memory page, or a generic fallback. */
+function getPageLabel(
+  address: number,
+  isWritable: boolean,
+  programKind: "generic" | "jam_spi",
+  initializedPages: Set<number>,
+): string {
+  if (programKind !== "jam_spi") {
+    return "Page @ 0x" + address.toString(16).toUpperCase();
+  }
+
+  if (address === 0xfeff0000) return "Arguments";
+  if (address >= 0xfefe0000 && address < 0xfeff0000) return "Stack";
+  if (!isWritable && address >= 0x00010000) return "RO Data";
+  if (isWritable && initializedPages.has(address)) return "RW Data";
+  if (isWritable) return "Heap";
+
+  return "Page @ 0x" + address.toString(16).toUpperCase();
+}
+
+export function MemoryPanel({
+  orchestrator,
+  pvmId,
+  pageMap,
+  snapshotVersion,
+  programKind,
+  memoryChunks,
+  editable,
+}: MemoryPanelProps) {
   const pages = useMemo(() => expandPages(pageMap), [pageMap]);
+  const initializedPages = useMemo(() => computeInitializedPages(memoryChunks), [memoryChunks]);
   const { getPage, isLoading, expandPage } = useMemoryReader(orchestrator, pvmId, snapshotVersion);
+
+  const onWriteBytes = useCallback(
+    (address: number, data: Uint8Array) => {
+      if (!orchestrator) return;
+      const pvmIds = orchestrator.getPvmIds();
+      for (const id of pvmIds) {
+        orchestrator.setMemory(id, address, data).catch((err) => {
+          console.error(`Failed to write memory at 0x${address.toString(16)} on ${id}:`, err);
+        });
+      }
+    },
+    [orchestrator],
+  );
 
   if (pages.length === 0) {
     return (
@@ -49,13 +117,17 @@ export function MemoryPanel({ orchestrator, pvmId, pageMap, snapshotVersion }: M
         Memory
       </div>
       <div className="flex-1 overflow-auto">
-        {pages.map((addr) => (
+        {pages.map((pg) => (
           <MemoryRange
-            key={addr}
-            address={addr}
-            getData={() => getPage(addr)}
-            isLoading={isLoading(addr)}
-            onExpand={() => expandPage(addr)}
+            key={pg.address}
+            address={pg.address}
+            label={getPageLabel(pg.address, pg.isWritable, programKind, initializedPages)}
+            isWritable={pg.isWritable}
+            editable={editable && pg.isWritable}
+            getData={() => getPage(pg.address)}
+            isLoading={isLoading(pg.address)}
+            onExpand={() => expandPage(pg.address)}
+            onWriteBytes={onWriteBytes}
           />
         ))}
       </div>
