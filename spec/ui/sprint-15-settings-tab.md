@@ -107,4 +107,36 @@ Every section includes concise explanatory copy. Every option has a smaller hint
 ```bash
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-15-settings.spec.ts
+npm test  # includes debugger-settings.test.ts unit tests
 ```
+
+## Implementation Notes
+
+### Consuming settings from other components
+
+Use the `useDebuggerSettings()` hook from any component inside `<DebuggerSettingsProvider>` (wraps the entire App). Example for Sprint 16's Step button:
+
+```ts
+const { settings } = useDebuggerSettings();
+// settings.steppingMode → "instruction" | "block" | "n_instructions"
+// settings.nInstructionsCount → number (only meaningful when mode is "n_instructions")
+// settings.autoContinuePolicy → "always_continue" | "continue_when_trace_matches" | "never"
+```
+
+### PVM reload pitfall
+
+`DebuggerPage.onPvmChange` uses an `isReloadingRef` to suppress the route guard during orchestrator teardown/re-initialization. Without this, the brief `orchestrator === null` window causes a redirect to `/load`. The ref is set before `initialize()` and cleared in the `.finally()` of `loadProgram()`.
+
+### Ananas PVM adapter not yet available
+
+`AVAILABLE_PVMS` lists both Typeberry and Ananas, but `createPvmAdapter("ananas")` in `lib/runtime.ts` throws. Enabling Ananas in settings will crash the PVM reload. This is by design — the adapter will be added in a future sprint. Until then, the toggle exists in the UI but is non-functional for Ananas.
+
+### localStorage key scheme
+
+- Aggregate blob: `pvmdbg.settings` (single JSON object, authoritative source)
+- Per-setting mirrors: `pvmdbg.settings.selectedPvmIds`, `pvmdbg.settings.steppingMode`, etc. (for future direct reads without parsing the whole blob)
+- `loadSettings()` reads only the aggregate blob; per-setting keys are write-only mirrors for now.
+
+### Sprint-14 test update
+
+The sprint-14 drawer E2E test previously asserted `"Settings — coming soon"`. This was updated to assert `"PVM Selection"` to match the real settings content.

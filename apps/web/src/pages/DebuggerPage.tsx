@@ -43,7 +43,9 @@ export function DebuggerPage() {
       setEnvelope(savedEnvelope);
       orch
         .loadProgram(savedEnvelope)
-        .catch(() => {})
+        .catch((err) => {
+          console.error("Failed to reload program after PVM change:", err);
+        })
         .finally(() => {
           isReloadingRef.current = false;
         });
