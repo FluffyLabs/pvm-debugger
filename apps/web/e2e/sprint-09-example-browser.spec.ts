@@ -96,4 +96,33 @@ test.describe("Sprint 09 — Full Example Browser", () => {
     // The page should still be functional — other cards should still be visible
     await expect(page.getByTestId("example-card-add")).toBeVisible();
   });
+
+  test("bundled examples do not show Remote label", async ({ page }) => {
+    // "add" is a bundled example with a file field — it should have no Remote label
+    await expect(page.getByTestId("example-card-add")).toBeVisible();
+    await expect(page.getByTestId("example-remote-add")).not.toBeAttached();
+  });
+
+  test("JAM SPI example with entrypoint metadata loads and navigates to debugger", async ({
+    page,
+  }) => {
+    // add-jam has entrypoint: { type: "accumulate", params: {...} }
+    const card = page.getByTestId("example-card-add-jam");
+    await expect(card).toBeVisible();
+    await card.click();
+
+    // Should navigate to debugger page
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
+  });
+
+  test("category toggle shows correct example count", async ({ page }) => {
+    // Generic PVM category has 6 examples
+    const toggle = page.getByTestId("category-toggle-generic");
+    await expect(toggle).toContainText("(6)");
+
+    // WAT category has 3 examples
+    const watToggle = page.getByTestId("category-toggle-wat");
+    await expect(watToggle).toContainText("(3)");
+  });
 });

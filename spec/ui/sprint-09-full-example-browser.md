@@ -79,3 +79,21 @@ The left column is a placeholder for future source inputs (Sprint 10–11). If n
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-09-example-browser.spec.ts
 ```
+
+## Implementation Notes
+
+### Architecture decisions
+- `ExampleList` is a self-contained component in `apps/web/src/components/load/ExampleList.tsx`. It owns the load flow (load → create envelope → initialize orchestrator → navigate). `LoadPage` is now a thin wrapper.
+- Collapse state uses a `Set<string>` of collapsed category IDs (default empty = all open).
+- Format badge colors use shared-ui `Badge` component with `intent` mapping: info (Generic), success (JAM SPI), warning (JSON), primary (Trace).
+
+### Known limitations
+- **Byte size display not implemented.** The spec says "bundled examples show byte size when available" but the manifest (`fixtures/examples.json`) does not include file sizes. Displaying sizes would require fetching Content-Length headers for each bundled file at render time or extending the manifest schema. Deferred — could be added by adding a `size` field to the manifest entries.
+
+### Edge cases & pitfalls
+- Remote examples (those with `url` but no `file`) can fail due to CORS or network issues. The error is caught and displayed in an Alert; the page remains functional.
+- All cards are disabled during any load operation (prevents double-loading).
+- The `entrypoint` and `initialState` metadata survival is handled implicitly by `createProgramEnvelope()` which calls `findExampleEntry()` and applies `manifestEntrypointToParams()` / `manifestInitialStateOverrides()` — no extra code needed in the UI.
+
+### Refactoring opportunity for future sprints
+- When Sprint 10-11 add upload/URL/manual-input sources, the `loadExample → createProgramEnvelope → initialize → loadProgram → navigate` flow will be duplicated. At that point, extract a `useLoadProgram()` hook to share the pattern across source types.
