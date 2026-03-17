@@ -1,5 +1,7 @@
 # Sprint 05 — Single-Step (Next Button)
 
+Status: Implemented
+
 ## Goal
 
 Add the first execution control: a `Next` button that steps exactly one instruction. After clicking, the instructions panel updates the current PC highlight and the registers panel shows the new machine state. This is the first real user interaction with the running PVM.

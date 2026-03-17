@@ -6,6 +6,17 @@
       "description": "Manually crafted small programs demonstrating PVM instructions",
       "examples": [
         {
+          "id": "step-test",
+          "name": "Step test (LOAD_IMM)",
+          "file": "generic/step-test.pvm",
+          "format": "generic_pvm",
+          "initialState": {
+            "pc": 0,
+            "gas": 10000,
+            "registers": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          }
+        },
+        {
           "id": "add",
           "name": "ADD instruction",
           "file": "generic/add.pvm",

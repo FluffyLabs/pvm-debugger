@@ -7,6 +7,7 @@ export interface OrchestratorReactiveState {
   selectedPvmId: string | null;
   hostCallInfo: Map<string, HostCallInfo>;
   isStepInProgress: boolean;
+  setIsStepInProgress: (value: boolean) => void;
 }
 
 /**
@@ -106,5 +107,5 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     };
   }, [orchestrator]);
 
-  return { snapshots, selectedPvmId, hostCallInfo, isStepInProgress };
+  return { snapshots, selectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress };
 }

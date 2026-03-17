@@ -1,14 +1,17 @@
 import { Navigate } from "react-router";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
+import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
 import { RegistersPanel } from "../components/debugger/RegistersPanel";
+import { ExecutionControls } from "../components/debugger/ExecutionControls";
 import { lifecycleLabel } from "../components/debugger/value-format";
 
 export function DebuggerPage() {
   const { orchestrator, envelope } = useOrchestrator();
-  const { snapshots, selectedPvmId } = useOrchestratorState();
+  const { snapshots, selectedPvmId, isStepInProgress, setIsStepInProgress } =
+    useOrchestratorState();
   const instructions = useDisassembly(envelope);
 
   // Route guard: redirect to /load when no program is loaded
@@ -19,11 +22,20 @@ export function DebuggerPage() {
   // Get current PVM state
   const selectedEntry = selectedPvmId ? snapshots.get(selectedPvmId) : undefined;
   const currentPc = selectedEntry?.snapshot.pc ?? 0;
+  const selectedLifecycle = selectedEntry?.lifecycle ?? null;
+
+  const { next, canStep } = useDebuggerActions({
+    orchestrator,
+    isStepInProgress,
+    setIsStepInProgress,
+    selectedLifecycle,
+  });
 
   return (
     <div data-testid="debugger-page" className="flex flex-col h-full">
       <div className="flex items-center gap-4 px-4 py-2 border-b border-border shrink-0">
         <h1 className="text-sm font-semibold text-foreground">Debugger</h1>
+        <ExecutionControls onNext={next} canStep={canStep} />
         <div className="flex gap-2">
           {[...snapshots.entries()].map(([pvmId, { lifecycle, snapshot }]) => (
             <div
