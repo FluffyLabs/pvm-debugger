@@ -1,5 +1,7 @@
 # Sprint 29 — Registers — Inline Editing
 
+Status: Implemented
+
 ## Goal
 
 Make PC, gas, and all 13 registers editable inline on the registers panel. Edits fan out to all loaded PVMs through the orchestrator. Editing is only allowed when execution is paused with `ok` status.
@@ -82,6 +84,17 @@ Gas field should expose its hex value via a secondary tooltip/popover affordance
 - Edit mode preserves row height.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+## Implementation Notes
+
+- Value parsing functions (`parseBigintInput`, `parsePcInput`, `formatGasHex`) added to `value-format.ts` alongside existing formatters
+- `InlineEdit` is a local helper component inside `StatusHeader.tsx` (used for PC and gas editing), not a shared component — keeps it simple
+- `RegisterRow` handles its own edit state internally; `editable` prop controls whether clicking activates edit mode
+- Edit mode automatically cancels when `editable` becomes false (e.g. execution starts mid-edit)
+- `minHeight` CSS on register rows prevents layout shift when toggling between display and input mode
+- Gas hex tooltip uses `WithTooltip` from `@fluffylabs/shared-ui` for consistency with existing tooltip patterns
+- All edits fan out to all PVMs by iterating `orchestrator.getPvmIds()` — errors are caught per-PVM and logged
+- The `editable` guard checks `lifecycle === "paused" && snapshot.status === "ok"` — this correctly excludes running, host-call, and all terminal states
 
 ## Verification
 

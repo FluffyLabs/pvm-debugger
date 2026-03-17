@@ -44,6 +44,43 @@ export function bytesToHex(bytes: Uint8Array): string {
     .join(" ");
 }
 
+/**
+ * Parse a user-entered value string as a bigint.
+ * Accepts decimal or 0x-prefixed hex. Returns null on invalid input.
+ */
+export function parseBigintInput(input: string): bigint | null {
+  const trimmed = input.trim();
+  if (trimmed === "") return null;
+  try {
+    if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
+      if (!/^0[xX][0-9a-fA-F]+$/.test(trimmed)) return null;
+      return BigInt(trimmed);
+    }
+    if (!/^-?\d+$/.test(trimmed)) return null;
+    return BigInt(trimmed);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse a user-entered value string as a non-negative integer (for PC).
+ * Accepts decimal or 0x-prefixed hex. Rejects negative values.
+ * Returns null on invalid input.
+ */
+export function parsePcInput(input: string): number | null {
+  const value = parseBigintInput(input);
+  if (value === null || value < 0n) return null;
+  // PC must fit in a safe integer range
+  if (value > BigInt(Number.MAX_SAFE_INTEGER)) return null;
+  return Number(value);
+}
+
+/** Format gas as a hex string (for tooltip display). */
+export function formatGasHex(gas: bigint): string {
+  return "0x" + gas.toString(16);
+}
+
 /** Map PvmLifecycle (+ PvmStatus for terminal states) to a user-facing label. */
 export function lifecycleLabel(lifecycle: PvmLifecycle, status?: PvmStatus): string {
   switch (lifecycle) {

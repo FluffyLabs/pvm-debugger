@@ -166,6 +166,7 @@ export function DebuggerPage() {
           <RegistersPanel
             snapshot={selectedEntry?.snapshot ?? null}
             lifecycle={selectedEntry?.lifecycle ?? null}
+            orchestrator={orchestrator}
           />
         }
         memory={

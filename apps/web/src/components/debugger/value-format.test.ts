@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatRegister, formatPc, formatGas, lifecycleLabel, bytesToHex } from "./value-format";
+import { formatRegister, formatPc, formatGas, formatGasHex, lifecycleLabel, bytesToHex, parseBigintInput, parsePcInput } from "./value-format";
 
 describe("formatRegister", () => {
   it("formats zero with 16-digit hex", () => {
@@ -129,5 +129,66 @@ describe("lifecycleLabel", () => {
 
   it("maps timed_out to Timeout", () => {
     expect(lifecycleLabel("timed_out")).toBe("Timeout");
+  });
+});
+
+describe("parseBigintInput", () => {
+  it("parses decimal strings", () => {
+    expect(parseBigintInput("42")).toBe(42n);
+    expect(parseBigintInput("0")).toBe(0n);
+    expect(parseBigintInput("1000000")).toBe(1000000n);
+  });
+
+  it("parses hex strings", () => {
+    expect(parseBigintInput("0xff")).toBe(255n);
+    expect(parseBigintInput("0xFF")).toBe(255n);
+    expect(parseBigintInput("0x0")).toBe(0n);
+    expect(parseBigintInput("0x000000000000002a")).toBe(42n);
+  });
+
+  it("parses negative decimal", () => {
+    expect(parseBigintInput("-1")).toBe(-1n);
+  });
+
+  it("rejects empty string", () => {
+    expect(parseBigintInput("")).toBeNull();
+    expect(parseBigintInput("  ")).toBeNull();
+  });
+
+  it("rejects non-numeric strings", () => {
+    expect(parseBigintInput("abc")).toBeNull();
+    expect(parseBigintInput("0xzz")).toBeNull();
+    expect(parseBigintInput("12.5")).toBeNull();
+  });
+
+  it("trims whitespace", () => {
+    expect(parseBigintInput("  42  ")).toBe(42n);
+    expect(parseBigintInput(" 0xff ")).toBe(255n);
+  });
+});
+
+describe("parsePcInput", () => {
+  it("parses valid PC values", () => {
+    expect(parsePcInput("0")).toBe(0);
+    expect(parsePcInput("100")).toBe(100);
+    expect(parsePcInput("0x100")).toBe(256);
+  });
+
+  it("rejects negative values", () => {
+    expect(parsePcInput("-1")).toBeNull();
+    expect(parsePcInput("-100")).toBeNull();
+  });
+
+  it("rejects invalid input", () => {
+    expect(parsePcInput("")).toBeNull();
+    expect(parsePcInput("abc")).toBeNull();
+  });
+});
+
+describe("formatGasHex", () => {
+  it("formats gas as hex", () => {
+    expect(formatGasHex(0n)).toBe("0x0");
+    expect(formatGasHex(1000000n)).toBe("0xf4240");
+    expect(formatGasHex(255n)).toBe("0xff");
   });
 });
