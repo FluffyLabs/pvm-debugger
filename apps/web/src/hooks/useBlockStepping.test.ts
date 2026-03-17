@@ -83,6 +83,11 @@ describe("computeBlockStepCount", () => {
   it("returns 1 when there are no blocks", () => {
     expect(computeBlockStepCount([], 0)).toBe(1);
   });
+
+  it("returns 1 for a single-instruction block", () => {
+    const blocks = [makeBlock(0, [42])];
+    expect(computeBlockStepCount(blocks, 42)).toBe(1);
+  });
 });
 
 // --- buildBlocksFromInstructions ---

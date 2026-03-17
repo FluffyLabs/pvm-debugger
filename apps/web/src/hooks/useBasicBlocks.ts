@@ -21,6 +21,52 @@ export interface UseBasicBlocksResult {
 }
 
 /**
+ * Pure function: groups decoded instructions into basic blocks using the
+ * `blockIndex` field already computed by `useDisassembly`.
+ *
+ * All blocks are returned with `isCollapsed: false` — the React hook
+ * layer applies collapsed state on top.
+ *
+ * Used by both `useBasicBlocks` (UI) and `useBlockStepping` (stepping logic).
+ */
+export function groupInstructionsIntoBlocks(
+  instructions: DecodedInstruction[],
+): BasicBlock[] {
+  if (instructions.length === 0) return [];
+
+  const result: BasicBlock[] = [];
+  let current: DecodedInstruction[] = [];
+  let currentIdx = instructions[0].blockIndex;
+
+  for (const instr of instructions) {
+    if (instr.blockIndex !== currentIdx) {
+      result.push({
+        index: currentIdx,
+        startPc: current[0].pc,
+        endPc: current[current.length - 1].pc,
+        instructions: current,
+        isCollapsed: false,
+      });
+      current = [];
+      currentIdx = instr.blockIndex;
+    }
+    current.push(instr);
+  }
+
+  if (current.length > 0) {
+    result.push({
+      index: currentIdx,
+      startPc: current[0].pc,
+      endPc: current[current.length - 1].pc,
+      instructions: current,
+      isCollapsed: false,
+    });
+  }
+
+  return result;
+}
+
+/**
  * Groups decoded instructions into basic blocks (using the `blockIndex` field
  * already computed by `useDisassembly`) and tracks per-block collapsed state.
  *
@@ -34,40 +80,12 @@ export function useBasicBlocks(
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
 
   const blocks: BasicBlock[] = useMemo(() => {
-    if (instructions.length === 0) return [];
-
-    const result: BasicBlock[] = [];
-    let current: DecodedInstruction[] = [];
-    let currentIdx = instructions[0].blockIndex;
-
-    for (const instr of instructions) {
-      if (instr.blockIndex !== currentIdx) {
-        // Flush previous block
-        result.push({
-          index: currentIdx,
-          startPc: current[0].pc,
-          endPc: current[current.length - 1].pc,
-          instructions: current,
-          isCollapsed: collapsed.has(currentIdx),
-        });
-        current = [];
-        currentIdx = instr.blockIndex;
-      }
-      current.push(instr);
-    }
-
-    // Flush last block
-    if (current.length > 0) {
-      result.push({
-        index: currentIdx,
-        startPc: current[0].pc,
-        endPc: current[current.length - 1].pc,
-        instructions: current,
-        isCollapsed: collapsed.has(currentIdx),
-      });
-    }
-
-    return result;
+    const raw = groupInstructionsIntoBlocks(instructions);
+    // Apply collapsed state
+    return raw.map((block) => ({
+      ...block,
+      isCollapsed: collapsed.has(block.index),
+    }));
   }, [instructions, collapsed]);
 
   // Auto-expand the block containing the current PC so the user always sees it.

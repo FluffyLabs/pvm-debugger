@@ -1,5 +1,6 @@
 import type { DecodedInstruction } from "./useDisassembly";
 import type { BasicBlock } from "./useBasicBlocks";
+import { groupInstructionsIntoBlocks } from "./useBasicBlocks";
 import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 
 /**
@@ -27,43 +28,12 @@ export function computeBlockStepCount(
 
 /**
  * Build basic blocks from decoded instructions (pure function, no React hooks).
- * This mirrors the grouping logic in useBasicBlocks but without React state.
+ * Delegates to the shared grouping logic in useBasicBlocks.
  */
 export function buildBlocksFromInstructions(
   instructions: DecodedInstruction[],
 ): BasicBlock[] {
-  if (instructions.length === 0) return [];
-
-  const result: BasicBlock[] = [];
-  let current: DecodedInstruction[] = [];
-  let currentIdx = instructions[0].blockIndex;
-
-  for (const instr of instructions) {
-    if (instr.blockIndex !== currentIdx) {
-      result.push({
-        index: currentIdx,
-        startPc: current[0].pc,
-        endPc: current[current.length - 1].pc,
-        instructions: current,
-        isCollapsed: false,
-      });
-      current = [];
-      currentIdx = instr.blockIndex;
-    }
-    current.push(instr);
-  }
-
-  if (current.length > 0) {
-    result.push({
-      index: currentIdx,
-      startPc: current[0].pc,
-      endPc: current[current.length - 1].pc,
-      instructions: current,
-      isCollapsed: false,
-    });
-  }
-
-  return result;
+  return groupInstructionsIntoBlocks(instructions);
 }
 
 /**
