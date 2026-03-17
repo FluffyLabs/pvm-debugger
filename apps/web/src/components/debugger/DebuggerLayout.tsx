@@ -6,13 +6,20 @@ interface DebuggerLayoutProps {
   instructions: ReactNode;
   registers: ReactNode;
   memory: ReactNode;
+  drawer?: ReactNode;
 }
 
 /**
- * 3-column debugger grid: toolbar row + [Instructions | Registers | Memory].
+ * 3-column debugger grid: toolbar row + [Instructions | Registers | Memory] + bottom drawer.
  * Each panel scrolls independently; the page itself does not scroll.
  */
-export function DebuggerLayout({ toolbar, instructions, registers, memory }: DebuggerLayoutProps) {
+export function DebuggerLayout({
+  toolbar,
+  instructions,
+  registers,
+  memory,
+  drawer,
+}: DebuggerLayoutProps) {
   return (
     <div data-testid="debugger-layout" className="debugger-shell">
       <div data-testid="debugger-toolbar" className="debugger-toolbar">
@@ -29,6 +36,7 @@ export function DebuggerLayout({ toolbar, instructions, registers, memory }: Deb
           {memory}
         </div>
       </div>
+      {drawer}
     </div>
   );
 }

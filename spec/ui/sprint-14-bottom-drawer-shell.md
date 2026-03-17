@@ -1,5 +1,7 @@
 # Sprint 14 — Bottom Drawer Shell
 
+Status: Implemented
+
 ## Goal
 
 Add the bottom drawer to the debugger layout. The drawer is always visible as a tab bar at the bottom, expandable to show tab content. This sprint builds only the shell — tab bodies are placeholders. Content comes in Sprints 15, 19–23.

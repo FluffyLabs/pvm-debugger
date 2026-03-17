@@ -10,6 +10,8 @@ import { RegistersPanel } from "../components/debugger/RegistersPanel";
 import { MemoryPanel } from "../components/debugger/MemoryPanel";
 import { ExecutionControls } from "../components/debugger/ExecutionControls";
 import { DebuggerLayout } from "../components/debugger/DebuggerLayout";
+import { BottomDrawer } from "../components/debugger/BottomDrawer";
+import { DrawerProvider } from "../components/debugger/DrawerContext";
 import { lifecycleLabel } from "../components/debugger/value-format";
 
 export function DebuggerPage() {
@@ -51,6 +53,7 @@ export function DebuggerPage() {
     [...snapshots.values()].every(({ lifecycle }) => isTerminal(lifecycle));
 
   return (
+    <DrawerProvider>
     <div data-testid="debugger-page" className="h-full">
       <DebuggerLayout
         toolbar={
@@ -124,7 +127,9 @@ export function DebuggerPage() {
             snapshotVersion={snapshotVersion}
           />
         }
+        drawer={<BottomDrawer />}
       />
     </div>
+    </DrawerProvider>
   );
 }
