@@ -12,7 +12,9 @@
 
 .app-content {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
+  /* Height must be constrained so debugger panels scroll independently,
+     not the page. Individual pages handle their own overflow. */
 }
 
 /* All clickable elements use pointer cursor */

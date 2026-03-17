@@ -1,0 +1,46 @@
+/*
+ * Sprint 07 — 3-column debugger layout
+ *
+ * Grid rows:  toolbar (auto) | panel area (1fr)
+ * Grid cols:  instructions (3fr) | registers (3.5fr) | memory (3.5fr)
+ *
+ * The height chain is pinned at .debugger-shell so that panels
+ * can scroll independently without the page itself scrolling.
+ */
+
+.debugger-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.debugger-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.debugger-panels {
+  display: grid;
+  grid-template-columns: 3fr 3.5fr 3.5fr;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.debugger-panel {
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Subtle vertical separators between panels */
+.debugger-panel + .debugger-panel {
+  border-left: 1px solid var(--color-border);
+}

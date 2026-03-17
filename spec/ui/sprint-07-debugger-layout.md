@@ -1,5 +1,7 @@
 # Sprint 07 — 3-Column Debugger Layout
 
+Status: Implemented
+
 ## Goal
 
 Arrange the existing debugger panels (instructions, registers, memory) into a real 3-column desktop grid with a toolbar row and independent panel scrolling. This replaces the default stacked layout from earlier sprints with the final debugger workspace structure.
@@ -82,6 +84,13 @@ Rules:
 - Previous sprint functionality (instructions, registers, memory, Next) still works.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
+
+## Implementation Notes
+
+- `.app-content` overflow changed from `auto` to `hidden` to prevent page-level scrolling. Individual pages (like LoadPage) handle their own overflow internally.
+- The CSS import for `debugger-layout.css` is done from `DebuggerLayout.tsx` (component-level), not from `global.css`, keeping it modular.
+- `--color-border` CSS variable (from shared-ui theme) is used for panel separators to match the app's theme.
+- The `DebuggerLayout` component uses named slot props (`toolbar`, `instructions`, `registers`, `memory`) rather than children, making the layout contract explicit.
 
 ## Verification
 
