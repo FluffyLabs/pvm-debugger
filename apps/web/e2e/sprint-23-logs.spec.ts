@@ -12,7 +12,11 @@ test.describe("Sprint 23 — Logs Tab", () => {
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
-  /** Load trace-001 which has ecalli=100 log entries. */
+  /**
+   * Load trace-001 which has ecalli=100 log entries in the reference trace.
+   * Note: the first ecalli=100 occurs after ~14 other host calls (fetch/lookup),
+   * so execution may not reach log calls within a short run window on slow machines.
+   */
   async function loadTraceProgram(page: import("@playwright/test").Page) {
     await page.goto("/#/load");
     const card = page.getByTestId("example-card-trace-001");
@@ -37,6 +41,20 @@ test.describe("Sprint 23 — Logs Tab", () => {
     await expect(page.getByTestId("auto-continue-radio-always_continue")).toBeChecked();
   }
 
+  /**
+   * Run trace-001 with auto-continue and return to a paused state.
+   * Uses a longer timeout (8s) to give the PVM time to reach ecalli=100 log calls.
+   */
+  async function runAndPause(page: import("@playwright/test").Page) {
+    await page.getByTestId("run-button").click();
+    await page.waitForTimeout(8000);
+    const pauseBtn = page.getByTestId("pause-button");
+    if (await pauseBtn.isVisible()) {
+      await pauseBtn.click();
+      await page.waitForTimeout(500);
+    }
+  }
+
   test("empty state renders before any log host calls", async ({ page }) => {
     await loadSimpleProgram(page);
     await openLogsTab(page);
@@ -48,44 +66,26 @@ test.describe("Sprint 23 — Logs Tab", () => {
   test("after a log host call, decoded text appears with step number", async ({ page }) => {
     await loadTraceProgram(page);
     await setAlwaysContinue(page);
-
-    // Run the program so host calls accumulate (trace-001 has ecalli=100 entries)
-    await page.getByTestId("run-button").click();
-    await page.waitForTimeout(5000);
-
-    // Pause if still running
-    const pauseBtn = page.getByTestId("pause-button");
-    if (await pauseBtn.isVisible()) {
-      await pauseBtn.click();
-      await page.waitForTimeout(500);
-    }
-
+    await runAndPause(page);
     await openLogsTab(page);
 
-    // Check that at least one log entry appeared
+    // Guarded: trace-001 has ecalli=100 entries but execution may not reach them
+    // in time on slow machines. When entries ARE produced, verify the format.
     const entries = page.getByTestId("log-entry");
     const count = await entries.count();
     if (count > 0) {
-      // Each entry should show [Step N] prefix
-      const firstEntry = entries.first();
-      const text = await firstEntry.textContent();
+      const text = await entries.first().textContent();
       expect(text).toMatch(/\[Step \d+\]/);
+    } else {
+      // No entries reached — at least verify the empty state renders correctly
+      await expect(page.getByTestId("logs-empty")).toBeVisible();
     }
   });
 
   test("Copy writes the visible log stream to clipboard", async ({ page }) => {
     await loadTraceProgram(page);
     await setAlwaysContinue(page);
-
-    // Run to accumulate log entries
-    await page.getByTestId("run-button").click();
-    await page.waitForTimeout(5000);
-    const pauseBtn = page.getByTestId("pause-button");
-    if (await pauseBtn.isVisible()) {
-      await pauseBtn.click();
-      await page.waitForTimeout(500);
-    }
-
+    await runAndPause(page);
     await openLogsTab(page);
 
     // Grant clipboard permissions
@@ -97,36 +97,34 @@ test.describe("Sprint 23 — Logs Tab", () => {
     // Read clipboard content
     const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
 
-    // If there were log entries, clipboard should contain [Step N] prefixed lines
     const entries = page.getByTestId("log-entry");
     const count = await entries.count();
     if (count > 0) {
+      // Entries were produced — clipboard should contain [Step N] lines
       expect(clipboardText).toContain("[Step ");
+    } else {
+      // No entries — Copy on empty state should produce empty string
+      expect(clipboardText).toBe("");
     }
   });
 
   test("Clear returns the panel to empty state", async ({ page }) => {
     await loadTraceProgram(page);
     await setAlwaysContinue(page);
-
-    // Run to accumulate log entries
-    await page.getByTestId("run-button").click();
-    await page.waitForTimeout(5000);
-    const pauseBtn = page.getByTestId("pause-button");
-    if (await pauseBtn.isVisible()) {
-      await pauseBtn.click();
-      await page.waitForTimeout(500);
-    }
-
+    await runAndPause(page);
     await openLogsTab(page);
 
-    // If entries exist, clear should remove them
     const entries = page.getByTestId("log-entry");
-    const countBefore = await entries.count();
-    if (countBefore > 0) {
+    const count = await entries.count();
+    if (count > 0) {
+      // Entries exist — clicking Clear should hide them
       await page.getByTestId("logs-clear-button").click();
       await expect(page.getByTestId("logs-empty")).toBeVisible();
       await expect(page.getByTestId("logs-empty")).toHaveText("No log messages yet.");
+    } else {
+      // No entries yet — Clear on empty should keep the empty state
+      await page.getByTestId("logs-clear-button").click();
+      await expect(page.getByTestId("logs-empty")).toBeVisible();
     }
   });
 });

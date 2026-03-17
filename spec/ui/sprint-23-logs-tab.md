@@ -86,3 +86,11 @@ Rules:
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-23-logs.spec.ts
 ```
+
+## Implementation Notes
+
+- **Test fixture**: `trace-001` (`fixtures/trace-001.log`) has many `ecalli=100` entries with UTF-8 decodable log messages (e.g. "Bootstrap Service Accumulate…", "Deleting item…"). Use this fixture for E2E tests that need visible log output. The `io-trace` fixture also has a few `ecalli=100` entries but fewer.
+- **Message decoding** reuses `decodeLogMessage` from `trace-display.ts` — it picks the longest `memoryRead` attached to the trace entry and decodes as UTF-8, falling back to hex on failure.
+- **Clear** uses an offset into the `allMessages` array rather than filtering or cloning, so the underlying trace data is never mutated.
+- **Auto-scroll** uses a 40px threshold from the bottom (`AUTO_SCROLL_THRESHOLD`). The `isNearBottomRef` is updated on every scroll event and checked when `messages` changes.
+- **`navigator.clipboard`** is used directly in the hook. This is acceptable since the hook lives in `apps/web/`, not in a browser-agnostic core package.
