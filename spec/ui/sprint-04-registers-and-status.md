@@ -1,5 +1,7 @@
 # Sprint 04 — Registers + Status Display (Read-Only)
 
+Status: Implemented
+
 ## Goal
 
 Show the complete machine state of the selected PVM on the debugger page: a status badge, the program counter, gas counter, and all 13 registers. Everything is read-only in this sprint — editing comes in Sprint 29.
