@@ -27,13 +27,14 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
   const prevSnapshotRef = useRef<MachineStateSnapshot | null>(null);
   const prevPvmIdRef = useRef<string | null>(null);
 
-  // Reset comparison state when selected PVM changes
-  useEffect(() => {
-    if (selectedPvmId !== prevPvmIdRef.current) {
-      prevSnapshotRef.current = null;
-      prevPvmIdRef.current = selectedPvmId;
-    }
-  }, [selectedPvmId]);
+  // Reset comparison state synchronously during render when PVM changes.
+  // This MUST happen before the useMemo calls below, otherwise switching
+  // PVMs would compare the new PVM's snapshot against the old PVM's last
+  // snapshot, producing spurious deltas for one frame.
+  if (selectedPvmId !== prevPvmIdRef.current) {
+    prevSnapshotRef.current = null;
+    prevPvmIdRef.current = selectedPvmId;
+  }
 
   // Compute changed indices by comparing current vs previous snapshot
   const changedRegisters = useMemo(() => {
