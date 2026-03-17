@@ -1,4 +1,5 @@
 import type { TraceEntry, TraceTermination, EcalliTrace } from "@pvmdbg/types";
+import { fromHex } from "@pvmdbg/types";
 import { getHostCallName, compareTraces, type TraceMismatch } from "@pvmdbg/trace";
 
 /** A displayable row — either a host-call entry or a termination. */
@@ -35,11 +36,6 @@ function mismatchPathsToEntryIndices(mismatches: TraceMismatch[]): Set<number> {
     const match = m.path.match(/^entries\[(\d+)\]/);
     if (match) {
       indices.add(Number(match[1]));
-    }
-    // "entries.length" means count differs — mark all beyond the shorter trace
-    if (m.path === "entries.length") {
-      // The mismatch itself doesn't tell us which are extra, but the
-      // per-entry mismatches (entries[N] missing) will catch those.
     }
   }
   return indices;
@@ -102,23 +98,12 @@ export function decodeLogMessage(entry: TraceEntry): string | null {
     }
   }
 
-  const bytes = hexToUint8(longest.dataHex);
-  if (bytes.length === 0) return null;
-
   try {
+    const bytes = fromHex(longest.dataHex);
+    if (bytes.length === 0) return null;
     const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     return text;
   } catch {
-    return `0x${longest.dataHex}`;
+    return longest.dataHex.startsWith("0x") ? longest.dataHex : `0x${longest.dataHex}`;
   }
-}
-
-function hexToUint8(hex: string): Uint8Array {
-  const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
-  if (clean.length === 0) return new Uint8Array(0);
-  const bytes = new Uint8Array(clean.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
 }
