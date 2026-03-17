@@ -187,6 +187,7 @@ export function DebuggerPage() {
             snapshots={snapshots}
             orchestrator={orchestrator}
             storageTable={storageTable}
+            snapshotVersion={snapshotVersion}
           />
         }
       />

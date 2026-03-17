@@ -1,5 +1,7 @@
 # Sprint 21 — Ecalli Trace Tab
 
+Status: Implemented
+
 ## Goal
 
 Replace the Ecalli Trace drawer placeholder with a side-by-side trace comparison viewer. The left column shows the execution trace recorded during the current run; the right column shows the reference trace loaded with the program. Mismatches are highlighted.
