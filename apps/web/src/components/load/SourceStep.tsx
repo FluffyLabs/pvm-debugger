@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { Button, Alert } from "@fluffylabs/shared-ui";
-import { ArrowRight, Loader2 } from "lucide-react";
-import { createProgramEnvelope, type RawPayload } from "@pvmdbg/content";
-import { useOrchestrator } from "../../hooks/useOrchestrator";
+import { ArrowRight } from "lucide-react";
+import type { RawPayload, DetectedFormat } from "@pvmdbg/content";
 import { FileUpload, type FileUploadResult } from "./FileUpload";
 import { UrlInput, type UrlInputResult } from "./UrlInput";
 import { ManualInput, type ManualInputResult } from "./ManualInput";
@@ -11,16 +9,16 @@ import { ManualInput, type ManualInputResult } from "./ManualInput";
 /** Which source type currently holds the pending selection. */
 type ActiveSource = "file" | "url" | "hex" | null;
 
-export function SourceStep() {
-  const navigate = useNavigate();
-  const { initialize, setEnvelope } = useOrchestrator();
+interface SourceStepProps {
+  onAdvance: (rawPayload: RawPayload, detectedFormat: DetectedFormat) => void;
+}
 
+export function SourceStep({ onAdvance }: SourceStepProps) {
   const [activeSource, setActiveSource] = useState<ActiveSource>(null);
   const [fileResult, setFileResult] = useState<FileUploadResult | null>(null);
   const [urlResult, setUrlResult] = useState<UrlInputResult | null>(null);
   const [hexResult, setHexResult] = useState<ManualInputResult | null>(null);
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Determine what payload is pending based on active source
@@ -32,6 +30,19 @@ export function SourceStep() {
         return urlResult?.rawPayload ?? null;
       case "hex":
         return hexResult?.rawPayload ?? null;
+      default:
+        return null;
+    }
+  }
+
+  function getPendingFormat(): DetectedFormat | null {
+    switch (activeSource) {
+      case "file":
+        return fileResult?.detectedFormat ?? null;
+      case "url":
+        return urlResult?.detectedFormat ?? null;
+      case "hex":
+        return hexResult?.detectedFormat ?? null;
       default:
         return null;
     }
@@ -83,21 +94,12 @@ export function SourceStep() {
   }
 
   // --- Continue ---
-  async function handleContinue() {
+  function handleContinue() {
     const payload = getPendingPayload();
-    if (!payload) return;
-    setLoading(true);
+    const format = getPendingFormat();
+    if (!payload || !format) return;
     setError(null);
-    try {
-      const envelope = createProgramEnvelope(payload);
-      const orch = initialize(["typeberry"]);
-      await orch.loadProgram(envelope);
-      setEnvelope(envelope);
-      navigate("/");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-      setLoading(false);
-    }
+    onAdvance(payload, format);
   }
 
   return (
@@ -152,15 +154,11 @@ export function SourceStep() {
       {/* Shared Continue button */}
       <Button
         data-testid="source-step-continue"
-        disabled={!hasPending || loading}
+        disabled={!hasPending}
         onClick={handleContinue}
         className="cursor-pointer self-start gap-1.5"
       >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <ArrowRight className="w-4 h-4" />
-        )}
+        <ArrowRight className="w-4 h-4" />
         Continue
       </Button>
     </div>

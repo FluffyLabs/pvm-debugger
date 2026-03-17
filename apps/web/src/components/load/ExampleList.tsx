@@ -1,24 +1,26 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import { Button, Badge, Alert } from "@fluffylabs/shared-ui";
 import { ChevronDown, ChevronRight, Loader2, Globe } from "lucide-react";
 import {
   getExamplesManifest,
   loadExample,
-  createProgramEnvelope,
+  detectFormat,
+  type RawPayload,
+  type DetectedFormat,
   type ExampleEntry,
   type ExampleCategory,
 } from "@pvmdbg/content";
-import { useOrchestrator } from "../../hooks/useOrchestrator";
 import { FORMAT_LABELS, FORMAT_BADGE_INTENT } from "./format";
 
 function isRemote(example: ExampleEntry): boolean {
   return !!example.url && !example.file;
 }
 
-export function ExampleList() {
-  const navigate = useNavigate();
-  const { initialize, setEnvelope } = useOrchestrator();
+interface ExampleListProps {
+  onAdvance: (rawPayload: RawPayload, detectedFormat: DetectedFormat, exampleEntry: ExampleEntry) => void;
+}
+
+export function ExampleList({ onAdvance }: ExampleListProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
@@ -45,13 +47,11 @@ export function ExampleList() {
     try {
       const fixturesBase = new URL("/fixtures/", window.location.origin).href;
       const rawPayload = await loadExample(example.id, fixturesBase);
-      const envelope = createProgramEnvelope(rawPayload);
-      const orch = initialize(["typeberry"]);
-      await orch.loadProgram(envelope);
-      setEnvelope(envelope);
-      navigate("/");
+      const detectedFormat = detectFormat(rawPayload.bytes);
+      onAdvance(rawPayload, detectedFormat, example);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
       setLoadingId(null);
     }
   }

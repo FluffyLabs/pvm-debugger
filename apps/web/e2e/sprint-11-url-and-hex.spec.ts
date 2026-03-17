@@ -155,6 +155,10 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await expect(page.getByTestId("source-step-continue")).toBeEnabled();
     await page.getByTestId("source-step-continue").click();
 
+    // Step 2: detection summary
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await page.getByTestId("config-step-load").click();
+
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
@@ -167,6 +171,11 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await expect(page.getByTestId("url-input-success")).toBeVisible({ timeout: 10000 });
 
     await page.getByTestId("source-step-continue").click();
+
+    // Step 2: detection summary
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await page.getByTestId("config-step-load").click();
+
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 

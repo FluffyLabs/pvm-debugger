@@ -20,6 +20,10 @@ test.describe("Sprint 02 — Load a Bundled Example", () => {
     await expect(firstCard).toBeVisible();
     await firstCard.click();
 
+    // Step 2: detection summary
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await page.getByTestId("config-step-load").click();
+
     // Should navigate to debugger page
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
@@ -29,6 +33,9 @@ test.describe("Sprint 02 — Load a Bundled Example", () => {
     const firstCard = page.getByTestId("example-card-add");
     await expect(firstCard).toBeVisible();
     await firstCard.click();
+
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await page.getByTestId("config-step-load").click();
 
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
     await expect(page.getByTestId("pvm-status-typeberry")).toBeVisible();
@@ -40,6 +47,9 @@ test.describe("Sprint 02 — Load a Bundled Example", () => {
     const jamCard = page.getByTestId("example-card-add-jam");
     await expect(jamCard).toBeVisible();
     await jamCard.click();
+
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await page.getByTestId("config-step-load").click();
 
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
