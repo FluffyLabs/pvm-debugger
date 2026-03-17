@@ -45,7 +45,7 @@ export function stepsForMode(mode: SteppingMode, nInstructionsCount: number): nu
 }
 
 /** Convert a trace-backed resume proposal to effects, or return empty effects. */
-function proposalToEffects(proposal?: HostCallResumeProposal): HostCallResumeEffects {
+export function proposalToEffects(proposal?: HostCallResumeProposal): HostCallResumeEffects {
   if (!proposal) return {};
   return {
     registerWrites: proposal.registerWrites,
@@ -65,7 +65,7 @@ async function resumeAllHostCalls(orch: Orchestrator): Promise<void> {
 }
 
 /** Determine whether to auto-continue past host calls during run mode. */
-function shouldAutoContinue(
+export function shouldAutoContinue(
   policy: AutoContinuePolicy,
   result: StepResult,
 ): boolean {
@@ -85,7 +85,7 @@ function shouldAutoContinue(
 }
 
 /** Check whether any PVM in the step result is paused on a host call. */
-function hasHostCallPause(result: StepResult): boolean {
+export function hasHostCallPause(result: StepResult): boolean {
   for (const [, report] of result.results) {
     if (report.lifecycle === "paused_host_call") {
       return true;

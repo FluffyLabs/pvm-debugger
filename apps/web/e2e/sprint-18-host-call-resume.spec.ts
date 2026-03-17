@@ -43,19 +43,22 @@ test.describe("Sprint 18 — Host Call Resume Flow", () => {
     await page.getByTestId("run-button").click();
     await expect(pvmStatus(page)).toHaveText("Host Call", { timeout: 15000 });
 
+    // Record PC before clicking Next
+    const pcBefore = await page.getByTestId("pc-value").textContent();
+
     // Click Next — it should resume the host call and step past it
     const nextBtn = page.getByTestId("next-button");
     await expect(nextBtn).toBeEnabled();
     await nextBtn.click();
 
-    // Status should change from "Host Call" to something else (OK, or another Host Call after stepping)
-    // Wait for the step to complete — status should not remain "Host Call" permanently
-    // It might become OK briefly or hit another host call after stepping
-    await expect(pvmStatus(page)).not.toHaveText("Host Call", { timeout: 5000 }).catch(() => {
-      // It's acceptable if another host call is hit immediately after stepping
-      // (the PVM stepped 1 instruction and hit another ecalli)
-      // As long as it actually processed the resume, the test is valid
-    });
+    // Wait for the step to process
+    await page.waitForTimeout(500);
+
+    // PC must have changed — proving the host call was resumed and a step executed.
+    // (Status may land on another Host Call if the very next instruction is ecalli,
+    // but the PC change proves the resume happened.)
+    const pcAfter = await page.getByTestId("pc-value").textContent();
+    expect(pcAfter).not.toBe(pcBefore);
   });
 
   test("Next while paused on host call resumes and steps", async ({ page }) => {

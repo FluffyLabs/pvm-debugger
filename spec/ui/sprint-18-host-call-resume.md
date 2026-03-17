@@ -77,4 +77,21 @@ Use a trace-backed example that includes host calls.
 ```bash
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-18-host-call-resume.spec.ts
+npm test -- --reporter=verbose apps/web/src/hooks/useDebuggerActions.test.ts
 ```
+
+## Implementation Notes
+
+### Architecture decisions
+
+- **Resume reads from orchestrator, not React state.** `resumeAllHostCalls()` calls `orchestrator.getPendingHostCall(pvmId)` directly rather than reading the `hostCallInfo` React state map. This avoids stale-closure issues in async callbacks and is always authoritative.
+- **Resume ALL PVMs, not just the selected one.** When the user clicks Next/Step/Run, all PVMs with pending host calls are resumed. This is correct for multi-PVM scenarios where different PVMs may hit host calls at different times.
+- **Explicit resume before first step in Run.** When the user clicks Run while already paused on a host call, the resume always happens (regardless of auto-continue policy) because the user explicitly requested execution. The auto-continue policy only applies to host calls encountered *during* the run loop.
+- **`autoContinuePolicy` is captured at `run()` creation time.** If the user changes the policy while the run loop is active, the change takes effect on the *next* Run invocation, not mid-loop. This is standard React `useCallback` behavior.
+
+### Edge cases and pitfalls
+
+- **`canStep` is already true for `paused_host_call`.** The `isTerminal()` check returns false for `paused_host_call`, and `isStepInProgress` is set to false by the `hostCallPaused` event handler. No special `canStep` logic was needed.
+- **Immediate consecutive host calls.** If Next resumes a host call and the very next instruction is also ecalli, the PVM pauses on the new host call. The PC changes (proving the resume worked), but the lifecycle remains `paused_host_call`. This is correct behavior — tests verify via PC change, not lifecycle change.
+- **`continue_when_trace_matches` checks ALL host-call-paused PVMs.** If PVM A has a matching trace but PVM B does not, auto-continue returns false. This is conservative — it only continues when *all* host calls match.
+- **`hostCallInfo` map in `useOrchestratorState` is not cleaned up on resume.** After `resumeHostCall()`, the orchestrator emits `pvmStateChanged` with `lifecycle: "paused"`, but the `hostCallInfo` map retains the stale entry. This doesn't affect Sprint 18 (we use `getPendingHostCall()` directly), but Sprint 19's Host Call drawer should clear entries when lifecycle transitions away from `paused_host_call`.
