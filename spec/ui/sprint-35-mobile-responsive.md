@@ -69,6 +69,14 @@ Use narrow viewport (e.g., 375px width):
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
 
+### Implementation Notes & Edge Cases
+
+- **Panel switcher hidden on desktop**: The switcher bar renders in the DOM always but is `display: none` above 768px. Tests verify it is not visible on wide viewports.
+- **Panel state preserved**: All three panel React trees stay mounted (CSS `display: none`), so scroll position and component state are preserved when switching panels on mobile. Do NOT switch to conditional rendering — that would lose state.
+- **Resize recovery**: Resizing from narrow back to wide viewport restores the 3-column grid because `data-mobile-visible` attributes only apply within the media query. No JS cleanup needed.
+- **Sidebar hiding**: Uses `.app-body > aside` selector, which depends on `AppsSidebar` rendering an `<aside>` element. If shared-ui changes that, the selector will break.
+- **Toolbar wrapping**: On mobile the toolbar gets `flex-wrap: wrap` to prevent overflow, since execution controls + PVM tabs don't fit in 375px on one line.
+
 ## Verification
 
 ```bash

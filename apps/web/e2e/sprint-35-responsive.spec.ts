@@ -76,6 +76,40 @@ test.describe("Sprint 35 — Mobile / Responsive Layout", () => {
     expect(panelsBox!.y + panelsBox!.height).toBeLessThanOrEqual(drawerBox!.y + 2);
   });
 
+  test("panel switcher is hidden on wide viewport", async ({ page }) => {
+    await loadProgram(page);
+    // Default viewport is wide (1280x720) — switcher should be hidden
+    const switcher = page.getByTestId("panel-switcher");
+    await expect(switcher).not.toBeVisible();
+
+    // All three panels should be visible side by side
+    await expect(page.getByTestId("panel-instructions")).toBeVisible();
+    await expect(page.getByTestId("panel-registers")).toBeVisible();
+    await expect(page.getByTestId("panel-memory")).toBeVisible();
+  });
+
+  test("resizing back to desktop restores 3-column layout", async ({ page }) => {
+    await loadProgram(page);
+
+    // Go narrow first
+    await page.setViewportSize({ width: NARROW_WIDTH, height: NARROW_HEIGHT });
+    await expect(page.getByTestId("panel-switcher")).toBeVisible();
+
+    // Switch to registers so we're not on the default panel
+    await page.getByTestId("panel-switcher-registers").click();
+    await expect(page.getByTestId("panel-registers")).toBeVisible();
+    await expect(page.getByTestId("panel-instructions")).not.toBeVisible();
+
+    // Resize back to desktop
+    await page.setViewportSize({ width: 1280, height: 720 });
+
+    // Switcher should hide, all 3 panels should be visible
+    await expect(page.getByTestId("panel-switcher")).not.toBeVisible();
+    await expect(page.getByTestId("panel-instructions")).toBeVisible();
+    await expect(page.getByTestId("panel-registers")).toBeVisible();
+    await expect(page.getByTestId("panel-memory")).toBeVisible();
+  });
+
   test("load page columns stack vertically on narrow viewport", async ({ page }) => {
     await page.goto("/#/load");
     await expect(page.getByTestId("load-page")).toBeVisible();

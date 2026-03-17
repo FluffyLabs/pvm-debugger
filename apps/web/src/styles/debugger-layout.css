@@ -87,7 +87,6 @@
   .debugger-panels {
     display: flex;
     flex-direction: column;
-    grid-template-columns: none;
   }
 
   .debugger-panel {
