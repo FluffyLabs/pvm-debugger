@@ -44,6 +44,7 @@ export function ExecutionControls({
       <button
         data-testid="reset-button"
         aria-label="Reset"
+        title="Reset (Ctrl+Shift+R)"
         onClick={onReset}
         className={btnClass}
       >
@@ -56,6 +57,7 @@ export function ExecutionControls({
       <button
         data-testid="next-button"
         aria-label="Next"
+        title="Next (F10)"
         onClick={onNext}
         disabled={!canStep || isRunning}
         className={btnClass}
@@ -83,6 +85,7 @@ export function ExecutionControls({
           key="pause"
           data-testid="pause-button"
           aria-label="Pause"
+          title="Pause (F5)"
           onClick={onPause}
           className={btnClass}
         >
@@ -94,6 +97,7 @@ export function ExecutionControls({
           key="run"
           data-testid="run-button"
           aria-label="Run"
+          title="Run (F5)"
           onClick={onRun}
           disabled={isTerminated}
           className={btnClass}

@@ -130,29 +130,33 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
   test("shortcuts do not fire when focus is inside an input", async ({ page }) => {
     await loadProgram(page);
 
+    // Open drawer settings tab and switch to n_instructions mode to expose a text input.
+    await page.getByTestId("drawer-tab-settings").click();
+    await expect(page.getByTestId("settings-tab")).toBeVisible();
+    await page.getByTestId("stepping-radio-n_instructions").click();
+    const input = page.getByTestId("n-instructions-count");
+    await expect(input).toBeVisible();
+
     const pcValue = page.getByTestId("pc-value");
     const initialPc = await pcValue.textContent();
 
-    // Focus on the first input on the page (e.g., memory address input)
-    const input = page.locator("input").first();
-    if (await input.isVisible()) {
-      await input.focus();
+    // Focus the input
+    await input.focus();
 
-      // Dispatch F10 from the input element (target is input, so handler skips it)
-      await page.evaluate(() => {
-        const el = document.querySelector("input");
-        if (el) {
-          el.dispatchEvent(
-            new KeyboardEvent("keydown", { key: "F10", bubbles: true, cancelable: true }),
-          );
-        }
-      });
+    // Dispatch F10 from the input element (target is input, so handler skips it)
+    await page.evaluate(() => {
+      const el = document.querySelector("[data-testid='n-instructions-count']");
+      if (el) {
+        el.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "F10", bubbles: true, cancelable: true }),
+        );
+      }
+    });
 
-      // Small wait to ensure no async step happened
-      await page.waitForTimeout(200);
+    // Small wait to ensure no async step happened
+    await page.waitForTimeout(200);
 
-      // PC should remain unchanged
-      await expect(pcValue).toHaveText(initialPc!);
-    }
+    // PC should remain unchanged
+    await expect(pcValue).toHaveText(initialPc!);
   });
 });
