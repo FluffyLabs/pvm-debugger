@@ -61,7 +61,9 @@ Rules:
 - clicking Next advances the PC (PC value changes)
 - gas decreases after stepping
 - at least one register value changes after stepping a program with register-writing instructions
-- Next button is disabled during step execution
+- Next button is disabled during step execution and re-enables after
+- Next button stays disabled in terminal state
+- instruction panel highlight moves after stepping
 ```
 
 ## Acceptance Criteria
@@ -72,7 +74,34 @@ Rules:
 - The registers panel updates PC, gas, and register values.
 - The button is disabled during step execution and in terminal states.
 - `cd apps/web && npx vite build` succeeds.
-- E2E tests pass.
+- E2E tests pass (7 tests).
+
+## Implementation Notes & Pitfalls
+
+### React rules of hooks
+`useDebuggerActions` must be called BEFORE the route guard early return in
+`DebuggerPage`. Moving it after the `if (!orchestrator) return <Navigate>` block
+violates React's rules of hooks (conditional hook count across renders).
+
+### Fixture opcode incompatibility
+The existing generic `.pvm` fixtures (`add.pvm`, `fibonacci.pvm`, etc.) use
+PVM-spec opcode values (e.g., `add_32 = 4`), but typeberry uses different
+internal opcode values (`ADD_32 = 190`, `LOAD_IMM = 51`). These programs
+**panic immediately** on the first step when loaded via typeberry.
+
+A `step-test.pvm` fixture was created using typeberry-compatible opcodes
+(a single `LOAD_IMM r0=42` instruction, opcode 51). This is the only generic
+fixture that reliably survives stepping. Future sprints needing multi-step
+programs should either:
+- Create fixtures with typeberry opcodes and matching instruction boundary masks
+- Use a program format that handles opcode translation (JAM SPI programs go through
+  `resetJAM()` which may use a different encoding path)
+
+### Instruction boundary mask
+`encodePvmBlob()` only marks byte 0 as an instruction start by default.
+Multi-instruction programs need explicit `instructionStarts` arrays passed to
+`encodePvmBlob`, but `decodeGeneric()` doesn't support this yet. Single-instruction
+fixtures work correctly with the default `[0]` mask.
 
 ## Verification
 

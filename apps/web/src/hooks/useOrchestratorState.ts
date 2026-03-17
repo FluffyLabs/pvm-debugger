@@ -15,8 +15,8 @@ export interface OrchestratorReactiveState {
  * (e.g. in DebuggerPage) and pass results down via props — do NOT call from
  * individual panels, as each call creates independent event subscriptions.
  *
- * `isStepInProgress` is set to false by event handlers but must be set to true
- * externally when initiating a step (wired in the execution controls sprint).
+ * `isStepInProgress` is set to false by event handlers and set to true by
+ * `useDebuggerActions` when initiating a step via the exposed `setIsStepInProgress`.
  */
 export function useOrchestratorState(): OrchestratorReactiveState {
   const { orchestrator } = useOrchestrator();

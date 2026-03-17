@@ -71,4 +71,37 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
     // Button should re-enable after the step completes (PVM is still ok)
     await expect(nextBtn).toBeEnabled({ timeout: 5000 });
   });
+
+  test("Next button stays disabled in terminal state", async ({ page }) => {
+    await loadProgram(page);
+
+    const nextBtn = page.getByTestId("next-button");
+
+    // Step once: executes LOAD_IMM, PVM still ok at PC=6
+    await nextBtn.click();
+    await expect(nextBtn).toBeEnabled({ timeout: 5000 });
+
+    // Step again: PC=6 is past program end, PVM panics → terminal
+    await nextBtn.click();
+
+    // Button should stay disabled (terminal state)
+    await expect(nextBtn).toBeDisabled({ timeout: 5000 });
+  });
+
+  test("instruction panel highlight moves after stepping", async ({ page }) => {
+    await loadProgram(page);
+
+    // The initial row at PC=0 should have the highlight class
+    const row0 = page.getByTestId("instruction-row-0");
+    await expect(row0).toBeVisible();
+    await expect(row0).toHaveClass(/bg-primary/);
+
+    await page.getByTestId("next-button").click();
+
+    // Wait for PC to change
+    await expect(page.getByTestId("pc-value")).not.toHaveText("0x0000", { timeout: 5000 });
+
+    // Row at PC=0 should no longer be highlighted
+    await expect(row0).not.toHaveClass(/bg-primary/);
+  });
 });

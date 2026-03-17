@@ -14,22 +14,24 @@ export function DebuggerPage() {
     useOrchestratorState();
   const instructions = useDisassembly(envelope);
 
-  // Route guard: redirect to /load when no program is loaded
-  if (!orchestrator || !orchestrator.getProgramBytes()) {
-    return <Navigate to="/load" replace />;
-  }
-
-  // Get current PVM state
+  // Get current PVM state (must be before early return — hooks below depend on it)
   const selectedEntry = selectedPvmId ? snapshots.get(selectedPvmId) : undefined;
-  const currentPc = selectedEntry?.snapshot.pc ?? 0;
   const selectedLifecycle = selectedEntry?.lifecycle ?? null;
 
+  // useDebuggerActions must be called before any early return (React rules of hooks)
   const { next, canStep } = useDebuggerActions({
     orchestrator,
     isStepInProgress,
     setIsStepInProgress,
     selectedLifecycle,
   });
+
+  // Route guard: redirect to /load when no program is loaded
+  if (!orchestrator || !orchestrator.getProgramBytes()) {
+    return <Navigate to="/load" replace />;
+  }
+
+  const currentPc = selectedEntry?.snapshot.pc ?? 0;
 
   return (
     <div data-testid="debugger-page" className="flex flex-col h-full">
