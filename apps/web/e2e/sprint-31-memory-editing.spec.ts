@@ -156,20 +156,19 @@ test.describe("Sprint 31 — Memory SPI Labels + Inline Editing", () => {
         }
       }
 
-      if (roHeaderFound) {
-        // Wait for hex dump to appear
-        const hexDump = page.getByTestId("hex-dump").first();
-        await expect(hexDump).toBeVisible({ timeout: 5000 });
+      // SPI programs (add-jam) must have RO Data pages
+      expect(roHeaderFound).toBe(true);
 
-        // Clicking a byte cell should NOT open an editor
-        const firstByte = page.getByTestId("hex-byte-0");
-        if (await firstByte.count() > 0) {
-          await firstByte.click();
-          // No input should appear — the byte cell is not editable
-          await expect(page.getByTestId("hex-byte-input-0")).not.toBeVisible();
-        }
-      }
-      // If no RO header found, the SPI program may not have RO pages — test passes vacuously
+      // Wait for hex dump to appear
+      const hexDump = page.getByTestId("hex-dump").first();
+      await expect(hexDump).toBeVisible({ timeout: 5000 });
+
+      // Clicking a byte cell should NOT open an editor
+      const firstByte = page.getByTestId("hex-byte-0");
+      await expect(firstByte).toBeVisible();
+      await firstByte.click();
+      // No input should appear — the byte cell is not editable
+      await expect(page.getByTestId("hex-byte-input-0")).not.toBeVisible();
     });
 
     test("editing is disabled when not paused with OK status", async ({ page }) => {

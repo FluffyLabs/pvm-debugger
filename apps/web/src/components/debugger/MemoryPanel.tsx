@@ -18,13 +18,13 @@ interface MemoryPanelProps {
   editable: boolean;
 }
 
-interface ExpandedPage {
+export interface ExpandedPage {
   address: number;
   isWritable: boolean;
 }
 
 /** Expand page map segments into individual 4 KiB pages with writable info, sorted ascending. */
-function expandPages(pageMap: PageMapEntry[]): ExpandedPage[] {
+export function expandPages(pageMap: PageMapEntry[]): ExpandedPage[] {
   const pageMap_ = new Map<number, boolean>();
   for (const entry of pageMap) {
     const pageCount = Math.ceil(entry.length / PAGE_SIZE);
@@ -40,7 +40,7 @@ function expandPages(pageMap: PageMapEntry[]): ExpandedPage[] {
 }
 
 /** Compute the set of page addresses that overlap with any memory chunk (initialized data). */
-function computeInitializedPages(memoryChunks: MemoryChunk[]): Set<number> {
+export function computeInitializedPages(memoryChunks: MemoryChunk[]): Set<number> {
   const pages = new Set<number>();
   for (const chunk of memoryChunks) {
     const start = chunk.address;
@@ -55,7 +55,7 @@ function computeInitializedPages(memoryChunks: MemoryChunk[]): Set<number> {
 }
 
 /** Get an SPI-aware label for a memory page, or a generic fallback. */
-function getPageLabel(
+export function getPageLabel(
   address: number,
   isWritable: boolean,
   programKind: "generic" | "jam_spi",

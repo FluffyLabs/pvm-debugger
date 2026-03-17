@@ -1,57 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { PageMapEntry, MemoryChunk } from "@pvmdbg/types";
-
-// Extract expandPages for testability — same logic as in MemoryPanel.tsx
-const PAGE_SIZE = 4096;
-
-interface ExpandedPage {
-  address: number;
-  isWritable: boolean;
-}
-
-function expandPages(pageMap: PageMapEntry[]): ExpandedPage[] {
-  const pageMap_ = new Map<number, boolean>();
-  for (const entry of pageMap) {
-    const pageCount = Math.ceil(entry.length / PAGE_SIZE);
-    for (let i = 0; i < pageCount; i++) {
-      const addr = entry.address + i * PAGE_SIZE;
-      pageMap_.set(addr, pageMap_.get(addr) || entry.isWritable);
-    }
-  }
-  return [...pageMap_.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([address, isWritable]) => ({ address, isWritable }));
-}
-
-function computeInitializedPages(memoryChunks: MemoryChunk[]): Set<number> {
-  const pages = new Set<number>();
-  for (const chunk of memoryChunks) {
-    const start = chunk.address;
-    const end = start + chunk.data.length;
-    const firstPage = Math.floor(start / PAGE_SIZE) * PAGE_SIZE;
-    for (let addr = firstPage; addr < end; addr += PAGE_SIZE) {
-      pages.add(addr);
-    }
-  }
-  return pages;
-}
-
-function getPageLabel(
-  address: number,
-  isWritable: boolean,
-  programKind: "generic" | "jam_spi",
-  initializedPages: Set<number>,
-): string {
-  if (programKind !== "jam_spi") {
-    return "Page @ 0x" + address.toString(16).toUpperCase();
-  }
-  if (address === 0xfeff0000) return "Arguments";
-  if (address >= 0xfefe0000 && address < 0xfeff0000) return "Stack";
-  if (!isWritable && address >= 0x00010000) return "RO Data";
-  if (isWritable && initializedPages.has(address)) return "RW Data";
-  if (isWritable) return "Heap";
-  return "Page @ 0x" + address.toString(16).toUpperCase();
-}
+import { expandPages, computeInitializedPages, getPageLabel } from "./MemoryPanel";
+import { sanitizeHexInput } from "./HexDump";
 
 describe("expandPages", () => {
   it("returns empty array for empty page map", () => {
@@ -132,6 +82,21 @@ describe("computeInitializedPages", () => {
     ];
     expect(computeInitializedPages(chunks)).toEqual(new Set([0x10000, 0x11000]));
   });
+
+  it("returns empty set for zero-length chunk", () => {
+    const chunks: MemoryChunk[] = [
+      { address: 0x10000, data: new Uint8Array(0) },
+    ];
+    expect(computeInitializedPages(chunks)).toEqual(new Set());
+  });
+
+  it("handles multiple disjoint chunks", () => {
+    const chunks: MemoryChunk[] = [
+      { address: 0x10000, data: new Uint8Array(10) },
+      { address: 0x30000, data: new Uint8Array(10) },
+    ];
+    expect(computeInitializedPages(chunks)).toEqual(new Set([0x10000, 0x30000]));
+  });
 });
 
 describe("getPageLabel", () => {
@@ -161,5 +126,39 @@ describe("getPageLabel", () => {
 
   it("returns Heap for writable SPI pages not backed by chunks", () => {
     expect(getPageLabel(0x20000, true, "jam_spi", emptyInit)).toBe("Heap");
+  });
+
+  it("falls back to generic label for SPI non-writable pages below 0x10000", () => {
+    expect(getPageLabel(0x5000, false, "jam_spi", emptyInit)).toBe("Page @ 0x5000");
+  });
+
+  it("returns Stack not Arguments at 0xFEFEF000 (one page below Arguments)", () => {
+    expect(getPageLabel(0xfefef000, true, "jam_spi", emptyInit)).toBe("Stack");
+  });
+});
+
+describe("sanitizeHexInput", () => {
+  it("strips spaces", () => {
+    expect(sanitizeHexInput("AB CD")).toBe("ABCD");
+  });
+
+  it("strips 0x prefix", () => {
+    expect(sanitizeHexInput("0xABCD")).toBe("ABCD");
+  });
+
+  it("strips colons, dashes, commas, semicolons", () => {
+    expect(sanitizeHexInput("AB:CD-EF,01;23")).toBe("ABCDEF0123");
+  });
+
+  it("removes non-hex characters", () => {
+    expect(sanitizeHexInput("GHzz12XY")).toBe("12");
+  });
+
+  it("handles empty string", () => {
+    expect(sanitizeHexInput("")).toBe("");
+  });
+
+  it("handles multiple 0x prefixes", () => {
+    expect(sanitizeHexInput("0xAB 0xCD")).toBe("ABCD");
   });
 });

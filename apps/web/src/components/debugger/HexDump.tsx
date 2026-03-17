@@ -24,7 +24,7 @@ function byteToHex(byte: number): string {
 const HEX_CHARS = new Set("0123456789abcdefABCDEF");
 
 /** Strip common hex separators and 0x prefixes, return only hex chars. */
-function sanitizeHexInput(text: string): string {
+export function sanitizeHexInput(text: string): string {
   return text.replace(/0x/gi, "").replace(/[\s,;:-]/g, "").split("").filter((c) => HEX_CHARS.has(c)).join("");
 }
 
@@ -104,9 +104,9 @@ function ByteCell({
   return (
     <span
       data-testid={`hex-byte-${offset}`}
-      className={`inline-block cursor-${editable ? "pointer" : "default"} ${
+      className={`inline-block ${editable ? "cursor-pointer hover:bg-accent/50 rounded" : "cursor-default"} ${
         byte === 0 ? "text-muted-foreground/40" : "text-foreground"
-      } ${editable ? "hover:bg-accent/50 rounded" : ""}`}
+      }`}
       style={{ width: "1.5em", textAlign: "center" }}
       onClick={editable ? () => onStartEdit(offset) : undefined}
     >
