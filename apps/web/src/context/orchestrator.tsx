@@ -2,6 +2,7 @@ import { createContext, useCallback, useEffect, useRef, useState, type ReactNode
 import { Orchestrator } from "@pvmdbg/orchestrator";
 import type { ProgramEnvelope } from "@pvmdbg/types";
 import { createPvmAdapter } from "../lib/runtime";
+import { installDevBridge } from "../lib/dev-bridge";
 
 export interface OrchestratorContextValue {
   orchestrator: Orchestrator | null;
@@ -50,6 +51,11 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
     },
     [teardown],
   );
+
+  // Install dev bridge for E2E testing (no-op in production)
+  useEffect(() => {
+    installDevBridge(() => orchestratorRef.current);
+  }, []);
 
   // Teardown on unmount
   useEffect(() => {

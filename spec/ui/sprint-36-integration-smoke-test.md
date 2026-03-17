@@ -1,5 +1,7 @@
 # Sprint 36 — Integration Smoke Test + Dev Bridge
 
+Status: Implemented
+
 ## Goal
 
 Add a dev-only test bridge on `window.__PVMDBG__` for E2E state manipulation and a cross-cutting Playwright smoke suite that validates the full debugger journey across all major program kinds.
