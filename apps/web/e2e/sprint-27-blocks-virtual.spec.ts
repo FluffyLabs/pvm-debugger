@@ -45,10 +45,8 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     const headerCount = await allHeaders.count();
     expect(headerCount).toBeGreaterThan(1);
 
-    // Use the last block header (unlikely to contain PC=0)
+    // Use the last block header (unlikely to contain current PC)
     const lastHeader = allHeaders.last();
-    const lastHeaderTestId = await lastHeader.getAttribute("data-testid");
-    const blockIdx = lastHeaderTestId!.replace("block-header-", "");
 
     // Click to collapse
     await lastHeader.click();
