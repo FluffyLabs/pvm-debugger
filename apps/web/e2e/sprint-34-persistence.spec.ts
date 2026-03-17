@@ -1,19 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Sprint 34 — Persistence + Reload", () => {
-  /** Load a generic example program and wait for the debugger page. */
+  /** Load an example program by card ID and wait for the debugger page. */
   async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
-    await page.goto("/#/load");
-    const card = page.getByTestId(`example-card-${exampleId}`);
-    await expect(card).toBeVisible({ timeout: 15000 });
-    await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
-  }
-
-  /** Load a JAM SPI example and wait for the debugger page. */
-  async function loadSpiProgram(page: import("@playwright/test").Page, exampleId = "add-jam") {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
@@ -48,6 +37,27 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
 
     // PC should be the same initial value (fresh initial state)
     await expect(page.getByTestId("pc-value")).toHaveText(initialPc!);
+  });
+
+  test("restored state is fresh initial state, not mid-execution", async ({ page }) => {
+    await loadProgram(page);
+
+    // Capture the initial PC before stepping
+    const initialPc = await page.getByTestId("pc-value").textContent();
+
+    // Step forward to mutate state
+    await page.getByTestId("next-button").click();
+    // Wait for PC to change (execution happened)
+    await expect(page.getByTestId("pc-value")).not.toHaveText(initialPc!);
+
+    const steppedPc = await page.getByTestId("pc-value").textContent();
+    expect(steppedPc).not.toBe(initialPc);
+
+    // Reload — should restore to initial state, not the stepped state
+    await page.reload();
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("pc-value")).toHaveText(initialPc!);
+    await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
   });
 
   test("Back to Loader clears program persistence", async ({ page }) => {
@@ -108,7 +118,7 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
 
   test("SPI entrypoint changes survive refresh", async ({ page }) => {
     // Load a JAM SPI example (add-jam defaults to accumulate with PC=5)
-    await loadSpiProgram(page, "add-jam");
+    await loadProgram(page, "add-jam");
 
     // Verify the initial PC is 0x0005 (accumulate entrypoint)
     await expect(page.getByTestId("pc-value")).toHaveText("0x0005");

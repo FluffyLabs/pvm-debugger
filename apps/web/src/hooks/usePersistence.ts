@@ -37,8 +37,15 @@ interface PersistedFormatMeta {
   forceGeneric: boolean;
 }
 
+/** JSON-safe SPI params shape (Uint8Arrays stored as hex strings). */
+interface SerializedSpiParams {
+  entrypoint: string;
+  pc: number;
+  params: Record<string, string | number>;
+}
+
 /** Serialize SPI params to a JSON-safe shape (Uint8Arrays → hex strings). */
-function serializeSpiParams(params: SpiEntrypointParams): unknown {
+function serializeSpiParams(params: SpiEntrypointParams): SerializedSpiParams {
   if (params.entrypoint === "refine") {
     return {
       entrypoint: params.entrypoint,
@@ -52,12 +59,43 @@ function serializeSpiParams(params: SpiEntrypointParams): unknown {
       },
     };
   }
-  return params;
+  if (params.entrypoint === "accumulate") {
+    return {
+      entrypoint: params.entrypoint,
+      pc: params.pc,
+      params: {
+        slot: params.params.slot,
+        id: params.params.id,
+        results: params.params.results,
+      },
+    };
+  }
+  return {
+    entrypoint: params.entrypoint,
+    pc: params.pc,
+    params: { core: params.params.core },
+  };
+}
+
+function requireNumber(value: unknown, field: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`Invalid SPI field "${field}": expected number, got ${typeof value}`);
+  }
+  return value;
 }
 
 /** Deserialize SPI params from JSON (hex strings → Uint8Arrays). */
-function deserializeSpiParams(data: Record<string, unknown>): SpiEntrypointParams {
+function deserializeSpiParams(data: unknown): SpiEntrypointParams {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid SPI config: expected object");
+  }
   const d = data as Record<string, unknown>;
+  if (typeof d.entrypoint !== "string") {
+    throw new Error("Invalid SPI config: missing entrypoint");
+  }
+  if (typeof d.params !== "object" || d.params === null) {
+    throw new Error("Invalid SPI config: missing params");
+  }
   const params = d.params as Record<string, unknown>;
 
   if (d.entrypoint === "refine") {
@@ -65,9 +103,9 @@ function deserializeSpiParams(data: Record<string, unknown>): SpiEntrypointParam
       entrypoint: "refine",
       pc: 0,
       params: {
-        core: params.core as number,
-        index: params.index as number,
-        id: params.id as number,
+        core: requireNumber(params.core, "core"),
+        index: requireNumber(params.index, "index"),
+        id: requireNumber(params.id, "id"),
         payload:
           typeof params.payload === "string" && params.payload.length > 0
             ? fromHex(params.payload)
@@ -84,9 +122,9 @@ function deserializeSpiParams(data: Record<string, unknown>): SpiEntrypointParam
       entrypoint: "accumulate",
       pc: 5,
       params: {
-        slot: params.slot as number,
-        id: params.id as number,
-        results: params.results as number,
+        slot: requireNumber(params.slot, "slot"),
+        id: requireNumber(params.id, "id"),
+        results: requireNumber(params.results, "results"),
       },
     };
   }
@@ -94,7 +132,7 @@ function deserializeSpiParams(data: Record<string, unknown>): SpiEntrypointParam
     return {
       entrypoint: "is_authorized",
       pc: 0,
-      params: { core: params.core as number },
+      params: { core: requireNumber(params.core, "core") },
     };
   }
   throw new Error(`Unknown SPI entrypoint: ${String(d.entrypoint)}`);
