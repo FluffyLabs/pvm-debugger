@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
 import type { PvmLifecycle, HostCallResumeEffects, HostCallResumeProposal, HostCallInfo, StepResult } from "@pvmdbg/types";
-import { isTerminal } from "@pvmdbg/types";
+import { isTerminal, toHex } from "@pvmdbg/types";
 import type { SteppingMode, AutoContinuePolicy } from "../lib/debugger-settings";
 import type { UseStorageTable } from "./useStorageTable";
+import { deriveKeyHex } from "../lib/storage-utils";
 
 interface UseDebuggerActionsParams {
   orchestrator: Orchestrator | null;
@@ -66,7 +67,7 @@ export function proposalToEffects(proposal?: HostCallResumeProposal): HostCallRe
  * For write (index 4): after resume, the written k/v should be persisted to
  * the storage table (done in the caller after resume).
  */
-function storageAwareEffects(
+export function storageAwareEffects(
   hc: HostCallInfo,
   storageTable: UseStorageTable,
 ): HostCallResumeEffects {
@@ -78,7 +79,7 @@ function storageAwareEffects(
   }
 
   // Try to derive the key hex for this host call
-  const keyHex = deriveStorageKeyHex(hc);
+  const keyHex = deriveKeyHex(hc);
   if (!keyHex) return base;
 
   // Check if there's a custom value in the storage table
@@ -100,44 +101,8 @@ function storageAwareEffects(
   return base;
 }
 
-/** Derive a hex key string from a storage host call's register state. */
-function deriveStorageKeyHex(hc: HostCallInfo): string | null {
-  const proposal = hc.resumeProposal;
-  if (!proposal) return null;
-
-  let keyPtr: number;
-  let keyLen: number;
-
-  if (hc.hostCallIndex === 3) {
-    // read: key at ω8, len at ω9
-    keyPtr = Number(hc.currentState.registers[8] ?? 0n);
-    keyLen = Number(hc.currentState.registers[9] ?? 0n);
-  } else if (hc.hostCallIndex === 4) {
-    // write: key at ω7, len at ω8
-    keyPtr = Number(hc.currentState.registers[7] ?? 0n);
-    keyLen = Number(hc.currentState.registers[8] ?? 0n);
-  } else {
-    return null;
-  }
-
-  // Look for the key data in memory writes (trace data)
-  for (const mw of proposal.memoryWrites) {
-    if (mw.address === keyPtr && mw.data.length >= keyLen) {
-      const keyData = mw.data.slice(0, keyLen);
-      return (
-        "0x" +
-        Array.from(keyData)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("")
-      );
-    }
-  }
-
-  return null;
-}
-
 /** Persist write host call data to the storage table after resume. */
-function persistWriteToStorage(
+export function persistWriteToStorage(
   hc: HostCallInfo,
   storageTable: UseStorageTable,
 ): void {
@@ -145,7 +110,7 @@ function persistWriteToStorage(
   const proposal = hc.resumeProposal;
   if (!proposal) return;
 
-  const keyHex = deriveStorageKeyHex(hc);
+  const keyHex = deriveKeyHex(hc);
   if (!keyHex) return;
 
   // For write, value is at ω9/ω10
@@ -155,12 +120,7 @@ function persistWriteToStorage(
   for (const mw of proposal.memoryWrites) {
     if (mw.address === valPtr && mw.data.length >= valLen) {
       const valData = mw.data.slice(0, valLen);
-      const valHex =
-        "0x" +
-        Array.from(valData)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
-      storageTable.setEntry(keyHex, valHex);
+      storageTable.setEntry(keyHex, toHex(valData));
       return;
     }
   }

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import type { HostCallResumeEffects } from "@pvmdbg/types";
+import { fromHex } from "@pvmdbg/types";
 
 export interface StorageEntry {
   key: string;
@@ -77,22 +78,26 @@ class StorageStore {
     const customValue = this.entries.get(key);
     if (customValue === undefined) return undefined;
 
-    const bytes = hexToBytes(customValue);
+    const bytes = safeFromHex(customValue);
     return {
       memoryWrites: [{ address: destinationAddress, data: bytes }],
     };
   }
 }
 
-/** Decode a hex string (with or without 0x prefix) to Uint8Array. */
-function hexToBytes(hex: string): Uint8Array {
-  const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
-  const padded = clean.length % 2 === 1 ? "0" + clean : clean;
-  const bytes = new Uint8Array(padded.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(padded.slice(i * 2, i * 2 + 2), 16);
+/**
+ * Convert user-entered hex to bytes. Falls back to empty on invalid input.
+ * Uses `fromHex` from `@pvmdbg/types` (the canonical implementation).
+ * Pads odd-length input with a leading zero for UX tolerance.
+ */
+function safeFromHex(hex: string): Uint8Array {
+  try {
+    let clean = hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
+    if (clean.length % 2 === 1) clean = "0" + clean;
+    return fromHex("0x" + clean);
+  } catch {
+    return new Uint8Array(0);
   }
-  return bytes;
 }
 
 export interface UseStorageTable {

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useMemo } from "react";
+import { useCallback, useRef } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
@@ -27,15 +27,18 @@ export function DebuggerPage() {
 
   // Derive a stable orchestrator identity for the storage table.
   // Each new orchestrator reference gets a unique id so storage resets.
-  const orchIdCounter = useRef(0);
-  const prevOrchRef = useRef<typeof orchestrator>(null);
-  const orchestratorId = useMemo(() => {
-    if (orchestrator !== prevOrchRef.current) {
-      prevOrchRef.current = orchestrator;
-      orchIdCounter.current++;
-    }
-    return orchestrator ? `orch-${orchIdCounter.current}` : null;
-  }, [orchestrator]);
+  // Computed during render (refs are safe to mutate during render).
+  const orchIdRef = useRef<{ orch: typeof orchestrator; id: number }>({
+    orch: null,
+    id: 0,
+  });
+  if (orchestrator !== orchIdRef.current.orch) {
+    orchIdRef.current = {
+      orch: orchestrator,
+      id: orchIdRef.current.id + 1,
+    };
+  }
+  const orchestratorId = orchestrator ? `orch-${orchIdRef.current.id}` : null;
 
   const storageTable = useStorageTable(orchestratorId);
 

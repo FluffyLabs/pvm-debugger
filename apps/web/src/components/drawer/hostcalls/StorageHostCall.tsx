@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { HostCallInfo } from "@pvmdbg/types";
 import type { UseStorageTable, StorageEntry } from "../../../hooks/useStorageTable";
+import { deriveKeyHex } from "../../../lib/storage-utils";
 
 const HOST_CALL_LABELS: Record<number, string> = {
   1: "fetch",
@@ -49,47 +50,6 @@ function decodeLookupDetails(regs: bigint[]) {
     r8: regs[8] ?? 0n,
     r9: regs[9] ?? 0n,
   };
-}
-
-/** Format bytes as a hex string with 0x prefix. */
-function toHex(data: Uint8Array): string {
-  return (
-    "0x" +
-    Array.from(data)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("")
-  );
-}
-
-/** Try to extract the key hex from trace memory reads or register pointers. */
-function deriveKeyHex(info: HostCallInfo): string | null {
-  // For read/write, try to get key from memory reads in the resume proposal
-  const proposal = info.resumeProposal;
-  if (!proposal) return null;
-
-  // The trace may include memory reads that represent the key data
-  // For read (index 3): key is at ω8/ω9
-  // For write (index 4): key is at ω7/ω8
-  if (info.hostCallIndex === 3) {
-    const keyPtr = Number(info.currentState.registers[8] ?? 0n);
-    const keyLen = Number(info.currentState.registers[9] ?? 0n);
-    // Look in memory writes for a read at keyPtr
-    for (const mw of proposal.memoryWrites) {
-      if (mw.address === keyPtr && mw.data.length >= keyLen) {
-        return toHex(mw.data.slice(0, keyLen));
-      }
-    }
-  } else if (info.hostCallIndex === 4) {
-    const keyPtr = Number(info.currentState.registers[7] ?? 0n);
-    const keyLen = Number(info.currentState.registers[8] ?? 0n);
-    for (const mw of proposal.memoryWrites) {
-      if (mw.address === keyPtr && mw.data.length >= keyLen) {
-        return toHex(mw.data.slice(0, keyLen));
-      }
-    }
-  }
-
-  return null;
 }
 
 function ReadDetails({ info }: { info: HostCallInfo }) {

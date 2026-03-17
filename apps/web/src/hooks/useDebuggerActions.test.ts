@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { stepsForMode, proposalToEffects, shouldAutoContinue, hasHostCallPause } from "./useDebuggerActions";
-import type { StepResult, PvmStepReport, HostCallResumeProposal, MachineStateSnapshot } from "@pvmdbg/types";
+import { describe, it, expect, vi } from "vitest";
+import { stepsForMode, proposalToEffects, shouldAutoContinue, hasHostCallPause, storageAwareEffects, persistWriteToStorage } from "./useDebuggerActions";
+import type { StepResult, PvmStepReport, HostCallResumeProposal, HostCallInfo, MachineStateSnapshot } from "@pvmdbg/types";
+import type { UseStorageTable } from "./useStorageTable";
 
 describe("stepsForMode", () => {
   it("returns 1 for instruction mode", () => {
@@ -298,5 +299,216 @@ describe("shouldAutoContinue", () => {
       ]);
       expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(true);
     });
+  });
+});
+
+// --- storageAwareEffects ---
+
+function makeStorageTable(entries: Record<string, string> = {}): UseStorageTable {
+  const map = new Map(Object.entries(entries));
+  return {
+    entries: [...map.entries()].map(([key, value]) => ({ key, value })),
+    setEntry: vi.fn(),
+    removeEntry: vi.fn(),
+    hasEntry: (key: string) => map.has(key),
+    clear: vi.fn(),
+    store: {
+      buildReadOverride: (key: string, addr: number) => {
+        const val = map.get(key);
+        if (val === undefined) return undefined;
+        // Simple mock: return a memory write with the key as data
+        return { memoryWrites: [{ address: addr, data: new Uint8Array([0x42]) }] };
+      },
+    } as UseStorageTable["store"],
+  };
+}
+
+function makeHostCallInfo(overrides: Partial<HostCallInfo> = {}): HostCallInfo {
+  return {
+    pvmId: "test",
+    hostCallIndex: 0,
+    hostCallName: "gas",
+    currentState: EMPTY_SNAPSHOT,
+    ...overrides,
+  };
+}
+
+describe("storageAwareEffects", () => {
+  it("returns base effects for non-storage host calls", () => {
+    const hc = makeHostCallInfo({
+      hostCallIndex: 0,
+      resumeProposal: {
+        registerWrites: new Map([[7, 99n]]),
+        memoryWrites: [],
+        traceMatches: true,
+        mismatches: [],
+      },
+    });
+    const st = makeStorageTable();
+    const effects = storageAwareEffects(hc, st);
+    expect(effects.registerWrites?.get(7)).toBe(99n);
+  });
+
+  it("returns base effects for storage host call with no proposal", () => {
+    const hc = makeHostCallInfo({ hostCallIndex: 3, resumeProposal: undefined });
+    const st = makeStorageTable();
+    const effects = storageAwareEffects(hc, st);
+    expect(effects).toEqual({});
+  });
+
+  it("overrides memory writes for read (index 3) when custom value exists", () => {
+    const regs = Array(13).fill(0n) as bigint[];
+    regs[8] = 0x1000n; // key ptr
+    regs[9] = 2n; // key len
+
+    const hc = makeHostCallInfo({
+      hostCallIndex: 3,
+      hostCallName: "read",
+      currentState: { ...EMPTY_SNAPSHOT, registers: regs },
+      resumeProposal: {
+        registerWrites: new Map([[0, 1n]]),
+        memoryWrites: [
+          { address: 0x1000, data: new Uint8Array([0xab, 0xcd]) },
+          { address: 0x2000, data: new Uint8Array([0x11, 0x22]) },
+        ],
+        traceMatches: true,
+        mismatches: [],
+      },
+    });
+
+    // The key is 0xabcd (derived from memory write at keyPtr)
+    const st = makeStorageTable({ "0xabcd": "0x42" });
+    const effects = storageAwareEffects(hc, st);
+
+    // Should override memory writes with custom value
+    expect(effects.memoryWrites).toHaveLength(1);
+    expect(effects.memoryWrites![0].data).toEqual(new Uint8Array([0x42]));
+    // Register writes should be preserved
+    expect(effects.registerWrites?.get(0)).toBe(1n);
+  });
+
+  it("does NOT override for write (index 4) — only persists after resume", () => {
+    const regs = Array(13).fill(0n) as bigint[];
+    regs[7] = 0x1000n;
+    regs[8] = 2n;
+
+    const hc = makeHostCallInfo({
+      hostCallIndex: 4,
+      hostCallName: "write",
+      currentState: { ...EMPTY_SNAPSHOT, registers: regs },
+      resumeProposal: {
+        registerWrites: new Map(),
+        memoryWrites: [
+          { address: 0x1000, data: new Uint8Array([0xab, 0xcd]) },
+        ],
+        traceMatches: true,
+        mismatches: [],
+      },
+    });
+
+    const st = makeStorageTable({ "0xabcd": "0xff" });
+    const effects = storageAwareEffects(hc, st);
+
+    // Should return base effects unchanged for write host calls
+    expect(effects.memoryWrites).toHaveLength(1);
+    expect(effects.memoryWrites![0].address).toBe(0x1000);
+  });
+
+  it("returns base effects when storage table has no matching key", () => {
+    const regs = Array(13).fill(0n) as bigint[];
+    regs[8] = 0x1000n;
+    regs[9] = 2n;
+
+    const hc = makeHostCallInfo({
+      hostCallIndex: 3,
+      currentState: { ...EMPTY_SNAPSHOT, registers: regs },
+      resumeProposal: {
+        registerWrites: new Map(),
+        memoryWrites: [
+          { address: 0x1000, data: new Uint8Array([0xab, 0xcd]) },
+        ],
+        traceMatches: true,
+        mismatches: [],
+      },
+    });
+
+    const st = makeStorageTable({ "0xdead": "0xff" }); // different key
+    const effects = storageAwareEffects(hc, st);
+
+    // Should use trace memory writes since key doesn't match
+    expect(effects.memoryWrites).toHaveLength(1);
+    expect(effects.memoryWrites![0].address).toBe(0x1000);
+  });
+});
+
+// --- persistWriteToStorage ---
+
+describe("persistWriteToStorage", () => {
+  it("does nothing for non-write host calls", () => {
+    const hc = makeHostCallInfo({ hostCallIndex: 3 });
+    const st = makeStorageTable();
+    persistWriteToStorage(hc, st);
+    expect(st.setEntry).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when no proposal exists", () => {
+    const hc = makeHostCallInfo({ hostCallIndex: 4, resumeProposal: undefined });
+    const st = makeStorageTable();
+    persistWriteToStorage(hc, st);
+    expect(st.setEntry).not.toHaveBeenCalled();
+  });
+
+  it("persists key/value to storage table for write host calls", () => {
+    const regs = Array(13).fill(0n) as bigint[];
+    regs[7] = 0x1000n; // key ptr
+    regs[8] = 2n; // key len
+    regs[9] = 0x2000n; // val ptr
+    regs[10] = 3n; // val len
+
+    const hc = makeHostCallInfo({
+      hostCallIndex: 4,
+      hostCallName: "write",
+      currentState: { ...EMPTY_SNAPSHOT, registers: regs },
+      resumeProposal: {
+        registerWrites: new Map(),
+        memoryWrites: [
+          { address: 0x1000, data: new Uint8Array([0xab, 0xcd]) }, // key
+          { address: 0x2000, data: new Uint8Array([0x11, 0x22, 0x33, 0x44]) }, // value (longer than valLen)
+        ],
+        traceMatches: true,
+        mismatches: [],
+      },
+    });
+
+    const st = makeStorageTable();
+    persistWriteToStorage(hc, st);
+
+    expect(st.setEntry).toHaveBeenCalledWith("0xabcd", "0x112233");
+  });
+
+  it("does nothing when key cannot be derived", () => {
+    const regs = Array(13).fill(0n) as bigint[];
+    regs[7] = 0x1000n;
+    regs[8] = 2n;
+    regs[9] = 0x2000n;
+    regs[10] = 3n;
+
+    const hc = makeHostCallInfo({
+      hostCallIndex: 4,
+      currentState: { ...EMPTY_SNAPSHOT, registers: regs },
+      resumeProposal: {
+        registerWrites: new Map(),
+        memoryWrites: [
+          // No memory write at key pointer address
+          { address: 0x9999, data: new Uint8Array([0xab, 0xcd]) },
+        ],
+        traceMatches: true,
+        mismatches: [],
+      },
+    });
+
+    const st = makeStorageTable();
+    persistWriteToStorage(hc, st);
+    expect(st.setEntry).not.toHaveBeenCalled();
   });
 });
