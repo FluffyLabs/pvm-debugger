@@ -1,5 +1,7 @@
 # Sprint 35 — Mobile / Responsive Layout
 
+Status: Implemented
+
 ## Goal
 
 Add responsive behavior to the debugger and load pages. Below 768px, the 3-column debugger layout collapses to a single-panel view with a panel switcher, and the load wizard columns stack vertically.

@@ -18,6 +18,19 @@
      not the page. Individual pages handle their own overflow. */
 }
 
+/* --- Sprint 35: Shell responsive --- */
+@media (max-width: 767px) {
+  /* Collapse sidebar; single content column */
+  .app-body {
+    flex-direction: column;
+  }
+
+  /* Hide the apps sidebar on mobile */
+  .app-body > aside {
+    display: none;
+  }
+}
+
 /* All clickable elements use pointer cursor */
 button,
 a,

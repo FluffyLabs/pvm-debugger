@@ -45,3 +45,62 @@
 .debugger-panel + .debugger-panel {
   border-left: 1px solid var(--color-border);
 }
+
+/* --- Sprint 35: Mobile panel switcher --- */
+
+.debugger-panel-switcher {
+  display: none; /* hidden on desktop */
+}
+
+/* On mobile (<768px) panels become single-column with a switcher */
+@media (max-width: 767px) {
+  .debugger-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .debugger-panel-switcher {
+    display: flex;
+    gap: 0;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .debugger-panel-switcher button {
+    flex: 1;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--color-muted-foreground);
+    cursor: pointer;
+  }
+
+  .debugger-panel-switcher button[data-active="true"] {
+    color: var(--color-foreground);
+    border-bottom-color: var(--color-primary, #E91E8C);
+  }
+
+  .debugger-panels {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+  }
+
+  .debugger-panel {
+    display: none;
+  }
+
+  .debugger-panel[data-mobile-visible="true"] {
+    display: flex;
+    flex: 1;
+  }
+
+  /* No vertical separators on mobile */
+  .debugger-panel + .debugger-panel {
+    border-left: none;
+  }
+}
