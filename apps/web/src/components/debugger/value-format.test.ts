@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatRegister, formatPc, formatGas, lifecycleLabel } from "./value-format";
+import { formatRegister, formatPc, formatGas, lifecycleLabel, bytesToHex } from "./value-format";
 
 describe("formatRegister", () => {
   it("formats zero with 16-digit hex", () => {
@@ -71,6 +71,26 @@ describe("formatGas", () => {
 
   it("formats large values", () => {
     expect(formatGas(1234567890n)).toBe("1,234,567,890");
+  });
+});
+
+describe("bytesToHex", () => {
+  it("formats empty array as empty string", () => {
+    expect(bytesToHex(new Uint8Array([]))).toBe("");
+  });
+
+  it("formats single byte", () => {
+    expect(bytesToHex(new Uint8Array([0x00]))).toBe("00");
+    expect(bytesToHex(new Uint8Array([0xff]))).toBe("FF");
+    expect(bytesToHex(new Uint8Array([0x0a]))).toBe("0A");
+  });
+
+  it("formats multiple bytes with spaces", () => {
+    expect(bytesToHex(new Uint8Array([0xc8, 0x00, 0x01]))).toBe("C8 00 01");
+  });
+
+  it("zero-pads single-digit hex values", () => {
+    expect(bytesToHex(new Uint8Array([0x05]))).toBe("05");
   });
 });
 

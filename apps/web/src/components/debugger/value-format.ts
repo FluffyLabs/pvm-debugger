@@ -37,6 +37,13 @@ export function formatGas(gas: bigint): string {
   return parts.join(",");
 }
 
+/** Format a Uint8Array as space-separated uppercase hex pairs. */
+export function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).toUpperCase().padStart(2, "0"))
+    .join(" ");
+}
+
 /** Map PvmLifecycle (+ PvmStatus for terminal states) to a user-facing label. */
 export function lifecycleLabel(lifecycle: PvmLifecycle, status?: PvmStatus): string {
   switch (lifecycle) {

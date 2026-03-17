@@ -83,3 +83,31 @@ Rules:
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-28-asm-raw-popover.spec.ts
 ```
+
+## Implementation Notes
+
+### Data model changes
+- `DecodedInstruction` (in `useDisassembly.ts`) gained a `rawArgs: string` field — numeric-only operand formatting (register indices as plain numbers, no omega notation). Both `args` and `rawArgs` are pre-computed during disassembly via a shared `formatArgsWithReg()` function parameterized by register formatter.
+
+### Component structure
+- **Popover trigger area**: the row is split — the breakpoint gutter (`breakpoint-gutter-{pc}`) handles breakpoint toggles via `onClick`, while the rest of the row is wrapped in a `PopoverTrigger` (`instruction-trigger-{pc}`). Each `InstructionRow` wraps in its own `<Popover>` context (Radix handles single-open behavior).
+- **`bytesToHex`** utility lives in `value-format.ts` (shared by both `InstructionRow` and `InstructionBinary`).
+- **`DisplayMode` type** is exported from `InstructionRow.tsx` and imported by `InstructionsPanel.tsx`.
+
+### Edge cases and pitfalls
+- The `rawArgs` field for no-argument instructions (e.g. `trap`) is an empty string, same as `args`. Both conditional renders (`instruction.args &&` / `instruction.rawArgs &&`) handle this correctly.
+- Popover content avoids `JSON.stringify` on any object that might contain bigint values — all values are pre-formatted to strings during disassembly.
+- Toggling display mode does NOT re-run disassembly (just a React state change controlling which fields render). Both args formats are pre-computed in `useMemo`.
+
+### Data-testid inventory (sprint-28 additions)
+```
+display-mode-toggle           — toggle container
+display-mode-asm              — ASM button
+display-mode-raw              — Raw button
+instruction-trigger-{pc}      — popover trigger area (excludes gutter)
+instruction-raw-bytes         — raw bytes hex (raw mode only)
+instruction-raw-args          — numeric args (raw mode only)
+instruction-binary-popover    — popover content root
+popover-raw-bytes             — raw bytes inside popover
+popover-opcode                — opcode value inside popover
+```

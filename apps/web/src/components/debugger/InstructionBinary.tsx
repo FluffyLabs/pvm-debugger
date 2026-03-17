@@ -1,10 +1,5 @@
 import type { DecodedInstruction } from "../../hooks/useDisassembly";
-
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).toUpperCase().padStart(2, "0"))
-    .join(" ");
-}
+import { bytesToHex } from "./value-format";
 
 interface InstructionBinaryProps {
   instruction: DecodedInstruction;

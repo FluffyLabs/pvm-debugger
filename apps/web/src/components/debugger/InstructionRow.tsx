@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "@fluffylabs/shared-ui";
 import type { DecodedInstruction } from "../../hooks/useDisassembly";
 import { InstructionBinary } from "./InstructionBinary";
+import { bytesToHex } from "./value-format";
 
 export type DisplayMode = "asm" | "raw";
 
@@ -16,12 +17,6 @@ interface InstructionRowProps {
 
 function padHexPc(pc: number, padWidth: number): string {
   return pc.toString(16).toUpperCase().padStart(padWidth, "0");
-}
-
-function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes)
-    .map((b) => b.toString(16).toUpperCase().padStart(2, "0"))
-    .join(" ");
 }
 
 export const InstructionRow = memo(function InstructionRow({
