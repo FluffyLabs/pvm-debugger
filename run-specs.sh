@@ -161,7 +161,7 @@ IMPORTANT: You must work on THIS SPEC ONLY. Do NOT look at other spec files. Do 
 anything from other specs. Do NOT bundle multiple tasks together. Focus entirely on $spec.
 
 RULES:
-1. Read AGENTS.md, docs/rewrite-architecture.md, and the spec file before writing any code.
+1. Read AGENTS.md and the spec file before writing any code.
 2. Implement ONLY what this spec requires — nothing more, nothing less.
 3. Follow all constraints in AGENTS.md (package namespace, no Redux, real interpreters, etc.).
 4. Run the verify/test commands from the spec to confirm everything passes.

@@ -5,10 +5,8 @@
 This repository is the clean-slate rewrite workspace for the PVM debugger.
 
 Read first (in this order):
-1. `docs/rewrite-architecture.md` — architecture decisions, interface contracts, layout
-2. `docs/rewrite-plan.md` — overview of all tickets and design decisions
-3. `spec/README.md` — spec structure and conventions
-4. The specific spec you're implementing (as instructed in the prompt)
+1. `spec/README.md` — spec structure and conventions
+2. The specific spec you're implementing (as instructed in the prompt)
 
 ## Reference Code
 
@@ -34,7 +32,7 @@ Each ticket lists specific reference files to read. Study the behavior, then wri
 - **No mocks for PVM interpreters**: use real `@typeberry/lib` and ananas packages.
 - **Async adapter interface**: all PVM adapter methods return Promises.
 - **Event-emitter orchestrator**: strictly typed, works in browser + Node.js.
-- **Shared-ui first**: use `@fluffylabs/shared-ui` components where available. See `docs/rewrite-architecture.md` section 9.4.
+- **Shared-ui first**: use `@fluffylabs/shared-ui` components where available.
 - **Local UI components**: Tabs, Table, Drawer are copied from `reference/pvm-debugger/src/components/ui/` and adapted.
 - **TailwindCSS v4**: for styling in `apps/web`.
 - **Fixtures**: use `fixtures/` for example programs and test data. Do NOT embed hex strings in source code.
@@ -43,11 +41,11 @@ Each ticket lists specific reference files to read. Study the behavior, then wri
 
 ## Code Quality Rules
 
-- **No duplicate utilities.** `hexToBytes`, `HOST_CALL_NAMES`, register byte conversion, and memory page access helpers are defined ONCE in their respective packages. Import, don't copy. See `docs/rewrite-architecture.md` section 12.1.
+- **No duplicate utilities.** `hexToBytes`, `HOST_CALL_NAMES`, register byte conversion, and memory page access helpers are defined ONCE in their respective packages. Import, don't copy.
 - **No placeholder tests.** `expect(true).toBe(true)` is not acceptable. See section 12.4 for minimum test scenarios per package.
 - **`data-testid` attributes** on all interactive UI elements for E2E test selection. See `spec/ui/sprint-36-integration-smoke-test.md`.
 - **Ananas has initialization quirks.** Must prime with `nextStep()` after reset. See `spec/005-runtime-worker-and-adapters.md`.
-- **Trace matching is by sequential position** (Nth host call → Nth trace entry). NOT by value, NOT by PC. See `docs/rewrite-architecture.md` section 8.3.
+- **Trace matching is by sequential position** (Nth host call → Nth trace entry). NOT by value, NOT by PC.
 
 ## Build and Test
 
