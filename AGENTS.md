@@ -47,6 +47,17 @@ Each ticket lists specific reference files to read. Study the behavior, then wri
 - **Ananas has initialization quirks.** Must prime with `nextStep()` after reset. See `spec/005-runtime-worker-and-adapters.md`.
 - **Trace matching is by sequential position** (Nth host call → Nth trace entry). NOT by value, NOT by PC.
 
+## Session Workflow
+
+Every interactive session MUST end by producing a sprint specification in `spec/ui/`.
+
+- **Purpose**: The sprint spec captures all changes made during the session so that another agent can reproduce the exact same result from the spec alone.
+- **Numbering**: Continue from the last sprint number (check `spec/ui/` for the current highest).
+- **Content**: High-level, human-readable description of the features and changes. Describe *what* needs to happen and *why*, not *how* — no file paths, no copy-pasted code, no implementation details. Focus on behavior, constraints, and acceptance criteria that mattered during the session.
+- **Tone**: Written for an LLM agent that has never seen the session. It should be self-contained enough to reproduce the work without referencing chat history.
+- **Format**: Follow the existing sprint spec structure (Goal, What Works After This Sprint, Prior Sprint Dependencies, acceptance criteria, verify commands).
+- **Timing**: Create the spec only when the session's work is fully done and verified.
+
 ## Build and Test
 
 ```bash
