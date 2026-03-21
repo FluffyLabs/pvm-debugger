@@ -90,7 +90,7 @@ export function InstructionsPanel({ instructions, currentPc, orchestrator }: Ins
       data-testid="instructions-panel"
       className="flex flex-col h-full overflow-hidden"
     >
-      <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border shrink-0 flex items-center justify-between">
+      <div className="px-2 h-7 text-sm font-semibold text-foreground border-b border-border shrink-0 flex items-center justify-between">
         <span>Instructions</span>
         <div className="flex text-xs font-normal" data-testid="display-mode-toggle">
           <button
@@ -113,7 +113,7 @@ export function InstructionsPanel({ instructions, currentPc, orchestrator }: Ins
             }`}
             onClick={() => setDisplayMode("raw")}
           >
-            Raw
+            RAW
           </button>
         </div>
       </div>

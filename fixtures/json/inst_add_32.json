@@ -20,9 +20,13 @@
   "initial-page-map": [],
   "initial-memory": [],
   "program": [
-    4,
+    0,
+    0,
+    3,
+    190,
     135,
-    3
+    9,
+    1
   ],
   "expected-status": "halt",
   "expected-regs": [

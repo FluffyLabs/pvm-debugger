@@ -7,8 +7,6 @@ test.describe("Sprint 25 — Divergence Detection", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -32,7 +30,7 @@ test.describe("Sprint 25 — Divergence Detection", () => {
     await expect(ananasSwitch).toBeVisible();
     await ananasSwitch.click();
     try {
-      await expect(page.getByTestId("pvm-tab-ananas")).toBeVisible({ timeout: 15000 });
+      await expect(page.getByTestId("pvm-tab-ananas")).toHaveRole("tab", { timeout: 15000 });
       return true;
     } catch {
       return false;
@@ -43,10 +41,11 @@ test.describe("Sprint 25 — Divergence Detection", () => {
     await loadProgram(page);
 
     // Step a few times
-    const stepBtn = page.getByTestId("step-button");
-    await expect(stepBtn).toBeVisible({ timeout: 10000 });
-    await stepBtn.click();
-    await stepBtn.click();
+    // Use next-button (step-button is hidden in instruction mode)
+    const nextBtn = page.getByTestId("next-button");
+    await expect(nextBtn).toBeVisible({ timeout: 10000 });
+    await nextBtn.click();
+    await nextBtn.click();
 
     // Should NOT show divergence with only one PVM
     await expect(page.getByTestId("divergence-summary")).not.toBeVisible();

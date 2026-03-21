@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
  * Dispatch a keyboard event from within the page.
  * Using page.evaluate instead of page.keyboard.press because
  * Playwright's CDP-level key dispatch can trigger browser shortcuts
- * (F5 → refresh, Ctrl+Shift+R → hard refresh) before the JS handler
+ * (Ctrl+Shift+R → hard refresh) before the JS handler
  * has a chance to call preventDefault(). Synthetic KeyboardEvents
  * dispatched from JS go directly through the DOM event pipeline.
  */
@@ -35,36 +35,33 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
-  test("F10 advances execution (PC changes)", async ({ page }) => {
+  test("Ctrl+Shift+N advances execution (PC changes)", async ({ page }) => {
     await loadProgram(page);
 
     const pcValue = page.getByTestId("pc-value");
     const initialPc = await pcValue.textContent();
 
-    // Press F10 to trigger Next
-    await pressKey(page, "F10");
+    // Press Ctrl+Shift+N to trigger Next
+    await pressKey(page, "N", { ctrlKey: true, shiftKey: true });
 
     // PC should change
     await expect(pcValue).not.toHaveText(initialPc!, { timeout: 5000 });
   });
 
-  test("F5 starts running, pressing F5 again pauses", async ({ page }) => {
+  test("Ctrl+Shift+P starts running, pressing again pauses", async ({ page }) => {
     // Use game-of-life — runs for many thousands of steps (gas=10M)
     await loadProgram(page, "game-of-life");
 
     const pcValue = page.getByTestId("pc-value");
     const initialPc = await pcValue.textContent();
 
-    // Press F5 to start running
-    await pressKey(page, "F5");
+    // Press Ctrl+Shift+P to start running
+    await pressKey(page, "P", { ctrlKey: true, shiftKey: true });
 
     // Verify execution started: either pause button appears (running) or execution completes.
-    // Both prove F5 triggered run().
     const pauseOrComplete = await Promise.race([
       page.getByTestId("pause-button").waitFor({ state: "visible", timeout: 5000 }).then(() => "running" as const),
       page.getByTestId("execution-complete-badge").waitFor({ state: "visible", timeout: 5000 }).then(() => "completed" as const),
@@ -73,13 +70,13 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
     ]);
 
     if (pauseOrComplete === "running") {
-      // Press F5 again to pause
-      await pressKey(page, "F5");
+      // Press Ctrl+Shift+P again to pause
+      await pressKey(page, "P", { ctrlKey: true, shiftKey: true });
 
       // Run button should reappear (program paused or completed after stopping)
       await expect(page.getByTestId("run-button")).toBeVisible({ timeout: 5000 });
     }
-    // If completed or pc-changed, F5 successfully triggered run
+    // If completed or pc-changed, shortcut successfully triggered run
   });
 
   test("Ctrl+Shift+R resets to initial state", async ({ page }) => {
@@ -107,8 +104,8 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
   test("shortcuts do not trigger page refresh", async ({ page }) => {
     await loadProgram(page);
 
-    // Press F5 — should NOT reload the page
-    await pressKey(page, "F5");
+    // Press Ctrl+Shift+P — should start run, NOT reload the page
+    await pressKey(page, "P", { ctrlKey: true, shiftKey: true });
 
     // The debugger page should still be visible (no page reload)
     await expect(page.getByTestId("debugger-page")).toBeVisible();
@@ -118,7 +115,7 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
 
     // Press Ctrl+Shift+R — should reset, NOT hard-refresh
     // First stop any running execution
-    await pressKey(page, "F5");
+    await pressKey(page, "P", { ctrlKey: true, shiftKey: true });
     await page.waitForTimeout(200);
 
     await pressKey(page, "R", { ctrlKey: true, shiftKey: true });
@@ -143,12 +140,18 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
     // Focus the input
     await input.focus();
 
-    // Dispatch F10 from the input element (target is input, so handler skips it)
+    // Dispatch Ctrl+Shift+N from the input element (target is input, so handler skips it)
     await page.evaluate(() => {
       const el = document.querySelector("[data-testid='n-instructions-count']");
       if (el) {
         el.dispatchEvent(
-          new KeyboardEvent("keydown", { key: "F10", bubbles: true, cancelable: true }),
+          new KeyboardEvent("keydown", {
+            key: "N",
+            ctrlKey: true,
+            shiftKey: true,
+            bubbles: true,
+            cancelable: true,
+          }),
         );
       }
     });

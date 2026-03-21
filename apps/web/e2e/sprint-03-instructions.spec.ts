@@ -15,8 +15,6 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     await expect(card).toBeVisible();
     await card.click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
 
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
     await expect(page.getByTestId("instructions-panel")).toBeVisible();
@@ -28,8 +26,6 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     await expect(card).toBeVisible();
     await card.click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
 
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
 
@@ -50,15 +46,16 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
   });
 
   test("register arguments use omega notation (ω)", async ({ page }) => {
-    // Load the add-jam example which has register arguments in its instructions
+    // Load the add-jam example (SPI, in wat category — collapsed by default)
     await page.goto("/#/load");
+    await page.getByTestId("category-toggle-wat").click();
     const card = page.getByTestId("example-card-add-jam");
     await expect(card).toBeVisible();
     await card.click();
 
+    // SPI programs go through config step
     await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
     await page.getByTestId("config-step-load").click();
-
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
 
     const panel = page.getByTestId("instructions-panel");
@@ -82,14 +79,16 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
   });
 
   test("current PC row is visually highlighted", async ({ page }) => {
+    // Load the add-jam example (SPI, in wat category — collapsed by default)
     await page.goto("/#/load");
+    await page.getByTestId("category-toggle-wat").click();
     const card = page.getByTestId("example-card-add-jam");
     await expect(card).toBeVisible();
     await card.click();
 
+    // SPI programs go through config step
     await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
     await page.getByTestId("config-step-load").click();
-
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
 
     const panel = page.getByTestId("instructions-panel");
@@ -100,6 +99,6 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     const row = page.getByTestId("instruction-row-5");
     await expect(row).toBeVisible();
     // Check that the highlighted row has the primary/20 background class
-    await expect(row).toHaveClass(/bg-primary/);
+    await expect(row).toHaveClass(/instruction-row-current/);
   });
 });

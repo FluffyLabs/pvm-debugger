@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router";
 import { setColorMode } from "@fluffylabs/shared-ui";
+import { TooltipProvider } from "@fluffylabs/shared-ui/ui/tooltip";
 import App from "./App";
 import "./styles/global.css";
 
@@ -21,8 +22,10 @@ setColorMode(true);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>
+    <TooltipProvider delayDuration={300}>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </TooltipProvider>
   </React.StrictMode>,
 );

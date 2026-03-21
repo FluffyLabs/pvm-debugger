@@ -594,9 +594,9 @@ describe("decodeJsonTestVector", () => {
     const envelope = decodeJsonTestVector(data, "example", "inst-add-32");
 
     expect(envelope.programKind).toBe("generic");
-    // programBytes is a PVM blob wrapping the raw instruction bytes [0x04, 0x87, 0x03]:
-    // [jtLen=0, jtItemLen=0, codeLen=3, code..., mask=0x01]
-    expect(Array.from(envelope.programBytes)).toEqual([0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01]);
+    // The fixture contains pre-encoded PVM blob bytes [0, 0, 3, 190, 135, 9, 1]
+    // (upstream jamtestvectors format). deblob succeeds so they're used as-is.
+    expect(Array.from(envelope.programBytes)).toEqual([0x00, 0x00, 0x03, 190, 135, 9, 0x01]);
     expect(envelope.initialState.pc).toBe(0);
     expect(envelope.initialState.gas).toBe(10000n);
     expect(envelope.initialState.registers.length).toBe(13);

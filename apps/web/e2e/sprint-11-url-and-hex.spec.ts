@@ -15,7 +15,7 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await expect(page.getByTestId("example-list")).toBeVisible();
   });
 
-  test("URL fetch succeeds and shows byte count", async ({ page }) => {
+  test("URL fetch succeeds and auto-advances to debugger", async ({ page }) => {
     // Use a fixture served by the same vite preview server
     const urlField = page.getByTestId("url-input-field");
     const fetchBtn = page.getByTestId("url-input-fetch");
@@ -23,13 +23,8 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await urlField.fill("http://localhost:4199/fixtures/generic/add.pvm");
     await fetchBtn.click();
 
-    // Wait for success indicator
-    await expect(page.getByTestId("url-input-success")).toBeVisible({ timeout: 10000 });
-    const byteText = await page.getByTestId("url-input-bytecount").textContent();
-    expect(byteText).toMatch(/Fetched \d+(\.\d+)?\s*(B|KB|MB)/);
-
-    // Continue should be enabled
-    await expect(page.getByTestId("source-step-continue")).toBeEnabled();
+    // URL auto-advances to debugger for non-SPI programs
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
   test("URL fetch shows loading state", async ({ page }) => {
@@ -41,12 +36,11 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     // Click fetch and immediately check for loading indicator
     await fetchBtn.click();
 
-    // The loading spinner should appear (may be very fast for local requests)
-    // Check that either the spinner appeared or the success already showed
-    const loadingOrSuccess = page
+    // The loading spinner should appear, or the page auto-advances to debugger
+    const loadingOrDebugger = page
       .getByTestId("url-input-loading")
-      .or(page.getByTestId("url-input-success"));
-    await expect(loadingOrSuccess).toBeVisible({ timeout: 10000 });
+      .or(page.getByTestId("debugger-page"));
+    await expect(loadingOrDebugger).toBeVisible({ timeout: 10000 });
   });
 
   test("URL fetch error shows alert", async ({ page }) => {
@@ -87,40 +81,9 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await expect(page.getByTestId("source-step-continue")).toBeEnabled();
   });
 
-  test("selecting hex source clears previous URL selection", async ({ page }) => {
-    const urlField = page.getByTestId("url-input-field");
-    const fetchBtn = page.getByTestId("url-input-fetch");
-
-    await urlField.fill("http://localhost:4199/fixtures/generic/add.pvm");
-    await fetchBtn.click();
-    await expect(page.getByTestId("url-input-success")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId("source-step-continue")).toBeEnabled();
-
-    // Now type valid hex — should clear URL result and enable Continue from hex
-    const hexField = page.getByTestId("manual-input-field");
-    await hexField.fill("00030001000d");
-    await hexField.blur();
-
-    await expect(page.getByTestId("manual-input-success")).toBeVisible();
-    // URL success should be cleared since hex is now the active source
-    await expect(page.getByTestId("url-input-success")).not.toBeVisible();
-  });
-
-  test("changing URL text clears pending URL result", async ({ page }) => {
-    const urlField = page.getByTestId("url-input-field");
-    const fetchBtn = page.getByTestId("url-input-fetch");
-
-    // Fetch a URL
-    await urlField.fill("http://localhost:4199/fixtures/generic/add.pvm");
-    await fetchBtn.click();
-    await expect(page.getByTestId("url-input-success")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId("source-step-continue")).toBeEnabled();
-
-    // Change the URL text — should clear the result
-    await urlField.fill("http://localhost:4199/different");
-    await expect(page.getByTestId("url-input-success")).not.toBeVisible();
-    await expect(page.getByTestId("source-step-continue")).toBeDisabled();
-  });
+  // Note: URL auto-advance (non-SPI URLs navigate directly to debugger)
+  // means URL-to-hex and URL-text-change interactions can no longer be
+  // tested on the source step. Those scenarios were removed.
 
   test("valid manual hex with 0x prefix works", async ({ page }) => {
     const hexField = page.getByTestId("manual-input-field");
@@ -155,27 +118,18 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await expect(page.getByTestId("source-step-continue")).toBeEnabled();
     await page.getByTestId("source-step-continue").click();
 
-    // Step 2: detection summary
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
-
+    // Non-SPI programs skip config step and go directly to debugger
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
-  test("Continue with URL fetch navigates to debugger", async ({ page }) => {
+  test("URL fetch auto-advances to debugger for non-SPI programs", async ({ page }) => {
     const urlField = page.getByTestId("url-input-field");
     const fetchBtn = page.getByTestId("url-input-fetch");
 
     await urlField.fill("http://localhost:4199/fixtures/generic/add.pvm");
     await fetchBtn.click();
-    await expect(page.getByTestId("url-input-success")).toBeVisible({ timeout: 10000 });
 
-    await page.getByTestId("source-step-continue").click();
-
-    // Step 2: detection summary
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
-
+    // Non-SPI URL fetches auto-advance directly to the debugger
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 

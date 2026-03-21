@@ -7,8 +7,6 @@ test.describe("Sprint 15 — Settings Tab", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -45,9 +43,9 @@ test.describe("Sprint 15 — Settings Tab", () => {
     await page.getByTestId("stepping-radio-block").click();
     await expect(page.getByTestId("stepping-radio-block")).toBeChecked();
 
-    // Reload the page and navigate back to debugger
+    // Reload — RestoreGate restores the session and stays on debugger
     await page.reload();
-    await loadProgram(page);
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
     await openSettings(page);
 
     // Block mode should still be selected
@@ -62,9 +60,9 @@ test.describe("Sprint 15 — Settings Tab", () => {
     await page.getByTestId("auto-continue-radio-always_continue").click();
     await expect(page.getByTestId("auto-continue-radio-always_continue")).toBeChecked();
 
-    // Reload the page and navigate back to debugger
+    // Reload — RestoreGate restores the session and stays on debugger
     await page.reload();
-    await loadProgram(page);
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
     await openSettings(page);
 
     // Always should still be selected
@@ -83,9 +81,9 @@ test.describe("Sprint 15 — Settings Tab", () => {
     const countInput = page.getByTestId("n-instructions-count");
     await countInput.fill("25");
 
-    // Verify persisted
+    // Reload — RestoreGate restores the session and stays on debugger
     await page.reload();
-    await loadProgram(page);
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
     await openSettings(page);
 
     // N-Instructions mode should still be selected

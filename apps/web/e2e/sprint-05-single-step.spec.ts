@@ -11,8 +11,6 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -21,7 +19,8 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
 
     const nextBtn = page.getByTestId("next-button");
     await expect(nextBtn).toBeVisible();
-    await expect(nextBtn).toHaveText(/Next/);
+    // In instruction mode, the Next button shows "Step" label
+    await expect(nextBtn).toHaveText(/Step/);
     await expect(nextBtn).toHaveAttribute("aria-label", "Next");
   });
 
@@ -96,7 +95,7 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
     // The initial row at PC=0 should have the highlight class
     const row0 = page.getByTestId("instruction-row-0");
     await expect(row0).toBeVisible();
-    await expect(row0).toHaveClass(/bg-primary/);
+    await expect(row0).toHaveClass(/instruction-row-current/);
 
     await page.getByTestId("next-button").click();
 
@@ -104,6 +103,6 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
     await expect(page.getByTestId("pc-value")).not.toHaveText("0x0000", { timeout: 5000 });
 
     // Row at PC=0 should no longer be highlighted
-    await expect(row0).not.toHaveClass(/bg-primary/);
+    await expect(row0).not.toHaveClass(/instruction-row-current/);
   });
 });

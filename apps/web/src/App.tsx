@@ -61,7 +61,6 @@ function RestoreGate({ children }: { children: ReactNode }) {
         clearProgramSession();
         restoredRef.current = true;
         setRestoring(false);
-        window.alert("Failed to restore previous session. Please load a program.");
         navigate("/load", { replace: true });
       }
     }
@@ -89,7 +88,7 @@ export default function App() {
     <DebuggerSettingsProvider>
     <OrchestratorProvider>
       <div className="app-shell" data-testid="app-shell">
-        <Header toolNameSrc="" ghRepoName="pvm-debugger" />
+        <Header toolNameSrc="/tool-name.svg" ghRepoName="pvm-debugger" />
         <div className="app-body">
           <AppsSidebar activeLink="debugger" enableDarkModeToggle />
           <Content className="app-content">

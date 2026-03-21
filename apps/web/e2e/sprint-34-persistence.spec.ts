@@ -2,13 +2,21 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Sprint 34 — Persistence + Reload", () => {
   /** Load an example program by card ID and wait for the debugger page. */
+  const SPI_EXAMPLES: Record<string, string> = { "add-jam": "wat", "fibonacci-jam": "wat" };
+
   async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
     await page.goto("/#/load");
+    const categoryId = SPI_EXAMPLES[exampleId];
+    if (categoryId) {
+      await page.getByTestId(`category-toggle-${categoryId}`).click();
+    }
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
+    if (categoryId) {
+      await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+      await page.getByTestId("config-step-load").click();
+    }
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -132,7 +140,7 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
   });
 
-  test("corrupted persistence falls back to loader with error alert", async ({ page }) => {
+  test("corrupted persistence falls back to loader silently", async ({ page }) => {
     await loadProgram(page);
 
     // Corrupt the persisted payload
@@ -140,19 +148,9 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
       localStorage.setItem("pvmdbg:payload", "not-valid-hex-data");
     });
 
-    // Set up dialog handler before reload
-    const dialogPromise = page.waitForEvent("dialog");
-
     await page.reload();
 
-    // Should get an alert about failed restore
-    const dialog = await dialogPromise;
-    expect(dialog.message()).toBe(
-      "Failed to restore previous session. Please load a program.",
-    );
-    await dialog.accept();
-
-    // Should end up on load page
+    // Should silently fall back to load page (no dialog)
     await expect(page.getByTestId("load-page")).toBeVisible({ timeout: 15000 });
 
     // Corrupted keys should be cleared — another reload stays on load page

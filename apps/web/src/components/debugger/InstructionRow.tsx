@@ -33,9 +33,13 @@ export const InstructionRow = memo(function InstructionRow({
         data-testid={`instruction-row-${instruction.pc}`}
         className={`flex items-center gap-2 px-2 py-0.5 whitespace-nowrap ${
           isCurrent
-            ? "bg-primary/20 text-foreground"
+            ? "instruction-row-current"
             : "text-muted-foreground hover:bg-muted/50"
         }`}
+        style={isCurrent ? {
+          backgroundColor: "var(--instruction-current-bg, #E4FFFD)",
+          color: "var(--instruction-current-text, #17AFA3)",
+        } : undefined}
       >
         <span
           data-testid={`breakpoint-gutter-${instruction.pc}`}
@@ -63,8 +67,12 @@ export const InstructionRow = memo(function InstructionRow({
             </span>
             {displayMode === "asm" ? (
               <>
-                <span className="text-foreground font-medium" data-testid="instruction-mnemonic">
-                  {instruction.mnemonic}
+                <span
+                  className={isCurrent ? "font-bold" : "font-medium"}
+                  style={isCurrent ? { color: "var(--instruction-current-text, #17AFA3)" } : { color: "var(--color-foreground)" }}
+                  data-testid="instruction-mnemonic"
+                >
+                  {instruction.mnemonic.toUpperCase()}
                 </span>
                 {instruction.args && (
                   <span className="text-muted-foreground" data-testid="instruction-args">

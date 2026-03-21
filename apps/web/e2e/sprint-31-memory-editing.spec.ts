@@ -7,14 +7,14 @@ test.describe("Sprint 31 — Memory SPI Labels + Inline Editing", () => {
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
   /** Load an SPI example program into the debugger. */
   async function loadSpiProgram(page: import("@playwright/test").Page, exampleId: string) {
     await page.goto("/#/load");
+    // WAT category is collapsed by default, expand it
+    await page.getByTestId("category-toggle-wat").click();
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();

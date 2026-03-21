@@ -11,8 +11,8 @@ export interface DebuggerSettings {
 }
 
 export const AVAILABLE_PVMS: { id: string; label: string; hint: string }[] = [
-  { id: "typeberry", label: "Typeberry", hint: "Reference PVM interpreter from @typeberry/lib" },
-  { id: "ananas", label: "Ananas", hint: "Alternative PVM interpreter" },
+  { id: "typeberry", label: "typeberry", hint: "Reference PVM interpreter from @typeberry/lib" },
+  { id: "ananas", label: "ananas", hint: "Alternative PVM interpreter" },
 ];
 
 export const STEPPING_MODES: { id: SteppingMode; label: string; hint: string }[] = [

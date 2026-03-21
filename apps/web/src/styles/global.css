@@ -3,10 +3,26 @@
 @import "@fluffylabs/shared-ui/style.css";
 @import "./layout.css";
 
+:root {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --default-font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --default-mono-font-family: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-brand: #17AFA3;
+  --instruction-current-bg: #E4FFFD;
+  --instruction-current-text: #17AFA3;
+}
+
+.dark, [data-color-mode="dark"] {
+  --instruction-current-bg: #00413B;
+  --instruction-current-text: #00FFEB;
+}
+
 body {
   margin: 0;
   height: 100vh;
   overflow: hidden;
+  font-family: var(--font-sans);
 }
 
 #root {
@@ -16,9 +32,9 @@ body {
   overflow: hidden;
 }
 
-/* Sprint-30: register change flash animation */
+/* Sprint-38: register change flash animation using brand teal */
 @keyframes register-flash {
-  0% { background-color: rgba(250, 204, 21, 0.3); }
+  0% { background-color: rgba(23, 175, 163, 0.3); }
   100% { background-color: transparent; }
 }
 .register-flash {

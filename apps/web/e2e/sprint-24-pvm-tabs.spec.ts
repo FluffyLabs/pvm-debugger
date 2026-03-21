@@ -7,8 +7,6 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -32,7 +30,9 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     await expect(ananasSwitch).toBeVisible();
     await ananasSwitch.click();
     try {
-      await expect(page.getByTestId("pvm-tab-ananas")).toBeVisible({ timeout: 15000 });
+      // Ananas tab is always visible (grayed out when inactive).
+      // Check it becomes an active button (role="tab") rather than a span.
+      await expect(page.getByTestId("pvm-tab-ananas")).toHaveAttribute("role", "tab", { timeout: 15000 });
       return true;
     } catch {
       return false;
@@ -45,9 +45,13 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     const tabs = page.getByTestId("pvm-tabs");
     await expect(tabs).toBeVisible();
 
-    // Only typeberry tab should render by default
+    // Typeberry tab should be an active tab (button) by default
     await expect(page.getByTestId("pvm-tab-typeberry")).toBeVisible();
-    await expect(page.getByTestId("pvm-tab-ananas")).not.toBeVisible();
+    // Ananas tab is visible but grayed out (shown as a span, not a button)
+    const ananasTab = page.getByTestId("pvm-tab-ananas");
+    await expect(ananasTab).toBeVisible();
+    // It should be a grayed-out span, not an interactive button (no role="tab")
+    await expect(ananasTab).not.toHaveRole("tab");
   });
 
   test("both PVM tabs render when both are enabled", async ({ page }) => {
@@ -62,11 +66,11 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
   test("clicking a tab changes the rendered register values", async ({ page }) => {
     await loadProgram(page);
 
-    // Step once so registers have values
-    const stepBtn = page.getByTestId("step-button");
-    await expect(stepBtn).toBeVisible({ timeout: 10000 });
-    await stepBtn.click();
-    await expect(stepBtn).toBeEnabled({ timeout: 5000 });
+    // Step once so registers have values (use next-button; step-button is hidden in instruction mode)
+    const nextBtn = page.getByTestId("next-button");
+    await expect(nextBtn).toBeVisible({ timeout: 10000 });
+    await nextBtn.click();
+    await expect(nextBtn).toBeEnabled({ timeout: 5000 });
 
     // Capture register state for typeberry
     const regPanel = page.getByTestId("panel-registers");
@@ -109,8 +113,8 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     const ananasSwitch = page.getByTestId("pvm-switch-ananas");
     await ananasSwitch.click();
 
-    // Ananas tab should disappear
-    await expect(page.getByTestId("pvm-tab-ananas")).not.toBeVisible({ timeout: 15000 });
+    // Ananas tab should revert to grayed-out (not a button with role="tab")
+    await expect(page.getByTestId("pvm-tab-ananas")).not.toHaveRole("tab", { timeout: 15000 });
     await expect(page.getByTestId("pvm-tab-typeberry")).toBeVisible();
   });
 

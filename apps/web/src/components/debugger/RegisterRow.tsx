@@ -92,10 +92,12 @@ export function RegisterRow({ index, value, editable, changed, divergences, onCo
 
   const hasDivergence = divergences && divergences.length > 0;
 
+  const isZero = value === 0n;
+
   return (
     <div
       data-testid={`register-row-${index}`}
-      className={`flex items-baseline gap-2 px-2 py-0.5 font-mono text-xs hover:bg-muted/50 ${flash ? "register-flash" : ""}`}
+      className={`flex items-baseline gap-2 px-2 py-0.5 font-mono text-xs hover:bg-muted/50 ${flash ? "register-flash" : ""} ${isZero && !changed ? "opacity-40" : ""}`}
       style={{ minHeight: "1.5rem" }}
     >
       <span data-testid={`register-label-${index}`} className="text-muted-foreground w-8 shrink-0 select-none">
@@ -105,8 +107,8 @@ export function RegisterRow({ index, value, editable, changed, divergences, onCo
         <input
           ref={inputRef}
           data-testid={`register-edit-${index}`}
-          className={`flex-1 bg-transparent border-b outline-none font-mono text-xs text-foreground ${error ? "border-red-500" : "border-primary"}`}
-          style={{ minHeight: "1.25rem", lineHeight: "1.25rem", padding: 0 }}
+          className={`flex-1 bg-transparent border-b outline-none font-mono text-xs text-foreground ${error ? "border-red-500" : ""}`}
+          style={{ borderColor: error ? undefined : "var(--color-brand)", minHeight: "1.25rem", lineHeight: "1.25rem", padding: 0 }}
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value);
@@ -130,10 +132,11 @@ export function RegisterRow({ index, value, editable, changed, divergences, onCo
           {changed && (
             <span
               data-testid={`register-delta-${index}`}
-              className="text-yellow-400 font-semibold shrink-0 select-none"
+              className="font-semibold shrink-0 select-none"
+              style={{ color: "var(--color-brand)" }}
               title="Changed"
             >
-              Δ
+              ●
             </span>
           )}
           {hasDivergence && (

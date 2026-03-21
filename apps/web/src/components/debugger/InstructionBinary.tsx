@@ -15,13 +15,13 @@ export function InstructionBinary({ instruction }: InstructionBinaryProps) {
         <div className="text-muted-foreground text-[10px] uppercase tracking-wide">
           Raw Bytes
         </div>
-        <div data-testid="popover-raw-bytes">{bytesToHex(instruction.rawBytes)}</div>
+        <div className="text-foreground" data-testid="popover-raw-bytes">{bytesToHex(instruction.rawBytes)}</div>
       </div>
       <div>
         <div className="text-muted-foreground text-[10px] uppercase tracking-wide">
           Opcode
         </div>
-        <div data-testid="popover-opcode">
+        <div className="text-foreground" data-testid="popover-opcode">
           {instruction.opcode} (0x
           {instruction.opcode.toString(16).toUpperCase().padStart(2, "0")})
         </div>
@@ -30,14 +30,14 @@ export function InstructionBinary({ instruction }: InstructionBinaryProps) {
         <div className="text-muted-foreground text-[10px] uppercase tracking-wide">
           Mnemonic
         </div>
-        <div>{instruction.mnemonic}</div>
+        <div className="text-foreground">{instruction.mnemonic.toUpperCase()}</div>
       </div>
       {instruction.args && (
         <div>
           <div className="text-muted-foreground text-[10px] uppercase tracking-wide">
             Arguments
           </div>
-          <div>{instruction.args}</div>
+          <div className="text-foreground">{instruction.args}</div>
         </div>
       )}
     </div>

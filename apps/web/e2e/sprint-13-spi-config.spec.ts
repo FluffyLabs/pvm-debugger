@@ -113,35 +113,34 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     }
   });
 
-  test("trace sources do not render SPI config", async ({ page }) => {
+  test("trace sources skip config step and go directly to debugger", async ({ page }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "trace-001.log"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    // SPI config should NOT be visible for trace files
-    await expect(page.getByTestId("spi-entrypoint-config")).not.toBeVisible();
+    // Non-SPI programs skip config step and go directly to debugger
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
-  test("generic PVM does not render SPI config", async ({ page }) => {
+  test("generic PVM skips config step and goes directly to debugger", async ({ page }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await expect(page.getByTestId("spi-entrypoint-config")).not.toBeVisible();
+    // Non-SPI programs skip config step and go directly to debugger
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
-  test("JSON test vector does not render SPI config", async ({ page }) => {
+  test("JSON test vector skips config step and goes directly to debugger", async ({ page }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "json/inst_add_32.json"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await expect(page.getByTestId("spi-entrypoint-config")).not.toBeVisible();
+    // Non-SPI programs skip config step and go directly to debugger
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
   test("invalid input disables Load Program", async ({ page }) => {

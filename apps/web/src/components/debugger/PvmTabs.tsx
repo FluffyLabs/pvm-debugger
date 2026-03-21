@@ -1,5 +1,6 @@
 import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import { lifecycleLabel } from "./value-format";
+import { AVAILABLE_PVMS } from "../../lib/debugger-settings";
 
 interface PvmTabsProps {
   snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
@@ -11,6 +12,8 @@ interface PvmTabsProps {
   divergenceDetails?: string | null;
   /** Per-PVM error messages from orchestrator error events. */
   perPvmErrors?: Map<string, string>;
+  /** Set of currently active/loaded PVM ids. */
+  activePvmIds?: Set<string>;
 }
 
 /** Compact lifecycle status dot color. */
@@ -37,9 +40,15 @@ function formatErrorText(lifecycle: PvmLifecycle, errorMsg?: string): string | n
   return null;
 }
 
+/** Get lowercase display name for a PVM id. */
+function pvmDisplayName(id: string): string {
+  return id.toLowerCase();
+}
+
 /**
- * PVM tab bar for the debugger toolbar. One tab per active PVM with a lifecycle
- * status dot. Shows divergence summary inline and error text for failed PVMs.
+ * PVM tab bar for the debugger toolbar. Renders all known PVMs from AVAILABLE_PVMS:
+ * active ones as clickable tab buttons, inactive ones as grayed-out spans.
+ * Extra PVMs from snapshots (not in the known list) also render for backward compatibility.
  */
 export function PvmTabs({
   snapshots,
@@ -48,14 +57,18 @@ export function PvmTabs({
   divergenceSummary,
   divergenceDetails,
   perPvmErrors,
+  activePvmIds,
 }: PvmTabsProps) {
-  const entries = [...snapshots.entries()];
+  const active = activePvmIds ?? new Set(snapshots.keys());
 
-  if (entries.length === 0) return null;
+  // Build ordered PVM list: known PVMs first, then any extras from snapshots
+  const knownIds = AVAILABLE_PVMS.map((p) => p.id);
+  const extraIds = [...snapshots.keys()].filter((id) => !knownIds.includes(id));
+  const allIds = [...knownIds, ...extraIds];
 
   // Collect inline error messages for failed/timed-out PVMs
   const errorEntries: Array<{ pvmId: string; text: string }> = [];
-  for (const [pvmId, { lifecycle }] of entries) {
+  for (const [pvmId, { lifecycle }] of snapshots) {
     const errorText = formatErrorText(lifecycle, perPvmErrors?.get(pvmId));
     if (errorText) {
       errorEntries.push({ pvmId, text: errorText });
@@ -63,9 +76,28 @@ export function PvmTabs({
   }
 
   return (
-    <div data-testid="pvm-tabs" className="flex items-center gap-1" role="tablist">
-      {entries.map(([pvmId, { lifecycle, snapshot }]) => {
+    <div data-testid="pvm-tabs" className="flex items-center gap-1 ml-auto" role="tablist">
+      {allIds.map((pvmId) => {
+        const entry = snapshots.get(pvmId);
+        const isActive = active.has(pvmId);
+
+        if (!isActive) {
+          // Inactive/grayed-out PVM
+          return (
+            <span
+              key={pvmId}
+              data-testid={`pvm-tab-${pvmId}`}
+              className="flex items-center gap-1.5 px-2 py-0.5 text-xs font-mono text-muted-foreground/40"
+            >
+              {pvmDisplayName(pvmId)}
+            </span>
+          );
+        }
+
         const isSelected = pvmId === selectedPvmId;
+        const lifecycle = entry?.lifecycle;
+        const snapshot = entry?.snapshot;
+
         return (
           <button
             key={pvmId}
@@ -79,14 +111,18 @@ export function PvmTabs({
                 : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
             }`}
           >
-            <span
-              data-testid={`pvm-dot-${pvmId}`}
-              className={`inline-block h-2 w-2 rounded-full ${dotColor(lifecycle)}`}
-            />
-            {pvmId}
-            <span data-testid={`pvm-status-${pvmId}`} className="sr-only">
-              {lifecycleLabel(lifecycle, snapshot.status)}
-            </span>
+            {lifecycle && (
+              <span
+                data-testid={`pvm-dot-${pvmId}`}
+                className={`inline-block h-2 w-2 rounded-full ${dotColor(lifecycle)}`}
+              />
+            )}
+            {pvmDisplayName(pvmId)}
+            {lifecycle && snapshot && (
+              <span data-testid={`pvm-status-${pvmId}`} className="sr-only">
+                {lifecycleLabel(lifecycle, snapshot.status)}
+              </span>
+            )}
           </button>
         );
       })}

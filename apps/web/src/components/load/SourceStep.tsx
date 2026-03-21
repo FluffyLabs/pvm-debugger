@@ -72,6 +72,8 @@ export function SourceStep({ onAdvance }: SourceStepProps) {
     setHexResult(null);
     setActiveSource("url");
     setError(null);
+    // Auto-advance after successful URL fetch (item 10)
+    onAdvance(result.rawPayload, result.detectedFormat);
   }
 
   function handleUrlClear() {

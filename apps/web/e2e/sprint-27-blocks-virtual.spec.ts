@@ -1,12 +1,21 @@
 import { test, expect } from "@playwright/test";
 
+/** SPI examples that require expanding a collapsed category and going through config step. */
+const SPI_EXAMPLES: Record<string, string> = { "add-jam": "wat", "fibonacci-jam": "wat", "as-add": "assemblyscript" };
+
 async function loadProgram(page: import("@playwright/test").Page, exampleId = "fibonacci") {
   await page.goto("/#/load");
+  const categoryId = SPI_EXAMPLES[exampleId];
+  if (categoryId) {
+    await page.getByTestId(`category-toggle-${categoryId}`).click();
+  }
   const card = page.getByTestId(`example-card-${exampleId}`);
   await expect(card).toBeVisible();
   await card.click();
-  await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-  await page.getByTestId("config-step-load").click();
+  if (categoryId) {
+    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await page.getByTestId("config-step-load").click();
+  }
   await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
 }
 
@@ -111,7 +120,7 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     // add-jam starts at PC=5
     const row = page.getByTestId("instruction-row-5");
     await expect(row).toBeVisible();
-    await expect(row).toHaveClass(/bg-primary/);
+    await expect(row).toHaveClass(/instruction-row-current/);
   });
 
   test("breakpoints still work with block headers", async ({ page }) => {

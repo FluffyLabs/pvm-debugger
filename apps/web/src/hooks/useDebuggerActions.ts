@@ -228,31 +228,17 @@ export function useDebuggerActions({
     return stepsForMode(steppingMode, nInstructionsCount);
   }
 
+  // Note: isStepInProgress is intentionally excluded here to avoid a
+  // disabled-flash on every step. The next/step callbacks already guard
+  // against double-stepping via their own isStepInProgress check.
   const canStep =
     !!orchestrator &&
-    !isStepInProgress &&
     !isRunning &&
     !!selectedLifecycle &&
     !isTerminal(selectedLifecycle);
 
+  /** Next button: settings-dependent step count. */
   const next = useCallback(() => {
-    if (!orchestrator || isStepInProgress || isRunning) return;
-    if (selectedLifecycle && isTerminal(selectedLifecycle)) return;
-
-    setIsStepInProgress(true);
-
-    const doStep = async () => {
-      await resumeAllHostCalls(orchestrator, storageTable);
-      await orchestrator.step(1);
-    };
-
-    doStep().catch((err) => {
-      setError(err instanceof Error ? err.message : String(err));
-      setIsStepInProgress(false);
-    });
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, storageTable]);
-
-  const step = useCallback(() => {
     if (!orchestrator || isStepInProgress || isRunning) return;
     if (selectedLifecycle && isTerminal(selectedLifecycle)) return;
 
@@ -270,6 +256,24 @@ export function useDebuggerActions({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount, storageTable, instructions, snapshots]);
+
+  /** Step button: always executes exactly one instruction. */
+  const step = useCallback(() => {
+    if (!orchestrator || isStepInProgress || isRunning) return;
+    if (selectedLifecycle && isTerminal(selectedLifecycle)) return;
+
+    setIsStepInProgress(true);
+
+    const doStep = async () => {
+      await resumeAllHostCalls(orchestrator, storageTable);
+      await orchestrator.step(1);
+    };
+
+    doStep().catch((err) => {
+      setError(err instanceof Error ? err.message : String(err));
+      setIsStepInProgress(false);
+    });
+  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, storageTable]);
 
   const run = useCallback(() => {
     if (!orchestrator || isRunning || isRunningRef.current) return;
@@ -380,20 +384,28 @@ export function useDebuggerActions({
   const clearError = useCallback(() => setError(null), []);
 
   // Keyboard shortcuts — registered at document level.
-  // F10 → Next, F5 → Run/Pause toggle, Ctrl+Shift+R → Reset
+  // Ctrl+Shift+N → Next, Ctrl+Shift+S → Step, Ctrl+Shift+P → Run/Pause, Ctrl+Shift+R → Reset
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Skip when focus is inside an input or textarea to avoid editing conflicts.
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
-      if (e.key === "F10") {
+      if (!e.ctrlKey || !e.shiftKey) return;
+
+      if (e.key === "N") {
         e.preventDefault();
         next();
         return;
       }
 
-      if (e.key === "F5") {
+      if (e.key === "S") {
+        e.preventDefault();
+        step();
+        return;
+      }
+
+      if (e.key === "P") {
         e.preventDefault();
         if (isRunningRef.current) {
           pause();
@@ -403,7 +415,7 @@ export function useDebuggerActions({
         return;
       }
 
-      if (e.key === "R" && e.ctrlKey && e.shiftKey) {
+      if (e.key === "R") {
         e.preventDefault();
         reset();
         return;
@@ -412,7 +424,7 @@ export function useDebuggerActions({
 
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [next, run, pause, reset]);
+  }, [next, step, run, pause, reset]);
 
   return { next, step, run, pause, reset, load, canStep, isRunning, error, clearError };
 }

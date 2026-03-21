@@ -109,10 +109,12 @@ function ByteCell({
     <span
       data-testid={`hex-byte-${offset}`}
       className={`inline-block ${editable ? "cursor-pointer hover:bg-accent/50 rounded" : "cursor-default"} ${
-        isChanged ? "text-yellow-300 bg-yellow-500/20 rounded" : byte === 0 ? "text-muted-foreground/40" : "text-foreground"
+        isChanged ? "rounded" : byte === 0 ? "text-muted-foreground/40" : "text-foreground"
       }`}
+      style={isChanged
+        ? { color: "var(--color-brand)", backgroundColor: "rgba(23, 175, 163, 0.2)", width: "1.5em", textAlign: "center" as const }
+        : { width: "1.5em", textAlign: "center" as const }}
       data-changed={isChanged ? "true" : undefined}
-      style={{ width: "1.5em", textAlign: "center" }}
       onClick={editable ? () => onStartEdit(offset) : undefined}
     >
       {byteToHex(byte)}

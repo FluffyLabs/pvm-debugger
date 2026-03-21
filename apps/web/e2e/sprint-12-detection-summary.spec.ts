@@ -13,9 +13,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
   });
 
   test("step 2 renders after selecting a source in step 1", async ({ page }) => {
-    // Upload a generic PVM file
+    // Upload an SPI file (non-SPI programs skip config step)
     const fileInput = page.getByTestId("file-upload-input");
-    await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
+    await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
 
     // Click Continue to advance to step 2
@@ -50,45 +50,32 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await expect(page.getByTestId("summary-registers")).toBeVisible();
   });
 
-  test("JSON vector shows expected terminal status", async ({ page }) => {
+  test("JSON vector skips config step and loads directly into debugger", async ({ page }) => {
     // Upload a JSON test vector fixture directly
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "json/inst_add_32.json"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
-    // Step 2 should render with JSON-specific summary
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await expect(page.getByTestId("detection-summary")).toBeVisible();
-    await expect(page.getByTestId("detection-summary-json")).toBeVisible();
-    await expect(page.getByTestId("summary-expected-status")).toBeVisible();
-    await expect(page.getByTestId("summary-pc")).toBeVisible();
-    await expect(page.getByTestId("summary-gas")).toBeVisible();
-    await expect(page.getByTestId("summary-registers")).toBeVisible();
+    // Non-SPI programs skip config step and go directly to debugger
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
-  test("trace file shows host-call entry count and program kind", async ({ page }) => {
+  test("trace file skips config step and loads directly into debugger", async ({ page }) => {
     // Upload a trace fixture file
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "trace-001.log"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
-    // Step 2 should render with trace-specific summary
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await expect(page.getByTestId("detection-summary")).toBeVisible();
-    await expect(page.getByTestId("detection-summary-trace")).toBeVisible();
-    await expect(page.getByTestId("summary-trace-entries")).toBeVisible();
-    await expect(page.getByTestId("summary-program-kind")).toBeVisible();
-    await expect(page.getByTestId("summary-code-size")).toBeVisible();
-    await expect(page.getByTestId("summary-pc")).toBeVisible();
-    await expect(page.getByTestId("summary-gas")).toBeVisible();
+    // Non-SPI programs skip config step and go directly to debugger
+    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
   test("Load Program navigates to debugger with OK status", async ({ page }) => {
-    // Upload a generic PVM file
+    // Upload an SPI file (non-SPI programs skip config step)
     const fileInput = page.getByTestId("file-upload-input");
-    await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
+    await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
 
     // Advance to step 2
@@ -103,9 +90,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
   });
 
   test("Back returns to step 1 with candidate preserved", async ({ page }) => {
-    // Upload a generic PVM file
+    // Upload an SPI file (non-SPI programs skip config step)
     const fileInput = page.getByTestId("file-upload-input");
-    await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
+    await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
 
     // Advance to step 2
@@ -151,10 +138,12 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await expect(page.getByTestId("config-step-force-generic")).not.toBeVisible();
   });
 
-  test("step 2 renders after selecting an example", async ({ page }) => {
-    // Click first available example
-    const firstCard = page.locator('[data-testid^="example-card-"]').first();
-    await firstCard.click();
+  test("step 2 renders after selecting an SPI example", async ({ page }) => {
+    // Click a JAM SPI example (non-SPI programs skip config step)
+    // WAT category is collapsed by default, expand it
+    await page.getByTestId("category-toggle-wat").click();
+    const card = page.getByTestId("example-card-add-jam");
+    await card.click();
 
     // Step 2 should render
     await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
@@ -163,9 +152,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
   });
 
   test("no gas editor on step 2", async ({ page }) => {
-    // Upload a file and advance to step 2
+    // Upload an SPI file (non-SPI programs skip config step)
     const fileInput = page.getByTestId("file-upload-input");
-    await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
+    await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
 
     await page.getByTestId("source-step-continue").click();

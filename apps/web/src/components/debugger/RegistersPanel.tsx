@@ -139,7 +139,7 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
 
   return (
     <div data-testid="registers-panel" className="flex flex-col h-full overflow-hidden">
-      <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border shrink-0">
+      <div className="px-2 h-7 text-sm font-semibold text-foreground border-b border-border shrink-0 flex items-center">
         Registers
       </div>
       {snapshot && lifecycle ? (

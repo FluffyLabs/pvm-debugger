@@ -7,8 +7,6 @@ test.describe("Sprint 23 — Logs Tab", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -22,8 +20,6 @@ test.describe("Sprint 23 — Logs Tab", () => {
     const card = page.getByTestId("example-card-trace-001");
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 

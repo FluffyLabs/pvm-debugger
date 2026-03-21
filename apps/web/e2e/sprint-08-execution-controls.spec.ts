@@ -6,8 +6,6 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -33,13 +31,15 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     await expect(nextBtn).toHaveAttribute("aria-label", "Next");
     await expect(runBtn).toHaveAttribute("aria-label", "Run");
 
-    // Verify order by checking DOM positions
+    // Step button is hidden in instruction mode (the default)
+    await expect(page.getByTestId("step-button")).not.toBeVisible();
+
+    // Verify order by checking DOM positions (no step button in instruction mode)
     const buttons = controls.locator("button");
     await expect(buttons.nth(0)).toHaveAttribute("data-testid", "load-button");
     await expect(buttons.nth(1)).toHaveAttribute("data-testid", "reset-button");
     await expect(buttons.nth(2)).toHaveAttribute("data-testid", "next-button");
-    await expect(buttons.nth(3)).toHaveAttribute("data-testid", "step-button");
-    await expect(buttons.nth(4)).toHaveAttribute("data-testid", "run-button");
+    await expect(buttons.nth(3)).toHaveAttribute("data-testid", "run-button");
   });
 
   test("Run starts continuous execution and becomes Pause", async ({ page }) => {

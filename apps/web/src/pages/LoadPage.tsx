@@ -1,26 +1,71 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router";
 import { Badge, Button } from "@fluffylabs/shared-ui";
 import { ArrowRight } from "lucide-react";
 import type { RawPayload, DetectedFormat, ExampleEntry } from "@pvmdbg/content";
+import { createProgramEnvelope, decodeGeneric } from "@pvmdbg/content";
+import { useOrchestrator } from "../hooks/useOrchestrator";
+import { persistSession } from "../hooks/usePersistence";
 import { ExampleList } from "../components/load/ExampleList";
 import { SourceStep } from "../components/load/SourceStep";
 import { ConfigStep } from "../components/load/ConfigStep";
 import { formatLabel, formatBadgeIntent, formatByteCount } from "../components/load/format";
 
+/** Formats that require the SPI entrypoint config step. */
+function isSpiFormat(kind: DetectedFormat["kind"]): boolean {
+  return kind === "jam_spi" || kind === "jam_spi_with_metadata";
+}
+
 export function LoadPage() {
+  const navigate = useNavigate();
+  const { initialize, setEnvelope } = useOrchestrator();
   const [step, setStep] = useState<1 | 2>(1);
   const [rawPayload, setRawPayload] = useState<RawPayload | null>(null);
   const [detectedFormat, setDetectedFormat] = useState<DetectedFormat | null>(null);
   const [exampleEntry, setExampleEntry] = useState<ExampleEntry | null>(null);
+
+  /** Try to load a non-SPI program directly into the debugger, bypassing step 2. */
+  const loadDirectly = useCallback(
+    async (payload: RawPayload, format: DetectedFormat) => {
+      try {
+        const envelope = createProgramEnvelope(payload);
+        const orch = initialize(["typeberry"]);
+        await orch.loadProgram(envelope);
+        if (envelope.trace) {
+          orch.setTrace("typeberry", envelope.trace);
+        }
+        setEnvelope(envelope);
+        persistSession(
+          payload.bytes,
+          { sourceKind: payload.sourceKind, sourceId: payload.sourceId },
+          format.kind,
+          false,
+          null,
+          envelope.initialState.gas,
+        );
+        navigate("/");
+      } catch {
+        // On failure, fall back to step 2 so the user sees the error
+        setStep(2);
+      }
+    },
+    [initialize, setEnvelope, navigate],
+  );
 
   const handleAdvance = useCallback(
     (payload: RawPayload, format: DetectedFormat, example?: ExampleEntry) => {
       setRawPayload(payload);
       setDetectedFormat(format);
       setExampleEntry(example ?? null);
-      setStep(2);
+
+      // Non-SPI programs skip step 2 and go directly to debugger
+      if (!isSpiFormat(format.kind)) {
+        loadDirectly(payload, format);
+      } else {
+        setStep(2);
+      }
     },
-    [],
+    [loadDirectly],
   );
 
   const handleBack = useCallback(() => {
@@ -42,7 +87,7 @@ export function LoadPage() {
 
   // Step 1: source selection
   return (
-    <div data-testid="load-page" className="flex flex-col items-center p-8 h-full overflow-auto">
+    <div data-testid="load-page" className="flex flex-col items-start p-8 h-full overflow-auto max-w-5xl mx-auto w-full">
       <h1 className="text-lg font-semibold text-foreground mb-1">Load Program</h1>
       <p className="text-sm text-muted-foreground mb-6">
         Upload a file, fetch from URL, paste hex, or select an example to begin debugging.
@@ -80,7 +125,7 @@ export function LoadPage() {
 
       <div
         data-testid="load-page-columns"
-        className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-8"
+        className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8"
       >
         <div data-testid="load-page-left">
           <SourceStep onAdvance={handleAdvance} />

@@ -20,11 +20,7 @@ test.describe("Sprint 02 — Load a Bundled Example", () => {
     await expect(firstCard).toBeVisible();
     await firstCard.click();
 
-    // Step 2: detection summary
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
-
-    // Should navigate to debugger page
+    // Non-SPI programs skip config step and go directly to debugger
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
@@ -34,9 +30,7 @@ test.describe("Sprint 02 — Load a Bundled Example", () => {
     await expect(firstCard).toBeVisible();
     await firstCard.click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
-
+    // Non-SPI programs skip config step and go directly to debugger
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
     await expect(page.getByTestId("pvm-status-typeberry")).toBeVisible();
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
@@ -44,6 +38,8 @@ test.describe("Sprint 02 — Load a Bundled Example", () => {
 
   test("loading a JAM SPI example (add.jam) shows OK status", async ({ page }) => {
     await page.goto("/#/load");
+    // WAT category is collapsed by default, expand it
+    await page.getByTestId("category-toggle-wat").click();
     const jamCard = page.getByTestId("example-card-add-jam");
     await expect(jamCard).toBeVisible();
     await jamCard.click();

@@ -10,13 +10,30 @@ const FIXTURES_DIR = path.resolve(__dirname, "../../../fixtures");
  * Helper: load a bundled example by clicking its card, confirming detection,
  * and waiting for the debugger page.
  */
+/** Map from example IDs to their parent category IDs (only for collapsed categories). */
+const COLLAPSED_CATEGORY: Record<string, string> = {
+  "inst-add-32": "json-test-vectors",
+  "inst-add-64": "json-test-vectors",
+  "io-trace": "traces",  // traces is expanded, but kept for safety
+};
+
 async function loadExample(page: import("@playwright/test").Page, exampleId: string) {
   await page.goto("/#/load");
+  // Expand collapsed category if needed
+  const categoryId = COLLAPSED_CATEGORY[exampleId];
+  if (categoryId) {
+    const toggle = page.getByTestId(`category-toggle-${categoryId}`);
+    // Only click if the category is actually collapsed (card not visible)
+    const card = page.getByTestId(`example-card-${exampleId}`);
+    const isVisible = await card.isVisible().catch(() => false);
+    if (!isVisible) {
+      await toggle.click();
+    }
+  }
   const card = page.getByTestId(`example-card-${exampleId}`);
   await expect(card).toBeVisible({ timeout: 15000 });
   await card.click();
-  await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-  await page.getByTestId("config-step-load").click();
+  // Non-SPI programs skip config step and go directly to debugger
   await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
 }
 
@@ -30,8 +47,7 @@ async function loadFile(page: import("@playwright/test").Page, fixturePath: stri
   await fileInput.setInputFiles(path.join(FIXTURES_DIR, fixturePath));
   await expect(page.getByTestId("file-upload-selected")).toBeVisible();
   await page.getByTestId("source-step-continue").click();
-  await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-  await page.getByTestId("config-step-load").click();
+  // Non-SPI programs skip config step and go directly to debugger
   await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
 }
 
@@ -56,8 +72,9 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
   test.setTimeout(60_000);
 
   test("JAM SPI example loads with correct format summary", async ({ page }) => {
-    // Load a JAM SPI example (add-jam has entrypoint config)
+    // Load a JAM SPI example (add-jam is in wat, collapsed by default)
     await page.goto("/#/load");
+    await page.getByTestId("category-toggle-wat").click();
     const card = page.getByTestId("example-card-add-jam");
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();

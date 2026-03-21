@@ -13,7 +13,7 @@ export function DetectionSummary({ envelope, detectedFormat, rawByteCount }: Det
   const kind = detectedFormat.kind;
 
   return (
-    <div data-testid="detection-summary" className="rounded-lg border border-border p-4">
+    <div data-testid="detection-summary" className="rounded-lg border border-border p-4 bg-card">
       <div className="flex items-center gap-2 mb-3">
         <h3 className="text-sm font-semibold text-foreground">Detection Summary</h3>
         <Badge

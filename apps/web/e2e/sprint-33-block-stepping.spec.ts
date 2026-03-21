@@ -7,8 +7,6 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   }
 
@@ -108,8 +106,7 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     await setBlockMode(page);
 
     // Step forward a few times with single step to find a mid-block instruction
-    // First, switch back to instruction mode temporarily
-    await page.getByTestId("drawer-tab-settings").click();
+    // Settings tab is already open from setBlockMode — switch to instruction mode
     await page.getByTestId("stepping-radio-instruction").click();
 
     const nextBtn = page.getByTestId("next-button");

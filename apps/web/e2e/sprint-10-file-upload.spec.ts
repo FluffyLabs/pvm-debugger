@@ -67,10 +67,7 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(continueBtn).toBeEnabled();
     await continueBtn.click();
 
-    // Step 2: detection summary
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
-
+    // Non-SPI programs skip config step and go directly to debugger
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 
@@ -124,9 +121,7 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(card).toBeVisible();
     await card.click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
-    await page.getByTestId("config-step-load").click();
-
+    // Non-SPI programs skip config step and go directly to debugger
     await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
   });
 

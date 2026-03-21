@@ -4,22 +4,25 @@ import { useOrchestrator } from "../hooks/useOrchestrator";
 import { useOrchestratorState } from "../hooks/useOrchestratorState";
 import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
-import { stepTooltip } from "../lib/debugger-settings";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { useStorageTable } from "../hooks/useStorageTable";
 import { clearProgramSession } from "../hooks/usePersistence";
 import { isTerminal } from "@pvmdbg/types";
+import { AVAILABLE_PVMS } from "../lib/debugger-settings";
 import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
 import { RegistersPanel } from "../components/debugger/RegistersPanel";
 import { MemoryPanel } from "../components/debugger/MemoryPanel";
 import { ExecutionControls } from "../components/debugger/ExecutionControls";
 import { DebuggerLayout } from "../components/debugger/DebuggerLayout";
 import { BottomDrawer } from "../components/debugger/BottomDrawer";
-import { DrawerProvider } from "../components/debugger/DrawerContext";
+import { DrawerProvider, useDrawer } from "../components/debugger/DrawerContext";
 import { PvmTabs } from "../components/debugger/PvmTabs";
 import { useDivergenceCheck } from "../hooks/useDivergenceCheck";
+import { Settings } from "lucide-react";
+import { Button } from "@fluffylabs/shared-ui";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@fluffylabs/shared-ui/ui/tooltip";
 
-export function DebuggerPage() {
+function DebuggerPageInner() {
   const { orchestrator, envelope, teardown, initialize, setEnvelope } = useOrchestrator();
   const navigate = useNavigate();
   const isReloadingRef = useRef(false);
@@ -29,9 +32,9 @@ export function DebuggerPage() {
     useDivergenceCheck(snapshots, selectedPvmId, snapshotVersion);
   const instructions = useDisassembly(envelope);
 
+  const { activeTab, openToTab, setActiveTab } = useDrawer();
+
   // Derive a stable orchestrator identity for the storage table.
-  // Each new orchestrator reference gets a unique id so storage resets.
-  // Computed during render (refs are safe to mutate during render).
   const orchIdRef = useRef<{ orch: typeof orchestrator; id: number }>({
     orch: null,
     id: 0,
@@ -62,11 +65,9 @@ export function DebuggerPage() {
   const onPvmChange = useCallback(
     (pvmIds: string[]) => {
       if (!envelope) return;
-      // Capture envelope before teardown clears it
       const savedEnvelope = envelope;
       isReloadingRef.current = true;
       const orch = initialize(pvmIds);
-      // Restore envelope in context (teardown clears it)
       setEnvelope(savedEnvelope);
       orch
         .loadProgram(savedEnvelope)
@@ -80,7 +81,6 @@ export function DebuggerPage() {
     [envelope, initialize, setEnvelope],
   );
 
-  // useDebuggerActions must be called before any early return (React rules of hooks)
   const { next, step, run, pause, reset, load, canStep, isRunning, error, clearError } =
     useDebuggerActions({
       orchestrator,
@@ -97,7 +97,6 @@ export function DebuggerPage() {
     });
 
   // Route guard: redirect to /load when no program is loaded.
-  // Skip during PVM reload to avoid a brief redirect.
   if (!isReloadingRef.current && (!orchestrator || !orchestrator.getProgramBytes())) {
     return <Navigate to="/load" replace />;
   }
@@ -116,13 +115,24 @@ export function DebuggerPage() {
       ({ lifecycle, snapshot }) => lifecycle === "paused" && snapshot.status === "ok",
     );
 
+  // Collect active PVM ids from snapshots
+  const activePvmIds = new Set(snapshots.keys());
+
+  // Settings cog toggle
+  const settingsOpen = activeTab === "settings";
+  const toggleSettings = useCallback(() => {
+    if (settingsOpen) {
+      setActiveTab(null);
+    } else {
+      openToTab("settings");
+    }
+  }, [settingsOpen, setActiveTab, openToTab]);
+
   return (
-    <DrawerProvider>
     <div data-testid="debugger-page" className="h-full">
       <DebuggerLayout
         toolbar={
           <>
-            <h1 className="text-sm font-semibold text-foreground">Debugger</h1>
             <ExecutionControls
               onNext={next}
               onStep={step}
@@ -133,9 +143,10 @@ export function DebuggerPage() {
               canStep={canStep}
               isRunning={isRunning}
               isTerminated={allTerminal}
-              stepTooltip={stepTooltip(settings.steppingMode, settings.nInstructionsCount)}
+              steppingMode={settings.steppingMode}
+              nInstructionsCount={settings.nInstructionsCount}
             />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-auto">
               {allTerminal && (
                 <span
                   data-testid="execution-complete-badge"
@@ -166,7 +177,23 @@ export function DebuggerPage() {
                 divergenceSummary={divergenceSummary}
                 divergenceDetails={divergenceDetails}
                 perPvmErrors={perPvmErrors}
+                activePvmIds={activePvmIds}
               />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    data-testid="settings-cog"
+                    aria-label="Settings"
+                    onClick={toggleSettings}
+                    className={`cursor-pointer shadow-none border-0 h-auto p-1 text-muted-foreground ${settingsOpen ? "bg-accent" : ""}`}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Settings</TooltipContent>
+              </Tooltip>
             </div>
           </>
         }
@@ -207,6 +234,13 @@ export function DebuggerPage() {
         }
       />
     </div>
+  );
+}
+
+export function DebuggerPage() {
+  return (
+    <DrawerProvider>
+      <DebuggerPageInner />
     </DrawerProvider>
   );
 }

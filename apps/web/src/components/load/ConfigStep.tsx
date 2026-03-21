@@ -109,7 +109,7 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
   }
 
   return (
-    <div data-testid="config-step" className="flex flex-col items-center p-8 h-full overflow-auto">
+    <div data-testid="config-step" className="flex flex-col items-start p-8 h-full overflow-auto max-w-2xl mx-auto w-full">
       <h1 className="text-lg font-semibold text-foreground mb-1">Program Summary</h1>
       <p className="text-sm text-muted-foreground mb-6">
         Review the detected program before loading it into the debugger.

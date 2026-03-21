@@ -24,11 +24,14 @@ function makeSnapshots(
 }
 
 describe("PvmTabs", () => {
-  it("returns null when snapshots is empty", () => {
-    const { container } = render(
+  it("renders inactive PVMs when snapshots is empty", () => {
+    render(
       <PvmTabs snapshots={new Map()} selectedPvmId={null} onSelect={() => {}} />,
     );
-    expect(container.innerHTML).toBe("");
+    // Known PVMs should render as grayed-out inactive spans
+    const tab = screen.getByTestId("pvm-tab-typeberry");
+    expect(tab.tagName).toBe("SPAN");
+    expect(tab.className).toContain("text-muted-foreground/40");
   });
 
   it("renders one tab per PVM", () => {

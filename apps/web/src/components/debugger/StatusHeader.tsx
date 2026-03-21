@@ -122,7 +122,8 @@ function InlineEdit({
   return (
     <span
       data-testid={testId}
-      className={`text-foreground ${editable ? "cursor-pointer hover:underline" : ""} ${changed ? "border-b border-yellow-400/60" : ""}`}
+      className={`text-foreground ${editable ? "cursor-pointer hover:underline" : ""}`}
+      style={changed ? { borderBottom: "1px solid var(--color-brand)" } : undefined}
       onClick={startEditing}
     >
       {displayValue}
@@ -157,15 +158,13 @@ export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChan
   const gasHex = formatGasHex(snapshot.gas);
 
   return (
-    <div data-testid="status-header" className="flex flex-col gap-1.5 px-2 py-1.5 border-b border-border">
-      <div className="flex items-center gap-2">
-        <span
-          data-testid="status-badge"
-          className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold ${className}`}
-        >
-          {label}
-        </span>
-      </div>
+    <div data-testid="status-header" className="flex items-center gap-4 px-2 py-1.5 border-b border-border">
+      <span
+        data-testid="status-badge"
+        className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold shrink-0 ${className}`}
+      >
+        {label}
+      </span>
       <div className="flex items-center gap-4 font-mono text-xs">
         <div className="flex items-center gap-1" data-testid="pc-field">
           <span className="text-muted-foreground">PC:</span>
@@ -177,7 +176,7 @@ export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChan
             onCommit={handlePcCommit}
           />
           {pcChanged && (
-            <span data-testid="pc-delta" className="text-yellow-400 font-semibold select-none">Δ</span>
+            <span data-testid="pc-delta" className="font-semibold select-none" style={{ color: "var(--color-brand)" }}>●</span>
           )}
         </div>
         <div className="flex items-center gap-1" data-testid="gas-field">
@@ -194,7 +193,7 @@ export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChan
             </span>
           </WithTooltip>
           {gasChanged && (
-            <span data-testid="gas-delta" className="text-yellow-400 font-semibold select-none">Δ</span>
+            <span data-testid="gas-delta" className="font-semibold select-none" style={{ color: "var(--color-brand)" }}>●</span>
           )}
         </div>
       </div>
