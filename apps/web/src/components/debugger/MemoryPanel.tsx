@@ -65,8 +65,8 @@ export function getPageLabel(
     return "Page @ 0x" + address.toString(16).toUpperCase();
   }
 
-  if (address === 0xfeff0000) return "Arguments";
-  if (address >= 0xfefe0000 && address < 0xfeff0000) return "Stack";
+  if (address >= 0xfeff0000) return "Arguments";
+  if (address >= 0xfefc0000 && address < 0xfeff0000) return "Stack";
   if (!isWritable && address >= 0x00010000) return "RO Data";
   if (isWritable && initializedPages.has(address)) return "RW Data";
   if (isWritable) return "Heap";
@@ -103,7 +103,7 @@ export function MemoryPanel({
   if (pages.length === 0) {
     return (
       <div data-testid="memory-panel" className="flex flex-col h-full overflow-hidden">
-        <div className="px-2 h-7 text-sm font-semibold text-foreground border-b border-border shrink-0 flex items-center">
+        <div className="px-2 h-7 text-sm font-normal text-foreground border-b border-border shrink-0 flex items-center">
           Memory
         </div>
         <div className="px-2 py-2 text-xs text-muted-foreground">No memory pages.</div>
@@ -113,7 +113,7 @@ export function MemoryPanel({
 
   return (
     <div data-testid="memory-panel" className="flex flex-col h-full overflow-hidden">
-      <div className="px-2 py-1 text-sm font-semibold text-foreground border-b border-border shrink-0">
+      <div className="px-2 h-7 text-sm font-normal text-foreground border-b border-border shrink-0 flex items-center">
         Memory
       </div>
       <div className="flex-1 overflow-auto">

@@ -26,7 +26,7 @@ export function SteppingModeConfig() {
 
   return (
     <div data-testid="settings-stepping-mode">
-      <h3 className="text-sm font-semibold text-foreground mb-1">Stepping Mode</h3>
+      <h3 className="text-sm font-normal text-foreground mb-1">Stepping Mode</h3>
       <p className="text-xs text-muted-foreground mb-2">
         Controls how many instructions are executed per step action.
       </p>

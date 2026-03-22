@@ -15,7 +15,7 @@ export function AutoContinueConfig() {
 
   return (
     <div data-testid="settings-auto-continue">
-      <h3 className="text-sm font-semibold text-foreground mb-1">Host Call Policy</h3>
+      <h3 className="text-sm font-normal text-foreground mb-1">Host Call Policy</h3>
       <p className="text-xs text-muted-foreground mb-2">
         Controls how the debugger handles host calls during execution. Traces are loaded in the program loader, not here.
       </p>

@@ -16,7 +16,7 @@ interface EcalliTraceTabProps {
 type ViewMode = "formatted" | "raw";
 
 export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion }: EcalliTraceTabProps) {
-  const [linkScroll, setLinkScroll] = useState(false);
+  const [linkScroll, setLinkScroll] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("formatted");
 
   const leftRef = useRef<HTMLDivElement>(null);
@@ -113,19 +113,17 @@ export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion }:
           </button>
         </div>
 
-        {/* Link scroll (only in formatted mode) */}
-        {viewMode === "formatted" && (
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
-            <input
-              data-testid="link-scroll-toggle"
-              type="checkbox"
-              checked={linkScroll}
-              onChange={(e) => setLinkScroll(e.target.checked)}
-              className="cursor-pointer"
-            />
-            Link scroll
-          </label>
-        )}
+        {/* Link scroll */}
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+          <input
+            data-testid="link-scroll-toggle"
+            type="checkbox"
+            checked={linkScroll}
+            onChange={(e) => setLinkScroll(e.target.checked)}
+            className="cursor-pointer"
+          />
+          Link scroll
+        </label>
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -162,7 +160,7 @@ export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion }:
           />
         </div>
       ) : (
-        <TraceRawView recorded={recorded} reference={reference} />
+        <TraceRawView recorded={recorded} reference={reference} linkScroll={linkScroll} />
       )}
     </div>
   );

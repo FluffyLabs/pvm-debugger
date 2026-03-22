@@ -16,7 +16,7 @@ const TABS: { id: DrawerTab; label: string }[] = [
   { id: "logs", label: "Logs" },
 ];
 
-const TAB_BAR_HEIGHT = 36;
+const TAB_BAR_HEIGHT = 28;
 const MIN_EXPANDED_HEIGHT = 80;
 
 function clampHeight(h: number, maxHeight: number): number {
@@ -98,6 +98,43 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
         </div>
       )}
 
+      {/* Tab bar */}
+      <div
+        data-testid="drawer-tab-bar"
+        className="flex items-center gap-0.5 px-2 border-b border-border bg-muted/30"
+        style={{ height: TAB_BAR_HEIGHT, flexShrink: 0 }}
+      >
+        {TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            data-testid={`drawer-tab-${id}`}
+            aria-label={label}
+            onClick={() => handleTabClick(id)}
+            className={`cursor-pointer px-3 py-0.5 text-xs font-medium transition-colors border-b-2 ${
+              activeTab === id
+                ? "text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
+            }`}
+            style={activeTab === id ? { borderBottomColor: "var(--color-brand)" } : undefined}
+          >
+            {label}
+          </button>
+        ))}
+        {isExpanded && (
+          <button
+            data-testid="drawer-close-button"
+            aria-label="Close drawer"
+            onClick={() => setActiveTab(null)}
+            className="ml-auto p-0.5 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
+          >
+            <svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="2" y1="2" x2="12" y2="12" />
+              <line x1="12" y1="2" x2="2" y2="12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
       {/* Tab content area */}
       {isExpanded && (
         <div
@@ -110,29 +147,6 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
           {activeTab === "logs" && <LogsTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} />}
         </div>
       )}
-
-      {/* Tab bar */}
-      <div
-        data-testid="drawer-tab-bar"
-        className="flex items-center gap-0.5 px-2 border-t border-border bg-muted/30"
-        style={{ height: TAB_BAR_HEIGHT, flexShrink: 0 }}
-      >
-        {TABS.map(({ id, label }) => (
-          <button
-            key={id}
-            data-testid={`drawer-tab-${id}`}
-            aria-label={label}
-            onClick={() => handleTabClick(id)}
-            className={`cursor-pointer px-3 py-1 text-xs font-medium rounded transition-colors ${
-              activeTab === id
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

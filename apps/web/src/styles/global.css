@@ -40,3 +40,9 @@ body {
 .register-flash {
   animation: register-flash 0.6s ease-out forwards;
 }
+
+/* Brand-colored checked switches */
+button[role="switch"][data-state="checked"] {
+  background-color: var(--color-brand);
+  border-color: var(--color-brand);
+}

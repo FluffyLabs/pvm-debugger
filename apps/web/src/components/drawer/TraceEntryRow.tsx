@@ -45,7 +45,7 @@ export function TraceEntryRow({ row, isMismatched }: TraceEntryRowProps) {
           </span>
         )}
       </div>
-      <pre className="text-[11px] leading-tight whitespace-pre-wrap font-mono text-muted-foreground mt-0.5">
+      <pre className="text-[11px] leading-tight whitespace-pre-wrap font-mono text-foreground mt-0.5">
         {lines.join("\n")}
       </pre>
     </div>

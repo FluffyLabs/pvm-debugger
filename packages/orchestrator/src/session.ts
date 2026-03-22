@@ -204,13 +204,23 @@ export function buildRecordedTracePrelude(
   envelope: ProgramEnvelope,
 ): EcalliTrace {
   const s = envelope.initialState;
+  const programBytes = envelope.loadContext?.spiProgram?.program ?? envelope.programBytes;
+
+  // For SPI programs, only include the SPI args at the arguments address (0xFEFF0000),
+  // not all expanded memory chunks (stack, heap, RO data, etc.)
+  const spiArgs = envelope.loadContext?.spiArgs;
+  const memoryWrites =
+    spiArgs && spiArgs.length > 0
+      ? [{ address: 0xfeff0000, dataHex: hexDigits(spiArgs) }]
+      : s.memoryChunks.map((c) => ({
+          address: c.address,
+          dataHex: hexDigits(c.data),
+        }));
+
   return {
     prelude: {
-      programHex: hexDigits(envelope.programBytes),
-      memoryWrites: s.memoryChunks.map((c) => ({
-        address: c.address,
-        dataHex: hexDigits(c.data),
-      })),
+      programHex: hexDigits(programBytes),
+      memoryWrites,
       startPc: s.pc,
       startGas: s.gas,
       startRegisters: registersToMap(s.registers),
@@ -228,12 +238,24 @@ export function appendHostCallEntry(
   effects: HostCallResumeEffects,
   hostCallInfo: HostCallInfo,
 ): void {
+  // Copy memoryReads from the corresponding reference trace entry if available
+  const refEntryIdx = session.recordedTrace.entries.length;
+  const refEntry = session.referenceTrace?.entries[refEntryIdx];
+  const memoryReads =
+    refEntry && refEntry.index === hostCallInfo.hostCallIndex
+      ? refEntry.memoryReads.map((mr) => ({
+          address: mr.address,
+          length: mr.length,
+          dataHex: mr.dataHex,
+        }))
+      : [];
+
   const entry: TraceEntry = {
     index: hostCallInfo.hostCallIndex,
     pc: hostCallInfo.currentState.pc,
     gas: hostCallInfo.currentState.gas,
     registers: registersToMap(hostCallInfo.currentState.registers),
-    memoryReads: [],
+    memoryReads,
     memoryWrites:
       effects.memoryWrites?.map((mw) => ({
         address: mw.address,

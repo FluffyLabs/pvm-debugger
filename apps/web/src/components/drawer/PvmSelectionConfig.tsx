@@ -30,14 +30,11 @@ export function PvmSelectionConfig({ onPvmChange }: PvmSelectionConfigProps) {
 
   return (
     <div data-testid="settings-pvm-selection">
-      <h3 className="text-sm font-semibold text-foreground mb-1">PVM Selection</h3>
+      <h3 className="text-sm font-normal text-foreground mb-1">PVM Selection</h3>
       <p className="text-xs text-muted-foreground mb-2">
         Choose which PVM interpreters to run. Changing this will reset the debugger to its initial state.
       </p>
-      <Alert data-testid="pvm-change-warning" className="mb-2 text-xs">
-        Changing PVM selection resets the current debugging session.
-      </Alert>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 mb-2">
         {AVAILABLE_PVMS.map((pvm) => {
           const isEnabled = selectedPvmIds.includes(pvm.id);
           const isLastEnabled = isEnabled && selectedPvmIds.length === 1;
@@ -63,6 +60,9 @@ export function PvmSelectionConfig({ onPvmChange }: PvmSelectionConfigProps) {
           );
         })}
       </div>
+      <Alert data-testid="pvm-change-warning" className="text-xs">
+        Changing PVM selection resets the current debugging session.
+      </Alert>
     </div>
   );
 }
