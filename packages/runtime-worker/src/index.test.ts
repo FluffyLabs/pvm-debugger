@@ -326,6 +326,46 @@ describe("AnanasSyncInterpreter", () => {
     expect(regs1).toEqual(regs2);
     expect(gas1).toBe(gas2);
   });
+
+  it("setPc changes the program counter immediately", () => {
+    interpreter.load(createAddProgram(), defaultState);
+    interpreter.setPc(99);
+    expect(interpreter.getPc()).toBe(99);
+  });
+
+  it("setPc does not consume gas", () => {
+    interpreter.load(createAddProgram(), defaultState);
+    const gasBefore = interpreter.getGas();
+    interpreter.setPc(99);
+    expect(interpreter.getGas()).toBe(gasBefore);
+  });
+
+  it("setPc followed by step executes from the new PC", () => {
+    // Load multi-step program: LOAD_IMM r7=10, LOAD_IMM r8=20, ADD_32 r0=r7+r8
+    const program = createMultiStepAddProgram(10, 20);
+    interpreter.load(program, defaultState);
+    // Jump to the second instruction (LOAD_IMM r8=20 at PC=6)
+    interpreter.setPc(6);
+    interpreter.step(1);
+    const regs = uint8ToRegs(interpreter.getRegisters());
+    // r8 should be loaded with 20, r7 should still be 0 (we skipped its LOAD_IMM)
+    expect(regs[8]).toBe(20n);
+    expect(regs[7]).toBe(0n);
+  });
+
+  it("setGas changes gas", () => {
+    interpreter.load(createAddProgram(), defaultState);
+    interpreter.setGas(42n);
+    expect(interpreter.getGas()).toBe(42n);
+  });
+
+  it("setRegisters changes registers", () => {
+    interpreter.load(createAddProgram(), defaultState);
+    const newRegs = Array.from({ length: 13 }, (_, i) => BigInt(i + 100));
+    interpreter.setRegisters(regsToUint8(newRegs));
+    const gotRegs = uint8ToRegs(interpreter.getRegisters());
+    expect(gotRegs).toEqual(newRegs);
+  });
 });
 
 // ===== Typeberry and Ananas produce same final state =====

@@ -51,7 +51,7 @@ test.describe("Sprint 25 — Divergence Detection", () => {
     await expect(page.getByTestId("divergence-summary")).not.toBeVisible();
   });
 
-  test("divergence appears when PVMs disagree after stepping", async ({ page }) => {
+  test("both PVMs agree after running to completion", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
     test.skip(!enabled, "PVM switching did not stabilize (pre-existing sprint-24 issue)");
@@ -66,16 +66,11 @@ test.describe("Sprint 25 — Divergence Detection", () => {
       timeout: 15000,
     });
 
-    // Check structural correctness: divergence element renders when PVMs disagree
-    const divergenceEl = page.getByTestId("divergence-summary");
-    const count = await divergenceEl.count();
-    if (count > 0) {
-      const text = await divergenceEl.textContent();
-      expect(text).toContain("Divergence:");
-    }
+    // Both PVMs execute the same program correctly — no divergence should appear
+    await expect(page.getByTestId("divergence-summary")).not.toBeVisible();
   });
 
-  test("divergence text is concise and tooltip shows details", async ({ page }) => {
+  test("both PVMs show matching status dots after completion", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
     test.skip(!enabled, "PVM switching did not stabilize (pre-existing sprint-24 issue)");
@@ -88,19 +83,11 @@ test.describe("Sprint 25 — Divergence Detection", () => {
       timeout: 15000,
     });
 
-    const divergenceEl = page.getByTestId("divergence-summary");
-    const count = await divergenceEl.count();
-    if (count > 0) {
-      // Summary text should be concise
-      const text = await divergenceEl.textContent();
-      expect(text!.length).toBeLessThan(100);
-      expect(text).toContain("Divergence:");
+    // Both PVMs should reach terminal state (gray dot)
+    await expect(page.getByTestId("pvm-dot-ananas")).toHaveClass(/bg-gray-500/);
 
-      // Tooltip (title attr) should have full details
-      const title = await divergenceEl.getAttribute("title");
-      expect(title).toBeTruthy();
-      expect(title!.length).toBeGreaterThan(0);
-    }
+    // No divergence since both executed the same program correctly
+    await expect(page.getByTestId("divergence-summary")).not.toBeVisible();
   });
 
   test("divergence clears after reset", async ({ page }) => {

@@ -12,6 +12,7 @@ import {
 } from "@pvmdbg/content";
 import type { ProgramEnvelope } from "@pvmdbg/types";
 import { useOrchestrator } from "../../hooks/useOrchestrator";
+import { useDebuggerSettings } from "../../hooks/useDebuggerSettings";
 import { persistSession } from "../../hooks/usePersistence";
 import { DetectionSummary } from "./DetectionSummary";
 import { SpiEntrypointConfig } from "./SpiEntrypointConfig";
@@ -31,6 +32,7 @@ function isSpiFormat(kind: DetectedFormat["kind"]): boolean {
 export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }: ConfigStepProps) {
   const navigate = useNavigate();
   const { initialize, setEnvelope } = useOrchestrator();
+  const { settings } = useDebuggerSettings();
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [forceGeneric, setForceGeneric] = useState(false);
@@ -82,10 +84,12 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
     setLoading(true);
     setLoadError(null);
     try {
-      const orch = initialize(["typeberry"]);
+      const orch = initialize(settings.selectedPvmIds);
       await orch.loadProgram(envelope);
       if (envelope.trace) {
-        orch.setTrace("typeberry", envelope.trace);
+        for (const pvmId of settings.selectedPvmIds) {
+          orch.setTrace(pvmId, envelope.trace);
+        }
       }
       setEnvelope(envelope);
       // Persist session for reload recovery

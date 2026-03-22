@@ -111,7 +111,14 @@ export class AnanasSyncInterpreter implements SyncPvmInterpreter {
   }
 
   setPc(pc: number): void {
+    // Ananas's setNextProgramCounter is deferred — getProgramCounter() returns
+    // the old value until nextStep() commits it. We call nextStep() to apply
+    // the change immediately (same pattern used in doLoad after reset).
+    // Gas must be re-set beforehand because nextStep() would otherwise consume
+    // gas for the virtual commit step.
     this.api.setNextProgramCounter(pc);
+    this.api.setGasLeft(this.api.getGasLeft());
+    this.api.nextStep();
   }
 
   getGas(): bigint {

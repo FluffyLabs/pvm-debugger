@@ -6,6 +6,7 @@ import type { RawPayload, DetectedFormat, ExampleEntry } from "@pvmdbg/content";
 import { createProgramEnvelope, decodeGeneric } from "@pvmdbg/content";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { persistSession } from "../hooks/usePersistence";
+import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
 import { ExampleList } from "../components/load/ExampleList";
 import { SourceStep } from "../components/load/SourceStep";
 import { ConfigStep } from "../components/load/ConfigStep";
@@ -19,6 +20,7 @@ function isSpiFormat(kind: DetectedFormat["kind"]): boolean {
 export function LoadPage() {
   const navigate = useNavigate();
   const { initialize, setEnvelope } = useOrchestrator();
+  const { settings } = useDebuggerSettings();
   const [step, setStep] = useState<1 | 2>(1);
   const [rawPayload, setRawPayload] = useState<RawPayload | null>(null);
   const [detectedFormat, setDetectedFormat] = useState<DetectedFormat | null>(null);
@@ -29,10 +31,12 @@ export function LoadPage() {
     async (payload: RawPayload, format: DetectedFormat) => {
       try {
         const envelope = createProgramEnvelope(payload);
-        const orch = initialize(["typeberry"]);
+        const orch = initialize(settings.selectedPvmIds);
         await orch.loadProgram(envelope);
         if (envelope.trace) {
-          orch.setTrace("typeberry", envelope.trace);
+          for (const pvmId of settings.selectedPvmIds) {
+            orch.setTrace(pvmId, envelope.trace);
+          }
         }
         setEnvelope(envelope);
         persistSession(
@@ -49,7 +53,7 @@ export function LoadPage() {
         setStep(2);
       }
     },
-    [initialize, setEnvelope, navigate],
+    [initialize, setEnvelope, navigate, settings.selectedPvmIds],
   );
 
   const handleAdvance = useCallback(

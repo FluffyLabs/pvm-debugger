@@ -74,6 +74,17 @@ export function useOrchestratorState(): OrchestratorReactiveState {
   }, []);
 
   useEffect(() => {
+    // Discard any buffered data from the previous orchestrator
+    pendingSnapshots.current = null;
+    pendingHostCallInfo.current = null;
+    pendingPerPvmErrors.current = null;
+    pendingSelectedPvmId.current = null;
+    pendingStepDone.current = false;
+    if (rafId.current !== null) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
+
     if (!orchestrator) {
       setSnapshots(new Map());
       setSelectedPvmId(null);
@@ -86,25 +97,26 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     // Seed from current orchestrator state
     const initial = orchestrator.getSnapshots();
     setSnapshots(initial);
+    setHostCallInfo(new Map());
+    setPerPvmErrors(new Map());
 
-    // Select first PVM if none selected
-    const firstId = initial.keys().next();
-    if (!firstId.done) {
-      setSelectedPvmId(firstId.value);
-    }
+    // Select a PVM that exists in the new orchestrator
+    const pvmIds = [...initial.keys()];
+    setSelectedPvmId((prev) => (prev && pvmIds.includes(prev)) ? prev : (pvmIds[0] ?? null));
 
+    // Use `initial` (from this orchestrator) as the fallback base for event
+    // accumulation — NOT the stale `snapshots` React state from the closure.
+    // This prevents disabled-PVM data from leaking into the new orchestrator.
     const onStateChanged = (pvmId: string, snapshot: MachineStateSnapshot, lifecycle: PvmLifecycle) => {
-      // Accumulate into the pending map (latest wins per pvmId)
-      const base = pendingSnapshots.current ?? new Map(snapshots);
+      const base = pendingSnapshots.current ?? new Map(initial);
       base.set(pvmId, { snapshot, lifecycle });
       pendingSnapshots.current = base;
       pendingSelectedPvmId.current = pvmId;
       pendingStepDone.current = true;
       versionRef.current += 1;
 
-      // Clear per-PVM error when PVM returns to paused (e.g. after reset)
       if (lifecycle === "paused") {
-        const errBase = pendingPerPvmErrors.current ?? new Map(perPvmErrors);
+        const errBase = pendingPerPvmErrors.current ?? new Map();
         if (errBase.has(pvmId)) {
           errBase.delete(pvmId);
           pendingPerPvmErrors.current = errBase;
@@ -115,7 +127,7 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     };
 
     const onHostCallPaused = (_pvmId: string, info: HostCallInfo) => {
-      const base = pendingHostCallInfo.current ?? new Map(hostCallInfo);
+      const base = pendingHostCallInfo.current ?? new Map();
       base.set(info.pvmId, info);
       pendingHostCallInfo.current = base;
       pendingStepDone.current = true;
@@ -123,7 +135,7 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     };
 
     const onTerminated = (pvmId: string, reason: PvmStatus) => {
-      const base = pendingSnapshots.current ?? new Map(snapshots);
+      const base = pendingSnapshots.current ?? new Map(initial);
       const entry = base.get(pvmId);
       if (entry) {
         base.set(pvmId, {
@@ -141,14 +153,14 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       const isTimeout = /timeout/i.test(error.message);
       const lifecycle: PvmLifecycle = isTimeout ? "timed_out" : "failed";
 
-      const base = pendingSnapshots.current ?? new Map(snapshots);
+      const base = pendingSnapshots.current ?? new Map(initial);
       const entry = base.get(pvmId);
       if (entry) {
         base.set(pvmId, { snapshot: entry.snapshot, lifecycle });
         pendingSnapshots.current = base;
       }
 
-      const errBase = pendingPerPvmErrors.current ?? new Map(perPvmErrors);
+      const errBase = pendingPerPvmErrors.current ?? new Map();
       errBase.set(pvmId, error.message);
       pendingPerPvmErrors.current = errBase;
 
