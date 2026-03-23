@@ -4,8 +4,6 @@ import type { UseStorageTable, StorageEntry } from "../../../hooks/useStorageTab
 import { deriveKeyHex } from "../../../lib/storage-utils";
 
 const HOST_CALL_LABELS: Record<number, string> = {
-  1: "fetch",
-  2: "lookup",
   3: "read",
   4: "write",
 };
@@ -30,26 +28,6 @@ function decodeWriteDetails(regs: bigint[]) {
   const valPtr = Number(regs[9] ?? 0n);
   const valLen = Number(regs[10] ?? 0n);
   return { keyPtr, keyLen, valPtr, valLen };
-}
-
-/** Decode fetch host call registers. */
-function decodeFetchDetails(regs: bigint[]) {
-  return {
-    r7: regs[7] ?? 0n,
-    r8: regs[8] ?? 0n,
-    r9: regs[9] ?? 0n,
-    r10: regs[10] ?? 0n,
-    r11: regs[11] ?? 0n,
-  };
-}
-
-/** Decode lookup host call registers. */
-function decodeLookupDetails(regs: bigint[]) {
-  return {
-    r7: regs[7] ?? 0n,
-    r8: regs[8] ?? 0n,
-    r9: regs[9] ?? 0n,
-  };
 }
 
 function ReadDetails({ info }: { info: HostCallInfo }) {
@@ -98,44 +76,8 @@ function WriteDetails({ info }: { info: HostCallInfo }) {
   );
 }
 
-function FetchDetails({ info }: { info: HostCallInfo }) {
-  const { r7, r8, r9, r10, r11 } = decodeFetchDetails(info.currentState.registers);
-  return (
-    <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono">
-      <span className="text-muted-foreground">ω7:</span>
-      <span className="text-foreground">{r7.toString()}</span>
-      <span className="text-muted-foreground">ω8:</span>
-      <span className="text-foreground">{r8.toString()}</span>
-      <span className="text-muted-foreground">ω9:</span>
-      <span className="text-foreground">{r9.toString()}</span>
-      <span className="text-muted-foreground">ω10:</span>
-      <span className="text-foreground">{r10.toString()}</span>
-      <span className="text-muted-foreground">ω11:</span>
-      <span className="text-foreground">{r11.toString()}</span>
-    </div>
-  );
-}
-
-function LookupDetails({ info }: { info: HostCallInfo }) {
-  const { r7, r8, r9 } = decodeLookupDetails(info.currentState.registers);
-  return (
-    <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono">
-      <span className="text-muted-foreground">ω7:</span>
-      <span className="text-foreground">{r7.toString()}</span>
-      <span className="text-muted-foreground">ω8:</span>
-      <span className="text-foreground">{r8.toString()}</span>
-      <span className="text-muted-foreground">ω9:</span>
-      <span className="text-foreground">{r9.toString()}</span>
-    </div>
-  );
-}
-
 function HostCallDetails({ info }: { info: HostCallInfo }) {
   switch (info.hostCallIndex) {
-    case 1:
-      return <FetchDetails info={info} />;
-    case 2:
-      return <LookupDetails info={info} />;
     case 3:
       return <ReadDetails info={info} />;
     case 4:
@@ -165,7 +107,7 @@ function PendingEffects({ info }: { info: HostCallInfo }) {
       <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 font-mono text-xs">
         {[...proposal.registerWrites.entries()].map(([idx, val]) => (
           <div key={idx} className="contents">
-            <span className="text-muted-foreground">ω{idx} ←:</span>
+            <span className="text-muted-foreground">{"\u03C9"}{idx} {"\u2190"}:</span>
             <span className="text-amber-400">{val.toString()}</span>
           </div>
         ))}
@@ -335,18 +277,18 @@ export function StorageHostCall({ info, storageTable }: StorageHostCallProps) {
   const activeKey = deriveKeyHex(info);
 
   return (
-    <div data-testid="storage-host-call" className="flex flex-col gap-2 text-xs">
-      <h4 className="text-sm font-semibold text-foreground">
-        Storage: {label}
-      </h4>
+    <div data-testid="storage-host-call" className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex flex-col gap-2 text-xs">
+        <h4 className="text-sm font-semibold text-foreground">
+          Storage: {label}
+        </h4>
 
-      <HostCallDetails info={info} />
+        <HostCallDetails info={info} />
 
-      <div className="border-t border-border my-1" />
+        <div className="border-t border-border my-1" />
 
-      <PendingEffects info={info} />
-
-      <div className="border-t border-border my-1" />
+        <PendingEffects info={info} />
+      </div>
 
       <StorageTable
         entries={storageTable.entries}

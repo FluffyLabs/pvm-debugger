@@ -6,6 +6,7 @@ import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
 import { useDisassembly } from "../hooks/useDisassembly";
 import { useStorageTable } from "../hooks/useStorageTable";
+import { usePendingChanges } from "../hooks/usePendingChanges";
 import { clearProgramSession } from "../hooks/usePersistence";
 import { isTerminal } from "@pvmdbg/types";
 import { AVAILABLE_PVMS } from "../lib/debugger-settings";
@@ -53,6 +54,9 @@ function DebuggerPageInner() {
   const selectedEntry = selectedPvmId ? snapshots.get(selectedPvmId) : undefined;
   const selectedLifecycle = selectedEntry?.lifecycle ?? null;
 
+  // Pending changes for host-call pause editing
+  const pendingChanges = usePendingChanges(hostCallInfo, selectedPvmId);
+
   const { settings } = useDebuggerSettings();
 
   const onLoad = useCallback(() => {
@@ -94,6 +98,8 @@ function DebuggerPageInner() {
       storageTable,
       instructions,
       snapshots,
+      getHostCallEffects: pendingChanges.getEffects,
+      clearHostCallEffects: pendingChanges.clear,
     });
 
   // Route guard: redirect to /load when no program is loaded.
@@ -108,15 +114,20 @@ function DebuggerPageInner() {
     snapshots.size > 0 &&
     [...snapshots.values()].every(({ lifecycle }) => isTerminal(lifecycle));
 
-  // Editing allowed when all active PVMs are paused with ok status
+  // Editing allowed when all active PVMs are paused with ok/host status
   const allPausedOk =
     snapshots.size > 0 &&
     [...snapshots.values()].every(
-      ({ lifecycle, snapshot }) => lifecycle === "paused" && snapshot.status === "ok",
+      ({ lifecycle, snapshot }) =>
+        (lifecycle === "paused" && snapshot.status === "ok") ||
+        (lifecycle === "paused_host_call" && (snapshot.status === "ok" || snapshot.status === "host")),
     );
 
   // Collect active PVM ids from snapshots
   const activePvmIds = new Set(snapshots.keys());
+
+  // During host-call pause, memory writes should also update pending changes
+  const isHostCallPaused = selectedLifecycle === "paused_host_call";
 
   // Settings cog toggle
   const settingsOpen = activeTab === "settings";
@@ -207,7 +218,7 @@ function DebuggerPageInner() {
             orchestrator={orchestrator}
             selectedPvmId={selectedPvmId}
             snapshots={snapshots}
-            hostCallInfo={hostCallInfo}
+            pendingChanges={pendingChanges}
           />
         }
         memory={
@@ -219,6 +230,7 @@ function DebuggerPageInner() {
             programKind={envelope?.programKind ?? "generic"}
             memoryChunks={envelope?.initialState.memoryChunks ?? []}
             editable={allPausedOk}
+            onPendingWrite={isHostCallPaused ? pendingChanges.writeMemory : undefined}
           />
         }
         drawer={

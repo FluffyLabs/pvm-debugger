@@ -63,7 +63,7 @@ Polish the bottom drawer UI (tab bar position, compact sizing, close button, fon
 
 ### Execution Trace — Memory Reads in Recorded Entries
 
-12. **Copy memoryReads from reference trace.** In `appendHostCallEntry()` (`packages/orchestrator/src/session.ts`), the function now looks up the corresponding reference trace entry at `session.referenceTrace?.entries[session.recordedTrace.entries.length]`. If the reference entry exists and its `index` matches the current host call index, the entry's `memoryReads` are copied (cloned) into the recorded entry. Otherwise `memoryReads` remains `[]`. This enables `decodeLogMessage()` to extract the actual log message text from recorded trace entries.
+12. **Copy memoryReads from reference trace.** In `appendHostCallEntry()` (`packages/orchestrator/src/session.ts`), the function now looks up the corresponding reference trace entry at `session.referenceTrace?.entries[session.recordedTrace.entries.length]`. If the reference entry exists and its `index` matches the current host call index, the entry's `memoryReads` are copied (cloned) into the recorded entry. Otherwise `memoryReads` remains `[]`. This enables `decodeLogMessage()` to extract the actual log message text from recorded trace entries. **Note:** Sprint 41 supersedes this for log host calls (index 100) — log memoryReads are now always captured from live PVM memory, not copied from the reference trace.
 
 ### Logs Tab
 

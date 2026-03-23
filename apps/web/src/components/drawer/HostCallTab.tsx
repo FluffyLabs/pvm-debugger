@@ -31,12 +31,6 @@ function HostCallHeader({ info }: { info: HostCallInfo }) {
         <span>PC: 0x{currentState.pc.toString(16)}</span>
         <span>Gas: {currentState.gas.toString()}</span>
       </div>
-      <p
-        data-testid="host-call-hint"
-        className="text-xs text-muted-foreground italic"
-      >
-        Use Step, Run, or Next to continue execution.
-      </p>
     </div>
   );
 }
@@ -55,6 +49,7 @@ function ContextualView({
       return <GasHostCall info={info} />;
     case 1:
     case 2:
+      return <GenericHostCall info={info} />;
     case 3:
     case 4:
       return <StorageHostCall info={info} storageTable={storageTable} />;

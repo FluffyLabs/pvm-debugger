@@ -328,7 +328,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     // Terminal statuses → terminated
     if (isTerminalStatus(result.status)) {
       session.lifecycle = "terminated";
-      appendTermination(session, result.status, snapshot);
+      appendTermination(session, result.status, snapshot, result.exitArg);
 
       this.emit(
         "pvmStateChanged",
@@ -387,6 +387,20 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
       );
     }
 
+    // For log host calls (index 100), capture memory reads from the PVM
+    // before applying effects. This provides memoryReads for the recorded
+    // trace entry when no reference trace is available.
+    const pendingHc = session.pendingHostCall!;
+    let capturedMemoryReads:
+      | Array<{ address: number; length: number; dataHex: string }>
+      | undefined;
+    if (pendingHc.hostCallIndex === 100) {
+      capturedMemoryReads = await this.captureLogMemoryReads(
+        session,
+        pendingHc.currentState.registers,
+      );
+    }
+
     // Apply effects through the adapter
     if (effects.registerWrites && effects.registerWrites.size > 0) {
       await session.adapter.setRegisters(effects.registerWrites);
@@ -405,12 +419,40 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     session.lastSnapshot = cloneSnapshot(snapshot);
 
     // Record the trace entry using actual applied effects, not the proposal
-    appendHostCallEntry(session, effects, session.pendingHostCall!);
+    appendHostCallEntry(session, effects, pendingHc, capturedMemoryReads);
 
     // Clear pending host call and transition back to paused
     session.pendingHostCall = null;
     session.lifecycle = "paused";
     this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), "paused");
+  }
+
+  /**
+   * Capture memory reads for log host calls (index 100) from the live PVM.
+   * Log registers: ω8=target_ptr, ω9=target_len, ω10=msg_ptr, ω11=msg_len.
+   */
+  private async captureLogMemoryReads(
+    session: Session,
+    registers: bigint[],
+  ): Promise<Array<{ address: number; length: number; dataHex: string }>> {
+    const reads: Array<{ address: number; length: number; dataHex: string }> = [];
+    const segments = [
+      { ptr: Number(registers[8] ?? 0n), len: Number(registers[9] ?? 0n) },   // target
+      { ptr: Number(registers[10] ?? 0n), len: Number(registers[11] ?? 0n) },  // message
+    ];
+    for (const { ptr, len } of segments) {
+      if (len <= 0) continue;
+      try {
+        const data = await session.adapter.getMemory(ptr, len);
+        const hex = Array.from(new Uint8Array(data), (b) =>
+          b.toString(16).padStart(2, "0"),
+        ).join("");
+        reads.push({ address: ptr, length: len, dataHex: hex });
+      } catch (err) {
+        console.warn(`Failed to capture log memory at 0x${ptr.toString(16)} len=${len}:`, err);
+      }
+    }
+    return reads;
   }
 
   // -----------------------------------------------------------------------
@@ -489,7 +531,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setRegisters(regs);
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), "paused");
+    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
   }
 
   async setPc(pvmId: string, pc: number): Promise<void> {
@@ -498,7 +540,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setPc(pc);
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), "paused");
+    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
   }
 
   async setGas(pvmId: string, gas: bigint): Promise<void> {
@@ -507,7 +549,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setGas(gas);
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), "paused");
+    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
   }
 
   async getMemory(
@@ -530,7 +572,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setMemory(address, new Uint8Array(data));
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), "paused");
+    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
   }
 
   // -----------------------------------------------------------------------
@@ -548,7 +590,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     pvmId: string,
     operation: string,
   ): void {
-    if (session.lifecycle !== "paused") {
+    if (session.lifecycle !== "paused" && session.lifecycle !== "paused_host_call") {
       throw new Error(
         `${operation} is only allowed while paused (PVM ${pvmId} is ${session.lifecycle})`,
       );

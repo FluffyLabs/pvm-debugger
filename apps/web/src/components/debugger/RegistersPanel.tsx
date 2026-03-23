@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect, useMemo } from "react";
-import type { MachineStateSnapshot, PvmLifecycle, HostCallInfo } from "@pvmdbg/types";
+import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import type { UsePendingChanges } from "../../hooks/usePendingChanges";
 import { StatusHeader } from "./StatusHeader";
 import { RegisterRow, type RegisterDivergence } from "./RegisterRow";
 import { PendingChanges } from "./PendingChanges";
@@ -11,17 +12,22 @@ interface RegistersPanelProps {
   orchestrator: Orchestrator | null;
   selectedPvmId: string | null;
   snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
-  hostCallInfo: Map<string, HostCallInfo>;
+  pendingChanges: UsePendingChanges;
 }
 
 const REGISTER_COUNT = 13;
 const DEFAULT_REGISTERS = Array.from({ length: REGISTER_COUNT }, () => 0n);
 
-export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmId, snapshots, hostCallInfo }: RegistersPanelProps) {
+export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmId, snapshots, pendingChanges }: RegistersPanelProps) {
   const registers = snapshot?.registers ?? DEFAULT_REGISTERS;
 
-  // Editing is allowed only when paused with ok status
-  const editable = lifecycle === "paused" && snapshot?.status === "ok" && orchestrator !== null;
+  // Editing is allowed when paused (including host-call pause) with non-terminal status
+  const editable =
+    (lifecycle === "paused" || lifecycle === "paused_host_call") &&
+    (snapshot?.status === "ok" || snapshot?.status === "host") &&
+    orchestrator !== null;
+
+  const isHostCallPaused = lifecycle === "paused_host_call";
 
   // --- Change tracking: compare against previous snapshot ---
   const prevSnapshotRef = useRef<MachineStateSnapshot | null>(null);
@@ -90,17 +96,15 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
     return result;
   }, [selectedPvmId, snapshot, snapshots, registers]);
 
-  // --- Pending host-call proposal ---
-  const pendingProposal = useMemo(() => {
-    if (hostCallInfo.size === 0) return null;
-    // Prefer selected PVM's host call, fall back to first available
-    const info = (selectedPvmId ? hostCallInfo.get(selectedPvmId) : undefined) ?? hostCallInfo.values().next().value;
-    return info?.resumeProposal ?? null;
-  }, [hostCallInfo, selectedPvmId]);
-
   const commitRegister = useCallback(
     (index: number, value: bigint) => {
       if (!orchestrator) return;
+
+      // During host-call pause, also update pending changes
+      if (isHostCallPaused) {
+        pendingChanges.setRegister(index, value);
+      }
+
       const pvmIds = orchestrator.getPvmIds();
       for (const pvmId of pvmIds) {
         orchestrator.setRegisters(pvmId, new Map([[index, value]])).catch((err) => {
@@ -108,12 +112,13 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
         });
       }
     },
-    [orchestrator],
+    [orchestrator, isHostCallPaused, pendingChanges],
   );
 
   const commitPc = useCallback(
     (pc: number) => {
       if (!orchestrator) return;
+      // PC editing goes directly to orchestrator (no pending changes field for PC)
       const pvmIds = orchestrator.getPvmIds();
       for (const pvmId of pvmIds) {
         orchestrator.setPc(pvmId, pc).catch((err) => {
@@ -127,6 +132,12 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
   const commitGas = useCallback(
     (gas: bigint) => {
       if (!orchestrator) return;
+
+      // During host-call pause, also update pending changes
+      if (isHostCallPaused) {
+        pendingChanges.setGas(gas);
+      }
+
       const pvmIds = orchestrator.getPvmIds();
       for (const pvmId of pvmIds) {
         orchestrator.setGas(pvmId, gas).catch((err) => {
@@ -134,7 +145,7 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
         });
       }
     },
-    [orchestrator],
+    [orchestrator, isHostCallPaused, pendingChanges],
   );
 
   return (
@@ -157,7 +168,6 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
           No PVM loaded
         </div>
       )}
-      {pendingProposal && <PendingChanges proposal={pendingProposal} />}
       <div data-testid="registers-scroll" className="flex-1 overflow-auto">
         {registers.map((value, i) => (
           <RegisterRow
@@ -171,6 +181,7 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
           />
         ))}
       </div>
+      {pendingChanges.pending && <PendingChanges pending={pendingChanges.pending} />}
     </div>
   );
 }

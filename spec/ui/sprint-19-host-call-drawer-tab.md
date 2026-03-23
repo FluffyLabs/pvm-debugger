@@ -12,7 +12,7 @@ Replace the Host Call drawer placeholder with a real inspection panel. When the 
 - Common header shows: host-call name, index, PVM id, PC, gas
 - Contextual views for Gas, Log, and Generic host calls
 - Empty state when no host call is active
-- A hint reminds users to use Step/Run/Next to continue
+- ~~A hint reminds users to use Step/Run/Next to continue~~ (removed in Sprint 41)
 - No resume/continue button in the tab
 - Auto-continued host calls do not open the tab
 
@@ -47,7 +47,7 @@ Every active host-call view shows:
 - host-call name (from `HOST_CALL_NAMES`) and numeric index
 - active PVM id
 - current PC and gas
-- hint text: "Use Step, Run, or Next to continue execution."
+- ~~hint text: "Use Step, Run, or Next to continue execution."~~ (removed in Sprint 41)
 
 ## Contextual View Contract
 
@@ -101,7 +101,7 @@ The tab never renders a dedicated resume/continue button. The hint text directs 
 - `useHostCallState` derives the active host call by checking both the `hostCallInfo` map AND the PVM's current lifecycle (`paused_host_call`). This ensures auto-continued host calls (where lifecycle transitions away quickly) don't trigger the drawer.
 - Auto-open uses a prev-ref pattern: only opens the drawer when transitioning from null → non-null active host call, avoiding re-opens on host call info updates.
 - Log host call decoding first tries trace `memoryWrites` (for trace-backed replays), then falls back to `orchestrator.getMemory()` to read message bytes at runtime.
-- Storage host calls (index 1-4) fall through to the GenericHostCall view — Sprint 20 will add dedicated views.
+- Fetch (1) and lookup (2) use the GenericHostCall view. Storage host calls (3, 4) get dedicated views in Sprint 20.
 - The sprint-14 drawer E2E test was updated to expect the new empty-state text instead of the old "coming soon" placeholder.
 - `BottomDrawer` now receives `hostCallInfo`, `selectedPvmId`, `snapshots`, and `orchestrator` as props from `DebuggerPage`.
 - `useHostCallState` must be called inside `DrawerProvider` (it uses `useDrawer()` for auto-open). It is called from `BottomDrawer`, which is already inside the provider.

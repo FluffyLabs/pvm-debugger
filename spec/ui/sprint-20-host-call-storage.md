@@ -82,10 +82,10 @@ Shared storage helpers should be reusable by both the Host Call tab and the exec
 
 - `useStorageTable` uses a `StorageStore` class outside React with `useSyncExternalStore` to avoid snapshot churn. A revision counter drives re-renders.
 - Orchestrator identity is tracked via a ref-based counter in `DebuggerPage`; when the orchestrator reference changes, a new store is created.
-- `StorageHostCall` component handles all four storage-type host calls (1=fetch, 2=lookup, 3=read, 4=write) with specific detail decoders per type.
+- `StorageHostCall` component handles storage host calls (3=read, 4=write) with specific detail decoders per type. Fetch (1) and lookup (2) are not storage host calls and use GenericHostCall (corrected in Sprint 41).
 - Key derivation logic lives in `apps/web/src/lib/storage-utils.ts` — shared by both the UI component and the resume logic. No duplication.
 - Hex encoding uses `toHex`/`fromHex` from `@pvmdbg/types` — no local copies (per architecture section 12.1).
-- The sprint-19 E2E test for "generic fallback" was updated to also check for `storage-host-call` visibility since indexes 1-4 now route to the storage view.
+- The sprint-19 E2E test for "generic fallback" was updated to also check for `storage-host-call` visibility since indexes 3-4 route to the storage view. Indexes 1-2 (fetch/lookup) use GenericHostCall.
 - `resumeAllHostCalls` in `useDebuggerActions` was extended to apply storage-aware effects: custom read overrides and post-write persistence.
 - Unit tests cover: `deriveKeyHex` (7 cases), `storageAwareEffects` (4 cases), `persistWriteToStorage` (4 cases). Added 16 new unit tests total.
 

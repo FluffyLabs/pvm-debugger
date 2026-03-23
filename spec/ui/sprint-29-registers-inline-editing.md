@@ -15,7 +15,8 @@ Make PC, gas, and all 13 registers editable inline on the registers panel. Edits
 - Register and gas inputs accept decimal or `0x...` hex
 - PC input accepts decimal or `0x...` hex but rejects negative values
 - Edits apply to all loaded PVMs via `orchestrator.getPvmIds()` iteration
-- Editing is disabled during running, host-call pause, and terminal states
+- ~~Editing is disabled during host-call pause~~ (enabled in Sprint 41; edits become pending changes)
+- Editing is disabled during running and terminal states
 - Edit mode preserves row height (no layout jumps)
 
 ## Prior Sprint Dependencies
@@ -36,7 +37,7 @@ apps/web/e2e/sprint-29-register-editing.spec.ts
 
 Rules:
 
-- editing is allowed only when every active PVM is paused and selected snapshot status is `ok`
+- editing is allowed when every active PVM is paused (including `paused_host_call`) and selected snapshot status is `ok` or `host` (updated in Sprint 41)
 - clicking a displayed value swaps it into an inline input
 - `Enter` commits
 - `Escape` cancels

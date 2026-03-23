@@ -237,18 +237,25 @@ export function appendHostCallEntry(
   session: Session,
   effects: HostCallResumeEffects,
   hostCallInfo: HostCallInfo,
+  capturedMemoryReads?: Array<{ address: number; length: number; dataHex: string }>,
 ): void {
-  // Copy memoryReads from the corresponding reference trace entry if available
-  const refEntryIdx = session.recordedTrace.entries.length;
-  const refEntry = session.referenceTrace?.entries[refEntryIdx];
-  const memoryReads =
-    refEntry && refEntry.index === hostCallInfo.hostCallIndex
-      ? refEntry.memoryReads.map((mr) => ({
-          address: mr.address,
-          length: mr.length,
-          dataHex: mr.dataHex,
-        }))
-      : [];
+  // Captured memory reads (live from PVM) take precedence over reference trace
+  let memoryReads: Array<{ address: number; length: number; dataHex: string }>;
+  if (capturedMemoryReads) {
+    memoryReads = capturedMemoryReads;
+  } else {
+    // Fall back to reference trace entry if available
+    const refEntryIdx = session.recordedTrace.entries.length;
+    const refEntry = session.referenceTrace?.entries[refEntryIdx];
+    memoryReads =
+      refEntry && refEntry.index === hostCallInfo.hostCallIndex
+        ? refEntry.memoryReads.map((mr) => ({
+            address: mr.address,
+            length: mr.length,
+            dataHex: mr.dataHex,
+          }))
+        : [];
+  }
 
   const entry: TraceEntry = {
     index: hostCallInfo.hostCallIndex,
@@ -282,11 +289,13 @@ export function appendTermination(
   session: Session,
   status: PvmStatus,
   snapshot: MachineStateSnapshot,
+  exitArg?: number,
 ): void {
   const kind = TERMINATION_KIND_MAP[status];
   if (!kind) return;
   session.recordedTrace.termination = {
     kind,
+    arg: exitArg,
     pc: snapshot.pc,
     gas: snapshot.gas,
     registers: registersToMap(snapshot.registers),

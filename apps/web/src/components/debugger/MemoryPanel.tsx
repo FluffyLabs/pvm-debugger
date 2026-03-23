@@ -16,6 +16,8 @@ interface MemoryPanelProps {
   memoryChunks: MemoryChunk[];
   /** True when all active PVMs are paused with ok status. */
   editable: boolean;
+  /** Optional callback to record memory writes in pending changes during host-call pause. */
+  onPendingWrite?: (address: number, data: Uint8Array) => void;
 }
 
 export interface ExpandedPage {
@@ -82,6 +84,7 @@ export function MemoryPanel({
   programKind,
   memoryChunks,
   editable,
+  onPendingWrite,
 }: MemoryPanelProps) {
   const pages = useMemo(() => expandPages(pageMap), [pageMap]);
   const initializedPages = useMemo(() => computeInitializedPages(memoryChunks), [memoryChunks]);
@@ -90,6 +93,12 @@ export function MemoryPanel({
   const onWriteBytes = useCallback(
     (address: number, data: Uint8Array) => {
       if (!orchestrator) return;
+
+      // Also record in pending changes during host-call pause
+      if (onPendingWrite) {
+        onPendingWrite(address, data);
+      }
+
       const pvmIds = orchestrator.getPvmIds();
       for (const id of pvmIds) {
         orchestrator.setMemory(id, address, data).catch((err) => {
@@ -97,7 +106,7 @@ export function MemoryPanel({
         });
       }
     },
-    [orchestrator],
+    [orchestrator, onPendingWrite],
   );
 
   if (pages.length === 0) {

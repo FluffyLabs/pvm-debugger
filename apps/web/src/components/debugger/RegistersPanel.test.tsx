@@ -1,7 +1,8 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
+import { describe, it, expect, afterEach } from "vitest";
 import { render, screen, cleanup, act } from "@testing-library/react";
 import { RegistersPanel } from "./RegistersPanel";
-import type { MachineStateSnapshot, PvmLifecycle, HostCallInfo, HostCallResumeProposal } from "@pvmdbg/types";
+import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
+import type { UsePendingChanges, PendingChangesData } from "../../hooks/usePendingChanges";
 
 afterEach(cleanup);
 
@@ -23,7 +24,20 @@ function makeSnapshots(
   );
 }
 
-const noHostCalls = new Map<string, HostCallInfo>();
+const noop = () => {};
+
+function makePendingChanges(pending: PendingChangesData | null = null): UsePendingChanges {
+  return {
+    pending,
+    setRegister: noop,
+    setGas: noop,
+    writeMemory: noop,
+    getEffects: () => null,
+    clear: noop,
+  };
+}
+
+const noPending = makePendingChanges();
 
 describe("RegistersPanel — Change Highlighting", () => {
   it("shows no delta markers on first render", () => {
@@ -35,7 +49,7 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused"]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
     // No delta markers should exist (no previous snapshot to compare against)
@@ -57,7 +71,7 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused"]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
 
@@ -69,17 +83,17 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused", { registers: snap2Regs, pc: 4, gas: 999_990n }]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
 
-    // ω3 changed → should have delta
+    // omega3 changed -> should have delta
     expect(screen.getByTestId("register-delta-3")).toBeDefined();
-    // ω0 did not change → no delta
+    // omega0 did not change -> no delta
     expect(screen.queryByTestId("register-delta-0")).toBeNull();
-    // PC changed → delta
+    // PC changed -> delta
     expect(screen.getByTestId("pc-delta")).toBeDefined();
-    // Gas changed → delta
+    // Gas changed -> delta
     expect(screen.getByTestId("gas-delta")).toBeDefined();
   });
 
@@ -98,11 +112,11 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused"]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
 
-    // Step 1→2: ω5 changes
+    // Step 1->2: omega5 changes
     rerender(
       <RegistersPanel
         snapshot={snap2}
@@ -110,12 +124,12 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused", { registers: snap2Regs, pc: 4 }]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
     expect(screen.getByTestId("register-delta-5")).toBeDefined();
 
-    // Step 2→3: nothing changes
+    // Step 2->3: nothing changes
     rerender(
       <RegistersPanel
         snapshot={snap3}
@@ -123,10 +137,10 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused", { registers: [...snap2Regs], pc: 4 }]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
-    // Delta should be gone — values didn't change between snap2 and snap3
+    // Delta should be gone -- values didn't change between snap2 and snap3
     expect(screen.queryByTestId("register-delta-5")).toBeNull();
   });
 
@@ -144,7 +158,7 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused"]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
 
@@ -156,12 +170,12 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused", { registers: snap2Regs, pc: 2 }]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
     expect(screen.getByTestId("register-delta-0")).toBeDefined();
 
-    // Switch PVM — should NOT show spurious deltas
+    // Switch PVM -- should NOT show spurious deltas
     rerender(
       <RegistersPanel
         snapshot={otherSnap}
@@ -169,10 +183,10 @@ describe("RegistersPanel — Change Highlighting", () => {
         orchestrator={null}
         selectedPvmId="ananas"
         snapshots={makeSnapshots([["ananas", "paused", { registers: Array(13).fill(99n), pc: 10 }]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
-    // No deltas — comparison reset because PVM changed
+    // No deltas -- comparison reset because PVM changed
     expect(screen.queryByTestId("register-delta-0")).toBeNull();
     expect(screen.queryByTestId("pc-delta")).toBeNull();
     expect(screen.queryByTestId("gas-delta")).toBeNull();
@@ -188,7 +202,7 @@ describe("RegistersPanel — Multi-PVM Divergence", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused"]])}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
     expect(screen.queryByTestId("register-divergence-0")).toBeNull();
@@ -211,36 +225,24 @@ describe("RegistersPanel — Multi-PVM Divergence", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={snapshots}
-        hostCallInfo={noHostCalls}
+        pendingChanges={noPending}
       />,
     );
 
-    // ω7 differs → divergence indicator
+    // omega7 differs -> divergence indicator
     expect(screen.getByTestId("register-divergence-7")).toBeDefined();
-    // ω0 matches → no indicator
+    // omega0 matches -> no indicator
     expect(screen.queryByTestId("register-divergence-0")).toBeNull();
   });
 });
 
 describe("RegistersPanel — Pending Changes", () => {
-  it("shows pending changes when host call has a resume proposal", async () => {
-    const proposal: HostCallResumeProposal = {
+  it("shows pending changes when pendingChanges has data", async () => {
+    const pending: PendingChangesData = {
       registerWrites: new Map([[7, 42n]]),
       memoryWrites: [],
       gasAfter: 500_000n,
-      traceMatches: true,
-      mismatches: [],
     };
-
-    const hostCallInfo = new Map<string, HostCallInfo>([
-      ["typeberry", {
-        pvmId: "typeberry",
-        hostCallIndex: 0,
-        hostCallName: "gas",
-        currentState: makeSnapshot(),
-        resumeProposal: proposal,
-      }],
-    ]);
 
     render(
       <RegistersPanel
@@ -249,7 +251,7 @@ describe("RegistersPanel — Pending Changes", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused_host_call"]])}
-        hostCallInfo={hostCallInfo}
+        pendingChanges={makePendingChanges(pending)}
       />,
     );
 
@@ -263,17 +265,7 @@ describe("RegistersPanel — Pending Changes", () => {
     expect(screen.getByTestId("pending-gas-change")).toBeDefined();
   });
 
-  it("does not show pending changes without a resume proposal", () => {
-    const hostCallInfo = new Map<string, HostCallInfo>([
-      ["typeberry", {
-        pvmId: "typeberry",
-        hostCallIndex: 0,
-        hostCallName: "gas",
-        currentState: makeSnapshot(),
-        // no resumeProposal
-      }],
-    ]);
-
+  it("does not show pending changes when pendingChanges.pending is null", () => {
     render(
       <RegistersPanel
         snapshot={makeSnapshot()}
@@ -281,7 +273,7 @@ describe("RegistersPanel — Pending Changes", () => {
         orchestrator={null}
         selectedPvmId="typeberry"
         snapshots={makeSnapshots([["typeberry", "paused_host_call"]])}
-        hostCallInfo={hostCallInfo}
+        pendingChanges={makePendingChanges()}
       />,
     );
 

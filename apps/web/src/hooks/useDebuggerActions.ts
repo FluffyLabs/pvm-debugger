@@ -27,6 +27,10 @@ interface UseDebuggerActionsParams {
   instructions?: DecodedInstruction[];
   /** Current PVM snapshots for multi-PVM block stepping. */
   snapshots?: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
+  /** Get pending host-call effects from the usePendingChanges hook. */
+  getHostCallEffects?: () => HostCallResumeEffects | null;
+  /** Clear pending host-call effects (e.g. on reset). */
+  clearHostCallEffects?: () => void;
 }
 
 interface DebuggerActions {
@@ -80,35 +84,36 @@ export function proposalToEffects(proposal?: HostCallResumeProposal): HostCallRe
 export function storageAwareEffects(
   hc: HostCallInfo,
   storageTable: UseStorageTable,
+  base?: HostCallResumeEffects,
 ): HostCallResumeEffects {
-  const base = proposalToEffects(hc.resumeProposal);
+  const effectiveBase = base ?? proposalToEffects(hc.resumeProposal);
 
   // Only apply storage overrides for read/write host calls
   if (hc.hostCallIndex !== 3 && hc.hostCallIndex !== 4) {
-    return base;
+    return effectiveBase;
   }
 
   // Try to derive the key hex for this host call
   const keyHex = deriveKeyHex(hc);
-  if (!keyHex) return base;
+  if (!keyHex) return effectiveBase;
 
   // Check if there's a custom value in the storage table
   if (hc.hostCallIndex === 3 && storageTable.hasEntry(keyHex)) {
-    const override = storageTable.store.buildReadOverride(
-      keyHex,
-      // For read, the destination address comes from the trace memory writes
-      // or we use the existing memory write address from the proposal
-      base.memoryWrites?.[0]?.address ?? 0,
-    );
+    // Destination address comes from the proposal's memory writes.
+    // Without it we can't know where to write — skip the override.
+    const destAddr = effectiveBase.memoryWrites?.[0]?.address;
+    if (destAddr === undefined) return effectiveBase;
+
+    const override = storageTable.store.buildReadOverride(keyHex, destAddr);
     if (override) {
       return {
-        ...base,
+        ...effectiveBase,
         memoryWrites: override.memoryWrites,
       };
     }
   }
 
-  return base;
+  return effectiveBase;
 }
 
 /** Persist write host call data to the storage table after resume. */
@@ -140,11 +145,15 @@ export function persistWriteToStorage(
 async function resumeAllHostCalls(
   orch: Orchestrator,
   storageTable: UseStorageTable,
+  getEffects?: () => HostCallResumeEffects | null,
 ): Promise<void> {
+  // User-edited pending effects (null during auto-continue -> falls back to proposal).
+  const userEffects = getEffects?.() ?? null;
   for (const pvmId of orch.getPvmIds()) {
     const hc = orch.getPendingHostCall(pvmId);
     if (hc) {
-      const effects = storageAwareEffects(hc, storageTable);
+      const base = userEffects ?? proposalToEffects(hc.resumeProposal);
+      const effects = storageAwareEffects(hc, storageTable, base);
       await orch.resumeHostCall(pvmId, effects);
       // After write host call resumes, persist to storage table
       persistWriteToStorage(hc, storageTable);
@@ -204,6 +213,8 @@ export function useDebuggerActions({
   storageTable,
   instructions,
   snapshots,
+  getHostCallEffects,
+  clearHostCallEffects,
 }: UseDebuggerActionsParams): DebuggerActions {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -246,7 +257,7 @@ export function useDebuggerActions({
     setIsStepInProgress(true);
 
     const doStep = async () => {
-      await resumeAllHostCalls(orchestrator, storageTable);
+      await resumeAllHostCalls(orchestrator, storageTable, getHostCallEffects);
       await orchestrator.step(n);
     };
 
@@ -255,7 +266,7 @@ export function useDebuggerActions({
       setIsStepInProgress(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount, storageTable, instructions, snapshots]);
+  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount, storageTable, instructions, snapshots, getHostCallEffects]);
 
   /** Step button: always executes exactly one instruction. */
   const step = useCallback(() => {
@@ -265,7 +276,7 @@ export function useDebuggerActions({
     setIsStepInProgress(true);
 
     const doStep = async () => {
-      await resumeAllHostCalls(orchestrator, storageTable);
+      await resumeAllHostCalls(orchestrator, storageTable, getHostCallEffects);
       await orchestrator.step(1);
     };
 
@@ -273,7 +284,7 @@ export function useDebuggerActions({
       setError(err instanceof Error ? err.message : String(err));
       setIsStepInProgress(false);
     });
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, storageTable]);
+  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, storageTable, getHostCallEffects]);
 
   const run = useCallback(() => {
     if (!orchestrator || isRunning || isRunningRef.current) return;
@@ -287,7 +298,7 @@ export function useDebuggerActions({
       try {
         // Resume any pending host calls before starting the run loop
         // (user explicitly clicked Run, so always resume).
-        await resumeAllHostCalls(orchestrator, storageTable);
+        await resumeAllHostCalls(orchestrator, storageTable, getHostCallEffects);
 
         while (!stopFlagRef.current) {
           // Batch multiple steps before yielding to React.
@@ -316,7 +327,7 @@ export function useDebuggerActions({
                 return;
               }
               // Auto-continue: resume all host calls and keep going
-              await resumeAllHostCalls(orchestrator, storageTable);
+              await resumeAllHostCalls(orchestrator, storageTable, getHostCallEffects);
             }
 
             // Check if all PVMs are terminal
@@ -347,7 +358,7 @@ export function useDebuggerActions({
 
     loop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount, autoContinuePolicy, storageTable]);
+  }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount, autoContinuePolicy, storageTable, getHostCallEffects]);
 
   const pause = useCallback(() => {
     stopFlagRef.current = true;
@@ -355,6 +366,9 @@ export function useDebuggerActions({
 
   const reset = useCallback(() => {
     if (!orchestrator) return;
+
+    // Clear pending changes before async reset
+    clearHostCallEffects?.();
 
     stopFlagRef.current = true;
     isRunningRef.current = false;
@@ -372,7 +386,7 @@ export function useDebuggerActions({
       .finally(() => {
         setIsStepInProgress(false);
       });
-  }, [orchestrator, setIsStepInProgress]);
+  }, [orchestrator, setIsStepInProgress, clearHostCallEffects]);
 
   const load = useCallback(() => {
     stopFlagRef.current = true;
