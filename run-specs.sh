@@ -1,6 +1,25 @@
 #!/bin/bash
 set -euo pipefail
 
+# ── CLI flags ─────────────────────────────────────────────────────────────
+for arg in "$@"; do
+  case "$arg" in
+    --last) LAST_ONLY=1 ;;
+    --dry)  DRY_RUN=1 ;;
+    --help|-h)
+      echo "Usage: ./run-specs.sh [--last] [--dry]"
+      echo "  --last  Run only the last (most recent) spec"
+      echo "  --dry   Print prompts without running Claude"
+      echo ""
+      echo "Environment variables:"
+      echo "  START_FROM=spec/...  Skip specs before this one"
+      echo "  MODEL=opus           Override Claude model"
+
+      exit 0
+      ;;
+  esac
+done
+
 # ── Signal handling ───────────────────────────────────────────────────────
 # Use a temp file for child output so the child runs as a direct child of
 # this script (not inside a command-substitution subshell). This lets
@@ -26,70 +45,8 @@ MODEL="${MODEL:-}"                           # e.g. MODEL=opus ./run-specs.sh
 SKIP_PERMISSIONS="${SKIP_PERMISSIONS:-1}"    # set to 0 to use normal permission mode
 START_FROM="${START_FROM:-}"                  # e.g. START_FROM=spec/004-content-pipeline.md
 DRY_RUN="${DRY_RUN:-}"                       # set to 1 to print prompts without running
-LOG_DIR="${LOG_DIR:-logs}"                   # directory for per-spec log files
 
-# ── Spec list (order matters) ──────────────────────────────────────────────
-SPECS=(
-  # Core package specs (sequential)
-  spec/001-workspace-bootstrap.md
-  spec/002-types-and-contracts.md
-  spec/003-trace-parser.md
-  spec/004-content-pipeline.md
-  spec/005-runtime-worker-and-adapters.md
-  spec/006-orchestrator.md
-  spec/007-cli-trace-replay.md
-
-  # UI sprints — Phase 1: Minimal Viable Debugger
-  spec/ui/sprint-01-app-shell-and-routing.md
-  spec/ui/sprint-02-load-bundled-example.md
-  spec/ui/sprint-03-flat-instruction-list.md
-  spec/ui/sprint-04-registers-and-status.md
-  spec/ui/sprint-05-single-step.md
-  spec/ui/sprint-06-memory-panel.md
-  spec/ui/sprint-07-debugger-layout.md
-  spec/ui/sprint-08-run-pause-reset-load.md
-
-  # UI sprints — Phase 2: Complete Load Wizard
-  spec/ui/sprint-09-full-example-browser.md
-  spec/ui/sprint-10-file-upload.md
-  spec/ui/sprint-11-url-and-manual-hex.md
-  spec/ui/sprint-12-detection-summary.md
-  spec/ui/sprint-13-spi-entrypoint-config.md
-
-  # UI sprints — Phase 3: Drawer + Settings
-  spec/ui/sprint-14-bottom-drawer-shell.md
-  spec/ui/sprint-15-settings-tab.md
-  spec/ui/sprint-16-stepping-modes.md
-  spec/ui/sprint-17-keyboard-shortcuts.md
-
-  # UI sprints — Phase 4: Host Calls + Traces
-  spec/ui/sprint-18-host-call-resume.md
-  spec/ui/sprint-19-host-call-drawer-tab.md
-  spec/ui/sprint-20-host-call-storage.md
-  spec/ui/sprint-21-ecalli-trace-tab.md
-  spec/ui/sprint-22-ecalli-trace-raw-and-download.md
-  spec/ui/sprint-23-logs-tab.md
-
-  # UI sprints — Phase 5: Multi-PVM
-  spec/ui/sprint-24-multi-pvm-tabs.md
-  spec/ui/sprint-25-divergence-detection.md
-
-  # UI sprints — Phase 6: Panel Polish
-  spec/ui/sprint-26-instructions-breakpoints.md
-  spec/ui/sprint-27-instructions-blocks-and-virtualization.md
-  spec/ui/sprint-28-instructions-asm-raw-and-popover.md
-  spec/ui/sprint-29-registers-inline-editing.md
-  spec/ui/sprint-30-registers-change-highlighting.md
-  spec/ui/sprint-31-memory-spi-labels-and-editing.md
-  spec/ui/sprint-32-memory-change-highlighting.md
-
-  # UI sprints — Phase 7: Cross-Cutting + Wrap-Up
-  spec/ui/sprint-33-block-stepping.md
-  spec/ui/sprint-34-persistence-and-reload.md
-  spec/ui/sprint-35-mobile-responsive.md
-  spec/ui/sprint-36-integration-smoke-test.md
-  spec/ui/sprint-37-user-documentation.md
-)
+LAST_ONLY="${LAST_ONLY:-}"                   # set to 1 to run only the last spec
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 cl_args=(-p)
@@ -100,8 +57,26 @@ log()  { printf "\n\033[1;36m>>> %s\033[0m\n" "$*"; }
 warn() { printf "\033[1;33m!!! %s\033[0m\n" "$*"; }
 err()  { printf "\033[1;31mERR %s\033[0m\n" "$*"; }
 
-# current_log is set per-spec in the main loop
-current_log=""
+# ── Spec list (auto-scanned, sorted by filename) ─────────────────────────
+SPECS=()
+while IFS= read -r f; do SPECS+=("$f"); done < <(
+  # Core specs: spec/NNN-*.md (exclude README and non-spec files)
+  find spec -maxdepth 1 -name '[0-9]*-*.md' -type f | sort
+  # UI sprint specs: spec/ui/sprint-*.md
+  find spec/ui -maxdepth 1 -name 'sprint-*.md' -type f | sort -t- -k2,2 -V
+)
+
+if [[ -z "${SPECS[*]}" ]]; then
+  err "No spec files found in spec/ or spec/ui/"
+  exit 1
+fi
+
+# ── --last flag: keep only the last spec ──────────────────────────────────
+if [[ -n "$LAST_ONLY" ]]; then
+  SPECS=("${SPECS[${#SPECS[@]}-1]}")
+  log "Running last spec only: ${SPECS[0]}"
+fi
+
 
 run_cl() {
   # $1 = prompt, rest = extra args. Writes JSON output to $CL_OUTPUT.
@@ -115,7 +90,6 @@ run_cl() {
   # propagates SIGINT directly to both the script and the child.
   "$CL" "${cl_args[@]}" "$@" --output-format json "$prompt" \
     > "$CL_OUTPUT" \
-    2> >(tee -a "$current_log" >&2) \
     || true  # don't let set -e kill us on non-zero exit
 }
 
@@ -141,14 +115,7 @@ for spec in "${SPECS[@]}"; do
 
   spec_title=$(head -1 "$spec" | sed 's/^#* *//')
 
-  # Set up per-spec log file
-  spec_slug=$(echo "$spec" | sed 's|/|_|g; s|\.md$||')
-  mkdir -p "$LOG_DIR"
-  current_log="$LOG_DIR/${spec_slug}.log"
-  : > "$current_log"  # truncate
-
   log "Starting: $spec — $spec_title"
-  log "Log file: $current_log (tail -f $current_log)"
 
   # ── Phase 1: Implementation ─────────────────────────────────────────────
   impl_prompt="$(cat <<EOF
