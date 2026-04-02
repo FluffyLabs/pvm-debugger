@@ -130,6 +130,20 @@
           "file": "as-factorial.jam",
           "format": "jam_spi_with_metadata",
           "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+        },
+        {
+          "id": "all-ecalli-refine",
+          "name": "All Ecalli (Refine)",
+          "file": "all-ecalli.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "refine", "params": { "core": "0", "index": "0", "id": "0" } }
+        },
+        {
+          "id": "all-ecalli-accumulate",
+          "name": "All Ecalli (Accumulate)",
+          "file": "all-ecalli.jam",
+          "format": "jam_spi_with_metadata",
+          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
         }
       ]
     },
