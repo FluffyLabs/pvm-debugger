@@ -31,7 +31,7 @@ test.describe("Sprint 20 — Host Call Storage Table", () => {
   }
 
   /**
-   * Step through host calls until we find one matching a storage-type index (1-4).
+   * Step through host calls until we find one matching a storage-type index (3=read, 4=write).
    * Returns true if found, false if execution terminated without finding one.
    */
   async function stepToStorageHostCall(page: import("@playwright/test").Page): Promise<boolean> {
@@ -49,17 +49,10 @@ test.describe("Sprint 20 — Host Call Storage Table", () => {
         }
       }
 
-      // Check header for storage-type host call
-      const header = page.getByTestId("host-call-header");
-      await expect(header).toBeVisible({ timeout: 3000 });
-      const headerText = await header.textContent();
-      if (
-        headerText &&
-        (headerText.includes("fetch") ||
-          headerText.includes("lookup") ||
-          headerText.includes("read") ||
-          headerText.includes("write"))
-      ) {
+      // Check if the storage host call view rendered (only for read/write indices)
+      const storageView = page.getByTestId("storage-host-call");
+      const isStorage = await storageView.isVisible().catch(() => false);
+      if (isStorage) {
         return true;
       }
 

@@ -39,13 +39,15 @@ function Sidebar({
 
   return (
     <div data-testid="host-call-sidebar" className="w-48 shrink-0 flex flex-col gap-2 border-r border-border px-3 py-2 overflow-y-auto">
-      {/* Badge */}
-      <span className="inline-block self-start rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-accent-foreground">
-        {getHostCallName(info.hostCallIndex)}
-      </span>
-      <span className="font-mono text-[10px] text-muted-foreground">
-        index {info.hostCallIndex} · PVM: {info.pvmId}
-      </span>
+      {/* Header (badge + index) — preserves host-call-header testid for older E2E tests */}
+      <div data-testid="host-call-header" className="flex flex-col gap-1">
+        <span className="inline-block self-start rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold text-accent-foreground">
+          {getHostCallName(info.hostCallIndex)}
+        </span>
+        <span className="font-mono text-[10px] text-muted-foreground">
+          index {info.hostCallIndex} · PVM: {info.pvmId}
+        </span>
+      </div>
 
       {/* Input registers */}
       {meta && meta.inputs.length > 0 && (
@@ -308,6 +310,9 @@ export function HostCallTab({ activeHostCall, orchestrator, storageTable, pendin
               NONE mode: returning ω₇ = 2⁶⁴−1 with no memory writes.
             </p>
           )}
+          <p data-testid="host-call-hint" className="mt-2 text-[10px] text-muted-foreground">
+            Use Step, Run, or Next to continue execution.
+          </p>
         </div>
       </div>
       <StickyBar
