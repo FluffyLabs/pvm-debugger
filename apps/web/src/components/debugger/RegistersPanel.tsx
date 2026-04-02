@@ -168,7 +168,7 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
           No PVM loaded
         </div>
       )}
-      <div data-testid="registers-scroll" className="flex-1 overflow-auto">
+      <div data-testid="registers-scroll" className="flex-1 overflow-auto min-h-[4.5rem]">
         {registers.map((value, i) => (
           <RegisterRow
             key={i}
