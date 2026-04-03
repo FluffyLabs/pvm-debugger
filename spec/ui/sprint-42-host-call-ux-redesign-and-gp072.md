@@ -1,10 +1,12 @@
-# Sprint 42 — Host Call UX Redesign, Handler Improvements, and GP 0.7.2 Alignment
+# Sprint 42 — Host Call UX Redesign, Handler Improvements, and GP Alignment
 
 Status: Implemented
 
+**GP Reference:** [graypaper-ab2cdbd](https://gp.fluffylabs.dev/graypaper-ab2cdbd5b070ba2176e8dd830b06401ce05a954d.md) (Appendix B §B.5–B.7 for host call indices)
+
 ## Goal
 
-Redesign the host call tab to a two-column layout with auto-apply (removing the manual Apply button). Improve existing handlers: storage read with correct offset/maxLen slicing, generic handler with comments and line numbers, gas handler simplification. Update host call index mapping to GP 0.7.2. Fix refine entrypoint encoding. Add pending changes coalescing. Highlight the active host call in the reference trace. Add the all-ecalli example program.
+Redesign the host call tab to a two-column layout with auto-apply (removing the manual Apply button). Improve existing handlers: storage read with correct offset/maxLen slicing, generic handler with comments and line numbers, gas handler simplification. Update host call index mapping to match the target GP revision. Fix refine entrypoint encoding. Add pending changes coalescing. Highlight the active host call in the reference trace. Add the all-ecalli example program.
 
 ## Prior Sprint Dependencies
 
@@ -65,9 +67,9 @@ Redesign the host call tab to a two-column layout with auto-apply (removing the 
 
 21. **`removeMemoryWrite` method.** Added to `usePendingChanges` so the host call tab can clean up stale writes when effects change (e.g., NONE toggled on). Only removes host-call-originated writes; user edits from the Memory pane are preserved.
 
-### GP 0.7.2 Alignment
+### GP Alignment (graypaper-ab2cdbd, Appendix B)
 
-22. **Host call index mapping updated.** `HOST_CALL_NAMES` in `packages/trace/src/host-call-names.ts` now matches GP 0.7.2: General (0-5), Refine (6-13: historical_lookup, export, machine, peek, poke, pages, invoke, expunge), Accumulate (14-26: bless, assign, designate, checkpoint, new_service, upgrade, transfer, eject, query, solicit, forget, yield_result, provide), JIP (100: log).
+22. **Host call index mapping updated.** `HOST_CALL_NAMES` in `packages/trace/src/host-call-names.ts` now matches the target GP revision (Appendix B §B.5–B.7): General (0–5: gas, fetch, lookup, read, write, info), Refine (6–13: historical_lookup, export, machine, peek, poke, pages, invoke, expunge), Accumulate (14–26: bless, assign, designate, checkpoint, new_service, upgrade, transfer, eject, query, solicit, forget, yield_result, provide), JIP (100: log).
 
 23. **Refine entrypoint encoding fixed.** `workPackageHash` is now encoded as fixed 32 bytes (no length prefix), replacing the old `package` field that was incorrectly length-prefixed.
 
@@ -95,18 +97,18 @@ Redesign the host call tab to a two-column layout with auto-apply (removing the 
 
 ### E2E Tests
 
-31. **E2E test** (`sprint-42-host-call-ux.spec.ts`). Playwright tests using `io-trace` (storage read/write, generic host calls) and `all-ecalli` (GP 0.7.2 name coverage). Must:
+31. **E2E test** (`sprint-42-host-call-ux.spec.ts`). Playwright tests using `io-trace` (storage read/write, generic host calls) and `all-ecalli` (GP name coverage). Must:
     - Load the io-trace example and step to a host call.
     - Verify the **two-column layout** renders: sidebar (`data-testid="host-call-sidebar"`) with register labels and output preview, content area with handler editor.
     - Verify **"Changes auto-applied"** text appears in the sticky bottom bar when no error.
     - Verify **memory write count** appears in the sidebar (e.g., `"+ N memory write(s)"`).
     - Step to a **storage read** host call and verify the storage handler shows key info and status indicator ("Key found" / "Key not found").
     - Verify **NONE toggle** for a read/lookup host call: checking the box changes the output preview to show the NONE sentinel value (2^64-1).
-    - Verify **GP 0.7.2 host call names** appear correctly in the trace column badges (e.g., "gas", "fetch", "write", "log" — not numeric indices).
+    - Verify **GP host call names** appear correctly in the trace column badges (e.g., "gas", "fetch", "write", "log" — not numeric indices).
     - Verify the **active trace entry highlight** is visible (blue ring) when paused on a host call.
     - Verify **pending changes coalescing**: after stepping through host calls that produce memory writes, the pending changes panel shows coalesced ranges (not individual byte writes).
     - Load **all-ecalli-refine** and verify both example cards are visible on the load page.
-    - Step through the all-ecalli-refine example and verify GP 0.7.2 host call names appear in trace badges (e.g., "gas", "fetch", "write", "log").
+    - Step through the all-ecalli-refine example and verify GP host call names appear in trace badges (e.g., "gas", "fetch", "write", "log").
 
 ## Key Implementation Details
 
@@ -131,7 +133,7 @@ Redesign the host call tab to a two-column layout with auto-apply (removing the 
 ### Unit Tests
 - `coalesceMemoryWrites` merges adjacent/overlapping writes correctly (7 tests)
 - `removeMemoryWrite` removes by address, no-op for non-existent/null (3 tests)
-- `HOST_CALL_NAMES` matches GP 0.7.2 (index 14 = "bless", index 100 = "log", etc.)
+- `HOST_CALL_NAMES` matches target GP revision (index 14 = "bless", index 100 = "log", etc.)
 - Refine entrypoint encoding produces fixed 32-byte `workPackageHash` (no length prefix)
 - All existing tests continue to pass
 
@@ -141,7 +143,7 @@ Redesign the host call tab to a two-column layout with auto-apply (removing the 
 - Memory write count visible in sidebar
 - Storage read handler shows key info and status indicator
 - NONE toggle changes output to sentinel value
-- GP 0.7.2 host call names in trace badges
+- GP host call names in trace badges
 - Active trace entry has blue highlight ring
 - Pending changes shows coalesced memory write ranges
 
@@ -162,7 +164,7 @@ cd apps/web && npx vite build
 
 ## Files Modified
 
-- `packages/trace/src/host-call-names.ts` — GP 0.7.2 index mapping
+- `packages/trace/src/host-call-names.ts` — GP-aligned index mapping
 - `packages/content/src/spi-entrypoint.ts` — refine encoding fix (workPackageHash)
 - `packages/content/src/examples-manifest.ts` — workPackageHash default
 - `apps/web/src/components/drawer/HostCallTab.tsx` — two-column layout + auto-apply
@@ -187,7 +189,7 @@ cd apps/web && npx vite build
 
 2. **`package` → `workPackageHash` rename is pervasive.** Touches 6+ files across 3 packages. String-keyed field references like `fields["package"]` must also be updated.
 
-3. **HOST_CALL_NAMES test assertions must match GP 0.7.2.** Index 14 was previously unmapped but is now `"bless"`.
+3. **HOST_CALL_NAMES test assertions must match target GP revision.** Index 14 was previously unmapped but is now `"bless"`.
 
 4. **RegistersPanel.test.tsx mock must include `removeMemoryWrite`.** Adding a new method to `UsePendingChanges` interface requires updating all test mocks.
 
