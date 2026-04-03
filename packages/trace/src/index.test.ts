@@ -21,31 +21,45 @@ function readFixture(name: string): string {
 
 // ===== HOST_CALL_NAMES =====
 
-describe("HOST_CALL_NAMES", () => {
-  it("maps all specified host call indices", () => {
+describe("HOST_CALL_NAMES — GP 0.7.2", () => {
+  it("maps general host calls (0-5)", () => {
     expect(HOST_CALL_NAMES[0]).toBe("gas");
     expect(HOST_CALL_NAMES[1]).toBe("fetch");
     expect(HOST_CALL_NAMES[2]).toBe("lookup");
     expect(HOST_CALL_NAMES[3]).toBe("read");
     expect(HOST_CALL_NAMES[4]).toBe("write");
     expect(HOST_CALL_NAMES[5]).toBe("info");
-    expect(HOST_CALL_NAMES[6]).toBe("bless");
-    expect(HOST_CALL_NAMES[7]).toBe("checkpoint");
-    expect(HOST_CALL_NAMES[8]).toBe("new");
-    expect(HOST_CALL_NAMES[9]).toBe("upgrade");
-    expect(HOST_CALL_NAMES[10]).toBe("transfer");
-    expect(HOST_CALL_NAMES[11]).toBe("quit");
-    expect(HOST_CALL_NAMES[12]).toBe("solicit");
-    expect(HOST_CALL_NAMES[13]).toBe("forget");
-    expect(HOST_CALL_NAMES[15]).toBe("historical_lookup");
-    expect(HOST_CALL_NAMES[16]).toBe("import");
-    expect(HOST_CALL_NAMES[17]).toBe("export");
-    expect(HOST_CALL_NAMES[18]).toBe("machine");
-    expect(HOST_CALL_NAMES[100]).toBe("log");
   });
 
-  it("does not map index 14", () => {
-    expect(HOST_CALL_NAMES[14]).toBeUndefined();
+  it("maps refine host calls (6-13)", () => {
+    expect(HOST_CALL_NAMES[6]).toBe("historical_lookup");
+    expect(HOST_CALL_NAMES[7]).toBe("export");
+    expect(HOST_CALL_NAMES[8]).toBe("machine");
+    expect(HOST_CALL_NAMES[9]).toBe("peek");
+    expect(HOST_CALL_NAMES[10]).toBe("poke");
+    expect(HOST_CALL_NAMES[11]).toBe("pages");
+    expect(HOST_CALL_NAMES[12]).toBe("invoke");
+    expect(HOST_CALL_NAMES[13]).toBe("expunge");
+  });
+
+  it("maps accumulate host calls (14-26)", () => {
+    expect(HOST_CALL_NAMES[14]).toBe("bless");
+    expect(HOST_CALL_NAMES[15]).toBe("assign");
+    expect(HOST_CALL_NAMES[16]).toBe("designate");
+    expect(HOST_CALL_NAMES[17]).toBe("checkpoint");
+    expect(HOST_CALL_NAMES[18]).toBe("new_service");
+    expect(HOST_CALL_NAMES[19]).toBe("upgrade");
+    expect(HOST_CALL_NAMES[20]).toBe("transfer");
+    expect(HOST_CALL_NAMES[21]).toBe("eject");
+    expect(HOST_CALL_NAMES[22]).toBe("query");
+    expect(HOST_CALL_NAMES[23]).toBe("solicit");
+    expect(HOST_CALL_NAMES[24]).toBe("forget");
+    expect(HOST_CALL_NAMES[25]).toBe("yield_result");
+    expect(HOST_CALL_NAMES[26]).toBe("provide");
+  });
+
+  it("maps JIP host call (100)", () => {
+    expect(HOST_CALL_NAMES[100]).toBe("log");
   });
 });
 
@@ -54,11 +68,12 @@ describe("getHostCallName", () => {
     expect(getHostCallName(0)).toBe("gas");
     expect(getHostCallName(100)).toBe("log");
     expect(getHostCallName(4)).toBe("write");
+    expect(getHostCallName(14)).toBe("bless");
   });
 
   it("returns deterministic fallback for unknown indices", () => {
     expect(getHostCallName(999)).toBe("unknown(999)");
-    expect(getHostCallName(14)).toBe("unknown(14)");
+    expect(getHostCallName(99)).toBe("unknown(99)");
     expect(getHostCallName(-1)).toBe("unknown(-1)");
   });
 });

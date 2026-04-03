@@ -7,6 +7,8 @@ interface TraceColumnProps {
   title: string;
   trace: EcalliTrace | undefined;
   mismatchedIndices: Set<number>;
+  /** Index of the currently active entry to highlight. */
+  activeEntryIndex?: number;
   emptyMessage?: string;
   scrollRef?: React.RefObject<HTMLDivElement | null>;
   onScroll?: (scrollTop: number) => void;
@@ -16,6 +18,7 @@ export function TraceColumn({
   title,
   trace,
   mismatchedIndices,
+  activeEntryIndex,
   emptyMessage,
   scrollRef,
   onScroll,
@@ -58,6 +61,9 @@ export function TraceColumn({
               row={row}
               isMismatched={
                 row.kind === "entry" && mismatchedIndices.has(row.index)
+              }
+              isActive={
+                row.kind === "entry" && activeEntryIndex !== undefined && row.index === activeEntryIndex
               }
             />
           ))

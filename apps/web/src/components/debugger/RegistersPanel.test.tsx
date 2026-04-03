@@ -32,6 +32,7 @@ function makePendingChanges(pending: PendingChangesData | null = null): UsePendi
     setRegister: noop,
     setGas: noop,
     writeMemory: noop,
+    removeMemoryWrite: noop,
     getEffects: () => null,
     clear: noop,
   };

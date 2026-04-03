@@ -230,7 +230,10 @@ describe("encodeSpiEntrypoint", () => {
     expect(Array.from(result)).toEqual([0x2a, 0x00, 0x00]);
   });
 
-  it("encodes refine { core: 1, index: 2, id: 3, payload: [0xaa], package: [0xbb, 0xcc] }", () => {
+  it("encodes refine with workPackageHash as fixed 32 bytes", () => {
+    const hash = new Uint8Array(32);
+    hash[0] = 0xbb;
+    hash[1] = 0xcc;
     const params: SpiEntrypointParams = {
       entrypoint: "refine",
       pc: 0,
@@ -239,11 +242,20 @@ describe("encodeSpiEntrypoint", () => {
         index: 2,
         id: 3,
         payload: new Uint8Array([0xaa]),
-        package: new Uint8Array([0xbb, 0xcc]),
+        workPackageHash: hash,
       },
     };
     const result = encodeSpiEntrypoint(params);
-    expect(Array.from(result)).toEqual([0x01, 0x02, 0x03, 0x01, 0xaa, 0x02, 0xbb, 0xcc]);
+    // core(1), index(2), id(3), blob(len=1, 0xaa), then 32 bytes of hash
+    expect(result.length).toBe(3 + 2 + 32); // 3 varU32s + blob(1+1) + 32
+    expect(result[0]).toBe(0x01); // core
+    expect(result[1]).toBe(0x02); // index
+    expect(result[2]).toBe(0x03); // id
+    expect(result[3]).toBe(0x01); // payload length
+    expect(result[4]).toBe(0xaa); // payload data
+    expect(result[5]).toBe(0xbb); // hash byte 0
+    expect(result[6]).toBe(0xcc); // hash byte 1
+    expect(result.length).toBe(37);
   });
 
   it("encodes is_authorized { core: 5 }", () => {
@@ -266,7 +278,7 @@ describe("encodeSpiEntrypoint", () => {
     expect(Array.from(result)).toEqual([0x00, 0x00, 0x00]);
   });
 
-  it("encodes refine with empty blobs", () => {
+  it("encodes refine with empty payload and zero hash", () => {
     const params: SpiEntrypointParams = {
       entrypoint: "refine",
       pc: 0,
@@ -275,12 +287,18 @@ describe("encodeSpiEntrypoint", () => {
         index: 0,
         id: 0,
         payload: new Uint8Array(),
-        package: new Uint8Array(),
+        workPackageHash: new Uint8Array(32),
       },
     };
     const result = encodeSpiEntrypoint(params);
-    // core(0), index(0), id(0), blob(len=0), blob(len=0)
-    expect(Array.from(result)).toEqual([0x00, 0x00, 0x00, 0x00, 0x00]);
+    // core(0), index(0), id(0), blob(len=0), 32 zero bytes
+    expect(result.length).toBe(3 + 1 + 32); // 3 varU32s + empty blob + 32 bytes hash
+    expect(result[0]).toBe(0x00);
+    expect(result[3]).toBe(0x00); // empty payload
+    // remaining 32 bytes are all zero
+    for (let i = 4; i < 36; i++) {
+      expect(result[i]).toBe(0x00);
+    }
   });
 
   it("encodes accumulate with 2-byte varU32 slot value (slot=200)", () => {
@@ -312,8 +330,12 @@ describe("decodeSpiEntrypoint", () => {
     }
   });
 
-  it("decodes refine bytes back to params", () => {
-    const bytes = new Uint8Array([0x01, 0x02, 0x03, 0x01, 0xaa, 0x02, 0xbb, 0xcc]);
+  it("decodes refine bytes back to params with fixed 32-byte hash", () => {
+    // Build: core=1, index=2, id=3, payload=[0xaa], then 32-byte hash
+    const hash = new Uint8Array(32);
+    hash[0] = 0xbb;
+    hash[1] = 0xcc;
+    const bytes = new Uint8Array([0x01, 0x02, 0x03, 0x01, 0xaa, ...hash]);
     const result = decodeSpiEntrypoint("refine", bytes);
     expect(result.entrypoint).toBe("refine");
     expect(result.pc).toBe(0);
@@ -322,7 +344,9 @@ describe("decodeSpiEntrypoint", () => {
       expect(result.params.index).toBe(2);
       expect(result.params.id).toBe(3);
       expect(Array.from(result.params.payload)).toEqual([0xaa]);
-      expect(Array.from(result.params.package)).toEqual([0xbb, 0xcc]);
+      expect(result.params.workPackageHash.length).toBe(32);
+      expect(result.params.workPackageHash[0]).toBe(0xbb);
+      expect(result.params.workPackageHash[1]).toBe(0xcc);
     }
   });
 
@@ -357,7 +381,10 @@ describe("SPI entrypoint encode/decode roundtrip", () => {
     expect(decoded).toEqual(params);
   });
 
-  it("roundtrips refine params with blobs", () => {
+  it("roundtrips refine params with payload and hash", () => {
+    const hash = new Uint8Array(32);
+    hash[0] = 0xca;
+    hash[1] = 0xfe;
     const params: SpiEntrypointParams = {
       entrypoint: "refine",
       pc: 0,
@@ -366,7 +393,7 @@ describe("SPI entrypoint encode/decode roundtrip", () => {
         index: 20,
         id: 30,
         payload: new Uint8Array([0xde, 0xad, 0xbe, 0xef]),
-        package: new Uint8Array([0xca, 0xfe]),
+        workPackageHash: hash,
       },
     };
     const encoded = encodeSpiEntrypoint(params);
@@ -377,11 +404,13 @@ describe("SPI entrypoint encode/decode roundtrip", () => {
       expect(decoded.params.index).toBe(20);
       expect(decoded.params.id).toBe(30);
       expect(Array.from(decoded.params.payload)).toEqual([0xde, 0xad, 0xbe, 0xef]);
-      expect(Array.from(decoded.params.package)).toEqual([0xca, 0xfe]);
+      expect(decoded.params.workPackageHash.length).toBe(32);
+      expect(decoded.params.workPackageHash[0]).toBe(0xca);
+      expect(decoded.params.workPackageHash[1]).toBe(0xfe);
     }
   });
 
-  it("roundtrips refine with empty blobs", () => {
+  it("roundtrips refine with empty payload and zero hash", () => {
     const params: SpiEntrypointParams = {
       entrypoint: "refine",
       pc: 0,
@@ -390,12 +419,17 @@ describe("SPI entrypoint encode/decode roundtrip", () => {
         index: 0,
         id: 0,
         payload: new Uint8Array(),
-        package: new Uint8Array(),
+        workPackageHash: new Uint8Array(32),
       },
     };
     const encoded = encodeSpiEntrypoint(params);
     const decoded = decodeSpiEntrypoint("refine", encoded);
-    expect(decoded).toEqual(params);
+    expect(decoded.entrypoint).toBe("refine");
+    if (decoded.entrypoint === "refine") {
+      expect(decoded.params.core).toBe(0);
+      expect(decoded.params.payload.length).toBe(0);
+      expect(decoded.params.workPackageHash.length).toBe(32);
+    }
   });
 
   it("roundtrips is_authorized params", () => {
@@ -805,7 +839,7 @@ describe("createProgramEnvelope", () => {
         index: 0,
         id: 0,
         payload: new Uint8Array(),
-        package: new Uint8Array(),
+        workPackageHash: new Uint8Array(32),
       },
     };
     const envelope = createProgramEnvelope(payload, { entrypoint: customEntrypoint });

@@ -205,6 +205,45 @@ describe("usePendingChanges", () => {
     expect(result.current.pending!.registerWrites.get(7)).toBe(20n);
   });
 
+  it("removeMemoryWrite removes write at given address", () => {
+    const info = makeHostCallInfo({ resumeProposal: makeProposal() });
+    const hcMap = new Map([["pvm-a", info]]);
+
+    const { result } = renderHook(() =>
+      usePendingChanges(hcMap, "pvm-a"),
+    );
+
+    expect(result.current.pending!.memoryWrites).toHaveLength(1);
+    expect(result.current.pending!.memoryWrites[0].address).toBe(0x100);
+
+    act(() => result.current.removeMemoryWrite(0x100));
+
+    expect(result.current.pending!.memoryWrites).toHaveLength(0);
+  });
+
+  it("removeMemoryWrite is no-op for non-existent address", () => {
+    const info = makeHostCallInfo({ resumeProposal: makeProposal() });
+    const hcMap = new Map([["pvm-a", info]]);
+
+    const { result } = renderHook(() =>
+      usePendingChanges(hcMap, "pvm-a"),
+    );
+
+    act(() => result.current.removeMemoryWrite(0x999));
+
+    expect(result.current.pending!.memoryWrites).toHaveLength(1);
+  });
+
+  it("removeMemoryWrite is no-op when pending is null", () => {
+    const { result } = renderHook(() =>
+      usePendingChanges(new Map(), null),
+    );
+
+    // Should not throw
+    act(() => result.current.removeMemoryWrite(0x100));
+    expect(result.current.pending).toBeNull();
+  });
+
   it("clears pending when host call is removed", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     let hcMap: Map<string, HostCallInfo> = new Map([["pvm-a", info]]);

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useMemo } from "react";
-import type { EcalliTrace } from "@pvmdbg/types";
+import type { EcalliTrace, HostCallInfo } from "@pvmdbg/types";
 import { serializeTrace } from "@pvmdbg/trace";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
 import { TraceColumn } from "./TraceColumn";
@@ -11,11 +11,13 @@ interface EcalliTraceTabProps {
   selectedPvmId: string | null;
   /** Monotonic version counter — triggers re-read of traces from orchestrator. */
   snapshotVersion: number;
+  /** Currently active host call, if any. Used to highlight the active reference trace entry. */
+  activeHostCall: HostCallInfo | null;
 }
 
 type ViewMode = "formatted" | "raw";
 
-export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion }: EcalliTraceTabProps) {
+export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion, activeHostCall }: EcalliTraceTabProps) {
   const [linkScroll, setLinkScroll] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("formatted");
 
@@ -43,6 +45,14 @@ export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion }:
     if (!recorded || !reference) return new Set<number>();
     return mismatchedEntryIndices(recorded, reference);
   }, [recorded, reference]);
+
+  // Compute active entry index for reference trace highlight.
+  // The active host call's sequential index = recorded.entries.length
+  // (the current host call hasn't been recorded yet).
+  const activeEntryIndex = useMemo(() => {
+    if (!activeHostCall || !recorded) return undefined;
+    return recorded.entries.length;
+  }, [activeHostCall, recorded]);
 
   // Linked scroll handlers
   const onLeftScroll = useCallback(
@@ -154,6 +164,7 @@ export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion }:
             title="Reference Trace"
             trace={reference}
             mismatchedIndices={mismatchedIndices}
+            activeEntryIndex={activeEntryIndex}
             emptyMessage="No reference trace loaded."
             scrollRef={rightRef}
             onScroll={onRightScroll}

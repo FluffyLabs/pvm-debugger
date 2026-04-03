@@ -53,7 +53,7 @@ function persistConfig(config: PersistedSpiConfig): void {
 
 const DEFAULT_FIELDS: Record<SpiEntrypointParams["entrypoint"], Record<string, string>> = {
   accumulate: { slot: "42", id: "0", results: "0" },
-  refine: { core: "0", index: "0", id: "0", payload: "", package: "0x" + "00".repeat(32) },
+  refine: { core: "0", index: "0", id: "0", payload: "", workPackageHash: "0x" + "00".repeat(32) },
   is_authorized: { core: "0" },
 };
 
@@ -76,7 +76,17 @@ function fieldsToParams(
       };
     case "refine": {
       const payloadHex = fields.payload ?? "";
-      const packageHex = fields.package ?? "";
+      const hashHex = fields.workPackageHash ?? "";
+      // Always produce a 32-byte buffer for workPackageHash
+      const hashBuf = new Uint8Array(32);
+      if (hashHex.length > 0) {
+        try {
+          const decoded = fromHex(hashHex);
+          hashBuf.set(decoded.subarray(0, 32));
+        } catch {
+          // leave as zeros on invalid input
+        }
+      }
       return {
         entrypoint: "refine",
         pc: 0,
@@ -85,7 +95,7 @@ function fieldsToParams(
           index: parseInt(fields.index ?? "0", 10),
           id: parseInt(fields.id ?? "0", 10),
           payload: payloadHex.length > 0 ? fromHex(payloadHex) : new Uint8Array(),
-          package: packageHex.length > 0 ? fromHex(packageHex) : new Uint8Array(),
+          workPackageHash: hashBuf,
         },
       };
     }
@@ -108,14 +118,18 @@ function paramsToFields(
         id: String(params.params.id),
         results: String(params.params.results),
       };
-    case "refine":
+    case "refine": {
+      // Suppress all-zero hash display (show empty string)
+      const hashBytes = params.params.workPackageHash;
+      const isAllZero = hashBytes.length === 0 || hashBytes.every((b) => b === 0);
       return {
         core: String(params.params.core),
         index: String(params.params.index),
         id: String(params.params.id),
         payload: params.params.payload.length > 0 ? toHex(params.params.payload) : "",
-        package: params.params.package.length > 0 ? toHex(params.params.package) : "",
+        workPackageHash: isAllZero ? "" : toHex(hashBytes),
       };
+    }
     case "is_authorized":
       return { core: String(params.params.core) };
   }
@@ -141,7 +155,7 @@ function validateFields(
   }
 
   if (entrypoint === "refine") {
-    for (const hexField of ["payload", "package"] as const) {
+    for (const hexField of ["payload", "workPackageHash"] as const) {
       const val = fields[hexField] ?? "";
       if (val.length > 0) {
         try {
@@ -186,7 +200,7 @@ const FIELD_DEFS: Record<SpiEntrypointParams["entrypoint"], FieldDef[]> = {
     { key: "index", label: "Index", type: "number", placeholder: "0" },
     { key: "id", label: "Service ID", type: "number", placeholder: "0" },
     { key: "payload", label: "Payload", type: "hex", placeholder: "0x..." },
-    { key: "package", label: "Package Hash", type: "hex", placeholder: "0x..." },
+    { key: "workPackageHash", label: "Work Package Hash", type: "hex", placeholder: "0x..." },
   ],
   is_authorized: [
     { key: "core", label: "Core", type: "number", placeholder: "0" },

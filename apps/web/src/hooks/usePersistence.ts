@@ -55,7 +55,7 @@ function serializeSpiParams(params: SpiEntrypointParams): SerializedSpiParams {
         index: params.params.index,
         id: params.params.id,
         payload: toHex(params.params.payload),
-        package: toHex(params.params.package),
+        workPackageHash: toHex(params.params.workPackageHash),
       },
     };
   }
@@ -99,6 +99,17 @@ function deserializeSpiParams(data: unknown): SpiEntrypointParams {
   const params = d.params as Record<string, unknown>;
 
   if (d.entrypoint === "refine") {
+    // Defensive 32-byte hash handling
+    const hashBuf = new Uint8Array(32);
+    const hashField = params.workPackageHash ?? params.package; // backwards compat
+    if (typeof hashField === "string" && hashField.length > 0) {
+      try {
+        const decoded = fromHex(hashField);
+        hashBuf.set(decoded.subarray(0, 32));
+      } catch {
+        // leave as zeros
+      }
+    }
     return {
       entrypoint: "refine",
       pc: 0,
@@ -110,10 +121,7 @@ function deserializeSpiParams(data: unknown): SpiEntrypointParams {
           typeof params.payload === "string" && params.payload.length > 0
             ? fromHex(params.payload)
             : new Uint8Array(),
-        package:
-          typeof params.package === "string" && params.package.length > 0
-            ? fromHex(params.package)
-            : new Uint8Array(),
+        workPackageHash: hashBuf,
       },
     };
   }

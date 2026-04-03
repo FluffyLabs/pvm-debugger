@@ -102,7 +102,7 @@ export function manifestEntrypointToParams(
           index: parseInt(entry.params.index ?? "0", 10),
           id: parseInt(entry.params.id ?? "0", 10),
           payload: new Uint8Array(),
-          package: new Uint8Array(),
+          workPackageHash: new Uint8Array(32),
         },
       };
     case "is_authorized":

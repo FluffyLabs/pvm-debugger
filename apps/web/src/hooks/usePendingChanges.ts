@@ -16,6 +16,8 @@ export interface UsePendingChanges {
   setGas: (gas: bigint) => void;
   /** Add or replace a pending memory write at the given address. */
   writeMemory: (address: number, data: Uint8Array) => void;
+  /** Remove a pending memory write by start address. No-op if not found. */
+  removeMemoryWrite: (address: number) => void;
   /**
    * Get the current pending effects for host-call resume.
    * Returns null when no pending state exists (e.g. during auto-continue
@@ -104,6 +106,17 @@ export function usePendingChanges(
     });
   }, []);
 
+  const removeMemoryWrite = useCallback((address: number) => {
+    setPending((prev) => {
+      if (!prev) return prev;
+      const filtered = prev.memoryWrites.filter((mw) => mw.address !== address);
+      if (filtered.length === prev.memoryWrites.length) return prev; // no-op
+      const next = { ...prev, memoryWrites: filtered };
+      pendingRef.current = next;
+      return next;
+    });
+  }, []);
+
   const getEffects = useCallback((): HostCallResumeEffects | null => {
     const p = pendingRef.current;
     if (!p) return null;
@@ -119,5 +132,5 @@ export function usePendingChanges(
     pendingRef.current = null;
   }, []);
 
-  return { pending, setRegister, setGas, writeMemory, getEffects, clear };
+  return { pending, setRegister, setGas, writeMemory, removeMemoryWrite, getEffects, clear };
 }

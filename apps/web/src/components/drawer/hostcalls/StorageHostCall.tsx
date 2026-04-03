@@ -1,7 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { HostCallInfo } from "@pvmdbg/types";
+import { toHex } from "@pvmdbg/types";
 import type { UseStorageTable, StorageEntry } from "../../../hooks/useStorageTable";
-import { deriveKeyHex } from "../../../lib/storage-utils";
+import type { HostCallEffects } from "../../../lib/fetch-utils";
+import { NONE, safeFromHex } from "../../../lib/fetch-utils";
+import { useStableCallback } from "../../../hooks/useStableCallback";
+import type { Orchestrator } from "@pvmdbg/orchestrator";
 
 const HOST_CALL_LABELS: Record<number, string> = {
   3: "read",
@@ -11,121 +15,59 @@ const HOST_CALL_LABELS: Record<number, string> = {
 interface StorageHostCallProps {
   info: HostCallInfo;
   storageTable: UseStorageTable;
+  orchestrator: Orchestrator | null;
+  onEffectsReady: (effects: HostCallEffects) => void;
+  traceVersion: number;
 }
 
-/** Decode read host call registers into human-readable details. */
-function decodeReadDetails(regs: bigint[]) {
-  const serviceId = regs[7] ?? 0n;
-  const keyPtr = Number(regs[8] ?? 0n);
-  const keyLen = Number(regs[9] ?? 0n);
-  return { serviceId, keyPtr, keyLen };
+/** Service ID u64 max = "self". */
+const SELF_SERVICE_ID = (1n << 64n) - 1n;
+
+/** Build scoped key: "serviceId:keyHex". */
+function scopedKey(serviceId: bigint, keyHex: string): string {
+  const svcLabel = serviceId === SELF_SERVICE_ID ? "self" : serviceId.toString();
+  return `${svcLabel}:${keyHex}`;
 }
 
-/** Decode write host call registers into human-readable details. */
-function decodeWriteDetails(regs: bigint[]) {
-  const keyPtr = Number(regs[7] ?? 0n);
-  const keyLen = Number(regs[8] ?? 0n);
-  const valPtr = Number(regs[9] ?? 0n);
-  const valLen = Number(regs[10] ?? 0n);
-  return { keyPtr, keyLen, valPtr, valLen };
-}
-
-function ReadDetails({ info }: { info: HostCallInfo }) {
-  const { serviceId, keyPtr, keyLen } = decodeReadDetails(info.currentState.registers);
-  const keyHex = deriveKeyHex(info);
-
-  return (
-    <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono">
-      <span className="text-muted-foreground">Service ID:</span>
-      <span className="text-foreground">{serviceId.toString()}</span>
-      <span className="text-muted-foreground">Key ptr:</span>
-      <span className="text-foreground">0x{keyPtr.toString(16)}</span>
-      <span className="text-muted-foreground">Key len:</span>
-      <span className="text-foreground">{keyLen}</span>
-      {keyHex && (
-        <>
-          <span className="text-muted-foreground">Key:</span>
-          <span className="text-foreground">{keyHex}</span>
-        </>
-      )}
-    </div>
-  );
-}
-
-function WriteDetails({ info }: { info: HostCallInfo }) {
-  const { keyPtr, keyLen, valPtr, valLen } = decodeWriteDetails(info.currentState.registers);
-  const keyHex = deriveKeyHex(info);
-
-  return (
-    <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono">
-      <span className="text-muted-foreground">Key ptr:</span>
-      <span className="text-foreground">0x{keyPtr.toString(16)}</span>
-      <span className="text-muted-foreground">Key len:</span>
-      <span className="text-foreground">{keyLen}</span>
-      <span className="text-muted-foreground">Value ptr:</span>
-      <span className="text-foreground">0x{valPtr.toString(16)}</span>
-      <span className="text-muted-foreground">Value len:</span>
-      <span className="text-foreground">{valLen}</span>
-      {keyHex && (
-        <>
-          <span className="text-muted-foreground">Key:</span>
-          <span className="text-foreground">{keyHex}</span>
-        </>
-      )}
-    </div>
-  );
-}
-
-function HostCallDetails({ info }: { info: HostCallInfo }) {
-  switch (info.hostCallIndex) {
-    case 3:
-      return <ReadDetails info={info} />;
-    case 4:
-      return <WriteDetails info={info} />;
-    default:
-      return null;
+/** Try to decode hex bytes as printable ASCII string. */
+function tryAscii(hex: string): string | null {
+  const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
+  if (clean.length === 0 || clean.length % 2 !== 0) return null;
+  const chars: string[] = [];
+  for (let i = 0; i < clean.length; i += 2) {
+    const byte = parseInt(clean.slice(i, i + 2), 16);
+    if (byte < 0x20 || byte > 0x7e) return null; // not printable ASCII
+    chars.push(String.fromCharCode(byte));
   }
+  return chars.join("");
 }
 
-function PendingEffects({ info }: { info: HostCallInfo }) {
-  const proposal = info.resumeProposal;
-  if (!proposal) return null;
+/** Hook: read key bytes from PVM memory. */
+function useKeyFromMemory(
+  orchestrator: Orchestrator | null,
+  pvmId: string,
+  keyPtr: number,
+  keyLen: number,
+): string | null {
+  const [keyHex, setKeyHex] = useState<string | null>(null);
 
-  const hasRegs = proposal.registerWrites.size > 0;
-  const hasMem = proposal.memoryWrites.length > 0;
-  const hasGas = proposal.gasAfter !== undefined;
+  useEffect(() => {
+    if (!orchestrator || keyLen === 0) {
+      setKeyHex(null);
+      return;
+    }
+    let cancelled = false;
+    orchestrator.getMemory(pvmId, keyPtr, keyLen).then((data) => {
+      if (!cancelled) {
+        setKeyHex(toHex(data));
+      }
+    }).catch(() => {
+      if (!cancelled) setKeyHex(null);
+    });
+    return () => { cancelled = true; };
+  }, [orchestrator, pvmId, keyPtr, keyLen]);
 
-  if (!hasRegs && !hasMem && !hasGas) {
-    return (
-      <p className="text-muted-foreground text-xs italic">No pending effects from trace.</p>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-1">
-      <h4 className="text-sm font-semibold text-foreground">Pending Effects</h4>
-      <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 font-mono text-xs">
-        {[...proposal.registerWrites.entries()].map(([idx, val]) => (
-          <div key={idx} className="contents">
-            <span className="text-muted-foreground">{"\u03C9"}{idx} {"\u2190"}:</span>
-            <span className="text-amber-400">{val.toString()}</span>
-          </div>
-        ))}
-        {hasMem && (
-          <div className="contents">
-            <span className="text-muted-foreground">Memory:</span>
-            <span className="text-amber-400">{proposal.memoryWrites.length} write(s)</span>
-          </div>
-        )}
-        {hasGas && (
-          <div className="contents">
-            <span className="text-muted-foreground">Gas after:</span>
-            <span className="text-amber-400">{proposal.gasAfter!.toString()}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return keyHex;
 }
 
 /** New entry form for adding key/value pairs to the storage table. */
@@ -149,9 +91,7 @@ function AddEntryForm({ onAdd }: { onAdd: (key: string, value: string) => void }
         placeholder="Key (hex)"
         value={newKey}
         onChange={(e) => setNewKey(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleAdd();
-        }}
+        onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
       />
       <input
         data-testid="storage-new-value"
@@ -159,9 +99,7 @@ function AddEntryForm({ onAdd }: { onAdd: (key: string, value: string) => void }
         placeholder="Value (hex)"
         value={newValue}
         onChange={(e) => setNewValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleAdd();
-        }}
+        onKeyDown={(e) => { if (e.key === "Enter") handleAdd(); }}
       />
       <button
         data-testid="storage-add-button"
@@ -194,12 +132,7 @@ function StorageRow({
       <td className="px-2 py-1 font-mono text-xs text-foreground break-all">
         {entry.key}
         {isActive && (
-          <span
-            data-testid="storage-active-indicator"
-            className="ml-1 text-amber-400 text-[10px]"
-          >
-            (active)
-          </span>
+          <span data-testid="storage-active-indicator" className="ml-1 text-amber-400 text-[10px]">(active)</span>
         )}
       </td>
       <td className="px-2 py-1">
@@ -272,9 +205,96 @@ function StorageTable({
   );
 }
 
-export function StorageHostCall({ info, storageTable }: StorageHostCallProps) {
+export function StorageHostCall({ info, storageTable, orchestrator, onEffectsReady, traceVersion }: StorageHostCallProps) {
   const label = HOST_CALL_LABELS[info.hostCallIndex] ?? `unknown (${info.hostCallIndex})`;
-  const activeKey = deriveKeyHex(info);
+  const isRead = info.hostCallIndex === 3;
+  const regs = info.currentState.registers;
+
+  // For read: ω7=serviceId, ω8=keyPtr, ω9=keyLen, ω10=dest, ω11=offset, ω12=maxLen
+  const serviceId = regs[7] ?? 0n;
+  const keyPtr = Number(regs[8] ?? 0n);
+  const keyLen = Number(regs[9] ?? 0n);
+  const destAddr = Number(regs[10] ?? 0n);
+  const readOffset = Number(regs[11] ?? 0n);
+  const readMaxLen = Number(regs[12] ?? 0n);
+
+  // Read key bytes from memory
+  const keyHex = useKeyFromMemory(orchestrator, info.pvmId, keyPtr, keyLen);
+  const fullKey = keyHex ? scopedKey(serviceId, keyHex) : null;
+  const asciiKey = keyHex ? tryAscii(keyHex) : null;
+
+  // Seed trace data into storage table (once per mount/traceVersion)
+  const seededRef = useRef(false);
+  useEffect(() => {
+    seededRef.current = false;
+  }, [traceVersion]);
+
+  useEffect(() => {
+    if (seededRef.current || !isRead || !fullKey) return;
+    // Seed from trace proposal if we have one
+    const proposal = info.resumeProposal;
+    if (proposal && proposal.memoryWrites.length > 0) {
+      // Only seed if key doesn't already exist (don't overwrite user edits)
+      if (!storageTable.store.get(fullKey)) {
+        // The trace's memory write at destAddr is the sliced value; we need to reconstruct the full value.
+        // The ω₇ return value from the proposal is the full value length.
+        const fullLen = Number(proposal.registerWrites.get(7) ?? 0n);
+        // For simplicity, seed the sliced portion — this is what the trace knows about.
+        const mw = proposal.memoryWrites.find((w) => w.address === destAddr);
+        if (mw) {
+          storageTable.store.set(fullKey, toHex(mw.data));
+        }
+      }
+    }
+    seededRef.current = true;
+  }, [isRead, fullKey, info.resumeProposal, destAddr, storageTable.store, traceVersion]);
+
+  // Compute effects based on storage table state
+  const stableOnEffects = useStableCallback(onEffectsReady);
+
+  // Look up value from storage table
+  const storedValue = fullKey ? storageTable.store.get(fullKey) : undefined;
+  const keyFound = storedValue !== undefined;
+
+  useEffect(() => {
+    if (!isRead) {
+      // Write host call — just report from proposal
+      const proposal = info.resumeProposal;
+      if (proposal) {
+        stableOnEffects({
+          registerWrites: new Map(proposal.registerWrites),
+          memoryWrites: proposal.memoryWrites.map((mw) => ({ address: mw.address, data: new Uint8Array(mw.data) })),
+          gasAfter: proposal.gasAfter,
+        });
+      } else {
+        stableOnEffects({ registerWrites: new Map(), memoryWrites: [] });
+      }
+      return;
+    }
+
+    // Read host call
+    if (!keyFound || !fullKey) {
+      // Not found → return NONE
+      stableOnEffects({
+        registerWrites: new Map([[7, NONE]]),
+        memoryWrites: [],
+      });
+      return;
+    }
+
+    // Found — slice value according to offset/maxLen
+    const valueBytes = safeFromHex(storedValue!);
+    const totalLen = valueBytes.length;
+    const sliceStart = Math.min(readOffset, totalLen);
+    const sliceEnd = Math.min(readOffset + readMaxLen, totalLen);
+    const sliced = valueBytes.slice(sliceStart, sliceEnd);
+
+    const effects: HostCallEffects = {
+      registerWrites: new Map([[7, BigInt(totalLen)]]),
+      memoryWrites: sliced.length > 0 ? [{ address: destAddr, data: sliced }] : [],
+    };
+    stableOnEffects(effects);
+  }, [isRead, fullKey, keyFound, storedValue, readOffset, readMaxLen, destAddr, info.resumeProposal, stableOnEffects]);
 
   return (
     <div data-testid="storage-host-call" className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -283,16 +303,45 @@ export function StorageHostCall({ info, storageTable }: StorageHostCallProps) {
           Storage: {label}
         </h4>
 
-        <HostCallDetails info={info} />
+        {isRead && (
+          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-mono">
+            <span className="text-muted-foreground">Service ID:</span>
+            <span className="text-foreground">{serviceId === SELF_SERVICE_ID ? "self" : serviceId.toString()}</span>
+            <span className="text-muted-foreground">Key ptr:</span>
+            <span className="text-foreground">0x{keyPtr.toString(16)}</span>
+            <span className="text-muted-foreground">Key len:</span>
+            <span className="text-foreground">{keyLen}</span>
+            {keyHex && (
+              <>
+                <span className="text-muted-foreground">Key:</span>
+                <span className="text-foreground">
+                  {keyHex}
+                  {asciiKey && <span className="text-muted-foreground ml-1">&quot;{asciiKey}&quot;</span>}
+                </span>
+              </>
+            )}
+            <span className="text-muted-foreground">Offset:</span>
+            <span className="text-foreground">{readOffset}</span>
+            <span className="text-muted-foreground">Max len:</span>
+            <span className="text-foreground">{readMaxLen}</span>
+          </div>
+        )}
 
-        <div className="border-t border-border my-1" />
-
-        <PendingEffects info={info} />
+        {/* Live status indicator */}
+        {isRead && fullKey && (
+          <div data-testid="storage-status" className="mt-1">
+            {keyFound ? (
+              <span className="text-green-400 text-xs">Key found in storage table</span>
+            ) : (
+              <span className="text-amber-400 text-xs">Key not found — will return NONE</span>
+            )}
+          </div>
+        )}
       </div>
 
       <StorageTable
         entries={storageTable.entries}
-        activeKey={activeKey}
+        activeKey={fullKey}
         onValueChange={storageTable.setEntry}
         onRemove={storageTable.removeEntry}
         onAdd={storageTable.setEntry}

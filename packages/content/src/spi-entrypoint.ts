@@ -5,7 +5,7 @@ export interface RefineParams {
   index: number;
   id: number;
   payload: Uint8Array;
-  package: Uint8Array;
+  workPackageHash: Uint8Array;
 }
 
 export interface AccumulateParams {
@@ -47,20 +47,24 @@ function concat(...arrays: Uint8Array[]): Uint8Array {
 /**
  * Encode SPI entrypoint parameters into bytes.
  *
- * - refine: core, index, id, payload blob, package blob
+ * - refine: core, index, id, payload blob, workPackageHash (fixed 32 bytes)
  * - accumulate: slot, id, results
  * - is_authorized: core
  */
 export function encodeSpiEntrypoint(params: SpiEntrypointParams): Uint8Array {
   switch (params.entrypoint) {
-    case "refine":
+    case "refine": {
+      // workPackageHash is always exactly 32 bytes (no length prefix)
+      const hash = new Uint8Array(32);
+      hash.set(params.params.workPackageHash.subarray(0, 32));
       return concat(
         encodeVarU32(params.params.core),
         encodeVarU32(params.params.index),
         encodeVarU32(params.params.id),
         encodeBlob(params.params.payload),
-        encodeBlob(params.params.package),
+        hash,
       );
+    }
     case "accumulate":
       return concat(
         encodeVarU32(params.params.slot),
@@ -108,8 +112,10 @@ export function decodeSpiEntrypoint(
       const index = readVarU32();
       const id = readVarU32();
       const payload = readBlob();
-      const pkg = readBlob();
-      return { entrypoint: "refine", pc: 0, params: { core, index, id, payload, package: pkg } };
+      // workPackageHash is fixed 32 bytes (no length prefix)
+      const hash = bytes.slice(offset, offset + 32);
+      offset += 32;
+      return { entrypoint: "refine", pc: 0, params: { core, index, id, payload, workPackageHash: hash } };
     }
     case "accumulate": {
       const slot = readVarU32();

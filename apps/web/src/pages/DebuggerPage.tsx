@@ -241,6 +241,7 @@ function DebuggerPageInner() {
             snapshots={snapshots}
             orchestrator={orchestrator}
             storageTable={storageTable}
+            pendingChanges={pendingChanges}
             snapshotVersion={snapshotVersion}
           />
         }

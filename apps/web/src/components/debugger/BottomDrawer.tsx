@@ -7,6 +7,7 @@ import { LogsTab } from "../drawer/LogsTab";
 import type { HostCallInfo, MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
 import type { UseStorageTable } from "../../hooks/useStorageTable";
+import type { UsePendingChanges } from "../../hooks/usePendingChanges";
 import { useHostCallState } from "../../hooks/useHostCallState";
 
 const TABS: { id: DrawerTab; label: string }[] = [
@@ -30,10 +31,11 @@ interface BottomDrawerProps {
   snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
   orchestrator: Orchestrator | null;
   storageTable: UseStorageTable;
+  pendingChanges: UsePendingChanges;
   snapshotVersion: number;
 }
 
-export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapshots, orchestrator, storageTable, snapshotVersion }: BottomDrawerProps) {
+export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapshots, orchestrator, storageTable, pendingChanges, snapshotVersion }: BottomDrawerProps) {
   const { activeTab, height, setActiveTab, setHeight } = useDrawer();
   const { activeHostCall } = useHostCallState(hostCallInfo, selectedPvmId, snapshots);
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -142,8 +144,8 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
           className="flex-1 overflow-auto px-3 py-2 text-sm text-muted-foreground min-h-0"
         >
           {activeTab === "settings" && <SettingsTab onPvmChange={onPvmChange} />}
-          {activeTab === "ecalli_trace" && <EcalliTraceTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} />}
-          {activeTab === "host_call" && <HostCallTab activeHostCall={activeHostCall} orchestrator={orchestrator} storageTable={storageTable} />}
+          {activeTab === "ecalli_trace" && <EcalliTraceTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} activeHostCall={activeHostCall} />}
+          {activeTab === "host_call" && <HostCallTab activeHostCall={activeHostCall} orchestrator={orchestrator} storageTable={storageTable} pendingChanges={pendingChanges} />}
           {activeTab === "logs" && <LogsTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} />}
         </div>
       )}

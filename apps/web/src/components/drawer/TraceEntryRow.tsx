@@ -5,9 +5,10 @@ import { formatEntryLines, formatTerminationLines } from "./trace-display";
 interface TraceEntryRowProps {
   row: TraceDisplayRow;
   isMismatched: boolean;
+  isActive?: boolean;
 }
 
-export function TraceEntryRow({ row, isMismatched }: TraceEntryRowProps) {
+export function TraceEntryRow({ row, isMismatched, isActive }: TraceEntryRowProps) {
   const lines =
     row.kind === "entry"
       ? formatEntryLines(row.entry)
@@ -26,8 +27,8 @@ export function TraceEntryRow({ row, isMismatched }: TraceEntryRowProps) {
           : "trace-termination"
       }
       className={`px-2 py-1 border-b border-border/50 ${
-        isMismatched ? "bg-red-900/30" : ""
-      }`}
+        isActive ? "bg-blue-500/20 ring-1 ring-inset ring-blue-500/40" : ""
+      } ${isMismatched ? "bg-red-900/30" : ""}`}
     >
       <div className="flex items-center gap-2">
         <span
