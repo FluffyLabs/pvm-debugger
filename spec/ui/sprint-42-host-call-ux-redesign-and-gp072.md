@@ -196,3 +196,7 @@ cd apps/web && npx vite build
 5. **`activeEntryIndex` for trace highlight.** The active host call's sequential index = `recorded.entries.length` (the current host call hasn't been recorded yet). Compute this inside `EcalliTraceTab`, not `BottomDrawer`.
 
 6. **GPG signing may fail in CI.** Use `-c commit.gpgsign=false` as a fallback if signing is unavailable.
+
+7. **Backwards-compatible testids.** The two-column redesign removed the old `HostCallHeader` component, but E2E tests from sprint-19, sprint-20, and integration-smoke reference `data-testid="host-call-header"` and `data-testid="host-call-hint"`. These testids must be preserved in the new Sidebar layout: `host-call-header` wraps the badge + index info, `host-call-hint` shows continuation instructions.
+
+8. **Sprint-20 `stepToStorageHostCall` detection.** The old helper matched host calls by name ("fetch"/"lookup"/"read"/"write"), but only read (3) and write (4) render `StorageHostCall`. The detection must check for the `storage-host-call` testid instead to avoid false positives on fetch/lookup calls.
