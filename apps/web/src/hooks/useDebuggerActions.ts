@@ -326,8 +326,9 @@ export function useDebuggerActions({
                 setIsRunning(false);
                 return;
               }
-              // Auto-continue: resume all host calls and keep going
-              await resumeAllHostCalls(orchestrator, storageTable, getHostCallEffects);
+              // Auto-continue: resume using trace proposals (not user-edited pending changes,
+              // which may be stale from a previous host call's auto-apply).
+              await resumeAllHostCalls(orchestrator, storageTable);
             }
 
             // Check if all PVMs are terminal
