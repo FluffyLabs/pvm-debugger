@@ -38,3 +38,40 @@ export function safeFromHex(hex: string): Uint8Array {
     return new Uint8Array(0);
   }
 }
+
+/**
+ * Compute the full fetch host call effects from the response blob.
+ *
+ * Implements: slice by offset/maxLen, set ω₇ = totalLength (or NONE),
+ * produce memory write at destAddr.
+ *
+ * @param fullBlob - The full response blob for this fetch kind
+ * @param isNone - If true, the response is ⊥ (NONE)
+ * @param destAddr - Destination memory address (ω₇ register value)
+ * @param offset - Offset into the full blob (ω₈)
+ * @param maxLen - Maximum bytes to write (ω₉)
+ */
+export function computeFetchEffects(
+  fullBlob: Uint8Array,
+  isNone: boolean,
+  destAddr: number,
+  offset: number,
+  maxLen: number,
+): HostCallEffects {
+  if (isNone) {
+    return {
+      registerWrites: new Map([[7, NONE]]),
+      memoryWrites: [],
+    };
+  }
+
+  const totalLen = fullBlob.length;
+  const sliceStart = Math.min(offset, totalLen);
+  const sliceEnd = Math.min(offset + maxLen, totalLen);
+  const sliced = fullBlob.slice(sliceStart, sliceEnd);
+
+  return {
+    registerWrites: new Map([[7, BigInt(totalLen)]]),
+    memoryWrites: sliced.length > 0 ? [{ address: destAddr, data: sliced }] : [],
+  };
+}

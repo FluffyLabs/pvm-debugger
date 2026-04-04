@@ -33,10 +33,12 @@ export const HOST_CALL_REGISTER_META: Record<number, HandlerRegisterMeta> = {
   // fetch (1)
   1: {
     inputs: [
-      { index: 7, label: "kind", format: "decimal" },
-      { index: 8, label: "dest", format: "hex" },
-      { index: 9, label: "offset", format: "decimal" },
-      { index: 10, label: "maxLen", format: "decimal" },
+      { index: 7, label: "dest", format: "hex" },
+      { index: 8, label: "offset", format: "decimal" },
+      { index: 9, label: "maxLen", format: "decimal" },
+      { index: 10, label: "kind", format: "custom" },
+      { index: 11, label: "param1", format: "decimal" },
+      { index: 12, label: "param2", format: "decimal" },
     ],
     output: { index: 7, label: "total length", format: "decimal" },
   },

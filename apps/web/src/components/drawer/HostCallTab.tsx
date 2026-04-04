@@ -11,11 +11,12 @@ import { GasHostCall } from "./hostcalls/GasHostCall";
 import { LogHostCall } from "./hostcalls/LogHostCall";
 import { StorageHostCall } from "./hostcalls/StorageHostCall";
 import { GenericHostCall } from "./hostcalls/GenericHostCall";
+import { FetchHostCall } from "./hostcalls/FetchHostCall";
 
 export type { HostCallEffects } from "../../lib/fetch-utils";
 
 /** Host call indices that support NONE toggle. */
-const NONE_SUPPORTED = new Set([2, 3, 5]); // lookup, read, info
+const NONE_SUPPORTED = new Set([1, 2, 3, 5]); // fetch, lookup, read, info
 
 interface HostCallTabProps {
   activeHostCall: HostCallInfo | null;
@@ -158,6 +159,7 @@ function ContextualView({
     case 0:
       return <GasHostCall info={info} onEffectsReady={onEffectsReady} />;
     case 1:
+      return <FetchHostCall info={info} onEffectsReady={onEffectsReady} traceVersion={traceVersion} />;
     case 2:
       return <GenericHostCall info={info} onEffectsReady={onEffectsReady} traceVersion={traceVersion} />;
     case 3:

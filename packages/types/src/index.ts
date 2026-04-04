@@ -62,3 +62,25 @@ export {
   regsToUint8,
   uint8ToRegs,
 } from "./encoding.js";
+
+// JAM codec
+export {
+  type DecodeResult,
+  tryDecode,
+  encodeVarU64,
+  decodeVarU64,
+  encodeU8,
+  decodeU8,
+  encodeU16LE,
+  decodeU16LE,
+  encodeU32LE,
+  decodeU32LE,
+  encodeU64LE,
+  decodeU64LE,
+  encodeBytes32,
+  decodeBytes32,
+  encodeBytesVarLen,
+  decodeBytesVarLen,
+  encodeSequenceVarLen,
+  decodeSequenceVarLen,
+} from "./jam-codec.js";
