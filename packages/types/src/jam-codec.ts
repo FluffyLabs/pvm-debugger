@@ -96,16 +96,8 @@ export function encodeVarU64(v: bigint): Uint8Array {
   const trailingValue = v & trailingMask;
   const leadPayload = v >> trailingBits;
 
-  // Lead byte: n leading 1-bits as prefix, then (8-n) payload bits
-  const prefixMask = ((1 << n) - 1) << (8 - n); // e.g. n=2 → 0xC0, n=3 → 0xE0
-  // Actually for VarU64: n=2 means 1 leading 1, then 6 payload bits → lead prefix 0x80
-  // Wait, let me re-check. For n bytes total:
-  // n=2: 1 leading 1-bit → prefix 10xxxxxx → mask 0x80, payload bits = 6
-  // n=3: 2 leading 1-bits → prefix 110xxxxx → mask 0xC0, payload bits = 5
-  // So prefix has (n-1) leading 1-bits, followed by a 0 bit (implicit), then (8-n) payload bits
-  // prefix mask = ((1 << (n-1)) - 1) << (9 - n)  ... no, simpler:
-  // n-1 leading 1-bits means the top (n-1) bits are 1, bit (8-n) is the first payload bit
-  // prefix = 0xFF << (9-n) & 0xFF
+  // Lead byte: (n-1) leading 1-bits as prefix, then (8-n) payload bits
+  // n=2 → 10xxxxxx (0x80), n=3 → 110xxxxx (0xC0), etc.
   const prefix = (0xFF << (9 - n)) & 0xFF;
   const payloadBits = 8 - n;
   const leadByte = prefix | (Number(leadPayload) & ((1 << payloadBits) - 1));
@@ -131,19 +123,13 @@ export function decodeVarU64(bytes: Uint8Array, offset: number = 0): DecodeResul
 
   const lead = bytes[offset];
 
-  // Count leading 1-bits to determine width
+  // Count leading 1-bits to determine total byte count (n)
   let n = 1;
   let mask = 0x80;
   while ((lead & mask) !== 0 && n < 9) {
     n++;
     mask >>= 1;
   }
-  // n = number of leading 1-bits + 1 = total byte count
-  // Wait: n starts at 1, increments for each leading 1-bit found.
-  // If lead = 0xxxxxxx → 0 leading 1s → n stays 1
-  // If lead = 10xxxxxx → 1 leading 1 → n = 2
-  // If lead = 110xxxxx → 2 leading 1s → n = 3
-  // If lead = 11111111 → 8 leading 1s → n = 9 (but loop stops at n<9)
 
   if (offset + n > bytes.length) {
     throw new Error(`decodeVarU64: not enough bytes (need ${n}, have ${bytes.length - offset})`);

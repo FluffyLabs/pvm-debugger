@@ -5,7 +5,6 @@
 
 import {
   type DecodeResult,
-  tryDecode,
   encodeU8,
   decodeU8,
   encodeU16LE,
@@ -23,6 +22,22 @@ import {
   encodeVarU64,
   decodeVarU64,
 } from "@pvmdbg/types";
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+/** Concatenate multiple Uint8Array parts into a single buffer. */
+function concatParts(parts: Uint8Array[]): Uint8Array {
+  const totalLen = parts.reduce((s, p) => s + p.length, 0);
+  const result = new Uint8Array(totalLen);
+  let off = 0;
+  for (const p of parts) {
+    result.set(p, off);
+    off += p.length;
+  }
+  return result;
+}
 
 // ---------------------------------------------------------------------------
 // FetchKind enum & info
@@ -221,22 +236,14 @@ export interface RefinementContext {
 }
 
 export function encodeRefinementContext(ctx: RefinementContext): Uint8Array {
-  const parts: Uint8Array[] = [
+  return concatParts([
     encodeBytes32(ctx.anchorhash),
     encodeBytes32(ctx.anchorpoststate),
     encodeBytes32(ctx.anchoraccoutlog),
     encodeBytes32(ctx.lookupanchorhash),
     encodeU32LE(ctx.lookupanchortime),
     encodeSequenceVarLen(ctx.prerequisites, (h) => encodeBytes32(h)),
-  ];
-  const totalLen = parts.reduce((s, p) => s + p.length, 0);
-  const result = new Uint8Array(totalLen);
-  let off = 0;
-  for (const p of parts) {
-    result.set(p, off);
-    off += p.length;
-  }
-  return result;
+  ]);
 }
 
 export function decodeRefinementContext(bytes: Uint8Array, offset: number = 0): DecodeResult<RefinementContext> | null {
@@ -338,7 +345,7 @@ export interface WorkItem {
 }
 
 export function encodeWorkItem(item: WorkItem): Uint8Array {
-  const parts: Uint8Array[] = [
+  return concatParts([
     encodeU32LE(item.serviceindex),
     encodeBytes32(item.codehash),
     encodeU64LE(item.refgaslimit),
@@ -347,15 +354,7 @@ export function encodeWorkItem(item: WorkItem): Uint8Array {
     encodeBytesVarLen(item.payload),
     encodeSequenceVarLen(item.importsegments, encodeImportRef),
     encodeSequenceVarLen(item.extrinsics, encodeExtrinsicRef),
-  ];
-  const totalLen = parts.reduce((s, p) => s + p.length, 0);
-  const result = new Uint8Array(totalLen);
-  let off = 0;
-  for (const p of parts) {
-    result.set(p, off);
-    off += p.length;
-  }
-  return result;
+  ]);
 }
 
 export function decodeWorkItem(bytes: Uint8Array, offset: number = 0): DecodeResult<WorkItem> {
@@ -397,22 +396,14 @@ export interface WorkPackageData {
 }
 
 export function encodeWorkPackage(wp: WorkPackageData): Uint8Array {
-  const parts: Uint8Array[] = [
+  return concatParts([
     encodeU32LE(wp.authcodehost),
     encodeBytes32(wp.authcodehash),
-    encodeRefinementContext(wp.context)!,
+    encodeRefinementContext(wp.context),
     encodeBytesVarLen(wp.authtoken),
     encodeBytesVarLen(wp.authconfig),
     encodeSequenceVarLen(wp.workitems, encodeWorkItem),
-  ];
-  const totalLen = parts.reduce((s, p) => s + p.length, 0);
-  const result = new Uint8Array(totalLen);
-  let off = 0;
-  for (const p of parts) {
-    result.set(p, off);
-    off += p.length;
-  }
-  return result;
+  ]);
 }
 
 export function decodeWorkPackage(bytes: Uint8Array, offset: number = 0): DecodeResult<WorkPackageData> | null {
@@ -570,7 +561,7 @@ export type TransferOrOperand = Operand | Transfer;
 
 export function encodeTransferOrOperand(item: TransferOrOperand): Uint8Array {
   if (item.tag === "operand") {
-    const parts: Uint8Array[] = [
+    return concatParts([
       encodeU8(0), // tag
       encodeBytes32(item.packagehash),
       encodeBytes32(item.segroot),
@@ -579,29 +570,19 @@ export function encodeTransferOrOperand(item: TransferOrOperand): Uint8Array {
       encodeU64LE(item.gaslimit),
       encodeOResult(item.result),
       encodeBytesVarLen(item.authtrace),
-    ];
-    const totalLen = parts.reduce((s, p) => s + p.length, 0);
-    const result = new Uint8Array(totalLen);
-    let off = 0;
-    for (const p of parts) { result.set(p, off); off += p.length; }
-    return result;
+    ]);
   }
   // Transfer
   const memo = new Uint8Array(TRANSFER_MEMO_SIZE);
   memo.set(item.memo.subarray(0, TRANSFER_MEMO_SIZE)); // truncate if longer
-  const parts: Uint8Array[] = [
+  return concatParts([
     encodeU8(1), // tag
     encodeU32LE(item.source),
     encodeU32LE(item.dest),
     encodeU64LE(item.amount),
     memo,
     encodeU64LE(item.gas),
-  ];
-  const totalLen = parts.reduce((s, p) => s + p.length, 0);
-  const result = new Uint8Array(totalLen);
-  let off = 0;
-  for (const p of parts) { result.set(p, off); off += p.length; }
-  return result;
+  ]);
 }
 
 export function decodeTransferOrOperand(bytes: Uint8Array, offset: number = 0): DecodeResult<TransferOrOperand> {

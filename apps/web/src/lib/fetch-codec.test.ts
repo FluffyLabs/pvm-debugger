@@ -31,6 +31,7 @@ import {
   type TransferOrOperand,
   type WorkPackageData,
   type WorkItem,
+  type Transfer,
 } from "./fetch-codec";
 import {
   DEFAULT_PROTOCOL_CONSTANTS,
@@ -41,7 +42,7 @@ import {
   DEFAULT_WORK_ITEM,
   DEFAULT_WORK_PACKAGE,
 } from "./fetch-defaults";
-import { encodeSequenceVarLen } from "@pvmdbg/types";
+import { encodeSequenceVarLen, decodeSequenceVarLen } from "@pvmdbg/types";
 
 describe("ProtocolConstants", () => {
   it("encodes to exactly 134 bytes", () => {
@@ -184,12 +185,59 @@ describe("TransferOrOperand", () => {
   it("roundtrips mixed sequence (operand + transfer)", () => {
     const items: TransferOrOperand[] = [DEFAULT_OPERAND, DEFAULT_TRANSFER];
     const encoded = encodeSequenceVarLen(items, encodeTransferOrOperand);
-    // Decode manually
-    const { decodeSequenceVarLen: decSeq } = require("@pvmdbg/types");
-    const decoded = decSeq(encoded, 0, decodeTransferOrOperand);
+    const decoded = decodeSequenceVarLen(encoded, 0, decodeTransferOrOperand);
     expect(decoded.value.length).toBe(2);
     expect(decoded.value[0].tag).toBe("operand");
     expect(decoded.value[1].tag).toBe("transfer");
+  });
+});
+
+describe("WorkItem", () => {
+  it("roundtrips with non-empty imports and extrinsics", () => {
+    const item: WorkItem = {
+      serviceindex: 5,
+      codehash: new Uint8Array(32).fill(0xCC),
+      refgaslimit: 100000n,
+      accgaslimit: 50000n,
+      exportcount: 3,
+      payload: new Uint8Array([0x01, 0x02, 0x03]),
+      importsegments: [
+        { hash: new Uint8Array(32).fill(0xAA), index: 7, isWorkPackageHash: false },
+        { hash: new Uint8Array(32).fill(0xBB), index: 42, isWorkPackageHash: true },
+      ],
+      extrinsics: [
+        { hash: new Uint8Array(32).fill(0xDD), length: 1024 },
+      ],
+    };
+    const encoded = encodeWorkItem(item);
+    const decoded = decodeWorkItem(encoded);
+    expect(decoded.value.serviceindex).toBe(5);
+    expect(decoded.value.exportcount).toBe(3);
+    expect(decoded.value.importsegments.length).toBe(2);
+    expect(decoded.value.importsegments[1].index).toBe(42);
+    expect(decoded.value.importsegments[1].isWorkPackageHash).toBe(true);
+    expect(decoded.value.extrinsics.length).toBe(1);
+    expect(decoded.value.extrinsics[0].length).toBe(1024);
+    expect(Array.from(decoded.value.payload)).toEqual([0x01, 0x02, 0x03]);
+  });
+});
+
+describe("Transfer memo truncation", () => {
+  it("truncates memo longer than 128 bytes", () => {
+    const longMemo = new Uint8Array(200).fill(0xFF);
+    const xfer: Transfer = {
+      ...DEFAULT_TRANSFER,
+      memo: longMemo,
+    };
+    const encoded = encodeTransferOrOperand(xfer);
+    const decoded = decodeTransferOrOperand(encoded);
+    expect(decoded.value.tag).toBe("transfer");
+    if (decoded.value.tag === "transfer") {
+      expect(decoded.value.memo.length).toBe(128);
+      // Should be 0xFF (truncated from the original), not zeros
+      expect(decoded.value.memo[0]).toBe(0xFF);
+      expect(decoded.value.memo[127]).toBe(0xFF);
+    }
   });
 });
 
