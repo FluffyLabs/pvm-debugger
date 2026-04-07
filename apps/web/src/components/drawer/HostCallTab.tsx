@@ -93,6 +93,7 @@ function StickyBar({
   noneChecked,
   onNoneToggle,
   userModified,
+  hasProposal,
   onUseTraceData,
   error,
 }: {
@@ -100,6 +101,7 @@ function StickyBar({
   noneChecked: boolean;
   onNoneToggle: (checked: boolean) => void;
   userModified: boolean;
+  hasProposal: boolean;
   onUseTraceData: () => void;
   error: string | null;
 }) {
@@ -119,8 +121,8 @@ function StickyBar({
         </label>
       )}
 
-      {/* Use Trace Data button */}
-      {userModified && (
+      {/* Use Trace Data button — only when trace data actually exists */}
+      {userModified && hasProposal && (
         <button
           data-testid="use-trace-data"
           onClick={onUseTraceData}
@@ -322,6 +324,7 @@ export function HostCallTab({ activeHostCall, orchestrator, storageTable, pendin
         noneChecked={noneChecked}
         onNoneToggle={handleNoneToggle}
         userModified={userModified}
+        hasProposal={!!activeHostCall.resumeProposal}
         onUseTraceData={handleUseTraceData}
         error={error}
       />

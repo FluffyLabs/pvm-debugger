@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import type { HostCallInfo } from "@pvmdbg/types";
 import type { HostCallEffects } from "../../../lib/fetch-utils";
 import { computeFetchEffects } from "../../../lib/fetch-utils";
 import { FetchKind, FETCH_KIND_INFO } from "../../../lib/fetch-codec";
+import { computeDefaultEncodedBlob } from "../../../lib/fetch-defaults";
 import { useStableCallback } from "../../../hooks/useStableCallback";
 import { TraceView } from "./fetch/TraceView";
 import { RawEditor } from "./fetch/RawEditor";
@@ -52,9 +53,17 @@ export function FetchHostCall({ info, onEffectsReady, traceVersion }: FetchHostC
   const traceData = useMemo(() => getTraceData(info), [info]);
   const traceTotalLength = useMemo(() => getTraceTotalLength(info), [info]);
 
+  // Compute the initial blob eagerly: use trace data when available,
+  // otherwise encode the struct defaults for this kind synchronously.
+  // This avoids any race with StructEditor's async effect reporting.
+  const initialBlob = useMemo(
+    () => (hasProposal ? traceData : computeDefaultEncodedBlob(kind)),
+    [hasProposal, traceData, kind],
+  );
+
   // Mode state
   const [mode, setMode] = useState<Mode>(hasProposal ? "trace" : "struct");
-  const [blob, setBlob] = useState<Uint8Array>(traceData);
+  const [blob, setBlob] = useState<Uint8Array>(initialBlob);
 
   // For Trace→Struct and Raw→Struct: the blob to decode
   const [structInitialBlob, setStructInitialBlob] = useState<Uint8Array | undefined>(undefined);
@@ -62,9 +71,9 @@ export function FetchHostCall({ info, onEffectsReady, traceVersion }: FetchHostC
   // Reset state on traceVersion change
   useEffect(() => {
     setMode(hasProposal ? "trace" : "struct");
-    setBlob(traceData);
+    setBlob(initialBlob);
     setStructInitialBlob(undefined);
-  }, [traceVersion, hasProposal, traceData]);
+  }, [traceVersion, hasProposal, initialBlob]);
 
   const stableOnEffects = useStableCallback(onEffectsReady);
 

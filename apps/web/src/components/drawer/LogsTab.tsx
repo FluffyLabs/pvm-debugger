@@ -13,7 +13,7 @@ interface LogsTabProps {
 const AUTO_SCROLL_THRESHOLD = 40;
 
 export function LogsTab({ orchestrator, selectedPvmId, snapshotVersion }: LogsTabProps) {
-  const { messages } = useLogMessages(orchestrator, selectedPvmId, snapshotVersion);
+  const { messages, clear, copy } = useLogMessages(orchestrator, selectedPvmId, snapshotVersion);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
 
@@ -52,6 +52,22 @@ export function LogsTab({ orchestrator, selectedPvmId, snapshotVersion }: LogsTa
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-2 py-1 border-b border-border">
         <div className="flex-1" />
+        <button
+          data-testid="logs-copy-button"
+          onClick={copy}
+          disabled={messages.length === 0}
+          className="px-2 py-0.5 text-xs rounded cursor-pointer bg-muted hover:bg-muted/80 text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Copy
+        </button>
+        <button
+          data-testid="logs-clear-button"
+          onClick={clear}
+          disabled={messages.length === 0}
+          className="px-2 py-0.5 text-xs rounded cursor-pointer bg-muted hover:bg-muted/80 text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Clear
+        </button>
         <button
           data-testid="logs-download-button"
           onClick={handleDownload}

@@ -3,14 +3,16 @@
  * Uses small testnet values from pvm-debugger.
  */
 
-import type {
-  ProtocolConstants,
-  WorkItemSummary,
-  RefinementContext,
-  Operand,
-  Transfer,
-  WorkItem,
-  WorkPackageData,
+import {
+  FetchKind,
+  encodeVariantData,
+  type ProtocolConstants,
+  type WorkItemSummary,
+  type RefinementContext,
+  type Operand,
+  type Transfer,
+  type WorkItem,
+  type WorkPackageData,
 } from "./fetch-codec";
 
 const ZERO_HASH = new Uint8Array(32);
@@ -110,3 +112,41 @@ export const DEFAULT_WORK_PACKAGE: WorkPackageData = {
   authconfig: new Uint8Array(0),
   workitems: [],
 };
+
+/**
+ * Eagerly compute the encoded blob for a given FetchKind using the same
+ * defaults that StructEditor initializes with.  This allows FetchHostCall
+ * to start with a correct blob on render 1 instead of waiting for
+ * StructEditor to report asynchronously via an effect.
+ */
+export function computeDefaultEncodedBlob(kind: FetchKind): Uint8Array {
+  switch (kind) {
+    case FetchKind.Constants:
+      return encodeVariantData({ kind, data: DEFAULT_PROTOCOL_CONSTANTS });
+    case FetchKind.Entropy:
+      return encodeVariantData({ kind, data: new Uint8Array(32) });
+    case FetchKind.AuthorizerTrace:
+    case FetchKind.OtherWorkItemExtrinsics:
+    case FetchKind.MyExtrinsics:
+    case FetchKind.OtherWorkItemImports:
+    case FetchKind.MyImports:
+    case FetchKind.Authorizer:
+    case FetchKind.AuthorizationToken:
+    case FetchKind.WorkItemPayload:
+      return new Uint8Array(0);
+    case FetchKind.WorkPackage:
+      return encodeVariantData({ kind, data: DEFAULT_WORK_PACKAGE });
+    case FetchKind.RefineContext:
+      return encodeVariantData({ kind, data: DEFAULT_REFINEMENT_CONTEXT });
+    case FetchKind.AllWorkItems:
+      return encodeVariantData({ kind, data: [] as WorkItemSummary[] });
+    case FetchKind.OneWorkItem:
+      return encodeVariantData({ kind, data: DEFAULT_WORK_ITEM_SUMMARY });
+    case FetchKind.AllTransfersAndOperands:
+      return encodeVariantData({ kind, data: [] });
+    case FetchKind.OneTransferOrOperand:
+      return encodeVariantData({ kind, data: DEFAULT_OPERAND });
+    default:
+      return new Uint8Array(0);
+  }
+}
