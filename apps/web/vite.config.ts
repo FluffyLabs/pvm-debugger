@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
 
 export default defineConfig({
+  base: "/pvm-debugger/",
   plugins: [react(), tailwindcss()],
   worker: {
     format: "es",

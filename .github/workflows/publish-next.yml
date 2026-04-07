@@ -1,0 +1,74 @@
+name: Publish Next
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+  pages: write
+
+jobs:
+  publish-next:
+    name: Publish next & Deploy Pages
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Patch versions with next tag
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          for pkg in packages/*/package.json; do
+            current=$(node -p "require('./$pkg').version")
+            next_version="${current}-next.${SHORT_SHA}"
+            node -e "
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('$pkg', 'utf8'));
+              pkg.version = '$next_version';
+              fs.writeFileSync('$pkg', JSON.stringify(pkg, null, 2) + '\n');
+            "
+            echo "Patched $(dirname $pkg) to $next_version"
+          done
+
+      - name: Publish all packages with next tag
+        run: |
+          for pkg_dir in packages/*/; do
+            echo "Publishing $pkg_dir..."
+            cd "$pkg_dir"
+            npm publish --tag next --provenance --access public || echo "Failed to publish $pkg_dir (may already exist)"
+            cd "${{ github.workspace }}"
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build web app
+        run: npm run build -w apps/web
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist/
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Lint
+        run: npx biome check .
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build web app
+        run: npm run build -w apps/web
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: E2E tests
+        run: npm run test:e2e -w apps/web
+
+      - name: Check changeset
+        if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
+        run: |
+          changeset_files=$(find .changeset -name '*.md' ! -name 'README.md' | head -1)
+          if [ -z "$changeset_files" ]; then
+            echo "::error::No changeset file found. Run 'npx changeset' to add one."
+            exit 1
+          fi
