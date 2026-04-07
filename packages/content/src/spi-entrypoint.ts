@@ -1,4 +1,4 @@
-import { encodeVarU32, decodeVarU32 } from "@pvmdbg/types";
+import { encodeVarU32, decodeVarU32, encodeU16LE, decodeU16LE } from "@pvmdbg/types";
 
 export interface RefineParams {
   core: number;
@@ -72,7 +72,7 @@ export function encodeSpiEntrypoint(params: SpiEntrypointParams): Uint8Array {
         encodeVarU32(params.params.results),
       );
     case "is_authorized":
-      return concat(encodeVarU32(params.params.core));
+      return concat(encodeU16LE(params.params.core));
   }
 }
 
@@ -124,7 +124,8 @@ export function decodeSpiEntrypoint(
       return { entrypoint: "accumulate", pc: 5, params: { slot, id, results } };
     }
     case "is_authorized": {
-      const core = readVarU32();
+      const { value: core } = decodeU16LE(bytes, offset);
+      offset += 2;
       return { entrypoint: "is_authorized", pc: 0, params: { core } };
     }
   }

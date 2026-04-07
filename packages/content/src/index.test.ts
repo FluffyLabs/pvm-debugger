@@ -265,7 +265,7 @@ describe("encodeSpiEntrypoint", () => {
       params: { core: 5 },
     };
     const result = encodeSpiEntrypoint(params);
-    expect(Array.from(result)).toEqual([0x05]);
+    expect(Array.from(result)).toEqual([0x05, 0x00]);
   });
 
   it("encodes accumulate with zero values", () => {
@@ -351,7 +351,7 @@ describe("decodeSpiEntrypoint", () => {
   });
 
   it("decodes is_authorized bytes back to params", () => {
-    const bytes = new Uint8Array([0x05]);
+    const bytes = new Uint8Array([0x05, 0x00]);
     const result = decodeSpiEntrypoint("is_authorized", bytes);
     expect(result.entrypoint).toBe("is_authorized");
     expect(result.pc).toBe(0);
