@@ -1,6 +1,6 @@
-import * as React from "react";
-import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "@fluffylabs/shared-ui/utils";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
+import * as React from "react";
 
 const Tabs = TabsPrimitive.Root;
 
@@ -10,7 +10,10 @@ const TabsList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
-    className={cn("inline-flex items-center justify-center rounded-md bg-muted p-1 text-muted-foreground", className)}
+    className={cn(
+      "inline-flex items-center justify-center rounded-md bg-muted p-1 text-muted-foreground",
+      className,
+    )}
     {...props}
   />
 ));
@@ -46,4 +49,4 @@ const TabsContent = React.forwardRef<
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-export { Tabs, TabsList, TabsTrigger, TabsContent };
+export { Tabs, TabsContent, TabsList, TabsTrigger };

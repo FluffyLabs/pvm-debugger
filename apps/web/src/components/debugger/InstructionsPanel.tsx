@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import type { DecodedInstruction } from "../../hooks/useDisassembly";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import { useBasicBlocks } from "../../hooks/useBasicBlocks";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { VirtualRow } from "../../hooks/useBasicBlocks";
-import { InstructionRow } from "./InstructionRow";
-import type { DisplayMode } from "./InstructionRow";
+import { useBasicBlocks } from "../../hooks/useBasicBlocks";
+import type { DecodedInstruction } from "../../hooks/useDisassembly";
 import { BlockHeader } from "./BlockHeader";
+import type { DisplayMode } from "./InstructionRow";
+import { InstructionRow } from "./InstructionRow";
 
 const HEADER_HEIGHT = 28;
 const ROW_HEIGHT = 24;
@@ -17,7 +17,11 @@ interface InstructionsPanelProps {
   orchestrator: Orchestrator | null;
 }
 
-export function InstructionsPanel({ instructions, currentPc, orchestrator }: InstructionsPanelProps) {
+export function InstructionsPanel({
+  instructions,
+  currentPc,
+  orchestrator,
+}: InstructionsPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [breakpoints, setBreakpoints] = useState<Set<number>>(new Set());
   const [displayMode, setDisplayMode] = useState<DisplayMode>("asm");
@@ -53,7 +57,8 @@ export function InstructionsPanel({ instructions, currentPc, orchestrator }: Ins
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => (rows[index].kind === "header" ? HEADER_HEIGHT : ROW_HEIGHT),
+    estimateSize: (index) =>
+      rows[index].kind === "header" ? HEADER_HEIGHT : ROW_HEIGHT,
     overscan: 15,
   });
 
@@ -92,7 +97,10 @@ export function InstructionsPanel({ instructions, currentPc, orchestrator }: Ins
     >
       <div className="px-2 h-7 text-sm font-normal text-foreground border-b border-border shrink-0 flex items-center justify-between">
         <span>Instructions</span>
-        <div className="flex text-xs font-normal" data-testid="display-mode-toggle">
+        <div
+          className="flex text-xs font-normal"
+          data-testid="display-mode-toggle"
+        >
           <button
             data-testid="display-mode-asm"
             className={`px-2 py-0.5 rounded-l border cursor-pointer ${
@@ -145,10 +153,7 @@ export function InstructionsPanel({ instructions, currentPc, orchestrator }: Ins
                 }}
               >
                 {row.kind === "header" ? (
-                  <BlockHeader
-                    block={row.block}
-                    onToggle={toggleBlock}
-                  />
+                  <BlockHeader block={row.block} onToggle={toggleBlock} />
                 ) : (
                   <InstructionRow
                     instruction={row.instruction}

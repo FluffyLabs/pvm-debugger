@@ -20,7 +20,9 @@ export async function loadUrl(url: string): Promise<RawPayload> {
   const resolvedUrl = rewriteGitHubBlobUrl(url);
   const response = await fetch(resolvedUrl);
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${resolvedUrl}: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch ${resolvedUrl}: ${response.status} ${response.statusText}`,
+    );
   }
   const buffer = await response.arrayBuffer();
   return {

@@ -1,11 +1,13 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import { PvmTabs } from "./PvmTabs";
 import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { PvmTabs } from "./PvmTabs";
 
 afterEach(cleanup);
 
-function makeSnapshot(overrides?: Partial<MachineStateSnapshot>): MachineStateSnapshot {
+function makeSnapshot(
+  overrides?: Partial<MachineStateSnapshot>,
+): MachineStateSnapshot {
   return {
     pc: 0,
     gas: 1_000_000n,
@@ -19,14 +21,21 @@ function makeSnapshots(
   entries: Array<[string, PvmLifecycle, Partial<MachineStateSnapshot>?]>,
 ): Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }> {
   return new Map(
-    entries.map(([id, lifecycle, overrides]) => [id, { snapshot: makeSnapshot(overrides), lifecycle }]),
+    entries.map(([id, lifecycle, overrides]) => [
+      id,
+      { snapshot: makeSnapshot(overrides), lifecycle },
+    ]),
   );
 }
 
 describe("PvmTabs", () => {
   it("renders inactive PVMs when snapshots is empty", () => {
     render(
-      <PvmTabs snapshots={new Map()} selectedPvmId={null} onSelect={() => {}} />,
+      <PvmTabs
+        snapshots={new Map()}
+        selectedPvmId={null}
+        onSelect={() => {}}
+      />,
     );
     // Known PVMs should render as grayed-out inactive spans
     const tab = screen.getByTestId("pvm-tab-typeberry");
@@ -39,7 +48,13 @@ describe("PvmTabs", () => {
       ["typeberry", "paused"],
       ["ananas", "paused"],
     ]);
-    render(<PvmTabs snapshots={snapshots} selectedPvmId="typeberry" onSelect={() => {}} />);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={() => {}}
+      />,
+    );
 
     expect(screen.getByTestId("pvm-tab-typeberry")).toBeDefined();
     expect(screen.getByTestId("pvm-tab-ananas")).toBeDefined();
@@ -50,10 +65,20 @@ describe("PvmTabs", () => {
       ["typeberry", "paused"],
       ["ananas", "paused"],
     ]);
-    render(<PvmTabs snapshots={snapshots} selectedPvmId="ananas" onSelect={() => {}} />);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="ananas"
+        onSelect={() => {}}
+      />,
+    );
 
-    expect(screen.getByTestId("pvm-tab-typeberry").getAttribute("aria-selected")).toBe("false");
-    expect(screen.getByTestId("pvm-tab-ananas").getAttribute("aria-selected")).toBe("true");
+    expect(
+      screen.getByTestId("pvm-tab-typeberry").getAttribute("aria-selected"),
+    ).toBe("false");
+    expect(
+      screen.getByTestId("pvm-tab-ananas").getAttribute("aria-selected"),
+    ).toBe("true");
   });
 
   it("calls onSelect with the pvmId when a tab is clicked", () => {
@@ -62,7 +87,13 @@ describe("PvmTabs", () => {
       ["ananas", "paused"],
     ]);
     const onSelect = vi.fn();
-    render(<PvmTabs snapshots={snapshots} selectedPvmId="typeberry" onSelect={onSelect} />);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={onSelect}
+      />,
+    );
 
     fireEvent.click(screen.getByTestId("pvm-tab-ananas"));
     expect(onSelect).toHaveBeenCalledWith("ananas");
@@ -77,7 +108,9 @@ describe("PvmTabs", () => {
       ["e", "failed"],
       ["f", "timed_out"],
     ]);
-    render(<PvmTabs snapshots={snapshots} selectedPvmId="a" onSelect={() => {}} />);
+    render(
+      <PvmTabs snapshots={snapshots} selectedPvmId="a" onSelect={() => {}} />,
+    );
 
     expect(screen.getByTestId("pvm-dot-a").className).toContain("bg-blue-500");
     expect(screen.getByTestId("pvm-dot-b").className).toContain("bg-green-500");
@@ -89,7 +122,13 @@ describe("PvmTabs", () => {
 
   it("renders sr-only status text for backward-compat test IDs", () => {
     const snapshots = makeSnapshots([["typeberry", "paused"]]);
-    render(<PvmTabs snapshots={snapshots} selectedPvmId="typeberry" onSelect={() => {}} />);
+    render(
+      <PvmTabs
+        snapshots={snapshots}
+        selectedPvmId="typeberry"
+        onSelect={() => {}}
+      />,
+    );
 
     const status = screen.getByTestId("pvm-status-typeberry");
     expect(status.textContent).toBe("OK");

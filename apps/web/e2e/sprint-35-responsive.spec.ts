@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 const NARROW_WIDTH = 375;
 const NARROW_HEIGHT = 812;
@@ -10,7 +10,9 @@ test.describe("Sprint 35 — Mobile / Responsive Layout", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("debugger shows panel switcher on narrow viewport", async ({ page }) => {
@@ -71,7 +73,9 @@ test.describe("Sprint 35 — Mobile / Responsive Layout", () => {
 
     expect(panelsBox).toBeTruthy();
     expect(drawerBox).toBeTruthy();
-    expect(panelsBox!.y + panelsBox!.height).toBeLessThanOrEqual(drawerBox!.y + 2);
+    expect(panelsBox!.y + panelsBox!.height).toBeLessThanOrEqual(
+      drawerBox!.y + 2,
+    );
   });
 
   test("panel switcher is hidden on wide viewport", async ({ page }) => {
@@ -86,7 +90,9 @@ test.describe("Sprint 35 — Mobile / Responsive Layout", () => {
     await expect(page.getByTestId("panel-memory")).toBeVisible();
   });
 
-  test("resizing back to desktop restores 3-column layout", async ({ page }) => {
+  test("resizing back to desktop restores 3-column layout", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Go narrow first
@@ -108,7 +114,9 @@ test.describe("Sprint 35 — Mobile / Responsive Layout", () => {
     await expect(page.getByTestId("panel-memory")).toBeVisible();
   });
 
-  test("load page columns stack vertically on narrow viewport", async ({ page }) => {
+  test("load page columns stack vertically on narrow viewport", async ({
+    page,
+  }) => {
     await page.goto("/#/load");
     await expect(page.getByTestId("load-page")).toBeVisible();
     await page.setViewportSize({ width: NARROW_WIDTH, height: NARROW_HEIGHT });

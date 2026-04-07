@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Button, Alert } from "@fluffylabs/shared-ui";
+import { Alert, Button } from "@fluffylabs/shared-ui";
+import type { DetectedFormat, RawPayload } from "@pvmdbg/content";
 import { ArrowRight } from "lucide-react";
-import type { RawPayload, DetectedFormat } from "@pvmdbg/content";
+import { useState } from "react";
 import { FileUpload, type FileUploadResult } from "./FileUpload";
-import { UrlInput, type UrlInputResult } from "./UrlInput";
 import { ManualInput, type ManualInputResult } from "./ManualInput";
+import { UrlInput, type UrlInputResult } from "./UrlInput";
 
 /** Which source type currently holds the pending selection. */
 type ActiveSource = "file" | "url" | "hex" | null;
@@ -108,7 +108,9 @@ export function SourceStep({ onAdvance }: SourceStepProps) {
     <div data-testid="source-step" className="flex flex-col gap-6">
       {/* File upload */}
       <div>
-        <h2 className="text-sm font-medium text-foreground mb-1">Upload File</h2>
+        <h2 className="text-sm font-medium text-foreground mb-1">
+          Upload File
+        </h2>
         <p className="text-xs text-muted-foreground mb-3">
           Load a local program file to begin debugging.
         </p>
@@ -121,9 +123,12 @@ export function SourceStep({ onAdvance }: SourceStepProps) {
 
       {/* URL input */}
       <div>
-        <h2 className="text-sm font-medium text-foreground mb-1">Fetch from URL</h2>
+        <h2 className="text-sm font-medium text-foreground mb-1">
+          Fetch from URL
+        </h2>
         <p className="text-xs text-muted-foreground mb-3">
-          Enter a URL to fetch a program. GitHub blob URLs are rewritten automatically.
+          Enter a URL to fetch a program. GitHub blob URLs are rewritten
+          automatically.
         </p>
         <UrlInput
           onLoaded={handleUrlLoaded}
@@ -134,7 +139,9 @@ export function SourceStep({ onAdvance }: SourceStepProps) {
 
       {/* Manual hex input */}
       <div>
-        <h2 className="text-sm font-medium text-foreground mb-1">Manual Hex Input</h2>
+        <h2 className="text-sm font-medium text-foreground mb-1">
+          Manual Hex Input
+        </h2>
         <p className="text-xs text-muted-foreground mb-3">
           Paste raw program bytes as a hex string.
         </p>

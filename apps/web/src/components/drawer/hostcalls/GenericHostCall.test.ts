@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parseAllCommands } from "./GenericHostCall";
 
 describe("parseAllCommands", () => {
@@ -59,9 +59,7 @@ describe("parseAllCommands", () => {
   });
 
   it("rejects memwrite with mismatched length", () => {
-    const { errors } = parseAllCommands(
-      "memwrite 0x00001000 len=4 <- 0xaabb",
-    );
+    const { errors } = parseAllCommands("memwrite 0x00001000 len=4 <- 0xaabb");
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain("does not match");
   });

@@ -1,15 +1,26 @@
-import * as pvm from "@typeberry/lib/pvm-interpreter";
 import type { InitialMachineState, ProgramLoadContext } from "@pvmdbg/types";
-import { regsToUint8, getMemoryRange } from "../utils.js";
+import * as pvm from "@typeberry/lib/pvm-interpreter";
+import { getMemoryRange, regsToUint8 } from "../utils.js";
 import type { SyncPvmInterpreter } from "./types.js";
 
-const { DebuggerAdapter, MemoryBuilder, Registers, tryAsMemoryIndex, tryAsSbrkIndex } = pvm;
+const {
+  DebuggerAdapter,
+  MemoryBuilder,
+  Registers,
+  tryAsMemoryIndex,
+  tryAsSbrkIndex,
+} = pvm;
 
 const PAGE_SIZE = 4096;
 
 /** Build typeberry Memory from our InitialMachineState page map and memory chunks. */
-function buildMemory(initialState: InitialMachineState): pvm.Memory | undefined {
-  if (initialState.pageMap.length === 0 && initialState.memoryChunks.length === 0) {
+function buildMemory(
+  initialState: InitialMachineState,
+): pvm.Memory | undefined {
+  if (
+    initialState.pageMap.length === 0 &&
+    initialState.memoryChunks.length === 0
+  ) {
     return undefined;
   }
 
@@ -35,9 +46,10 @@ function buildMemory(initialState: InitialMachineState): pvm.Memory | undefined 
     (max, page) => Math.max(max, page.address + page.length),
     0,
   );
-  const heapStart = maxAddressFromPageMap > 0
-    ? tryAsMemoryIndex(maxAddressFromPageMap + PAGE_SIZE)
-    : tryAsMemoryIndex(0);
+  const heapStart =
+    maxAddressFromPageMap > 0
+      ? tryAsMemoryIndex(maxAddressFromPageMap + PAGE_SIZE)
+      : tryAsMemoryIndex(0);
   const heapEnd = tryAsSbrkIndex(2 ** 32 - 2 * 2 ** 16 - 2 ** 24);
 
   return builder.finalize(heapStart, heapEnd);
@@ -54,14 +66,22 @@ export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
     this.adapter = new DebuggerAdapter();
   }
 
-  load(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): void {
+  load(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): void {
     this.storedProgram = program;
     this.storedInitialState = initialState;
     this.storedLoadContext = loadContext;
     this.doLoad(program, initialState, loadContext);
   }
 
-  private doLoad(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): void {
+  private doLoad(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): void {
     if (loadContext?.spiProgram) {
       this.adapter.resetJAM(
         loadContext.spiProgram.program,
@@ -74,7 +94,13 @@ export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
       const memory = buildMemory(initialState);
       const registers = new Registers();
       registers.setAllEncoded(regsToUint8(initialState.registers));
-      this.adapter.reset(program, initialState.pc, initialState.gas, registers, memory);
+      this.adapter.reset(
+        program,
+        initialState.pc,
+        initialState.gas,
+        registers,
+        memory,
+      );
     }
   }
 
@@ -82,7 +108,11 @@ export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
     if (!this.storedProgram || !this.storedInitialState) {
       throw new Error("Cannot reset: no program has been loaded");
     }
-    this.doLoad(this.storedProgram, this.storedInitialState, this.storedLoadContext);
+    this.doLoad(
+      this.storedProgram,
+      this.storedInitialState,
+      this.storedLoadContext,
+    );
   }
 
   step(n: number): { finished: boolean } {

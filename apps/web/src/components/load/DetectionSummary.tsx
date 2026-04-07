@@ -1,7 +1,7 @@
 import { Badge } from "@fluffylabs/shared-ui";
-import type { ProgramEnvelope } from "@pvmdbg/types";
 import type { DetectedFormat } from "@pvmdbg/content";
-import { formatLabel, formatBadgeIntent, formatByteCount } from "./format";
+import type { ProgramEnvelope } from "@pvmdbg/types";
+import { formatBadgeIntent, formatByteCount, formatLabel } from "./format";
 
 interface DetectionSummaryProps {
   envelope: ProgramEnvelope;
@@ -9,13 +9,22 @@ interface DetectionSummaryProps {
   rawByteCount: number;
 }
 
-export function DetectionSummary({ envelope, detectedFormat, rawByteCount }: DetectionSummaryProps) {
+export function DetectionSummary({
+  envelope,
+  detectedFormat,
+  rawByteCount,
+}: DetectionSummaryProps) {
   const kind = detectedFormat.kind;
 
   return (
-    <div data-testid="detection-summary" className="rounded-lg border border-border p-4 bg-card">
+    <div
+      data-testid="detection-summary"
+      className="rounded-lg border border-border p-4 bg-card"
+    >
       <div className="flex items-center gap-2 mb-3">
-        <h3 className="text-sm font-semibold text-foreground">Detection Summary</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          Detection Summary
+        </h3>
         <Badge
           intent={formatBadgeIntent(kind)}
           variant="outline"
@@ -27,11 +36,19 @@ export function DetectionSummary({ envelope, detectedFormat, rawByteCount }: Det
       </div>
 
       {kind === "jam_spi" || kind === "jam_spi_with_metadata" ? (
-        <SpiSummary envelope={envelope} detectedFormat={detectedFormat} rawByteCount={rawByteCount} />
+        <SpiSummary
+          envelope={envelope}
+          detectedFormat={detectedFormat}
+          rawByteCount={rawByteCount}
+        />
       ) : kind === "trace_file" ? (
         <TraceSummary envelope={envelope} rawByteCount={rawByteCount} />
       ) : kind === "json_test_vector" ? (
-        <JsonVectorSummary envelope={envelope} detectedFormat={detectedFormat} rawByteCount={rawByteCount} />
+        <JsonVectorSummary
+          envelope={envelope}
+          detectedFormat={detectedFormat}
+          rawByteCount={rawByteCount}
+        />
       ) : (
         <GenericSummary envelope={envelope} rawByteCount={rawByteCount} />
       )}
@@ -53,16 +70,36 @@ function SpiSummary({
     ? tryDecodeUtf8(envelope.metadata)
     : null;
 
-  const readablePages = envelope.initialState.pageMap.filter((p) => !p.isWritable).length;
-  const writablePages = envelope.initialState.pageMap.filter((p) => p.isWritable).length;
+  const readablePages = envelope.initialState.pageMap.filter(
+    (p) => !p.isWritable,
+  ).length;
+  const writablePages = envelope.initialState.pageMap.filter(
+    (p) => p.isWritable,
+  ).length;
 
   return (
-    <div data-testid="detection-summary-spi" className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+    <div
+      data-testid="detection-summary-spi"
+      className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs"
+    >
       {hasMetadata && metadataText && (
-        <SummaryRow label="Metadata" value={metadataText} span data-testid="summary-metadata" />
+        <SummaryRow
+          label="Metadata"
+          value={metadataText}
+          span
+          data-testid="summary-metadata"
+        />
       )}
-      <SummaryRow label="Binary size" value={formatByteCount(rawByteCount)} data-testid="summary-binary-size" />
-      <SummaryRow label="Code size" value={formatByteCount(envelope.programBytes.length)} data-testid="summary-code-size" />
+      <SummaryRow
+        label="Binary size"
+        value={formatByteCount(rawByteCount)}
+        data-testid="summary-binary-size"
+      />
+      <SummaryRow
+        label="Code size"
+        value={formatByteCount(envelope.programBytes.length)}
+        data-testid="summary-code-size"
+      />
       {envelope.jumpTableEntryCount != null && (
         <SummaryRow
           label="Jump table"
@@ -75,8 +112,16 @@ function SpiSummary({
         value={`${readablePages} readable / ${writablePages} writable pages`}
         data-testid="summary-memory"
       />
-      <SummaryRow label="Initial PC" value={`0x${envelope.initialState.pc.toString(16)}`} data-testid="summary-pc" />
-      <SummaryRow label="Initial gas" value={envelope.initialState.gas.toLocaleString()} data-testid="summary-gas" />
+      <SummaryRow
+        label="Initial PC"
+        value={`0x${envelope.initialState.pc.toString(16)}`}
+        data-testid="summary-pc"
+      />
+      <SummaryRow
+        label="Initial gas"
+        value={envelope.initialState.gas.toLocaleString()}
+        data-testid="summary-gas"
+      />
       <RegisterPreview registers={envelope.initialState.registers} />
     </div>
   );
@@ -92,12 +137,35 @@ function TraceSummary({
   const entryCount = envelope.trace?.entries.length ?? 0;
 
   return (
-    <div data-testid="detection-summary-trace" className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-      <SummaryRow label="Host-call entries" value={String(entryCount)} data-testid="summary-trace-entries" />
-      <SummaryRow label="Program kind" value={envelope.programKind} data-testid="summary-program-kind" />
-      <SummaryRow label="Code size" value={formatByteCount(envelope.programBytes.length)} data-testid="summary-code-size" />
-      <SummaryRow label="Initial PC" value={`0x${envelope.initialState.pc.toString(16)}`} data-testid="summary-pc" />
-      <SummaryRow label="Initial gas" value={envelope.initialState.gas.toLocaleString()} data-testid="summary-gas" />
+    <div
+      data-testid="detection-summary-trace"
+      className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs"
+    >
+      <SummaryRow
+        label="Host-call entries"
+        value={String(entryCount)}
+        data-testid="summary-trace-entries"
+      />
+      <SummaryRow
+        label="Program kind"
+        value={envelope.programKind}
+        data-testid="summary-program-kind"
+      />
+      <SummaryRow
+        label="Code size"
+        value={formatByteCount(envelope.programBytes.length)}
+        data-testid="summary-code-size"
+      />
+      <SummaryRow
+        label="Initial PC"
+        value={`0x${envelope.initialState.pc.toString(16)}`}
+        data-testid="summary-pc"
+      />
+      <SummaryRow
+        label="Initial gas"
+        value={envelope.initialState.gas.toLocaleString()}
+        data-testid="summary-gas"
+      />
       <RegisterPreview registers={envelope.initialState.registers} />
     </div>
   );
@@ -113,23 +181,53 @@ function JsonVectorSummary({
   rawByteCount: number;
 }) {
   const testName =
-    detectedFormat.kind === "json_test_vector" ? detectedFormat.data.name : undefined;
-  const nonZeroRegs = envelope.initialState.registers.filter((r) => r !== 0n).length;
+    detectedFormat.kind === "json_test_vector"
+      ? detectedFormat.data.name
+      : undefined;
+  const nonZeroRegs = envelope.initialState.registers.filter(
+    (r) => r !== 0n,
+  ).length;
   const expectedStatus = envelope.expectedState?.status;
 
   return (
-    <div data-testid="detection-summary-json" className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-      {testName && <SummaryRow label="Test name" value={testName} span data-testid="summary-test-name" />}
-      <SummaryRow label="Program size" value={formatByteCount(rawByteCount)} data-testid="summary-program-size" />
-      <SummaryRow label="Initial PC" value={`0x${envelope.initialState.pc.toString(16)}`} data-testid="summary-pc" />
-      <SummaryRow label="Initial gas" value={envelope.initialState.gas.toLocaleString()} data-testid="summary-gas" />
+    <div
+      data-testid="detection-summary-json"
+      className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs"
+    >
+      {testName && (
+        <SummaryRow
+          label="Test name"
+          value={testName}
+          span
+          data-testid="summary-test-name"
+        />
+      )}
+      <SummaryRow
+        label="Program size"
+        value={formatByteCount(rawByteCount)}
+        data-testid="summary-program-size"
+      />
+      <SummaryRow
+        label="Initial PC"
+        value={`0x${envelope.initialState.pc.toString(16)}`}
+        data-testid="summary-pc"
+      />
+      <SummaryRow
+        label="Initial gas"
+        value={envelope.initialState.gas.toLocaleString()}
+        data-testid="summary-gas"
+      />
       <SummaryRow
         label="Registers"
         value={`${envelope.initialState.registers.length} total, ${nonZeroRegs} non-zero`}
         data-testid="summary-registers"
       />
       {expectedStatus && (
-        <SummaryRow label="Expected status" value={expectedStatus} data-testid="summary-expected-status" />
+        <SummaryRow
+          label="Expected status"
+          value={expectedStatus}
+          data-testid="summary-expected-status"
+        />
       )}
     </div>
   );
@@ -143,10 +241,25 @@ function GenericSummary({
   rawByteCount: number;
 }) {
   return (
-    <div data-testid="detection-summary-generic" className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-      <SummaryRow label="Program size" value={formatByteCount(rawByteCount)} data-testid="summary-program-size" />
-      <SummaryRow label="Initial PC" value={`0x${envelope.initialState.pc.toString(16)}`} data-testid="summary-pc" />
-      <SummaryRow label="Initial gas" value={envelope.initialState.gas.toLocaleString()} data-testid="summary-gas" />
+    <div
+      data-testid="detection-summary-generic"
+      className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs"
+    >
+      <SummaryRow
+        label="Program size"
+        value={formatByteCount(rawByteCount)}
+        data-testid="summary-program-size"
+      />
+      <SummaryRow
+        label="Initial PC"
+        value={`0x${envelope.initialState.pc.toString(16)}`}
+        data-testid="summary-pc"
+      />
+      <SummaryRow
+        label="Initial gas"
+        value={envelope.initialState.gas.toLocaleString()}
+        data-testid="summary-gas"
+      />
       <RegisterPreview registers={envelope.initialState.registers} />
     </div>
   );

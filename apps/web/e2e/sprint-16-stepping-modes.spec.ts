@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 16 — Stepping Modes (Step Button)", () => {
   /** Load a program and wait for the debugger page to be visible. */
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "step-test",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -16,7 +21,9 @@ test.describe("Sprint 16 — Stepping Modes (Step Button)", () => {
     await expect(page.getByTestId("settings-tab")).toBeVisible();
   }
 
-  test("Step button is hidden in instruction mode (default)", async ({ page }) => {
+  test("Step button is hidden in instruction mode (default)", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Step button is hidden when steppingMode is "instruction" (the default)
@@ -37,7 +44,9 @@ test.describe("Sprint 16 — Stepping Modes (Step Button)", () => {
     await expect(stepBtn).toHaveAttribute("aria-label", "Step 1 instruction");
   });
 
-  test("changing stepping mode in settings updates the Next button label", async ({ page }) => {
+  test("changing stepping mode in settings updates the Next button label", async ({
+    page,
+  }) => {
     await loadProgram(page);
     await openSettings(page);
 
@@ -52,7 +61,9 @@ test.describe("Sprint 16 — Stepping Modes (Step Button)", () => {
 
     // Switch to N-Instructions mode
     await page.getByTestId("stepping-radio-n_instructions").click();
-    await expect(page.getByTestId("stepping-radio-n_instructions")).toBeChecked();
+    await expect(
+      page.getByTestId("stepping-radio-n_instructions"),
+    ).toBeChecked();
 
     // Default n is 10
     await expect(nextBtn).toHaveText(/Next\(10\)/);
@@ -64,7 +75,9 @@ test.describe("Sprint 16 — Stepping Modes (Step Button)", () => {
     await expect(nextBtn).toHaveText(/Next\(25\)/);
   });
 
-  test("Step with N-Instructions mode steps the correct count", async ({ page }) => {
+  test("Step with N-Instructions mode steps the correct count", async ({
+    page,
+  }) => {
     await loadProgram(page);
     await openSettings(page);
 
@@ -94,7 +107,9 @@ test.describe("Sprint 16 — Stepping Modes (Step Button)", () => {
 
     // Run to completion
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({
+      timeout: 10000,
+    });
 
     // Step button should be disabled
     await expect(page.getByTestId("step-button")).toBeDisabled();

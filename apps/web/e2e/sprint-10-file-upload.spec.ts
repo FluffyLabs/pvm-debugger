@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -12,7 +12,9 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(page.getByTestId("load-page")).toBeVisible();
   });
 
-  test("two-column layout renders (upload left, examples right)", async ({ page }) => {
+  test("two-column layout renders (upload left, examples right)", async ({
+    page,
+  }) => {
     await expect(page.getByTestId("load-page-columns")).toBeVisible();
     await expect(page.getByTestId("load-page-left")).toBeVisible();
     await expect(page.getByTestId("load-page-right")).toBeVisible();
@@ -44,7 +46,9 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(formatBadge).toHaveText("Generic");
   });
 
-  test("Continue button appears and enables after file selection", async ({ page }) => {
+  test("Continue button appears and enables after file selection", async ({
+    page,
+  }) => {
     const continueBtn = page.getByTestId("source-step-continue");
 
     // Continue button exists but is disabled before file selection
@@ -59,7 +63,9 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(continueBtn).toBeEnabled();
   });
 
-  test("Continue loads the program and navigates to debugger", async ({ page }) => {
+  test("Continue loads the program and navigates to debugger", async ({
+    page,
+  }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(FIXTURES_DIR, "generic/add.pvm"));
 
@@ -68,7 +74,9 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await continueBtn.click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("clearing file re-disables Continue", async ({ page }) => {
@@ -87,7 +95,9 @@ test.describe("Sprint 10 — File Upload Source", () => {
 
   test("JSON test vector file is detected correctly", async ({ page }) => {
     const fileInput = page.getByTestId("file-upload-input");
-    await fileInput.setInputFiles(path.join(FIXTURES_DIR, "json/inst_add_32.json"));
+    await fileInput.setInputFiles(
+      path.join(FIXTURES_DIR, "json/inst_add_32.json"),
+    );
 
     await expect(page.getByTestId("file-upload-format")).toHaveText("JSON");
   });
@@ -122,7 +132,9 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await card.click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   // --- Edge case tests added during reflection ---
@@ -141,7 +153,9 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(page.getByTestId("file-upload-format")).toHaveText("Trace");
   });
 
-  test("clearing and re-uploading a different file updates the display", async ({ page }) => {
+  test("clearing and re-uploading a different file updates the display", async ({
+    page,
+  }) => {
     const fileInput = page.getByTestId("file-upload-input");
 
     // Upload a generic PVM file first
@@ -154,12 +168,18 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(page.getByTestId("file-upload-dropzone")).toBeVisible();
 
     // Upload a JSON test vector
-    await fileInput.setInputFiles(path.join(FIXTURES_DIR, "json/inst_add_32.json"));
-    await expect(page.getByTestId("file-upload-name")).toHaveText("inst_add_32.json");
+    await fileInput.setInputFiles(
+      path.join(FIXTURES_DIR, "json/inst_add_32.json"),
+    );
+    await expect(page.getByTestId("file-upload-name")).toHaveText(
+      "inst_add_32.json",
+    );
     await expect(page.getByTestId("file-upload-format")).toHaveText("JSON");
   });
 
-  test("uploading a JAM SPI file and clicking Continue navigates to debugger", async ({ page }) => {
+  test("uploading a JAM SPI file and clicking Continue navigates to debugger", async ({
+    page,
+  }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(FIXTURES_DIR, "add.jam"));
 
@@ -167,9 +187,13 @@ test.describe("Sprint 10 — File Upload Source", () => {
     await expect(continueBtn).toBeEnabled();
     await continueBtn.click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
 
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 });

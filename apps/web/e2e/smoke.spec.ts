@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test("redirects / to /load and shows header", async ({ page }) => {
   await page.goto("/");

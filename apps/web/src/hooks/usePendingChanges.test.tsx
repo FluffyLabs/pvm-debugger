@@ -1,14 +1,24 @@
-import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import type {
+  HostCallInfo,
+  HostCallResumeProposal,
+  MachineStateSnapshot,
+} from "@pvmdbg/types";
+import { act, renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { usePendingChanges } from "./usePendingChanges";
-import type { HostCallInfo, HostCallResumeProposal } from "@pvmdbg/types";
-import type { MachineStateSnapshot } from "@pvmdbg/types";
 
 function makeSnapshot(): MachineStateSnapshot {
-  return { pc: 0, gas: 1_000_000n, status: "host", registers: Array(13).fill(0n) };
+  return {
+    pc: 0,
+    gas: 1_000_000n,
+    status: "host",
+    registers: Array(13).fill(0n),
+  };
 }
 
-function makeHostCallInfo(overrides?: { resumeProposal?: HostCallResumeProposal }): HostCallInfo {
+function makeHostCallInfo(overrides?: {
+  resumeProposal?: HostCallResumeProposal;
+}): HostCallInfo {
   return {
     pvmId: "pvm-a",
     hostCallIndex: 3,
@@ -18,7 +28,9 @@ function makeHostCallInfo(overrides?: { resumeProposal?: HostCallResumeProposal 
   };
 }
 
-function makeProposal(overrides?: Partial<HostCallResumeProposal>): HostCallResumeProposal {
+function makeProposal(
+  overrides?: Partial<HostCallResumeProposal>,
+): HostCallResumeProposal {
   return {
     registerWrites: new Map([[7, 42n]]),
     memoryWrites: [{ address: 0x100, data: new Uint8Array([1, 2, 3]) }],
@@ -31,9 +43,7 @@ function makeProposal(overrides?: Partial<HostCallResumeProposal>): HostCallResu
 
 describe("usePendingChanges", () => {
   it("returns null pending when no host call is active", () => {
-    const { result } = renderHook(() =>
-      usePendingChanges(new Map(), null),
-    );
+    const { result } = renderHook(() => usePendingChanges(new Map(), null));
     expect(result.current.pending).toBeNull();
     expect(result.current.getEffects()).toBeNull();
   });
@@ -43,9 +53,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: proposal });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     expect(result.current.pending).not.toBeNull();
     expect(result.current.pending!.registerWrites.get(7)).toBe(42n);
@@ -57,9 +65,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo();
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     expect(result.current.pending).not.toBeNull();
     expect(result.current.pending!.registerWrites.size).toBe(0);
@@ -71,9 +77,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     act(() => result.current.setRegister(3, 99n));
 
@@ -86,9 +90,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     act(() => result.current.setRegister(7, 999n));
 
@@ -99,9 +101,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     act(() => result.current.setGas(123_456n));
 
@@ -112,9 +112,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     act(() => result.current.writeMemory(0x200, new Uint8Array([0xff])));
 
@@ -126,23 +124,21 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     act(() => result.current.writeMemory(0x100, new Uint8Array([0xaa, 0xbb])));
 
     expect(result.current.pending!.memoryWrites).toHaveLength(1);
-    expect(result.current.pending!.memoryWrites[0].data).toEqual(new Uint8Array([0xaa, 0xbb]));
+    expect(result.current.pending!.memoryWrites[0].data).toEqual(
+      new Uint8Array([0xaa, 0xbb]),
+    );
   });
 
   it("getEffects returns current state", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     act(() => result.current.setRegister(3, 77n));
 
@@ -157,9 +153,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     expect(result.current.pending).not.toBeNull();
 
@@ -170,9 +164,7 @@ describe("usePendingChanges", () => {
   });
 
   it("setters are no-ops when pending is null", () => {
-    const { result } = renderHook(() =>
-      usePendingChanges(new Map(), null),
-    );
+    const { result } = renderHook(() => usePendingChanges(new Map(), null));
 
     // Should not throw
     act(() => {
@@ -209,9 +201,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     expect(result.current.pending!.memoryWrites).toHaveLength(1);
     expect(result.current.pending!.memoryWrites[0].address).toBe(0x100);
@@ -225,9 +215,7 @@ describe("usePendingChanges", () => {
     const info = makeHostCallInfo({ resumeProposal: makeProposal() });
     const hcMap = new Map([["pvm-a", info]]);
 
-    const { result } = renderHook(() =>
-      usePendingChanges(hcMap, "pvm-a"),
-    );
+    const { result } = renderHook(() => usePendingChanges(hcMap, "pvm-a"));
 
     act(() => result.current.removeMemoryWrite(0x999));
 
@@ -235,9 +223,7 @@ describe("usePendingChanges", () => {
   });
 
   it("removeMemoryWrite is no-op when pending is null", () => {
-    const { result } = renderHook(() =>
-      usePendingChanges(new Map(), null),
-    );
+    const { result } = renderHook(() => usePendingChanges(new Map(), null));
 
     // Should not throw
     act(() => result.current.removeMemoryWrite(0x100));

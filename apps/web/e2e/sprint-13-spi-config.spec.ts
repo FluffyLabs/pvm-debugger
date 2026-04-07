@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import * as path from "path";
 import * as url from "url";
 
@@ -15,7 +15,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await expect(page.getByTestId("load-page")).toBeVisible();
   });
 
-  test("SPI entrypoint config renders for JAM SPI examples", async ({ page }) => {
+  test("SPI entrypoint config renders for JAM SPI examples", async ({
+    page,
+  }) => {
     // Upload a JAM SPI file
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
@@ -23,7 +25,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await page.getByTestId("source-step-continue").click();
 
     // Step 2 should render with SPI config
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible();
     await expect(page.getByTestId("spi-entrypoint-options")).toBeVisible();
     await expect(page.getByTestId("spi-raw-hex")).toBeVisible();
@@ -34,7 +38,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Click Refine
     await page.getByTestId("spi-entrypoint-refine").click();
@@ -60,7 +66,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Default is Accumulate — change a field value
     await page.getByTestId("spi-field-slot").fill("100");
@@ -74,7 +82,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await page.getByTestId("spi-raw-mode-switch").click();
 
     // The hex should be preserved
-    const rawHexAfterSwitch = await page.getByTestId("spi-raw-hex").inputValue();
+    const rawHexAfterSwitch = await page
+      .getByTestId("spi-raw-hex")
+      .inputValue();
     expect(rawHexAfterSwitch).toBe(rawHex);
 
     // Switch back to builder mode
@@ -88,7 +98,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
   test("example entrypoints prefill the builder", async ({ page }) => {
     // Click an SPI example that has entrypoint preset (e.g., "add-jam" from examples.json)
     // Find an example card in the JAM SPI category
-    const spiExample = page.locator('[data-testid^="example-card-"][data-testid$="-jam"]').first();
+    const spiExample = page
+      .locator('[data-testid^="example-card-"][data-testid$="-jam"]')
+      .first();
     const exists = await spiExample.isVisible().catch(() => false);
 
     if (!exists) {
@@ -101,7 +113,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
       await spiExample.click();
     }
 
-    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({
+      timeout: 15000,
+    });
 
     // When loaded from an example with accumulate entrypoint,
     // the Accumulate button should be selected and fields should be prefilled
@@ -113,34 +127,48 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     }
   });
 
-  test("trace sources skip config step and go directly to debugger", async ({ page }) => {
+  test("trace sources skip config step and go directly to debugger", async ({
+    page,
+  }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "trace-001.log"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
-  test("generic PVM skips config step and goes directly to debugger", async ({ page }) => {
+  test("generic PVM skips config step and goes directly to debugger", async ({
+    page,
+  }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "generic/add.pvm"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
-  test("JSON test vector skips config step and goes directly to debugger", async ({ page }) => {
+  test("JSON test vector skips config step and goes directly to debugger", async ({
+    page,
+  }) => {
     const fileInput = page.getByTestId("file-upload-input");
-    await fileInput.setInputFiles(path.join(fixturesDir, "json/inst_add_32.json"));
+    await fileInput.setInputFiles(
+      path.join(fixturesDir, "json/inst_add_32.json"),
+    );
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("invalid input disables Load Program", async ({ page }) => {
@@ -148,7 +176,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Switch to RAW mode and enter invalid hex
     await page.getByTestId("spi-raw-mode-switch").click();
@@ -161,12 +191,16 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await expect(page.getByTestId("config-step-load")).toBeDisabled();
   });
 
-  test("switching entrypoint types preserves field values", async ({ page }) => {
+  test("switching entrypoint types preserves field values", async ({
+    page,
+  }) => {
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Set a custom slot value for Accumulate
     await page.getByTestId("spi-field-slot").fill("777");
@@ -194,13 +228,17 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Change slot to a distinctive value
     await page.getByTestId("spi-field-slot").fill("999");
 
     // Verify localStorage has the value (stored per-entrypoint in allFields)
-    const stored = await page.evaluate(() => localStorage.getItem("pvmdbg:spi-config"));
+    const stored = await page.evaluate(() =>
+      localStorage.getItem("pvmdbg:spi-config"),
+    );
     expect(stored).toBeTruthy();
     const parsed = JSON.parse(stored!);
     expect(parsed.allFields.accumulate.slot).toBe("999");
@@ -214,7 +252,9 @@ test.describe("Sprint 13 — SPI Entrypoint Configuration", () => {
     await fileInput2.setInputFiles(path.join(fixturesDir, "add.jam"));
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("spi-entrypoint-config")).toBeVisible({
+      timeout: 15000,
+    });
 
     // The persisted slot value should be restored
     const slotValue = await page.getByTestId("spi-field-slot").inputValue();

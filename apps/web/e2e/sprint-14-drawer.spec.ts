@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 14 — Bottom Drawer Shell", () => {
   /** Load a program and wait for the debugger page to be visible. */
@@ -7,7 +7,9 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("drawer tab bar is visible on the debugger page", async ({ page }) => {
@@ -26,9 +28,15 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     await expect(page.getByTestId("drawer-tab-logs")).toBeVisible();
 
     // Verify text labels
-    await expect(page.getByTestId("drawer-tab-settings")).toHaveText("Settings");
-    await expect(page.getByTestId("drawer-tab-ecalli_trace")).toHaveText("Ecalli Trace");
-    await expect(page.getByTestId("drawer-tab-host_call")).toHaveText("Host Call");
+    await expect(page.getByTestId("drawer-tab-settings")).toHaveText(
+      "Settings",
+    );
+    await expect(page.getByTestId("drawer-tab-ecalli_trace")).toHaveText(
+      "Ecalli Trace",
+    );
+    await expect(page.getByTestId("drawer-tab-host_call")).toHaveText(
+      "Host Call",
+    );
     await expect(page.getByTestId("drawer-tab-logs")).toHaveText("Logs");
   });
 
@@ -45,7 +53,9 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
 
     // Content should now be visible
     await expect(page.getByTestId("drawer-content")).toBeVisible();
-    await expect(page.getByTestId("drawer-content")).toContainText("PVM Selection");
+    await expect(page.getByTestId("drawer-content")).toContainText(
+      "PVM Selection",
+    );
 
     // Drawer should be taller than just the tab bar
     const box = await drawer.boundingBox();
@@ -70,11 +80,15 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
 
     // Open Settings
     await page.getByTestId("drawer-tab-settings").click();
-    await expect(page.getByTestId("drawer-content")).toContainText("PVM Selection");
+    await expect(page.getByTestId("drawer-content")).toContainText(
+      "PVM Selection",
+    );
 
     // Switch to Host Call
     await page.getByTestId("drawer-tab-host_call").click();
-    await expect(page.getByTestId("drawer-content")).toContainText("No host call is currently active");
+    await expect(page.getByTestId("drawer-content")).toContainText(
+      "No host call is currently active",
+    );
   });
 
   test("dragging the resize handle changes drawer height", async ({ page }) => {
@@ -150,6 +164,8 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     expect(drawerBox).toBeTruthy();
 
     // Drawer top should be at or below panels bottom
-    expect(drawerBox!.y).toBeGreaterThanOrEqual(panelsBox!.y + panelsBox!.height - 2);
+    expect(drawerBox!.y).toBeGreaterThanOrEqual(
+      panelsBox!.y + panelsBox!.height - 2,
+    );
   });
 });

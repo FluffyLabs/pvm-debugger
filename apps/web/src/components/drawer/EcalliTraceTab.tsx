@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef, useMemo } from "react";
-import type { EcalliTrace, HostCallInfo } from "@pvmdbg/types";
-import { serializeTrace } from "@pvmdbg/trace";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import { serializeTrace } from "@pvmdbg/trace";
+import type { EcalliTrace, HostCallInfo } from "@pvmdbg/types";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { TraceColumn } from "./TraceColumn";
 import { TraceRawView } from "./TraceRawView";
 import { mismatchedEntryIndices } from "./trace-display";
@@ -17,7 +17,12 @@ interface EcalliTraceTabProps {
 
 type ViewMode = "formatted" | "raw";
 
-export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion, activeHostCall }: EcalliTraceTabProps) {
+export function EcalliTraceTab({
+  orchestrator,
+  selectedPvmId,
+  snapshotVersion,
+  activeHostCall,
+}: EcalliTraceTabProps) {
   const [linkScroll, setLinkScroll] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("formatted");
 
@@ -94,11 +99,17 @@ export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion, a
   }, [recorded]);
 
   return (
-    <div data-testid="ecalli-trace-tab" className="flex flex-col h-full min-h-0">
+    <div
+      data-testid="ecalli-trace-tab"
+      className="flex flex-col h-full min-h-0"
+    >
       {/* Toolbar */}
       <div className="flex items-center gap-3 px-2 py-1 border-b border-border">
         {/* Formatted / Raw toggle */}
-        <div className="flex items-center gap-1 text-xs" data-testid="view-mode-toggle">
+        <div
+          className="flex items-center gap-1 text-xs"
+          data-testid="view-mode-toggle"
+        >
           <button
             data-testid="view-mode-formatted"
             onClick={() => setViewMode("formatted")}
@@ -171,7 +182,11 @@ export function EcalliTraceTab({ orchestrator, selectedPvmId, snapshotVersion, a
           />
         </div>
       ) : (
-        <TraceRawView recorded={recorded} reference={reference} linkScroll={linkScroll} />
+        <TraceRawView
+          recorded={recorded}
+          reference={reference}
+          linkScroll={linkScroll}
+        />
       )}
     </div>
   );

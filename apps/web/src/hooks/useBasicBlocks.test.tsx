@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { useBasicBlocks } from "./useBasicBlocks";
 import type { DecodedInstruction } from "./useDisassembly";
 
@@ -49,11 +49,7 @@ describe("useBasicBlocks", () => {
   });
 
   it("produces header + instruction rows when all blocks are expanded", () => {
-    const instructions = [
-      makeInstr(0, 0),
-      makeInstr(2, 0),
-      makeInstr(5, 1),
-    ];
+    const instructions = [makeInstr(0, 0), makeInstr(2, 0), makeInstr(5, 1)];
     const { result } = renderHook(() => useBasicBlocks(instructions, 0));
 
     // 2 block headers + 3 instruction rows = 5 total rows
@@ -66,11 +62,7 @@ describe("useBasicBlocks", () => {
   });
 
   it("toggleBlock collapses a block and hides its instruction rows", () => {
-    const instructions = [
-      makeInstr(0, 0),
-      makeInstr(2, 0),
-      makeInstr(5, 1),
-    ];
+    const instructions = [makeInstr(0, 0), makeInstr(2, 0), makeInstr(5, 1)];
     // currentPc is in block 0, so collapsing block 1 should work
     const { result } = renderHook(() => useBasicBlocks(instructions, 0));
 
@@ -92,11 +84,7 @@ describe("useBasicBlocks", () => {
   });
 
   it("toggleBlock expands a previously collapsed block", () => {
-    const instructions = [
-      makeInstr(0, 0),
-      makeInstr(5, 1),
-      makeInstr(8, 1),
-    ];
+    const instructions = [makeInstr(0, 0), makeInstr(5, 1), makeInstr(8, 1)];
     const { result } = renderHook(() => useBasicBlocks(instructions, 0));
 
     // Collapse block 1
@@ -114,11 +102,7 @@ describe("useBasicBlocks", () => {
   });
 
   it("auto-expands a collapsed block that contains the current PC", () => {
-    const instructions = [
-      makeInstr(0, 0),
-      makeInstr(5, 1),
-      makeInstr(8, 1),
-    ];
+    const instructions = [makeInstr(0, 0), makeInstr(5, 1), makeInstr(8, 1)];
     // Start with currentPc=0 (block 0), collapse block 1
     const { result, rerender } = renderHook(
       ({ currentPc }) => useBasicBlocks(instructions, currentPc),
@@ -138,11 +122,7 @@ describe("useBasicBlocks", () => {
   });
 
   it("handles a single block correctly", () => {
-    const instructions = [
-      makeInstr(0, 0),
-      makeInstr(3, 0),
-      makeInstr(7, 0),
-    ];
+    const instructions = [makeInstr(0, 0), makeInstr(3, 0), makeInstr(7, 0)];
     const { result } = renderHook(() => useBasicBlocks(instructions, 0));
 
     expect(result.current.blocks).toHaveLength(1);
@@ -150,10 +130,7 @@ describe("useBasicBlocks", () => {
   });
 
   it("collapsing the current-PC block is overridden by auto-expand", () => {
-    const instructions = [
-      makeInstr(0, 0),
-      makeInstr(2, 0),
-    ];
+    const instructions = [makeInstr(0, 0), makeInstr(2, 0)];
     const { result } = renderHook(() => useBasicBlocks(instructions, 0));
 
     // Try to collapse block 0 which contains the current PC

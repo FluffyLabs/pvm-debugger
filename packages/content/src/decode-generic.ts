@@ -1,4 +1,8 @@
-import type { InitialMachineState, ProgramEnvelope, LoadSourceKind } from "@pvmdbg/types";
+import type {
+  InitialMachineState,
+  LoadSourceKind,
+  ProgramEnvelope,
+} from "@pvmdbg/types";
 import { encodePvmBlob } from "@pvmdbg/types";
 import { ProgramDecoder } from "@typeberry/lib/pvm-interpreter";
 
@@ -12,7 +16,9 @@ export function buildGenericInitialState(
   return {
     pc: overrides?.pc ?? 0,
     gas: overrides?.gas ?? DEFAULT_GAS,
-    registers: overrides?.registers ?? Array.from<bigint>({ length: REGISTER_COUNT }).fill(0n),
+    registers:
+      overrides?.registers ??
+      Array.from<bigint>({ length: REGISTER_COUNT }).fill(0n),
     pageMap: overrides?.pageMap ?? [],
     memoryChunks: overrides?.memoryChunks ?? [],
   };

@@ -10,7 +10,10 @@
 import type { PvmLifecycle, PvmStatus } from "@pvmdbg/types";
 
 /** Format a register value as "0x{hex} ({decimal})". Hex is at least 16 digits. */
-export function formatRegister(value: bigint): { hex: string; decimal: string } {
+export function formatRegister(value: bigint): {
+  hex: string;
+  decimal: string;
+} {
   // Mask to unsigned 64-bit range
   const unsigned = BigInt.asUintN(64, value);
   const hex = "0x" + unsigned.toString(16).padStart(16, "0");
@@ -82,7 +85,10 @@ export function formatGasHex(gas: bigint): string {
 }
 
 /** Map PvmLifecycle (+ PvmStatus for terminal states) to a user-facing label. */
-export function lifecycleLabel(lifecycle: PvmLifecycle, status?: PvmStatus): string {
+export function lifecycleLabel(
+  lifecycle: PvmLifecycle,
+  status?: PvmStatus,
+): string {
   switch (lifecycle) {
     case "paused":
       return "OK";

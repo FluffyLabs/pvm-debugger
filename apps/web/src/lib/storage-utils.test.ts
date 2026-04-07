@@ -1,5 +1,9 @@
-import { describe, it, expect } from "vitest";
-import type { HostCallInfo, HostCallResumeProposal, MachineStateSnapshot } from "@pvmdbg/types";
+import type {
+  HostCallInfo,
+  HostCallResumeProposal,
+  MachineStateSnapshot,
+} from "@pvmdbg/types";
+import { describe, expect, it } from "vitest";
 import { deriveKeyHex } from "./storage-utils";
 
 const EMPTY_SNAPSHOT: MachineStateSnapshot = {
@@ -49,7 +53,10 @@ describe("deriveKeyHex", () => {
       resumeProposal: {
         registerWrites: new Map(),
         memoryWrites: [
-          { address: 0x1000, data: new Uint8Array([0xde, 0xad, 0xbe, 0xef, 0xff]) },
+          {
+            address: 0x1000,
+            data: new Uint8Array([0xde, 0xad, 0xbe, 0xef, 0xff]),
+          },
         ],
         traceMatches: true,
         mismatches: [],
@@ -69,9 +76,7 @@ describe("deriveKeyHex", () => {
       currentState: { ...EMPTY_SNAPSHOT, registers: regs },
       resumeProposal: {
         registerWrites: new Map(),
-        memoryWrites: [
-          { address: 0x2000, data: new Uint8Array([0xab, 0xcd]) },
-        ],
+        memoryWrites: [{ address: 0x2000, data: new Uint8Array([0xab, 0xcd]) }],
         traceMatches: true,
         mismatches: [],
       },
@@ -109,9 +114,7 @@ describe("deriveKeyHex", () => {
       currentState: { ...EMPTY_SNAPSHOT, registers: regs },
       resumeProposal: {
         registerWrites: new Map(),
-        memoryWrites: [
-          { address: 0x1000, data: new Uint8Array([0xde, 0xad]) },
-        ],
+        memoryWrites: [{ address: 0x1000, data: new Uint8Array([0xde, 0xad]) }],
         traceMatches: true,
         mismatches: [],
       },

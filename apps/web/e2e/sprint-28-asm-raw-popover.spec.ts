@@ -1,8 +1,15 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-const SPI_EXAMPLES: Record<string, string> = { "add-jam": "wat", "fibonacci-jam": "wat", "as-add": "assemblyscript" };
+const SPI_EXAMPLES: Record<string, string> = {
+  "add-jam": "wat",
+  "fibonacci-jam": "wat",
+  "as-add": "assemblyscript",
+};
 
-async function loadProgram(page: import("@playwright/test").Page, exampleId = "fibonacci") {
+async function loadProgram(
+  page: import("@playwright/test").Page,
+  exampleId = "fibonacci",
+) {
   await page.goto("/#/load");
   const categoryId = SPI_EXAMPLES[exampleId];
   if (categoryId) {
@@ -12,10 +19,14 @@ async function loadProgram(page: import("@playwright/test").Page, exampleId = "f
   await expect(card).toBeVisible();
   await card.click();
   if (categoryId) {
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
   }
-  await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId("debugger-page")).toBeVisible({
+    timeout: 15000,
+  });
 }
 
 test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
@@ -61,7 +72,9 @@ test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
     await page.getByTestId("display-mode-raw").click();
 
     // Mnemonics should no longer be visible
-    const mnemonicsAfter = panel.locator("[data-testid='instruction-mnemonic']");
+    const mnemonicsAfter = panel.locator(
+      "[data-testid='instruction-mnemonic']",
+    );
     expect(await mnemonicsAfter.count()).toBe(0);
 
     // Raw bytes should be visible instead
@@ -82,7 +95,9 @@ test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
 
     // Switch to Raw
     await page.getByTestId("display-mode-raw").click();
-    expect(await panel.locator("[data-testid='instruction-mnemonic']").count()).toBe(0);
+    expect(
+      await panel.locator("[data-testid='instruction-mnemonic']").count(),
+    ).toBe(0);
 
     // Switch back to ASM
     await page.getByTestId("display-mode-asm").click();

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { HexDump } from "./HexDump";
 
 interface MemoryRangeProps {
@@ -53,7 +53,9 @@ export function MemoryRange({
       >
         <span className="text-muted-foreground">{expanded ? "▼" : "▶"}</span>
         <span data-testid={`memory-range-label-${address}`}>{label}</span>
-        <span className="text-muted-foreground text-[10px]">0x{address.toString(16).toUpperCase()}</span>
+        <span className="text-muted-foreground text-[10px]">
+          0x{address.toString(16).toUpperCase()}
+        </span>
         {!isWritable && (
           <span className="ml-1 text-muted-foreground text-[10px]">(RO)</span>
         )}

@@ -1,5 +1,5 @@
-import { useRef, useCallback, type UIEvent } from "react";
 import type { EcalliTrace } from "@pvmdbg/types";
+import { type UIEvent, useCallback, useRef } from "react";
 import { TraceEntryRow } from "./TraceEntryRow";
 import { traceToRows } from "./trace-display";
 
@@ -38,7 +38,10 @@ export function TraceColumn({
   const rows = trace ? traceToRows(trace) : [];
 
   return (
-    <div className="flex-1 min-w-0 flex flex-col" data-testid={`trace-column-${title.toLowerCase().replace(/\s+/g, "-")}`}>
+    <div
+      className="flex-1 min-w-0 flex flex-col"
+      data-testid={`trace-column-${title.toLowerCase().replace(/\s+/g, "-")}`}
+    >
       <div className="px-2 py-1 text-xs font-semibold text-foreground border-b border-border bg-muted/30">
         {title}
       </div>
@@ -63,7 +66,9 @@ export function TraceColumn({
                 row.kind === "entry" && mismatchedIndices.has(row.index)
               }
               isActive={
-                row.kind === "entry" && activeEntryIndex !== undefined && row.index === activeEntryIndex
+                row.kind === "entry" &&
+                activeEntryIndex !== undefined &&
+                row.index === activeEntryIndex
               }
             />
           ))

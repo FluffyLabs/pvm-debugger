@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 22 — Ecalli Trace Raw Mode + Download", () => {
   /** Load a trace-backed program and wait for the debugger page. */
-  async function loadTraceProgram(page: import("@playwright/test").Page, exampleId = "io-trace") {
+  async function loadTraceProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "io-trace",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the Ecalli Trace tab. */
@@ -24,7 +29,9 @@ test.describe("Sprint 22 — Ecalli Trace Raw Mode + Download", () => {
     await page.getByTestId("drawer-tab-settings").click();
     await expect(page.getByTestId("settings-tab")).toBeVisible();
     await page.getByTestId(`auto-continue-radio-${policy}`).click();
-    await expect(page.getByTestId(`auto-continue-radio-${policy}`)).toBeChecked();
+    await expect(
+      page.getByTestId(`auto-continue-radio-${policy}`),
+    ).toBeChecked();
   }
 
   test("raw mode toggle switches to textarea view", async ({ page }) => {
@@ -32,7 +39,9 @@ test.describe("Sprint 22 — Ecalli Trace Raw Mode + Download", () => {
     await openTraceTab(page);
 
     // Initially in formatted mode — trace columns visible
-    await expect(page.getByTestId("trace-column-execution-trace")).toBeVisible();
+    await expect(
+      page.getByTestId("trace-column-execution-trace"),
+    ).toBeVisible();
 
     // Click Raw toggle
     await page.getByTestId("view-mode-raw").click();
@@ -43,7 +52,9 @@ test.describe("Sprint 22 — Ecalli Trace Raw Mode + Download", () => {
     await expect(page.getByTestId("trace-raw-reference")).toBeVisible();
 
     // Formatted columns should not be visible
-    await expect(page.getByTestId("trace-column-execution-trace")).not.toBeVisible();
+    await expect(
+      page.getByTestId("trace-column-execution-trace"),
+    ).not.toBeVisible();
   });
 
   test("raw mode shows serialized trace text", async ({ page }) => {
@@ -70,7 +81,9 @@ test.describe("Sprint 22 — Ecalli Trace Raw Mode + Download", () => {
     expect(refText).toContain("program 0x");
   });
 
-  test("switching back to formatted mode preserves content", async ({ page }) => {
+  test("switching back to formatted mode preserves content", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAutoContinuePolicy(page, "always_continue");
 
@@ -87,17 +100,23 @@ test.describe("Sprint 22 — Ecalli Trace Raw Mode + Download", () => {
 
     // Count entries in formatted mode
     const execColumn = page.getByTestId("trace-column-execution-trace");
-    const initialBadgeCount = await execColumn.getByTestId("trace-entry-badge").count();
+    const initialBadgeCount = await execColumn
+      .getByTestId("trace-entry-badge")
+      .count();
 
     // Switch to raw, then back to formatted
     await page.getByTestId("view-mode-raw").click();
     await expect(page.getByTestId("trace-raw-view")).toBeVisible();
 
     await page.getByTestId("view-mode-formatted").click();
-    await expect(page.getByTestId("trace-column-execution-trace")).toBeVisible();
+    await expect(
+      page.getByTestId("trace-column-execution-trace"),
+    ).toBeVisible();
 
     // Entry count should be the same
-    const afterBadgeCount = await execColumn.getByTestId("trace-entry-badge").count();
+    const afterBadgeCount = await execColumn
+      .getByTestId("trace-entry-badge")
+      .count();
     expect(afterBadgeCount).toBe(initialBadgeCount);
   });
 

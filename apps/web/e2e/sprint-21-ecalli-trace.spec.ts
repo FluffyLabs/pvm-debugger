@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 21 — Ecalli Trace Tab", () => {
   /** Load a trace-backed program and wait for the debugger page. */
-  async function loadTraceProgram(page: import("@playwright/test").Page, exampleId = "io-trace") {
+  async function loadTraceProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "io-trace",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Load a simple (non-trace) program. */
@@ -16,7 +21,9 @@ test.describe("Sprint 21 — Ecalli Trace Tab", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the Ecalli Trace tab. */
@@ -33,23 +40,33 @@ test.describe("Sprint 21 — Ecalli Trace Tab", () => {
     await page.getByTestId("drawer-tab-settings").click();
     await expect(page.getByTestId("settings-tab")).toBeVisible();
     await page.getByTestId(`auto-continue-radio-${policy}`).click();
-    await expect(page.getByTestId(`auto-continue-radio-${policy}`)).toBeChecked();
+    await expect(
+      page.getByTestId(`auto-continue-radio-${policy}`),
+    ).toBeChecked();
   }
 
   function pvmStatus(page: import("@playwright/test").Page) {
     return page.getByTestId("pvm-status-typeberry");
   }
 
-  test("the tab opens and shows execution and reference columns", async ({ page }) => {
+  test("the tab opens and shows execution and reference columns", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await openTraceTab(page);
 
     // Both columns should be visible
-    await expect(page.getByTestId("trace-column-execution-trace")).toBeVisible();
-    await expect(page.getByTestId("trace-column-reference-trace")).toBeVisible();
+    await expect(
+      page.getByTestId("trace-column-execution-trace"),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("trace-column-reference-trace"),
+    ).toBeVisible();
   });
 
-  test("a recorded log entry appears with readable text and a log badge", async ({ page }) => {
+  test("a recorded log entry appears with readable text and a log badge", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAutoContinuePolicy(page, "always_continue");
 
@@ -90,7 +107,9 @@ test.describe("Sprint 21 — Ecalli Trace Tab", () => {
     }
   });
 
-  test("mismatches are highlighted after execution diverges from reference", async ({ page }) => {
+  test("mismatches are highlighted after execution diverges from reference", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAutoContinuePolicy(page, "always_continue");
 
@@ -137,8 +156,12 @@ test.describe("Sprint 21 — Ecalli Trace Tab", () => {
     await expect(toggle).toBeChecked();
 
     // Get both column scroll containers (the scrollable divs inside columns)
-    const leftColumn = page.getByTestId("trace-column-execution-trace").locator(".overflow-y-auto");
-    const rightColumn = page.getByTestId("trace-column-reference-trace").locator(".overflow-y-auto");
+    const leftColumn = page
+      .getByTestId("trace-column-execution-trace")
+      .locator(".overflow-y-auto");
+    const rightColumn = page
+      .getByTestId("trace-column-reference-trace")
+      .locator(".overflow-y-auto");
 
     // Scroll the left column down
     await leftColumn.evaluate((el) => {
@@ -165,6 +188,8 @@ test.describe("Sprint 21 — Ecalli Trace Tab", () => {
     // Reference column should show empty state
     const refColumn = page.getByTestId("trace-column-reference-trace");
     await expect(refColumn.getByTestId("trace-empty-message")).toBeVisible();
-    await expect(refColumn.getByTestId("trace-empty-message")).toContainText("No reference trace loaded");
+    await expect(refColumn.getByTestId("trace-empty-message")).toContainText(
+      "No reference trace loaded",
+    );
   });
 });

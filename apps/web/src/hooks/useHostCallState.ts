@@ -1,5 +1,9 @@
+import type {
+  HostCallInfo,
+  MachineStateSnapshot,
+  PvmLifecycle,
+} from "@pvmdbg/types";
 import { useEffect, useMemo, useRef } from "react";
-import type { HostCallInfo, MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import { useDrawer } from "../components/debugger/DrawerContext";
 
 export interface HostCallState {
@@ -15,7 +19,10 @@ export interface HostCallState {
 export function useHostCallState(
   hostCallInfo: Map<string, HostCallInfo>,
   selectedPvmId: string | null,
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>,
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >,
 ): HostCallState {
   const { openToTab } = useDrawer();
 

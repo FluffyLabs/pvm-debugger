@@ -38,7 +38,9 @@ export function serializeTrace(trace: EcalliTrace): string {
 
   for (const mw of prelude.memoryWrites) {
     const len = mw.dataHex.length / 2;
-    lines.push(`memwrite 0x${mw.address.toString(16).padStart(8, "0")} len=${len} <- 0x${mw.dataHex}`);
+    lines.push(
+      `memwrite 0x${mw.address.toString(16).padStart(8, "0")} len=${len} <- 0x${mw.dataHex}`,
+    );
   }
 
   const startRegs = serializeRegisters(prelude.startRegisters);
@@ -79,9 +81,13 @@ function serializeEntrySubCommands(entry: TraceEntry, lines: string[]): void {
   }
 
   // setreg lines
-  const sortedRegWrites = [...entry.registerWrites.entries()].sort(([a], [b]) => a - b);
+  const sortedRegWrites = [...entry.registerWrites.entries()].sort(
+    ([a], [b]) => a - b,
+  );
   for (const [idx, val] of sortedRegWrites) {
-    lines.push(`setreg r${idx.toString().padStart(2, "0")} <- ${bigintHex(val)}`);
+    lines.push(
+      `setreg r${idx.toString().padStart(2, "0")} <- ${bigintHex(val)}`,
+    );
   }
 
   // setgas

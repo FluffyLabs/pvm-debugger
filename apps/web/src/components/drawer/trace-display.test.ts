@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
-import type { TraceEntry, TraceTermination, EcalliTrace } from "@pvmdbg/types";
+import type { EcalliTrace, TraceEntry, TraceTermination } from "@pvmdbg/types";
+import { describe, expect, it } from "vitest";
 import {
-  traceToRows,
-  mismatchedEntryIndices,
+  decodeLogMessage,
   formatEntryLines,
   formatTerminationLines,
-  decodeLogMessage,
+  mismatchedEntryIndices,
+  traceToRows,
 } from "./trace-display";
 
 function makeEntry(overrides: Partial<TraceEntry> = {}): TraceEntry {
@@ -21,7 +21,10 @@ function makeEntry(overrides: Partial<TraceEntry> = {}): TraceEntry {
   };
 }
 
-function makeTrace(entries: TraceEntry[] = [], termination?: TraceTermination): EcalliTrace {
+function makeTrace(
+  entries: TraceEntry[] = [],
+  termination?: TraceTermination,
+): EcalliTrace {
   return {
     prelude: {
       programHex: "0x00",
@@ -50,14 +53,25 @@ describe("traceToRows", () => {
   });
 
   it("appends termination row at the end", () => {
-    const term: TraceTermination = { kind: "halt", pc: 10, gas: 500n, registers: new Map() };
+    const term: TraceTermination = {
+      kind: "halt",
+      pc: 10,
+      gas: 500n,
+      registers: new Map(),
+    };
     const rows = traceToRows(makeTrace([makeEntry()], term));
     expect(rows).toHaveLength(2);
     expect(rows[1]).toEqual({ kind: "termination", termination: term });
   });
 
   it("returns only termination row when no entries exist", () => {
-    const term: TraceTermination = { kind: "panic", arg: 1, pc: 5, gas: 0n, registers: new Map() };
+    const term: TraceTermination = {
+      kind: "panic",
+      arg: 1,
+      pc: 5,
+      gas: 0n,
+      registers: new Map(),
+    };
     const rows = traceToRows(makeTrace([], term));
     expect(rows).toHaveLength(1);
     expect(rows[0].kind).toBe("termination");
@@ -126,20 +140,36 @@ describe("formatEntryLines", () => {
 
 describe("formatTerminationLines", () => {
   it("formats halt without arg", () => {
-    const term: TraceTermination = { kind: "halt", pc: 10, gas: 0n, registers: new Map() };
+    const term: TraceTermination = {
+      kind: "halt",
+      pc: 10,
+      gas: 0n,
+      registers: new Map(),
+    };
     const lines = formatTerminationLines(term);
     expect(lines[0]).toBe("halt");
     expect(lines[1]).toBe("  pc = 10, gas = 0");
   });
 
   it("formats panic with arg", () => {
-    const term: TraceTermination = { kind: "panic", arg: 1, pc: 5, gas: 100n, registers: new Map() };
+    const term: TraceTermination = {
+      kind: "panic",
+      arg: 1,
+      pc: 5,
+      gas: 100n,
+      registers: new Map(),
+    };
     const lines = formatTerminationLines(term);
     expect(lines[0]).toBe("panic 1");
   });
 
   it("formats oog", () => {
-    const term: TraceTermination = { kind: "oog", pc: 20, gas: 0n, registers: new Map() };
+    const term: TraceTermination = {
+      kind: "oog",
+      pc: 20,
+      gas: 0n,
+      registers: new Map(),
+    };
     const lines = formatTerminationLines(term);
     expect(lines[0]).toBe("oog");
   });
@@ -155,8 +185,8 @@ describe("decodeLogMessage", () => {
     const entry = makeEntry({
       index: 100,
       memoryReads: [
-        { address: 0, length: 2, dataHex: "0102" },        // short, not the message
-        { address: 10, length: 5, dataHex: "776f726c64" },  // "world" — longest
+        { address: 0, length: 2, dataHex: "0102" }, // short, not the message
+        { address: 10, length: 5, dataHex: "776f726c64" }, // "world" — longest
       ],
     });
     expect(decodeLogMessage(entry)).toBe("world");

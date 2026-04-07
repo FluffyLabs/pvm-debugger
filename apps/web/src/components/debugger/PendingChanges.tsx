@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PendingChangesData } from "../../hooks/usePendingChanges";
-import { formatRegister, formatGas, bytesToHex } from "./value-format";
+import { bytesToHex, formatGas, formatRegister } from "./value-format";
 
 interface PendingChangesProps {
   pending: PendingChangesData;
@@ -112,7 +112,9 @@ export function PendingChanges({ pending }: PendingChangesProps) {
 
   if (!hasRegisterWrites && !hasMemoryWrites && !hasGasChange) return null;
 
-  const coalescedWrites = hasMemoryWrites ? coalesceMemoryWrites(pending.memoryWrites) : [];
+  const coalescedWrites = hasMemoryWrites
+    ? coalesceMemoryWrites(pending.memoryWrites)
+    : [];
 
   return (
     <div data-testid="pending-changes" className="shrink-0 bg-amber-500/10">
@@ -122,17 +124,25 @@ export function PendingChanges({ pending }: PendingChangesProps) {
       <div className="overflow-auto max-h-40">
         <div className="px-2 py-1.5 text-xs font-mono space-y-0.5">
           {hasRegisterWrites && (
-            <div data-testid="pending-register-writes" className="space-y-0.5 min-h-[4.5rem]">
+            <div
+              data-testid="pending-register-writes"
+              className="space-y-0.5 min-h-[4.5rem]"
+            >
               {[...pending.registerWrites.entries()].map(([regIdx, val]) => (
                 <div key={regIdx} className="flex items-baseline gap-1">
-                  <span className="text-amber-800 dark:text-amber-300">{"\u03C9"}{regIdx} {"\u2190"} {formatRegister(val).hex}</span>
+                  <span className="text-amber-800 dark:text-amber-300">
+                    {"\u03C9"}
+                    {regIdx} {"\u2190"} {formatRegister(val).hex}
+                  </span>
                 </div>
               ))}
             </div>
           )}
           {hasGasChange && (
             <div data-testid="pending-gas-change">
-              <span className="text-amber-800 dark:text-amber-300">Gas {"\u2190"} {formatGas(pending.gasAfter!)}</span>
+              <span className="text-amber-800 dark:text-amber-300">
+                Gas {"\u2190"} {formatGas(pending.gasAfter!)}
+              </span>
             </div>
           )}
           {coalescedWrites.length > 0 && (
@@ -142,7 +152,9 @@ export function PendingChanges({ pending }: PendingChangesProps) {
                   <span className="text-amber-800 dark:text-amber-300">
                     [0x{range.address.toString(16)}] {"\u2190"} {range.preview}
                   </span>
-                  <span className="text-muted-foreground">({range.totalBytes}B)</span>
+                  <span className="text-muted-foreground">
+                    ({range.totalBytes}B)
+                  </span>
                 </div>
               ))}
             </div>

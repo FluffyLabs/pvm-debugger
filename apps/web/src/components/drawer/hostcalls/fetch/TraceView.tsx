@@ -26,7 +26,11 @@ export function TraceView({ traceData, traceTotalLength }: TraceViewProps) {
         data-testid="trace-hex"
         className="max-h-[200px] overflow-auto rounded border border-border bg-muted/30 px-2 py-1 font-mono text-xs break-all"
       >
-        {traceData.length > 0 ? toHex(traceData) : <span className="text-muted-foreground italic">empty</span>}
+        {traceData.length > 0 ? (
+          toHex(traceData)
+        ) : (
+          <span className="text-muted-foreground italic">empty</span>
+        )}
       </div>
     </div>
   );

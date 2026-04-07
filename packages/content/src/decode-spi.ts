@@ -1,8 +1,8 @@
 import type {
-  ProgramEnvelope,
   LoadSourceKind,
-  PageMapEntry,
   MemoryChunk,
+  PageMapEntry,
+  ProgramEnvelope,
 } from "@pvmdbg/types";
 import { decodeVarU32 } from "@pvmdbg/types";
 import * as pvm from "@typeberry/lib/pvm-interpreter";
@@ -80,11 +80,16 @@ export interface SpiDecodeResult {
 }
 
 /** Strip varU32 metadata prefix and return metadata + SPI payload. */
-export function stripMetadata(blob: Uint8Array): { metadata: Uint8Array; spiPayload: Uint8Array } {
+export function stripMetadata(blob: Uint8Array): {
+  metadata: Uint8Array;
+  spiPayload: Uint8Array;
+} {
   const { value: metaLen, bytesRead } = decodeVarU32(blob, 0);
   const totalHeaderLen = bytesRead + metaLen;
   if (totalHeaderLen > blob.length) {
-    throw new Error(`Metadata length ${metaLen} exceeds blob size ${blob.length}`);
+    throw new Error(
+      `Metadata length ${metaLen} exceeds blob size ${blob.length}`,
+    );
   }
   return {
     metadata: blob.subarray(bytesRead, totalHeaderLen),

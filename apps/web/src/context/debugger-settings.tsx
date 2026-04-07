@@ -1,9 +1,9 @@
-import { createContext, useCallback, useState, type ReactNode } from "react";
+import { createContext, type ReactNode, useCallback, useState } from "react";
 import {
-  type DebuggerSettings,
-  type SteppingMode,
   type AutoContinuePolicy,
+  type DebuggerSettings,
   loadSettings,
+  type SteppingMode,
   saveSettings,
 } from "../lib/debugger-settings";
 
@@ -15,9 +15,14 @@ export interface DebuggerSettingsContextValue {
   setAutoContinuePolicy: (policy: AutoContinuePolicy) => void;
 }
 
-export const DebuggerSettingsContext = createContext<DebuggerSettingsContextValue | null>(null);
+export const DebuggerSettingsContext =
+  createContext<DebuggerSettingsContextValue | null>(null);
 
-export function DebuggerSettingsProvider({ children }: { children: ReactNode }) {
+export function DebuggerSettingsProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [settings, setSettings] = useState<DebuggerSettings>(loadSettings);
 
   const update = useCallback((patch: Partial<DebuggerSettings>) => {
@@ -50,7 +55,13 @@ export function DebuggerSettingsProvider({ children }: { children: ReactNode }) 
 
   return (
     <DebuggerSettingsContext.Provider
-      value={{ settings, setSelectedPvmIds, setSteppingMode, setNInstructionsCount, setAutoContinuePolicy }}
+      value={{
+        settings,
+        setSelectedPvmIds,
+        setSteppingMode,
+        setNInstructionsCount,
+        setAutoContinuePolicy,
+      }}
     >
       {children}
     </DebuggerSettingsContext.Provider>

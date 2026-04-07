@@ -1,7 +1,7 @@
-import type { DecodedInstruction } from "./useDisassembly";
+import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import type { BasicBlock } from "./useBasicBlocks";
 import { groupInstructionsIntoBlocks } from "./useBasicBlocks";
-import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
+import type { DecodedInstruction } from "./useDisassembly";
 
 /**
  * Given an array of basic blocks and a PC, compute the number of remaining
@@ -45,14 +45,20 @@ export function buildBlocksFromInstructions(
  */
 export function computeMultiPvmBlockStepCount(
   blocks: BasicBlock[],
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>,
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >,
 ): number {
   let minCount = Infinity;
   let hasPaused = false;
 
   for (const [, entry] of snapshots) {
     // Only consider paused or paused_host_call PVMs (not terminal, not running)
-    if (entry.lifecycle !== "paused" && entry.lifecycle !== "paused_host_call") {
+    if (
+      entry.lifecycle !== "paused" &&
+      entry.lifecycle !== "paused_host_call"
+    ) {
       continue;
     }
     hasPaused = true;

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { CLI_NAME, CLI_VERSION, parseArgs } from "./index.js";
 
 describe("CLI metadata", () => {
@@ -22,51 +22,99 @@ describe("parseArgs", () => {
   });
 
   it("handles --help flag", () => {
-    const result = parseArgs(["node", "script.js", "replay", "trace.log", "--help"]);
+    const result = parseArgs([
+      "node",
+      "script.js",
+      "replay",
+      "trace.log",
+      "--help",
+    ]);
     expect(result.help).toBe(true);
   });
 
   it("handles --verbose flag", () => {
-    const result = parseArgs(["node", "script.js", "replay", "trace.log", "--verbose"]);
+    const result = parseArgs([
+      "node",
+      "script.js",
+      "replay",
+      "trace.log",
+      "--verbose",
+    ]);
     expect(result.verbose).toBe(true);
   });
 
   it("parses --pvm option with single value", () => {
-    const result = parseArgs(["node", "script.js", "replay", "trace.log", "--pvm", "ananas"]);
+    const result = parseArgs([
+      "node",
+      "script.js",
+      "replay",
+      "trace.log",
+      "--pvm",
+      "ananas",
+    ]);
     expect(result.pvms).toEqual(["ananas"]);
   });
 
   it("parses --pvm option with comma-separated values", () => {
     const result = parseArgs([
-      "node", "script.js", "replay", "trace.log",
-      "--pvm", "typeberry,ananas",
+      "node",
+      "script.js",
+      "replay",
+      "trace.log",
+      "--pvm",
+      "typeberry,ananas",
     ]);
     expect(result.pvms).toEqual(["typeberry", "ananas"]);
   });
 
   it("throws on invalid --pvm value", () => {
     expect(() =>
-      parseArgs(["node", "script.js", "replay", "trace.log", "--pvm", "invalid"]),
+      parseArgs([
+        "node",
+        "script.js",
+        "replay",
+        "trace.log",
+        "--pvm",
+        "invalid",
+      ]),
     ).toThrow(/Invalid --pvm value/);
   });
 
   it("parses --timeout option", () => {
     const result = parseArgs([
-      "node", "script.js", "replay", "trace.log",
-      "--timeout", "5000",
+      "node",
+      "script.js",
+      "replay",
+      "trace.log",
+      "--timeout",
+      "5000",
     ]);
     expect(result.timeout).toBe(5000);
   });
 
   it("throws on invalid --timeout value", () => {
     expect(() =>
-      parseArgs(["node", "script.js", "replay", "trace.log", "--timeout", "abc"]),
+      parseArgs([
+        "node",
+        "script.js",
+        "replay",
+        "trace.log",
+        "--timeout",
+        "abc",
+      ]),
     ).toThrow(/Invalid --timeout value/);
   });
 
   it("throws on negative --timeout value", () => {
     expect(() =>
-      parseArgs(["node", "script.js", "replay", "trace.log", "--timeout", "-1"]),
+      parseArgs([
+        "node",
+        "script.js",
+        "replay",
+        "trace.log",
+        "--timeout",
+        "-1",
+      ]),
     ).toThrow(/Invalid --timeout value/);
   });
 

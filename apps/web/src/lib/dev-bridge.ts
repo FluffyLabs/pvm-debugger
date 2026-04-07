@@ -3,7 +3,11 @@
  * Gated to dev mode only — not included in production builds.
  */
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { MachineStateSnapshot, PvmLifecycle, HostCallInfo } from "@pvmdbg/types";
+import type {
+  HostCallInfo,
+  MachineStateSnapshot,
+  PvmLifecycle,
+} from "@pvmdbg/types";
 
 interface DevBridge {
   getPvmIds(): string[];
@@ -24,7 +28,10 @@ declare global {
 }
 
 /** Convert a MachineStateSnapshot to a JSON-friendly object (bigint → string). */
-function snapshotToJson(snapshot: MachineStateSnapshot, lifecycle: PvmLifecycle): object {
+function snapshotToJson(
+  snapshot: MachineStateSnapshot,
+  lifecycle: PvmLifecycle,
+): object {
   return {
     pc: snapshot.pc,
     gas: snapshot.gas.toString(),
@@ -46,7 +53,10 @@ function hostCallInfoToJson(info: HostCallInfo): object {
           traceMatches: info.resumeProposal.traceMatches,
           mismatches: info.resumeProposal.mismatches,
           registerWrites: Object.fromEntries(
-            [...info.resumeProposal.registerWrites.entries()].map(([k, v]) => [k, v.toString()]),
+            [...info.resumeProposal.registerWrites.entries()].map(([k, v]) => [
+              k,
+              v.toString(),
+            ]),
           ),
           gasAfter: info.resumeProposal.gasAfter?.toString(),
         }
@@ -59,7 +69,9 @@ function hostCallInfoToJson(info: HostCallInfo): object {
  * The `getOrchestrator` callback returns the current orchestrator instance
  * (may be null if not yet initialized).
  */
-export function installDevBridge(getOrchestrator: () => Orchestrator | null): void {
+export function installDevBridge(
+  getOrchestrator: () => Orchestrator | null,
+): void {
   if (import.meta.env.PROD) return;
 
   const bridge: DevBridge = {

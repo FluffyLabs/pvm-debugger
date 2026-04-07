@@ -1,19 +1,19 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import type { PvmLifecycle, PvmStatus } from "./index.js";
 import {
-  PVM_STATUSES,
-  TERMINAL_LIFECYCLES,
-  isTerminal,
-  toHex,
-  fromHex,
   bigintToDecStr,
-  decStrToBigint,
-  encodeVarU32,
   decodeVarU32,
+  decStrToBigint,
   encodePvmBlob,
+  encodeVarU32,
+  fromHex,
+  isTerminal,
+  PVM_STATUSES,
   regsToUint8,
+  TERMINAL_LIFECYCLES,
+  toHex,
   uint8ToRegs,
 } from "./index.js";
-import type { PvmStatus, PvmLifecycle } from "./index.js";
 
 describe("PVM_STATUSES", () => {
   it("contains exactly 6 status values", () => {
@@ -21,7 +21,14 @@ describe("PVM_STATUSES", () => {
   });
 
   it("includes all expected statuses", () => {
-    const expected: PvmStatus[] = ["ok", "halt", "panic", "fault", "host", "out_of_gas"];
+    const expected: PvmStatus[] = [
+      "ok",
+      "halt",
+      "panic",
+      "fault",
+      "host",
+      "out_of_gas",
+    ];
     expect([...PVM_STATUSES]).toEqual(expected);
   });
 });
@@ -34,7 +41,11 @@ describe("isTerminal", () => {
   });
 
   it("returns false for non-terminal lifecycle states", () => {
-    const nonTerminal: PvmLifecycle[] = ["paused", "running", "paused_host_call"];
+    const nonTerminal: PvmLifecycle[] = [
+      "paused",
+      "running",
+      "paused_host_call",
+    ];
     for (const state of nonTerminal) {
       expect(isTerminal(state)).toBe(false);
     }
@@ -66,7 +77,9 @@ describe("toHex / fromHex", () => {
   });
 
   it("fromHex accepts raw hex without 0x prefix", () => {
-    expect(fromHex("deadbeef")).toEqual(new Uint8Array([0xde, 0xad, 0xbe, 0xef]));
+    expect(fromHex("deadbeef")).toEqual(
+      new Uint8Array([0xde, 0xad, 0xbe, 0xef]),
+    );
   });
 
   it("fromHex accepts uppercase hex", () => {
@@ -176,32 +189,46 @@ describe("encodeVarU32 / decodeVarU32", () => {
   });
 
   it("decodeVarU32 throws on empty buffer", () => {
-    expect(() => decodeVarU32(new Uint8Array(0))).toThrow("offset out of bounds");
+    expect(() => decodeVarU32(new Uint8Array(0))).toThrow(
+      "offset out of bounds",
+    );
   });
 
   it("decodeVarU32 throws on truncated 2-byte encoding", () => {
     // Lead byte 0x80 signals 2-byte encoding but no second byte
-    expect(() => decodeVarU32(new Uint8Array([0x80]))).toThrow("not enough bytes");
+    expect(() => decodeVarU32(new Uint8Array([0x80]))).toThrow(
+      "not enough bytes",
+    );
   });
 
   it("decodeVarU32 throws on truncated 3-byte encoding", () => {
-    expect(() => decodeVarU32(new Uint8Array([0xc0, 0x01]))).toThrow("not enough bytes");
+    expect(() => decodeVarU32(new Uint8Array([0xc0, 0x01]))).toThrow(
+      "not enough bytes",
+    );
   });
 
   it("decodeVarU32 throws on truncated 4-byte encoding", () => {
-    expect(() => decodeVarU32(new Uint8Array([0xe0, 0x01, 0x02]))).toThrow("not enough bytes");
+    expect(() => decodeVarU32(new Uint8Array([0xe0, 0x01, 0x02]))).toThrow(
+      "not enough bytes",
+    );
   });
 
   it("decodeVarU32 throws on truncated 5-byte encoding", () => {
-    expect(() => decodeVarU32(new Uint8Array([0xf0, 0x01, 0x02, 0x03]))).toThrow("not enough bytes");
+    expect(() =>
+      decodeVarU32(new Uint8Array([0xf0, 0x01, 0x02, 0x03])),
+    ).toThrow("not enough bytes");
   });
 
   it("decodeVarU32 throws on invalid lead byte 0xf8", () => {
-    expect(() => decodeVarU32(new Uint8Array([0xf8, 0x00, 0x00, 0x00, 0x00]))).toThrow("invalid lead byte");
+    expect(() =>
+      decodeVarU32(new Uint8Array([0xf8, 0x00, 0x00, 0x00, 0x00])),
+    ).toThrow("invalid lead byte");
   });
 
   it("decodeVarU32 throws on invalid lead byte 0xff", () => {
-    expect(() => decodeVarU32(new Uint8Array([0xff, 0x00, 0x00, 0x00, 0x00]))).toThrow("invalid lead byte");
+    expect(() =>
+      decodeVarU32(new Uint8Array([0xff, 0x00, 0x00, 0x00, 0x00])),
+    ).toThrow("invalid lead byte");
   });
 });
 
@@ -210,7 +237,9 @@ describe("encodePvmBlob", () => {
     const code = new Uint8Array([0x04, 0x87, 0x03]);
     const blob = encodePvmBlob(code);
     // [jtLen=0, jtItemLen=0, codeLen=3, code..., mask=0x01]
-    expect(Array.from(blob)).toEqual([0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01]);
+    expect(Array.from(blob)).toEqual([
+      0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01,
+    ]);
   });
 
   it("wraps empty code into a minimal blob", () => {
@@ -220,7 +249,9 @@ describe("encodePvmBlob", () => {
   });
 
   it("respects custom instruction starts in the mask", () => {
-    const code = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09]);
+    const code = new Uint8Array([
+      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+    ]);
     const blob = encodePvmBlob(code, [0, 3, 8]);
     // mask byte 0: bits 0 and 3 set = 0b00001001 = 0x09
     // mask byte 1: bit 0 set (offset 8 mod 8 = 0) = 0x01

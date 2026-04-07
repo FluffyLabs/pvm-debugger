@@ -1,8 +1,19 @@
-import { useCallback, useRef, useState, type DragEvent, type ChangeEvent } from "react";
 import { Badge } from "@fluffylabs/shared-ui";
-import { Upload, FileUp, X } from "lucide-react";
-import { loadUpload, detectFormat, type DetectedFormat, type RawPayload } from "@pvmdbg/content";
-import { formatLabel, formatBadgeIntent, formatByteCount } from "./format";
+import {
+  type DetectedFormat,
+  detectFormat,
+  loadUpload,
+  type RawPayload,
+} from "@pvmdbg/content";
+import { FileUp, Upload, X } from "lucide-react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  useCallback,
+  useRef,
+  useState,
+} from "react";
+import { formatBadgeIntent, formatByteCount, formatLabel } from "./format";
 
 const ACCEPTED_EXTENSIONS = [".jam", ".pvm", ".bin", ".log", ".json"];
 const ACCEPT_STRING = ACCEPTED_EXTENSIONS.join(",");
@@ -20,7 +31,11 @@ interface FileUploadProps {
   selectedFile: FileUploadResult | null;
 }
 
-export function FileUpload({ onFileSelected, onClear, selectedFile }: FileUploadProps) {
+export function FileUpload({
+  onFileSelected,
+  onClear,
+  selectedFile,
+}: FileUploadProps) {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,7 +45,9 @@ export function FileUpload({ onFileSelected, onClear, selectedFile }: FileUpload
       setError(null);
       const ext = file.name.substring(file.name.lastIndexOf(".")).toLowerCase();
       if (!ACCEPTED_EXTENSIONS.includes(ext)) {
-        setError(`Unsupported file type: ${ext}. Accepted: ${ACCEPTED_EXTENSIONS.join(", ")}`);
+        setError(
+          `Unsupported file type: ${ext}. Accepted: ${ACCEPTED_EXTENSIONS.join(", ")}`,
+        );
         return;
       }
       try {
@@ -99,7 +116,10 @@ export function FileUpload({ onFileSelected, onClear, selectedFile }: FileUpload
           <span data-testid="file-upload-name" className="font-mono truncate">
             {selectedFile.fileName}
           </span>
-          <span data-testid="file-upload-size" className="text-xs text-muted-foreground whitespace-nowrap">
+          <span
+            data-testid="file-upload-size"
+            className="text-xs text-muted-foreground whitespace-nowrap"
+          >
             {formatByteCount(selectedFile.byteCount)}
           </span>
           <Badge

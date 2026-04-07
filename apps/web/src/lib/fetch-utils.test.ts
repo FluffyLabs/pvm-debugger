@@ -1,5 +1,10 @@
-import { describe, it, expect } from "vitest";
-import { NONE, formatRegValue, safeFromHex, computeFetchEffects } from "./fetch-utils";
+import { describe, expect, it } from "vitest";
+import {
+  computeFetchEffects,
+  formatRegValue,
+  NONE,
+  safeFromHex,
+} from "./fetch-utils";
 
 describe("NONE constant", () => {
   it("equals 2^64 - 1", () => {
@@ -60,18 +65,26 @@ describe("safeFromHex", () => {
 
 describe("computeFetchEffects", () => {
   it("returns NONE sentinel when isNone is true", () => {
-    const effects = computeFetchEffects(new Uint8Array([1, 2, 3]), true, 0x1000, 0, 100);
+    const effects = computeFetchEffects(
+      new Uint8Array([1, 2, 3]),
+      true,
+      0x1000,
+      0,
+      100,
+    );
     expect(effects.registerWrites.get(7)).toBe(NONE);
     expect(effects.memoryWrites.length).toBe(0);
   });
 
   it("returns full blob when offset=0 and maxLen >= blob.length", () => {
-    const blob = new Uint8Array([0xAA, 0xBB, 0xCC]);
+    const blob = new Uint8Array([0xaa, 0xbb, 0xcc]);
     const effects = computeFetchEffects(blob, false, 0x2000, 0, 100);
     expect(effects.registerWrites.get(7)).toBe(3n);
     expect(effects.memoryWrites.length).toBe(1);
     expect(effects.memoryWrites[0].address).toBe(0x2000);
-    expect(Array.from(effects.memoryWrites[0].data)).toEqual([0xAA, 0xBB, 0xCC]);
+    expect(Array.from(effects.memoryWrites[0].data)).toEqual([
+      0xaa, 0xbb, 0xcc,
+    ]);
   });
 
   it("slices correctly with offset and maxLen", () => {
@@ -90,7 +103,13 @@ describe("computeFetchEffects", () => {
   });
 
   it("handles empty blob", () => {
-    const effects = computeFetchEffects(new Uint8Array(0), false, 0x1000, 0, 100);
+    const effects = computeFetchEffects(
+      new Uint8Array(0),
+      false,
+      0x1000,
+      0,
+      100,
+    );
     expect(effects.registerWrites.get(7)).toBe(0n);
     expect(effects.memoryWrites.length).toBe(0);
   });

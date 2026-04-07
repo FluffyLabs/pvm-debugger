@@ -1,6 +1,20 @@
-import { describe, it, expect, vi } from "vitest";
-import { stepsForMode, proposalToEffects, shouldAutoContinue, hasHostCallPause, hasBreakpointHit, storageAwareEffects, persistWriteToStorage } from "./useDebuggerActions";
-import type { StepResult, PvmStepReport, HostCallResumeProposal, HostCallInfo, MachineStateSnapshot } from "@pvmdbg/types";
+import type {
+  HostCallInfo,
+  HostCallResumeProposal,
+  MachineStateSnapshot,
+  PvmStepReport,
+  StepResult,
+} from "@pvmdbg/types";
+import { describe, expect, it, vi } from "vitest";
+import {
+  hasBreakpointHit,
+  hasHostCallPause,
+  persistWriteToStorage,
+  proposalToEffects,
+  shouldAutoContinue,
+  stepsForMode,
+  storageAwareEffects,
+} from "./useDebuggerActions";
 import type { UseStorageTable } from "./useStorageTable";
 
 describe("stepsForMode", () => {
@@ -247,7 +261,9 @@ describe("shouldAutoContinue", () => {
           },
         }),
       ]);
-      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(true);
+      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(
+        true,
+      );
     });
 
     it("returns false when trace does not match", () => {
@@ -264,7 +280,9 @@ describe("shouldAutoContinue", () => {
           },
         }),
       ]);
-      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(false);
+      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(
+        false,
+      );
     });
 
     it("returns false when no trace proposal exists", () => {
@@ -280,7 +298,9 @@ describe("shouldAutoContinue", () => {
           },
         }),
       ]);
-      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(false);
+      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(
+        false,
+      );
     });
 
     it("returns false if ANY PVM has a non-matching trace in multi-PVM scenario", () => {
@@ -308,7 +328,9 @@ describe("shouldAutoContinue", () => {
           },
         }),
       ]);
-      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(false);
+      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(
+        false,
+      );
     });
 
     it("ignores non-host-call PVMs in the result", () => {
@@ -326,14 +348,18 @@ describe("shouldAutoContinue", () => {
           },
         }),
       ]);
-      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(true);
+      expect(shouldAutoContinue("continue_when_trace_matches", result)).toBe(
+        true,
+      );
     });
   });
 });
 
 // --- storageAwareEffects ---
 
-function makeStorageTable(entries: Record<string, string> = {}): UseStorageTable {
+function makeStorageTable(
+  entries: Record<string, string> = {},
+): UseStorageTable {
   const map = new Map(Object.entries(entries));
   return {
     entries: [...map.entries()].map(([key, value]) => ({ key, value })),
@@ -346,7 +372,9 @@ function makeStorageTable(entries: Record<string, string> = {}): UseStorageTable
         const val = map.get(key);
         if (val === undefined) return undefined;
         // Simple mock: return a memory write with the key as data
-        return { memoryWrites: [{ address: addr, data: new Uint8Array([0x42]) }] };
+        return {
+          memoryWrites: [{ address: addr, data: new Uint8Array([0x42]) }],
+        };
       },
     } as UseStorageTable["store"],
   };
@@ -379,7 +407,10 @@ describe("storageAwareEffects", () => {
   });
 
   it("returns base effects for storage host call with no proposal", () => {
-    const hc = makeHostCallInfo({ hostCallIndex: 3, resumeProposal: undefined });
+    const hc = makeHostCallInfo({
+      hostCallIndex: 3,
+      resumeProposal: undefined,
+    });
     const st = makeStorageTable();
     const effects = storageAwareEffects(hc, st);
     expect(effects).toEqual({});
@@ -427,9 +458,7 @@ describe("storageAwareEffects", () => {
       currentState: { ...EMPTY_SNAPSHOT, registers: regs },
       resumeProposal: {
         registerWrites: new Map(),
-        memoryWrites: [
-          { address: 0x1000, data: new Uint8Array([0xab, 0xcd]) },
-        ],
+        memoryWrites: [{ address: 0x1000, data: new Uint8Array([0xab, 0xcd]) }],
         traceMatches: true,
         mismatches: [],
       },
@@ -453,9 +482,7 @@ describe("storageAwareEffects", () => {
       currentState: { ...EMPTY_SNAPSHOT, registers: regs },
       resumeProposal: {
         registerWrites: new Map(),
-        memoryWrites: [
-          { address: 0x1000, data: new Uint8Array([0xab, 0xcd]) },
-        ],
+        memoryWrites: [{ address: 0x1000, data: new Uint8Array([0xab, 0xcd]) }],
         traceMatches: true,
         mismatches: [],
       },
@@ -481,7 +508,10 @@ describe("persistWriteToStorage", () => {
   });
 
   it("does nothing when no proposal exists", () => {
-    const hc = makeHostCallInfo({ hostCallIndex: 4, resumeProposal: undefined });
+    const hc = makeHostCallInfo({
+      hostCallIndex: 4,
+      resumeProposal: undefined,
+    });
     const st = makeStorageTable();
     persistWriteToStorage(hc, st);
     expect(st.setEntry).not.toHaveBeenCalled();

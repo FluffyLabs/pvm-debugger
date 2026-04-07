@@ -1,7 +1,7 @@
 import type {
   EcalliTrace,
-  TracePrelude,
   TraceEntry,
+  TracePrelude,
   TraceTermination,
 } from "@pvmdbg/types";
 
@@ -27,7 +27,11 @@ function parseRegisters(tokens: string[]): Map<number, bigint> {
 }
 
 /** Validate that hex data length matches declared len. */
-function validateHexLen(hex: string, declaredLen: number, lineNum: number): void {
+function validateHexLen(
+  hex: string,
+  declaredLen: number,
+  lineNum: number,
+): void {
   // hex without 0x prefix
   const raw = hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
   const actualLen = raw.length / 2;
@@ -104,7 +108,9 @@ export function parseTrace(text: string): EcalliTrace {
         /^memwrite\s+0x([0-9a-fA-F]+)\s+len=(\d+)\s+<-\s+0x([0-9a-fA-F]*)$/,
       );
       if (!m) {
-        throw new Error(`Line ${lineNum}: malformed memwrite: ${line.slice(0, 80)}`);
+        throw new Error(
+          `Line ${lineNum}: malformed memwrite: ${line.slice(0, 80)}`,
+        );
       }
       const address = parseInt(m[1], 16);
       const declaredLen = parseInt(m[2], 10);
@@ -182,7 +188,9 @@ export function parseTrace(text: string): EcalliTrace {
         /^memread\s+0x([0-9a-fA-F]+)\s+len=(\d+)\s+->\s+0x([0-9a-fA-F]*)$/,
       );
       if (!m) {
-        throw new Error(`Line ${lineNum}: malformed memread: ${line.slice(0, 80)}`);
+        throw new Error(
+          `Line ${lineNum}: malformed memread: ${line.slice(0, 80)}`,
+        );
       }
       const address = parseInt(m[1], 16);
       const declaredLen = parseInt(m[2], 10);
@@ -194,9 +202,7 @@ export function parseTrace(text: string): EcalliTrace {
 
     if (line.startsWith("setreg ")) {
       if (!currentEntry) {
-        throw new Error(
-          `Line ${lineNum}: setreg outside of a host call entry`,
-        );
+        throw new Error(`Line ${lineNum}: setreg outside of a host call entry`);
       }
       // setreg r<idx> <- 0x<hex>
       const m = line.match(/^setreg\s+r(\d+)\s+<-\s+0x([0-9a-fA-F]+)$/);
@@ -211,9 +217,7 @@ export function parseTrace(text: string): EcalliTrace {
 
     if (line.startsWith("setgas ")) {
       if (!currentEntry) {
-        throw new Error(
-          `Line ${lineNum}: setgas outside of a host call entry`,
-        );
+        throw new Error(`Line ${lineNum}: setgas outside of a host call entry`);
       }
       // setgas <- <gas>
       const m = line.match(/^setgas\s+<-\s+(\d+)$/);
@@ -307,7 +311,6 @@ export function parseTrace(text: string): EcalliTrace {
         gas: BigInt(gasToken.slice(4)),
         registers: parseRegisters(tokens),
       };
-      continue;
     }
   }
 
@@ -320,7 +323,12 @@ export function parseTrace(text: string): EcalliTrace {
   if (programHex === undefined) {
     throw new Error("Trace is missing mandatory 'program' line");
   }
-  if (!seenStart || startPc === undefined || startGas === undefined || startRegisters === undefined) {
+  if (
+    !seenStart ||
+    startPc === undefined ||
+    startGas === undefined ||
+    startRegisters === undefined
+  ) {
     throw new Error("Trace is missing mandatory 'start' line");
   }
 

@@ -1,14 +1,14 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
 import type { HostCallInfo } from "@pvmdbg/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useStableCallback } from "../../../hooks/useStableCallback";
+import { FETCH_KIND_INFO, type FetchKind } from "../../../lib/fetch-codec";
+import { computeDefaultEncodedBlob } from "../../../lib/fetch-defaults";
 import type { HostCallEffects } from "../../../lib/fetch-utils";
 import { computeFetchEffects } from "../../../lib/fetch-utils";
-import { FetchKind, FETCH_KIND_INFO } from "../../../lib/fetch-codec";
-import { computeDefaultEncodedBlob } from "../../../lib/fetch-defaults";
-import { useStableCallback } from "../../../hooks/useStableCallback";
-import { TraceView } from "./fetch/TraceView";
 import { RawEditor } from "./fetch/RawEditor";
-import { StructEditor } from "./fetch/StructEditor";
 import { SlicePreview } from "./fetch/SlicePreview";
+import { StructEditor } from "./fetch/StructEditor";
+import { TraceView } from "./fetch/TraceView";
 
 type Mode = "trace" | "raw" | "struct";
 
@@ -40,7 +40,11 @@ function getTraceTotalLength(info: HostCallInfo): number {
   return Number(r7);
 }
 
-export function FetchHostCall({ info, onEffectsReady, traceVersion }: FetchHostCallProps) {
+export function FetchHostCall({
+  info,
+  onEffectsReady,
+  traceVersion,
+}: FetchHostCallProps) {
   const regs = info.currentState.registers;
   const destAddr = Number(regs[7] ?? 0n);
   const offset = Number(regs[8] ?? 0n);
@@ -66,7 +70,9 @@ export function FetchHostCall({ info, onEffectsReady, traceVersion }: FetchHostC
   const [blob, setBlob] = useState<Uint8Array>(initialBlob);
 
   // For Trace→Struct and Raw→Struct: the blob to decode
-  const [structInitialBlob, setStructInitialBlob] = useState<Uint8Array | undefined>(undefined);
+  const [structInitialBlob, setStructInitialBlob] = useState<
+    Uint8Array | undefined
+  >(undefined);
 
   // Reset state on traceVersion change
   useEffect(() => {
@@ -84,25 +90,28 @@ export function FetchHostCall({ info, onEffectsReady, traceVersion }: FetchHostC
   }, [blob, destAddr, offset, maxLen, stableOnEffects]);
 
   // Mode switching with data preservation
-  const handleModeChange = useCallback((newMode: Mode) => {
-    if (newMode === mode) return;
+  const handleModeChange = useCallback(
+    (newMode: Mode) => {
+      if (newMode === mode) return;
 
-    if (mode === "struct" && (newMode === "raw" || newMode === "trace")) {
-      // Struct→Raw: blob is already current (updated by StructEditor via onBlobChange)
-    } else if (mode === "raw" && newMode === "struct") {
-      // Raw→Struct: pass current blob as initialBlob for decoding
-      setStructInitialBlob(new Uint8Array(blob));
-    } else if (mode === "trace" && newMode === "raw") {
-      // Trace→Raw: copy trace data into blob
-      setBlob(traceData);
-    } else if (mode === "trace" && newMode === "struct") {
-      // Trace→Struct: decode trace data into struct fields
-      setBlob(traceData);
-      setStructInitialBlob(new Uint8Array(traceData));
-    }
+      if (mode === "struct" && (newMode === "raw" || newMode === "trace")) {
+        // Struct→Raw: blob is already current (updated by StructEditor via onBlobChange)
+      } else if (mode === "raw" && newMode === "struct") {
+        // Raw→Struct: pass current blob as initialBlob for decoding
+        setStructInitialBlob(new Uint8Array(blob));
+      } else if (mode === "trace" && newMode === "raw") {
+        // Trace→Raw: copy trace data into blob
+        setBlob(traceData);
+      } else if (mode === "trace" && newMode === "struct") {
+        // Trace→Struct: decode trace data into struct fields
+        setBlob(traceData);
+        setStructInitialBlob(new Uint8Array(traceData));
+      }
 
-    setMode(newMode);
-  }, [mode, blob, traceData]);
+      setMode(newMode);
+    },
+    [mode, blob, traceData],
+  );
 
   const handleRawBlobChange = useCallback((newBlob: Uint8Array) => {
     setBlob(newBlob);
@@ -115,7 +124,10 @@ export function FetchHostCall({ info, onEffectsReady, traceVersion }: FetchHostC
   return (
     <div data-testid="fetch-host-call" className="flex flex-col gap-3 text-xs">
       {/* Kind description */}
-      <div data-testid="fetch-kind-description" className="text-xs text-muted-foreground">
+      <div
+        data-testid="fetch-kind-description"
+        className="text-xs text-muted-foreground"
+      >
         <span className="font-semibold text-foreground">
           Kind {kindNum}: {kindInfo.name}
         </span>

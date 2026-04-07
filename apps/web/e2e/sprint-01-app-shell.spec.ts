@@ -1,7 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 01 — App Shell + Routing", () => {
-  test("app shell shows header with branding, sidebar, and content area", async ({ page }) => {
+  test("app shell shows header with branding, sidebar, and content area", async ({
+    page,
+  }) => {
     await page.goto("/");
 
     // Header with FluffyLabs logo

@@ -1,34 +1,50 @@
+import { Button } from "@fluffylabs/shared-ui";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@fluffylabs/shared-ui/ui/tooltip";
+import { isTerminal } from "@pvmdbg/types";
+import { Settings } from "lucide-react";
 import { useCallback, useRef } from "react";
 import { Navigate, useNavigate } from "react-router";
-import { useOrchestrator } from "../hooks/useOrchestrator";
-import { useOrchestratorState } from "../hooks/useOrchestratorState";
+import { BottomDrawer } from "../components/debugger/BottomDrawer";
+import { DebuggerLayout } from "../components/debugger/DebuggerLayout";
+import {
+  DrawerProvider,
+  useDrawer,
+} from "../components/debugger/DrawerContext";
+import { ExecutionControls } from "../components/debugger/ExecutionControls";
+import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
+import { MemoryPanel } from "../components/debugger/MemoryPanel";
+import { PvmTabs } from "../components/debugger/PvmTabs";
+import { RegistersPanel } from "../components/debugger/RegistersPanel";
 import { useDebuggerActions } from "../hooks/useDebuggerActions";
 import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
 import { useDisassembly } from "../hooks/useDisassembly";
-import { useStorageTable } from "../hooks/useStorageTable";
+import { useDivergenceCheck } from "../hooks/useDivergenceCheck";
+import { useOrchestrator } from "../hooks/useOrchestrator";
+import { useOrchestratorState } from "../hooks/useOrchestratorState";
 import { usePendingChanges } from "../hooks/usePendingChanges";
 import { clearProgramSession } from "../hooks/usePersistence";
-import { isTerminal } from "@pvmdbg/types";
+import { useStorageTable } from "../hooks/useStorageTable";
 import { AVAILABLE_PVMS } from "../lib/debugger-settings";
-import { InstructionsPanel } from "../components/debugger/InstructionsPanel";
-import { RegistersPanel } from "../components/debugger/RegistersPanel";
-import { MemoryPanel } from "../components/debugger/MemoryPanel";
-import { ExecutionControls } from "../components/debugger/ExecutionControls";
-import { DebuggerLayout } from "../components/debugger/DebuggerLayout";
-import { BottomDrawer } from "../components/debugger/BottomDrawer";
-import { DrawerProvider, useDrawer } from "../components/debugger/DrawerContext";
-import { PvmTabs } from "../components/debugger/PvmTabs";
-import { useDivergenceCheck } from "../hooks/useDivergenceCheck";
-import { Settings } from "lucide-react";
-import { Button } from "@fluffylabs/shared-ui";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@fluffylabs/shared-ui/ui/tooltip";
 
 function DebuggerPageInner() {
-  const { orchestrator, envelope, teardown, initialize, setEnvelope } = useOrchestrator();
+  const { orchestrator, envelope, teardown, initialize, setEnvelope } =
+    useOrchestrator();
   const navigate = useNavigate();
   const isReloadingRef = useRef(false);
-  const { snapshots, selectedPvmId, setSelectedPvmId, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion, perPvmErrors } =
-    useOrchestratorState();
+  const {
+    snapshots,
+    selectedPvmId,
+    setSelectedPvmId,
+    hostCallInfo,
+    isStepInProgress,
+    setIsStepInProgress,
+    snapshotVersion,
+    perPvmErrors,
+  } = useOrchestratorState();
   const { summary: divergenceSummary, details: divergenceDetails } =
     useDivergenceCheck(snapshots, selectedPvmId, snapshotVersion);
   const instructions = useDisassembly(envelope);
@@ -51,7 +67,9 @@ function DebuggerPageInner() {
   const storageTable = useStorageTable(orchestratorId);
 
   // Get current PVM state (must be before early return — hooks below depend on it)
-  const selectedEntry = selectedPvmId ? snapshots.get(selectedPvmId) : undefined;
+  const selectedEntry = selectedPvmId
+    ? snapshots.get(selectedPvmId)
+    : undefined;
   const selectedLifecycle = selectedEntry?.lifecycle ?? null;
 
   // Pending changes for host-call pause editing
@@ -85,25 +103,38 @@ function DebuggerPageInner() {
     [envelope, initialize, setEnvelope],
   );
 
-  const { next, step, run, pause, reset, load, canStep, isRunning, error, clearError } =
-    useDebuggerActions({
-      orchestrator,
-      isStepInProgress,
-      setIsStepInProgress,
-      selectedLifecycle,
-      onLoad,
-      steppingMode: settings.steppingMode,
-      nInstructionsCount: settings.nInstructionsCount,
-      autoContinuePolicy: settings.autoContinuePolicy,
-      storageTable,
-      instructions,
-      snapshots,
-      getHostCallEffects: pendingChanges.getEffects,
-      clearHostCallEffects: pendingChanges.clear,
-    });
+  const {
+    next,
+    step,
+    run,
+    pause,
+    reset,
+    load,
+    canStep,
+    isRunning,
+    error,
+    clearError,
+  } = useDebuggerActions({
+    orchestrator,
+    isStepInProgress,
+    setIsStepInProgress,
+    selectedLifecycle,
+    onLoad,
+    steppingMode: settings.steppingMode,
+    nInstructionsCount: settings.nInstructionsCount,
+    autoContinuePolicy: settings.autoContinuePolicy,
+    storageTable,
+    instructions,
+    snapshots,
+    getHostCallEffects: pendingChanges.getEffects,
+    clearHostCallEffects: pendingChanges.clear,
+  });
 
   // Route guard: redirect to /load when no program is loaded.
-  if (!isReloadingRef.current && (!orchestrator || !orchestrator.getProgramBytes())) {
+  if (
+    !isReloadingRef.current &&
+    (!orchestrator || !orchestrator.getProgramBytes())
+  ) {
     return <Navigate to="/load" replace />;
   }
 
@@ -120,7 +151,8 @@ function DebuggerPageInner() {
     [...snapshots.values()].every(
       ({ lifecycle, snapshot }) =>
         (lifecycle === "paused" && snapshot.status === "ok") ||
-        (lifecycle === "paused_host_call" && (snapshot.status === "ok" || snapshot.status === "host")),
+        (lifecycle === "paused_host_call" &&
+          (snapshot.status === "ok" || snapshot.status === "host")),
     );
 
   // Collect active PVM ids from snapshots
@@ -209,7 +241,11 @@ function DebuggerPageInner() {
           </>
         }
         instructions={
-          <InstructionsPanel instructions={instructions} currentPc={currentPc} orchestrator={orchestrator} />
+          <InstructionsPanel
+            instructions={instructions}
+            currentPc={currentPc}
+            orchestrator={orchestrator}
+          />
         }
         registers={
           <RegistersPanel
@@ -230,7 +266,9 @@ function DebuggerPageInner() {
             programKind={envelope?.programKind ?? "generic"}
             memoryChunks={envelope?.initialState.memoryChunks ?? []}
             editable={allPausedOk}
-            onPendingWrite={isHostCallPaused ? pendingChanges.writeMemory : undefined}
+            onPendingWrite={
+              isHostCallPaused ? pendingChanges.writeMemory : undefined
+            }
           />
         }
         drawer={

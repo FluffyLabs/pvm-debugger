@@ -1,8 +1,15 @@
-import { createContext, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Orchestrator } from "@pvmdbg/orchestrator";
 import type { ProgramEnvelope } from "@pvmdbg/types";
-import { createPvmAdapter } from "../lib/runtime";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { installDevBridge } from "../lib/dev-bridge";
+import { createPvmAdapter } from "../lib/runtime";
 
 export interface OrchestratorContextValue {
   orchestrator: Orchestrator | null;
@@ -67,7 +74,9 @@ export function OrchestratorProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrchestratorContext.Provider value={{ orchestrator, envelope, setEnvelope, initialize, teardown }}>
+    <OrchestratorContext.Provider
+      value={{ orchestrator, envelope, setEnvelope, initialize, teardown }}
+    >
       {children}
     </OrchestratorContext.Provider>
   );

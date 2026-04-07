@@ -1,6 +1,17 @@
 import { Button } from "@fluffylabs/shared-ui";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@fluffylabs/shared-ui/ui/tooltip";
-import { ArrowLeft, RotateCcw, StepForward, Play, Pause, ListOrdered } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@fluffylabs/shared-ui/ui/tooltip";
+import {
+  ArrowLeft,
+  ListOrdered,
+  Pause,
+  Play,
+  RotateCcw,
+  StepForward,
+} from "lucide-react";
 import type { SteppingMode } from "../../lib/debugger-settings";
 
 interface ExecutionControlsProps {
@@ -109,7 +120,9 @@ export function ExecutionControls({
             {nextLabel(steppingMode, nInstructionsCount)}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{nextTooltip(steppingMode, nInstructionsCount)}</TooltipContent>
+        <TooltipContent>
+          {nextTooltip(steppingMode, nInstructionsCount)}
+        </TooltipContent>
       </Tooltip>
 
       {showStepButton && (

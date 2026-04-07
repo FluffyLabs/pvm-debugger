@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
-import { Switch, Input, Alert } from "@fluffylabs/shared-ui";
+import { Alert, Input, Switch } from "@fluffylabs/shared-ui";
 import {
-  encodeSpiEntrypoint,
   decodeSpiEntrypoint,
-  type SpiEntrypointParams,
   type ExampleEntry,
+  encodeSpiEntrypoint,
+  type SpiEntrypointParams,
 } from "@pvmdbg/content";
-import { toHex, fromHex } from "@pvmdbg/types";
+import { fromHex, toHex } from "@pvmdbg/types";
+import { useCallback, useEffect, useState } from "react";
 
 // ── localStorage persistence ──────────────────────────────────────────
 
@@ -51,9 +51,18 @@ function persistConfig(config: PersistedSpiConfig): void {
 
 // ── Default field values ──────────────────────────────────────────────
 
-const DEFAULT_FIELDS: Record<SpiEntrypointParams["entrypoint"], Record<string, string>> = {
+const DEFAULT_FIELDS: Record<
+  SpiEntrypointParams["entrypoint"],
+  Record<string, string>
+> = {
   accumulate: { slot: "42", id: "0", results: "0" },
-  refine: { core: "0", index: "0", id: "0", payload: "", workPackageHash: "0x" + "00".repeat(32) },
+  refine: {
+    core: "0",
+    index: "0",
+    id: "0",
+    payload: "",
+    workPackageHash: "0x" + "00".repeat(32),
+  },
   is_authorized: { core: "0" },
 };
 
@@ -94,7 +103,8 @@ function fieldsToParams(
           core: parseInt(fields.core ?? "0", 10),
           index: parseInt(fields.index ?? "0", 10),
           id: parseInt(fields.id ?? "0", 10),
-          payload: payloadHex.length > 0 ? fromHex(payloadHex) : new Uint8Array(),
+          payload:
+            payloadHex.length > 0 ? fromHex(payloadHex) : new Uint8Array(),
           workPackageHash: hashBuf,
         },
       };
@@ -108,9 +118,7 @@ function fieldsToParams(
   }
 }
 
-function paramsToFields(
-  params: SpiEntrypointParams,
-): Record<string, string> {
+function paramsToFields(params: SpiEntrypointParams): Record<string, string> {
   switch (params.entrypoint) {
     case "accumulate":
       return {
@@ -121,12 +129,14 @@ function paramsToFields(
     case "refine": {
       // Suppress all-zero hash display (show empty string)
       const hashBytes = params.params.workPackageHash;
-      const isAllZero = hashBytes.length === 0 || hashBytes.every((b) => b === 0);
+      const isAllZero =
+        hashBytes.length === 0 || hashBytes.every((b) => b === 0);
       return {
         core: String(params.params.core),
         index: String(params.params.index),
         id: String(params.params.id),
-        payload: params.params.payload.length > 0 ? toHex(params.params.payload) : "",
+        payload:
+          params.params.payload.length > 0 ? toHex(params.params.payload) : "",
         workPackageHash: isAllZero ? "" : toHex(hashBytes),
       };
     }
@@ -141,9 +151,11 @@ function validateFields(
   fields: Record<string, string>,
 ): string | null {
   const numericFields: string[] =
-    entrypoint === "accumulate" ? ["slot", "id", "results"]
-    : entrypoint === "refine" ? ["core", "index", "id"]
-    : ["core"];
+    entrypoint === "accumulate"
+      ? ["slot", "id", "results"]
+      : entrypoint === "refine"
+        ? ["core", "index", "id"]
+        : ["core"];
 
   for (const field of numericFields) {
     const val = fields[field] ?? "";
@@ -200,14 +212,22 @@ const FIELD_DEFS: Record<SpiEntrypointParams["entrypoint"], FieldDef[]> = {
     { key: "index", label: "Index", type: "number", placeholder: "0" },
     { key: "id", label: "Service ID", type: "number", placeholder: "0" },
     { key: "payload", label: "Payload", type: "hex", placeholder: "0x..." },
-    { key: "workPackageHash", label: "Work Package Hash", type: "hex", placeholder: "0x..." },
+    {
+      key: "workPackageHash",
+      label: "Work Package Hash",
+      type: "hex",
+      placeholder: "0x...",
+    },
   ],
   is_authorized: [
     { key: "core", label: "Core", type: "number", placeholder: "0" },
   ],
 };
 
-const ENTRYPOINT_OPTIONS: Array<{ value: SpiEntrypointParams["entrypoint"]; label: string }> = [
+const ENTRYPOINT_OPTIONS: Array<{
+  value: SpiEntrypointParams["entrypoint"];
+  label: string;
+}> = [
   { value: "refine", label: "Refine" },
   { value: "accumulate", label: "Accumulate" },
   { value: "is_authorized", label: "Is Authorized" },
@@ -221,19 +241,26 @@ interface SpiEntrypointConfigProps {
   onChange: (params: SpiEntrypointParams | null) => void;
 }
 
-export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointConfigProps) {
+export function SpiEntrypointConfig({
+  exampleEntry,
+  onChange,
+}: SpiEntrypointConfigProps) {
   // Load persisted config once for all initializers
   const [persistedSnapshot] = useState(() => loadPersistedConfig());
 
   // Determine initial state: example overrides > persisted > defaults
-  const [entrypoint, setEntrypoint] = useState<SpiEntrypointParams["entrypoint"]>(() => {
+  const [entrypoint, setEntrypoint] = useState<
+    SpiEntrypointParams["entrypoint"]
+  >(() => {
     if (exampleEntry?.entrypoint) return exampleEntry.entrypoint.type;
     if (persistedSnapshot) return persistedSnapshot.entrypoint;
     return "accumulate";
   });
 
   // Store fields for ALL entrypoint types so switching doesn't lose data
-  const [allFields, setAllFields] = useState<Record<string, Record<string, string>>>(() => {
+  const [allFields, setAllFields] = useState<
+    Record<string, Record<string, string>>
+  >(() => {
     const base = { ...DEFAULT_FIELDS };
     // Merge persisted fields for each entrypoint type
     if (persistedSnapshot?.allFields) {
@@ -308,7 +335,10 @@ export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointCon
       try {
         const bytes = fromHex(rawHex);
         const decoded = decodeSpiEntrypoint(entrypoint, bytes);
-        setAllFields((prev) => ({ ...prev, [entrypoint]: paramsToFields(decoded) }));
+        setAllFields((prev) => ({
+          ...prev,
+          [entrypoint]: paramsToFields(decoded),
+        }));
         setValidationError(null);
         onChange(decoded);
       } catch (e) {
@@ -346,7 +376,10 @@ export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointCon
   const fieldDefs = FIELD_DEFS[entrypoint];
 
   return (
-    <div data-testid="spi-entrypoint-config" className="flex flex-col gap-3 border rounded-lg p-4 bg-card">
+    <div
+      data-testid="spi-entrypoint-config"
+      className="flex flex-col gap-3 border rounded-lg p-4 bg-card"
+    >
       {/* Header with RAW toggle */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">
@@ -358,7 +391,10 @@ export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointCon
             checked={isRawMode}
             onCheckedChange={handleRawModeToggle}
           />
-          <label className="text-xs text-muted-foreground cursor-pointer" onClick={() => handleRawModeToggle(!isRawMode)}>
+          <label
+            className="text-xs text-muted-foreground cursor-pointer"
+            onClick={() => handleRawModeToggle(!isRawMode)}
+          >
             RAW
           </label>
         </div>
@@ -390,7 +426,9 @@ export function SpiEntrypointConfig({ exampleEntry, onChange }: SpiEntrypointCon
         <div className="flex flex-col gap-2 pt-2 border-t border-border">
           {fieldDefs.map((def) => (
             <div key={def.key} className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground min-w-[90px]">{def.label}</label>
+              <label className="text-xs text-muted-foreground min-w-[90px]">
+                {def.label}
+              </label>
               <Input
                 data-testid={`spi-field-${def.key}`}
                 type={def.type === "number" ? "number" : "text"}

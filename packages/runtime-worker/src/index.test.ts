@@ -1,27 +1,27 @@
-import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { InitialMachineState, ProgramLoadContext } from "@pvmdbg/types";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { initAnanas } from "./adapters/ananas-init.js";
+import { encodePvmBlob } from "./blob-encoder.js";
+import type { WorkerRequest, WorkerResponse } from "./commands.js";
 import {
+  AnanasSyncInterpreter,
+  createWorkerCommandHandler,
+  DirectAdapter,
+  deserializeInitialState,
+  getMemoryRange,
+  installWorkerEntry,
   mapStatus,
   regsToUint8,
-  uint8ToRegs,
-  getMemoryRange,
   serializeInitialState,
-  deserializeInitialState,
-  TypeberrySyncInterpreter,
-  AnanasSyncInterpreter,
-  DirectAdapter,
-  WorkerBridge,
   TimeoutError,
-  createWorkerCommandHandler,
-  installWorkerEntry,
+  TypeberrySyncInterpreter,
+  uint8ToRegs,
   validateRegisterIndices,
+  WorkerBridge,
 } from "./index.js";
-import { encodePvmBlob } from "./blob-encoder.js";
-import { initAnanas } from "./adapters/ananas-init.js";
-import type { WorkerRequest, WorkerResponse } from "./commands.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = resolve(__dirname, "../../../fixtures");
@@ -44,16 +44,35 @@ function createAddProgram(): Uint8Array {
 
 // Helper: create a LOAD_IMM program that loads a value into r0
 function createLoadImmProgram(value: number): Uint8Array {
-  const code = new Uint8Array([LOAD_IMM, 0x00, value & 0xFF, (value >> 8) & 0xFF, (value >> 16) & 0xFF, (value >> 24) & 0xFF]);
+  const code = new Uint8Array([
+    LOAD_IMM,
+    0x00,
+    value & 0xff,
+    (value >> 8) & 0xff,
+    (value >> 16) & 0xff,
+    (value >> 24) & 0xff,
+  ]);
   return encodePvmBlob(code, [0]);
 }
 
 // Helper: create a multi-step program: LOAD_IMM r7=a, LOAD_IMM r8=b, ADD_32 r0=r7+r8
 function createMultiStepAddProgram(a: number, b: number): Uint8Array {
   const code = new Uint8Array([
-    LOAD_IMM, 0x07, a & 0xFF, (a >> 8) & 0xFF, 0, 0, // LOAD_IMM r7, a (6 bytes)
-    LOAD_IMM, 0x08, b & 0xFF, (b >> 8) & 0xFF, 0, 0, // LOAD_IMM r8, b (6 bytes)
-    ADD_32, 0x87, 0x00,                                 // ADD_32 r0 = r7 + r8 (3 bytes)
+    LOAD_IMM,
+    0x07,
+    a & 0xff,
+    (a >> 8) & 0xff,
+    0,
+    0, // LOAD_IMM r7, a (6 bytes)
+    LOAD_IMM,
+    0x08,
+    b & 0xff,
+    (b >> 8) & 0xff,
+    0,
+    0, // LOAD_IMM r8, b (6 bytes)
+    ADD_32,
+    0x87,
+    0x00, // ADD_32 r0 = r7 + r8 (3 bytes)
   ]);
   return encodePvmBlob(code, [0, 6, 12]);
 }
@@ -64,7 +83,12 @@ function createStoreProgram(): Uint8Array {
   // byte1 = (src<<4)|base = (8<<4)|7 = 0x87
   // imm = offset (u32 LE)
   const code = new Uint8Array([
-    STORE_IND_U16, 0x87, 0, 0, 0, 0, // store u16 at [r7 + 0] from r8
+    STORE_IND_U16,
+    0x87,
+    0,
+    0,
+    0,
+    0, // store u16 at [r7 + 0] from r8
   ]);
   return encodePvmBlob(code, [0]);
 }
@@ -120,7 +144,21 @@ describe("regsToUint8 / uint8ToRegs roundtrip", () => {
   });
 
   it("roundtrips non-zero registers", () => {
-    const regs = [1n, 2n, 3n, 0xdeadbeefn, 0xffffffffffffffffn, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 42n];
+    const regs = [
+      1n,
+      2n,
+      3n,
+      0xdeadbeefn,
+      0xffffffffffffffffn,
+      0n,
+      0n,
+      0n,
+      0n,
+      0n,
+      0n,
+      0n,
+      42n,
+    ];
     const bytes = regsToUint8(regs);
     expect(uint8ToRegs(bytes)).toEqual(regs);
   });
@@ -147,8 +185,10 @@ describe("getMemoryRange", () => {
     page1[0] = 0xbb;
     page1[1] = 0xcc;
     const result = getMemoryRange(
-      (pageNumber) => (pageNumber === 0 ? page0 : pageNumber === 1 ? page1 : null),
-      4095, 3,
+      (pageNumber) =>
+        pageNumber === 0 ? page0 : pageNumber === 1 ? page1 : null,
+      4095,
+      3,
     );
     expect(result).toEqual(new Uint8Array([0xaa, 0xbb, 0xcc]));
   });
@@ -162,7 +202,8 @@ describe("getMemoryRange", () => {
 describe("serializeInitialState / deserializeInitialState roundtrip", () => {
   it("roundtrips a basic state", () => {
     const state: InitialMachineState = {
-      pc: 42, gas: 999999n,
+      pc: 42,
+      gas: 999999n,
       registers: [1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n, 11n, 12n, 13n],
       pageMap: [{ address: 0, length: 4096, isWritable: true }],
       memoryChunks: [{ address: 0, data: new Uint8Array([1, 2, 3]) }],
@@ -172,19 +213,32 @@ describe("serializeInitialState / deserializeInitialState roundtrip", () => {
     expect(deserialized.gas).toBe(state.gas);
     expect(deserialized.registers).toEqual(state.registers);
     expect(deserialized.pageMap).toEqual(state.pageMap);
-    expect(deserialized.memoryChunks[0].data).toEqual(new Uint8Array([1, 2, 3]));
+    expect(deserialized.memoryChunks[0].data).toEqual(
+      new Uint8Array([1, 2, 3]),
+    );
   });
 });
 
 describe("validateRegisterIndices", () => {
   it("accepts valid indices", () => {
-    expect(() => validateRegisterIndices(new Map([[0, 1n], [12, 2n]]))).not.toThrow();
+    expect(() =>
+      validateRegisterIndices(
+        new Map([
+          [0, 1n],
+          [12, 2n],
+        ]),
+      ),
+    ).not.toThrow();
   });
   it("rejects index >= 13", () => {
-    expect(() => validateRegisterIndices(new Map([[13, 1n]]))).toThrow("Invalid register index: 13");
+    expect(() => validateRegisterIndices(new Map([[13, 1n]]))).toThrow(
+      "Invalid register index: 13",
+    );
   });
   it("rejects negative index", () => {
-    expect(() => validateRegisterIndices(new Map([[-1, 1n]]))).toThrow("Invalid register index: -1");
+    expect(() => validateRegisterIndices(new Map([[-1, 1n]]))).toThrow(
+      "Invalid register index: -1",
+    );
   });
 });
 
@@ -406,7 +460,11 @@ describe("DirectAdapter", () => {
     let adapter: DirectAdapter;
 
     beforeEach(() => {
-      adapter = new DirectAdapter("tb-1", "Typeberry", new TypeberrySyncInterpreter());
+      adapter = new DirectAdapter(
+        "tb-1",
+        "Typeberry",
+        new TypeberrySyncInterpreter(),
+      );
     });
 
     it("executes ADD_32 correctly", async () => {
@@ -427,7 +485,9 @@ describe("DirectAdapter", () => {
 
     it("setRegisters rejects indices >= 13", async () => {
       await adapter.load(createAddProgram(), addState);
-      await expect(adapter.setRegisters(new Map([[13, 1n]]))).rejects.toThrow("Invalid register index: 13");
+      await expect(adapter.setRegisters(new Map([[13, 1n]]))).rejects.toThrow(
+        "Invalid register index: 13",
+      );
     });
 
     it("setRegisters applies partial updates", async () => {
@@ -461,7 +521,11 @@ describe("DirectAdapter", () => {
 
     beforeAll(async () => {
       const api = await initAnanas();
-      adapter = new DirectAdapter("an-1", "Ananas", new AnanasSyncInterpreter(api));
+      adapter = new DirectAdapter(
+        "an-1",
+        "Ananas",
+        new AnanasSyncInterpreter(api),
+      );
     });
 
     it("executes ADD_32 correctly", async () => {
@@ -486,7 +550,9 @@ describe("WorkerBridge", () => {
           for (const listener of listeners) listener({ data: response });
         }, 0);
       },
-      addEventListener(_type: "message", listener: Listener) { listeners.push(listener); },
+      addEventListener(_type: "message", listener: Listener) {
+        listeners.push(listener);
+      },
       removeEventListener(_type: "message", listener: Listener) {
         const idx = listeners.indexOf(listener);
         if (idx >= 0) listeners.splice(idx, 1);
@@ -528,7 +594,9 @@ describe("WorkerBridge", () => {
     const worker = createMockWorker(new TypeberrySyncInterpreter());
     const bridge = new WorkerBridge("wb-4", "WB-Typeberry", worker);
     await bridge.load(createAddProgram(), addState);
-    await expect(bridge.setRegisters(new Map([[13, 1n]]))).rejects.toThrow("Invalid register index: 13");
+    await expect(bridge.setRegisters(new Map([[13, 1n]]))).rejects.toThrow(
+      "Invalid register index: 13",
+    );
     await bridge.setRegisters(new Map([[0, 777n]]));
     const state = await bridge.getState();
     expect(state.registers[0]).toBe(777n);
@@ -545,10 +613,10 @@ describe("WorkerBridge", () => {
     expect(mem).toBeInstanceOf(Uint8Array);
     expect(mem.length).toBe(4);
     // Write to memory
-    await bridge.setMemory(131072, new Uint8Array([0xAA, 0xBB]));
+    await bridge.setMemory(131072, new Uint8Array([0xaa, 0xbb]));
     const mem2 = await bridge.getMemory(131072, 2);
-    expect(mem2[0]).toBe(0xAA);
-    expect(mem2[1]).toBe(0xBB);
+    expect(mem2[0]).toBe(0xaa);
+    expect(mem2[1]).toBe(0xbb);
     await bridge.shutdown();
   });
 
@@ -568,7 +636,11 @@ describe("WorkerBridge", () => {
   });
 
   it("rejects stalled commands with TimeoutError", async () => {
-    const silentWorker = { postMessage() {}, addEventListener() {}, removeEventListener() {} };
+    const silentWorker = {
+      postMessage() {},
+      addEventListener() {},
+      removeEventListener() {},
+    };
     const bridge = new WorkerBridge("wb-timeout", "Timeout", silentWorker, 50);
     await expect(bridge.step(1)).rejects.toThrow(TimeoutError);
   });
@@ -581,7 +653,9 @@ describe("installWorkerEntry", () => {
     const responses: WorkerResponse[] = [];
     const mockSelf = {
       onmessage: null as ((event: { data: WorkerRequest }) => void) | null,
-      postMessage(data: WorkerResponse) { responses.push(data); },
+      postMessage(data: WorkerResponse) {
+        responses.push(data);
+      },
     };
     installWorkerEntry(mockSelf, interpreter);
     expect(mockSelf.onmessage).not.toBeNull();
@@ -589,7 +663,9 @@ describe("installWorkerEntry", () => {
     const program = createAddProgram();
     mockSelf.onmessage!({
       data: {
-        type: "load", messageId: "1", program,
+        type: "load",
+        messageId: "1",
+        program,
         initialState: serializeInitialState(addState),
       },
     });
@@ -622,8 +698,11 @@ describe("SPI loads", () => {
     const jamBytes = readFixture("add.jam");
     const interpreter = new TypeberrySyncInterpreter();
     const state: InitialMachineState = {
-      pc: 5, gas: 1_000_000n, registers: zeroRegs,
-      pageMap: [], memoryChunks: [],
+      pc: 5,
+      gas: 1_000_000n,
+      registers: zeroRegs,
+      pageMap: [],
+      memoryChunks: [],
     };
     const loadContext: ProgramLoadContext = {
       spiProgram: { program: jamBytes, hasMetadata: true },
@@ -631,7 +710,9 @@ describe("SPI loads", () => {
     };
     interpreter.load(jamBytes, state, loadContext);
     const status = mapStatus(interpreter.getStatus());
-    expect(["ok", "halt", "panic", "fault", "host", "out_of_gas"]).toContain(status);
+    expect(["ok", "halt", "panic", "fault", "host", "out_of_gas"]).toContain(
+      status,
+    );
   });
 
   it("Ananas handles SPI .jam load with loadContext", async () => {
@@ -639,8 +720,11 @@ describe("SPI loads", () => {
     const api = await initAnanas();
     const interpreter = new AnanasSyncInterpreter(api);
     const state: InitialMachineState = {
-      pc: 5, gas: 1_000_000n, registers: zeroRegs,
-      pageMap: [], memoryChunks: [],
+      pc: 5,
+      gas: 1_000_000n,
+      registers: zeroRegs,
+      pageMap: [],
+      memoryChunks: [],
     };
     const loadContext: ProgramLoadContext = {
       spiProgram: { program: jamBytes, hasMetadata: true },
@@ -648,7 +732,9 @@ describe("SPI loads", () => {
     };
     interpreter.load(jamBytes, state, loadContext);
     const status = mapStatus(interpreter.getStatus());
-    expect(["ok", "halt", "panic", "fault", "host", "out_of_gas"]).toContain(status);
+    expect(["ok", "halt", "panic", "fault", "host", "out_of_gas"]).toContain(
+      status,
+    );
   });
 
   it("Ananas reset restores full SPI load context", async () => {
@@ -656,8 +742,11 @@ describe("SPI loads", () => {
     const api = await initAnanas();
     const interpreter = new AnanasSyncInterpreter(api);
     const state: InitialMachineState = {
-      pc: 5, gas: 1_000_000n, registers: zeroRegs,
-      pageMap: [], memoryChunks: [],
+      pc: 5,
+      gas: 1_000_000n,
+      registers: zeroRegs,
+      pageMap: [],
+      memoryChunks: [],
     };
     const loadContext: ProgramLoadContext = {
       spiProgram: { program: jamBytes, hasMetadata: true },

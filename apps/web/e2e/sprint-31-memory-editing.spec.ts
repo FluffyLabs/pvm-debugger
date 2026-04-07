@@ -1,30 +1,44 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 31 — Memory SPI Labels + Inline Editing", () => {
   /** Load a generic example program into the debugger. */
-  async function loadGenericProgram(page: import("@playwright/test").Page, exampleId: string) {
+  async function loadGenericProgram(
+    page: import("@playwright/test").Page,
+    exampleId: string,
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Load an SPI example program into the debugger. */
-  async function loadSpiProgram(page: import("@playwright/test").Page, exampleId: string) {
+  async function loadSpiProgram(
+    page: import("@playwright/test").Page,
+    exampleId: string,
+  ) {
     await page.goto("/#/load");
     // WAT category is collapsed by default, expand it
     await page.getByTestId("category-toggle-wat").click();
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test.describe("SPI Labels", () => {
-    test("SPI programs show named labels (RO Data, Stack, etc.)", async ({ page }) => {
+    test("SPI programs show named labels (RO Data, Stack, etc.)", async ({
+      page,
+    }) => {
       await loadSpiProgram(page, "add-jam");
 
       const memoryPanel = page.getByTestId("memory-panel");
@@ -58,7 +72,9 @@ test.describe("Sprint 31 — Memory SPI Labels + Inline Editing", () => {
   });
 
   test.describe("Inline Editing", () => {
-    test("typing two hex digits writes and advances to next byte", async ({ page }) => {
+    test("typing two hex digits writes and advances to next byte", async ({
+      page,
+    }) => {
       // store-u16 has a writable page at 0x20000
       await loadGenericProgram(page, "store-u16");
 
@@ -122,10 +138,15 @@ test.describe("Sprint 31 — Memory SPI Labels + Inline Editing", () => {
 
       // Paste a multi-byte hex string (3 bytes)
       await page.evaluate(() => {
-        const input = document.querySelector('[data-testid="hex-byte-input-0"]') as HTMLInputElement;
+        const input = document.querySelector(
+          '[data-testid="hex-byte-input-0"]',
+        ) as HTMLInputElement;
         const dt = new DataTransfer();
         dt.setData("text", "AABBCC");
-        const event = new ClipboardEvent("paste", { clipboardData: dt, bubbles: true });
+        const event = new ClipboardEvent("paste", {
+          clipboardData: dt,
+          bubbles: true,
+        });
         input.dispatchEvent(event);
       });
 
@@ -171,7 +192,9 @@ test.describe("Sprint 31 — Memory SPI Labels + Inline Editing", () => {
       await expect(page.getByTestId("hex-byte-input-0")).not.toBeVisible();
     });
 
-    test("editing is disabled when not paused with OK status", async ({ page }) => {
+    test("editing is disabled when not paused with OK status", async ({
+      page,
+    }) => {
       // store-u16: step twice → terminal (fault) state
       await loadGenericProgram(page, "store-u16");
 
@@ -189,7 +212,7 @@ test.describe("Sprint 31 — Memory SPI Labels + Inline Editing", () => {
 
       // Now try to click a byte cell — should NOT open editor
       const firstByte = page.getByTestId("hex-byte-0");
-      if (await firstByte.count() > 0) {
+      if ((await firstByte.count()) > 0) {
         await firstByte.click();
         await expect(page.getByTestId("hex-byte-input-0")).not.toBeVisible();
       }

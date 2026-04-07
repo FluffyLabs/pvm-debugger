@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from "react";
 import type { HostCallInfo, HostCallResumeEffects } from "@pvmdbg/types";
+import { useCallback, useRef, useState } from "react";
 
 export interface PendingChangesData {
   registerWrites: Map<number, bigint>;
@@ -46,7 +46,9 @@ export function usePendingChanges(
   const pendingRef = useRef<PendingChangesData | null>(null);
 
   // Derive the active host call for the selected PVM.
-  const activeInfo = selectedPvmId ? hostCallInfo.get(selectedPvmId) : undefined;
+  const activeInfo = selectedPvmId
+    ? hostCallInfo.get(selectedPvmId)
+    : undefined;
   const prevInfoRef = useRef<HostCallInfo | undefined>(undefined);
 
   // Re-initialize pending state when the active host call changes.
@@ -98,7 +100,9 @@ export function usePendingChanges(
       // Replace any existing write at the exact same start address; append otherwise.
       // User writes are always at the end so they take precedence over proposal writes
       // at overlapping (but not identical) addresses when applied in order.
-      const newWrites = prev.memoryWrites.filter((mw) => mw.address !== address);
+      const newWrites = prev.memoryWrites.filter(
+        (mw) => mw.address !== address,
+      );
       newWrites.push({ address, data: new Uint8Array(data) });
       const next = { ...prev, memoryWrites: newWrites };
       pendingRef.current = next;
@@ -132,5 +136,13 @@ export function usePendingChanges(
     pendingRef.current = null;
   }, []);
 
-  return { pending, setRegister, setGas, writeMemory, removeMemoryWrite, getEffects, clear };
+  return {
+    pending,
+    setRegister,
+    setGas,
+    writeMemory,
+    removeMemoryWrite,
+    getEffects,
+    clear,
+  };
 }

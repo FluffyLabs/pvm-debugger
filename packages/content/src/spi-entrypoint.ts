@@ -1,4 +1,9 @@
-import { encodeVarU32, decodeVarU32, encodeU16LE, decodeU16LE } from "@pvmdbg/types";
+import {
+  decodeU16LE,
+  decodeVarU32,
+  encodeU16LE,
+  encodeVarU32,
+} from "@pvmdbg/types";
 
 export interface RefineParams {
   core: number;
@@ -77,7 +82,10 @@ export function encodeSpiEntrypoint(params: SpiEntrypointParams): Uint8Array {
 }
 
 /** Decode a varU32-length-prefixed blob from bytes at offset. Returns the data and total bytes consumed. */
-function decodeBlob(bytes: Uint8Array, offset: number): { data: Uint8Array; bytesRead: number } {
+function decodeBlob(
+  bytes: Uint8Array,
+  offset: number,
+): { data: Uint8Array; bytesRead: number } {
   const { value: length, bytesRead: lenBytes } = decodeVarU32(bytes, offset);
   const data = bytes.slice(offset + lenBytes, offset + lenBytes + length);
   return { data, bytesRead: lenBytes + length };
@@ -115,7 +123,11 @@ export function decodeSpiEntrypoint(
       // workPackageHash is fixed 32 bytes (no length prefix)
       const hash = bytes.slice(offset, offset + 32);
       offset += 32;
-      return { entrypoint: "refine", pc: 0, params: { core, index, id, payload, workPackageHash: hash } };
+      return {
+        entrypoint: "refine",
+        pc: 0,
+        params: { core, index, id, payload, workPackageHash: hash },
+      };
     }
     case "accumulate": {
       const slot = readVarU32();

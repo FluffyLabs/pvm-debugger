@@ -1,4 +1,10 @@
-import { TypeberrySyncInterpreter, installWorkerEntry } from "@pvmdbg/runtime-worker";
+import {
+  installWorkerEntry,
+  TypeberrySyncInterpreter,
+} from "@pvmdbg/runtime-worker";
 
 const interpreter = new TypeberrySyncInterpreter();
-installWorkerEntry(self as unknown as Parameters<typeof installWorkerEntry>[0], interpreter);
+installWorkerEntry(
+  self as unknown as Parameters<typeof installWorkerEntry>[0],
+  interpreter,
+);

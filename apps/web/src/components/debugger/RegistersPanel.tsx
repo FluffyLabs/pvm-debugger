@@ -1,24 +1,34 @@
-import { useCallback, useRef, useEffect, useMemo } from "react";
-import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { UsePendingChanges } from "../../hooks/usePendingChanges";
-import { StatusHeader } from "./StatusHeader";
-import { RegisterRow, type RegisterDivergence } from "./RegisterRow";
 import { PendingChanges } from "./PendingChanges";
+import { type RegisterDivergence, RegisterRow } from "./RegisterRow";
+import { StatusHeader } from "./StatusHeader";
 
 interface RegistersPanelProps {
   snapshot: MachineStateSnapshot | null;
   lifecycle: PvmLifecycle | null;
   orchestrator: Orchestrator | null;
   selectedPvmId: string | null;
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >;
   pendingChanges: UsePendingChanges;
 }
 
 const REGISTER_COUNT = 13;
 const DEFAULT_REGISTERS = Array.from({ length: REGISTER_COUNT }, () => 0n);
 
-export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmId, snapshots, pendingChanges }: RegistersPanelProps) {
+export function RegistersPanel({
+  snapshot,
+  lifecycle,
+  orchestrator,
+  selectedPvmId,
+  snapshots,
+  pendingChanges,
+}: RegistersPanelProps) {
   const registers = snapshot?.registers ?? DEFAULT_REGISTERS;
 
   // Editing is allowed when paused (including host-call pause) with non-terminal status
@@ -107,9 +117,11 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
 
       const pvmIds = orchestrator.getPvmIds();
       for (const pvmId of pvmIds) {
-        orchestrator.setRegisters(pvmId, new Map([[index, value]])).catch((err) => {
-          console.error(`Failed to set register ${index} on ${pvmId}:`, err);
-        });
+        orchestrator
+          .setRegisters(pvmId, new Map([[index, value]]))
+          .catch((err) => {
+            console.error(`Failed to set register ${index} on ${pvmId}:`, err);
+          });
       }
     },
     [orchestrator, isHostCallPaused, pendingChanges],
@@ -149,7 +161,10 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
   );
 
   return (
-    <div data-testid="registers-panel" className="flex flex-col h-full overflow-hidden">
+    <div
+      data-testid="registers-panel"
+      className="flex flex-col h-full overflow-hidden"
+    >
       <div className="px-2 h-7 text-sm font-normal text-foreground border-b border-border shrink-0 flex items-center">
         Registers
       </div>
@@ -168,7 +183,10 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
           No PVM loaded
         </div>
       )}
-      <div data-testid="registers-scroll" className="flex-1 overflow-auto min-h-[4.5rem]">
+      <div
+        data-testid="registers-scroll"
+        className="flex-1 overflow-auto min-h-[4.5rem]"
+      >
         {registers.map((value, i) => (
           <RegisterRow
             key={i}
@@ -181,7 +199,9 @@ export function RegistersPanel({ snapshot, lifecycle, orchestrator, selectedPvmI
           />
         ))}
       </div>
-      {pendingChanges.pending && <PendingChanges pending={pendingChanges.pending} />}
+      {pendingChanges.pending && (
+        <PendingChanges pending={pendingChanges.pending} />
+      )}
     </div>
   );
 }

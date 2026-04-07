@@ -1,5 +1,5 @@
-import { defineConfig } from "vitest/config";
 import path from "node:path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
@@ -7,10 +7,7 @@ export default defineConfig({
       {
         test: {
           name: "packages",
-          include: [
-            "packages/*/src/**/*.test.ts",
-            "apps/web/src/**/*.test.ts",
-          ],
+          include: ["packages/*/src/**/*.test.ts", "apps/web/src/**/*.test.ts"],
           environment: "node",
           setupFiles: ["./vitest.setup.ts"],
         },

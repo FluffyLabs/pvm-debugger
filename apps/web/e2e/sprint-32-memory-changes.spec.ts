@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 32 — Memory Change Highlighting", () => {
   /** Load a generic example program into the debugger. */
-  async function loadGenericProgram(page: import("@playwright/test").Page, exampleId: string) {
+  async function loadGenericProgram(
+    page: import("@playwright/test").Page,
+    exampleId: string,
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Expand the writable memory page at address 0x20000 (131072). */
@@ -17,7 +22,9 @@ test.describe("Sprint 32 — Memory Change Highlighting", () => {
     await expect(page.getByTestId("hex-dump")).toBeVisible({ timeout: 5000 });
   }
 
-  test("stepping produces changed-byte highlights in affected memory pages", async ({ page }) => {
+  test("stepping produces changed-byte highlights in affected memory pages", async ({
+    page,
+  }) => {
     // store-u16 writes to memory at 0x20000 on step 1
     await loadGenericProgram(page, "store-u16");
     await expandWritablePage(page);

@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 04 — Registers + Status Display", () => {
   /** Helper: load a program and wait for the debugger page. */
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "add") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "add",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("status shows 'OK' after program load", async ({ page }) => {

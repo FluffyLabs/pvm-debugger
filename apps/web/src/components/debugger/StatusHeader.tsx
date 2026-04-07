@@ -1,7 +1,18 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import type { PvmLifecycle, PvmStatus, MachineStateSnapshot } from "@pvmdbg/types";
 import { WithTooltip } from "@fluffylabs/shared-ui";
-import { formatPc, formatGas, formatGasHex, lifecycleLabel, parsePcInput, parseBigintInput } from "./value-format";
+import type {
+  MachineStateSnapshot,
+  PvmLifecycle,
+  PvmStatus,
+} from "@pvmdbg/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  formatGas,
+  formatGasHex,
+  formatPc,
+  lifecycleLabel,
+  parseBigintInput,
+  parsePcInput,
+} from "./value-format";
 
 interface StatusHeaderProps {
   snapshot: MachineStateSnapshot;
@@ -123,7 +134,9 @@ function InlineEdit({
     <span
       data-testid={testId}
       className={`text-foreground ${editable ? "cursor-pointer hover:underline" : ""}`}
-      style={changed ? { borderBottom: "1px solid var(--color-brand)" } : undefined}
+      style={
+        changed ? { borderBottom: "1px solid var(--color-brand)" } : undefined
+      }
       onClick={startEditing}
     >
       {displayValue}
@@ -131,7 +144,15 @@ function InlineEdit({
   );
 }
 
-export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChanged, onPcCommit, onGasCommit }: StatusHeaderProps) {
+export function StatusHeader({
+  snapshot,
+  lifecycle,
+  editable,
+  pcChanged,
+  gasChanged,
+  onPcCommit,
+  onGasCommit,
+}: StatusHeaderProps) {
   const label = lifecycleLabel(lifecycle, snapshot.status);
   const className = badgeClassName(lifecycle, snapshot.status);
 
@@ -158,7 +179,10 @@ export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChan
   const gasHex = formatGasHex(snapshot.gas);
 
   return (
-    <div data-testid="status-header" className="flex items-center gap-4 px-2 py-1.5 border-b border-border">
+    <div
+      data-testid="status-header"
+      className="flex items-center gap-4 px-2 py-1.5 border-b border-border"
+    >
       <span
         data-testid="status-badge"
         className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-semibold shrink-0 ${className}`}
@@ -176,7 +200,13 @@ export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChan
             onCommit={handlePcCommit}
           />
           {pcChanged && (
-            <span data-testid="pc-delta" className="font-semibold select-none" style={{ color: "var(--color-brand)" }}>●</span>
+            <span
+              data-testid="pc-delta"
+              className="font-semibold select-none"
+              style={{ color: "var(--color-brand)" }}
+            >
+              ●
+            </span>
           )}
         </div>
         <div className="flex items-center gap-1" data-testid="gas-field">
@@ -193,7 +223,13 @@ export function StatusHeader({ snapshot, lifecycle, editable, pcChanged, gasChan
             </span>
           </WithTooltip>
           {gasChanged && (
-            <span data-testid="gas-delta" className="font-semibold select-none" style={{ color: "var(--color-brand)" }}>●</span>
+            <span
+              data-testid="gas-delta"
+              className="font-semibold select-none"
+              style={{ color: "var(--color-brand)" }}
+            >
+              ●
+            </span>
           )}
         </div>
       </div>

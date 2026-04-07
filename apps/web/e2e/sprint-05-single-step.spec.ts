@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 05 — Single Step (Next Button)", () => {
   /**
@@ -6,12 +6,17 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
    * Uses "step-test" by default — a single LOAD_IMM instruction that
    * sets r0 = 42, survives one step without terminating.
    */
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "step-test",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("Next button is visible on the debugger page", async ({ page }) => {
@@ -47,7 +52,9 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
     await expect(gasValue).not.toHaveText(gasBefore!, { timeout: 5000 });
   });
 
-  test("register value changes after stepping a register-writing program", async ({ page }) => {
+  test("register value changes after stepping a register-writing program", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // r0 should be 0 initially
@@ -60,7 +67,9 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
     await expect(regHex0).not.toHaveText(before!, { timeout: 5000 });
   });
 
-  test("Next button is disabled during step execution and re-enables after", async ({ page }) => {
+  test("Next button is disabled during step execution and re-enables after", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     const nextBtn = page.getByTestId("next-button");
@@ -100,7 +109,9 @@ test.describe("Sprint 05 — Single Step (Next Button)", () => {
     await page.getByTestId("next-button").click();
 
     // Wait for PC to change
-    await expect(page.getByTestId("pc-value")).not.toHaveText("0x0000", { timeout: 5000 });
+    await expect(page.getByTestId("pc-value")).not.toHaveText("0x0000", {
+      timeout: 5000,
+    });
 
     // Row at PC=0 should no longer be highlighted
     await expect(row0).not.toHaveClass(/instruction-row-current/);

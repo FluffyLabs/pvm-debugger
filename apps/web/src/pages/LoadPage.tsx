@@ -1,16 +1,20 @@
-import { useState, useCallback } from "react";
-import { useNavigate } from "react-router";
 import { Badge, Button } from "@fluffylabs/shared-ui";
-import { ArrowRight } from "lucide-react";
-import type { RawPayload, DetectedFormat, ExampleEntry } from "@pvmdbg/content";
+import type { DetectedFormat, ExampleEntry, RawPayload } from "@pvmdbg/content";
 import { createProgramEnvelope, decodeGeneric } from "@pvmdbg/content";
+import { ArrowRight } from "lucide-react";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router";
+import { ConfigStep } from "../components/load/ConfigStep";
+import { ExampleList } from "../components/load/ExampleList";
+import {
+  formatBadgeIntent,
+  formatByteCount,
+  formatLabel,
+} from "../components/load/format";
+import { SourceStep } from "../components/load/SourceStep";
+import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
 import { useOrchestrator } from "../hooks/useOrchestrator";
 import { persistSession } from "../hooks/usePersistence";
-import { useDebuggerSettings } from "../hooks/useDebuggerSettings";
-import { ExampleList } from "../components/load/ExampleList";
-import { SourceStep } from "../components/load/SourceStep";
-import { ConfigStep } from "../components/load/ConfigStep";
-import { formatLabel, formatBadgeIntent, formatByteCount } from "../components/load/format";
 
 /** Formats that require the SPI entrypoint config step. */
 function isSpiFormat(kind: DetectedFormat["kind"]): boolean {
@@ -23,7 +27,9 @@ export function LoadPage() {
   const { settings } = useDebuggerSettings();
   const [step, setStep] = useState<1 | 2>(1);
   const [rawPayload, setRawPayload] = useState<RawPayload | null>(null);
-  const [detectedFormat, setDetectedFormat] = useState<DetectedFormat | null>(null);
+  const [detectedFormat, setDetectedFormat] = useState<DetectedFormat | null>(
+    null,
+  );
   const [exampleEntry, setExampleEntry] = useState<ExampleEntry | null>(null);
 
   /** Try to load a non-SPI program directly into the debugger, bypassing step 2. */
@@ -91,10 +97,16 @@ export function LoadPage() {
 
   // Step 1: source selection
   return (
-    <div data-testid="load-page" className="flex flex-col items-start p-8 h-full overflow-auto max-w-5xl mx-auto w-full">
-      <h1 className="text-lg font-semibold text-foreground mb-1">Load Program</h1>
+    <div
+      data-testid="load-page"
+      className="flex flex-col items-start p-8 h-full overflow-auto max-w-5xl mx-auto w-full"
+    >
+      <h1 className="text-lg font-semibold text-foreground mb-1">
+        Load Program
+      </h1>
       <p className="text-sm text-muted-foreground mb-6">
-        Upload a file, fetch from URL, paste hex, or select an example to begin debugging.
+        Upload a file, fetch from URL, paste hex, or select an example to begin
+        debugging.
       </p>
 
       {/* Candidate preview bar — shown when returning from step 2 */}
@@ -103,7 +115,9 @@ export function LoadPage() {
           data-testid="load-page-candidate"
           className="w-full max-w-5xl mb-4 flex items-center gap-3 rounded-lg border border-border p-3"
         >
-          <span className="text-xs text-muted-foreground">Previously selected:</span>
+          <span className="text-xs text-muted-foreground">
+            Previously selected:
+          </span>
           <Badge
             intent={formatBadgeIntent(detectedFormat.kind)}
             variant="outline"

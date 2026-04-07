@@ -1,9 +1,9 @@
 // Re-export canonical trace types from @pvmdbg/types
 export type {
-  TracePrelude,
-  TraceEntry,
-  TraceTermination,
   EcalliTrace,
+  TraceEntry,
+  TracePrelude,
+  TraceTermination,
 } from "@pvmdbg/types";
 
 /** Describes a single mismatch found when comparing two traces. */

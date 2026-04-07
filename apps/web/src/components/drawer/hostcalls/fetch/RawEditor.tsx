@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { toHex, fromHex } from "@pvmdbg/types";
+import { fromHex, toHex } from "@pvmdbg/types";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface RawEditorProps {
   blob: Uint8Array;
@@ -19,20 +19,24 @@ export function RawEditor({ blob, onBlobChange }: RawEditorProps) {
     }
   }, [blob]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    editingRef.current = true;
-    const raw = e.target.value;
-    setText(raw);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      editingRef.current = true;
+      const raw = e.target.value;
+      setText(raw);
 
-    const clean = raw.startsWith("0x") || raw.startsWith("0X") ? raw.slice(2) : raw;
-    if (clean.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(clean)) {
-      try {
-        onBlobChange(fromHex("0x" + clean));
-      } catch {
-        // ignore
+      const clean =
+        raw.startsWith("0x") || raw.startsWith("0X") ? raw.slice(2) : raw;
+      if (clean.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(clean)) {
+        try {
+          onBlobChange(fromHex("0x" + clean));
+        } catch {
+          // ignore
+        }
       }
-    }
-  }, [onBlobChange]);
+    },
+    [onBlobChange],
+  );
 
   const handleBlur = useCallback(() => {
     editingRef.current = false;

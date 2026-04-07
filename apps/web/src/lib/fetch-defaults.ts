@@ -4,14 +4,14 @@
  */
 
 import {
-  FetchKind,
   encodeVariantData,
-  type ProtocolConstants,
-  type WorkItemSummary,
-  type RefinementContext,
+  FetchKind,
   type Operand,
+  type ProtocolConstants,
+  type RefinementContext,
   type Transfer,
   type WorkItem,
+  type WorkItemSummary,
   type WorkPackageData,
 } from "./fetch-codec";
 

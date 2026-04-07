@@ -1,5 +1,5 @@
-import type { PvmStatus, PvmLifecycle } from "./pvm-status.js";
 import type { MachineStateSnapshot } from "./machine-state.js";
+import type { PvmLifecycle, PvmStatus } from "./pvm-status.js";
 
 export interface HostCallMismatch {
   field: string;
@@ -43,7 +43,11 @@ export interface StepResult {
 }
 
 export interface OrchestratorEvents {
-  pvmStateChanged: (pvmId: string, snapshot: MachineStateSnapshot, lifecycle: PvmLifecycle) => void;
+  pvmStateChanged: (
+    pvmId: string,
+    snapshot: MachineStateSnapshot,
+    lifecycle: PvmLifecycle,
+  ) => void;
   hostCallPaused: (pvmId: string, info: HostCallInfo) => void;
   terminated: (pvmId: string, reason: PvmStatus) => void;
   error: (pvmId: string, error: Error) => void;

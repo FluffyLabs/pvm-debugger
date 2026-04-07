@@ -8,7 +8,10 @@ interface AllTransfersEditorProps {
   onChange: (value: TransferOrOperand[]) => void;
 }
 
-export function AllTransfersEditor({ value, onChange }: AllTransfersEditorProps) {
+export function AllTransfersEditor({
+  value,
+  onChange,
+}: AllTransfersEditorProps) {
   const addItem = useCallback(() => {
     onChange([...value, { ...DEFAULT_OPERAND }]);
   }, [value, onChange]);
@@ -32,9 +35,14 @@ export function AllTransfersEditor({ value, onChange }: AllTransfersEditorProps)
   );
 
   return (
-    <div data-testid="all-transfers-editor" className="flex flex-col gap-2 text-xs">
+    <div
+      data-testid="all-transfers-editor"
+      className="flex flex-col gap-2 text-xs"
+    >
       <div className="flex items-center gap-2">
-        <span className="text-muted-foreground">{value.length} accumulation input(s)</span>
+        <span className="text-muted-foreground">
+          {value.length} accumulation input(s)
+        </span>
         <button
           className="cursor-pointer rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary hover:bg-primary/30"
           onClick={addItem}
@@ -45,7 +53,9 @@ export function AllTransfersEditor({ value, onChange }: AllTransfersEditorProps)
       {value.map((item, idx) => (
         <div key={idx} className="border border-border rounded p-2">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-muted-foreground">Input #{idx}</span>
+            <span className="text-[10px] text-muted-foreground">
+              Input #{idx}
+            </span>
             <button
               className="cursor-pointer text-xs text-muted-foreground hover:text-destructive"
               onClick={() => removeItem(idx)}
@@ -53,7 +63,10 @@ export function AllTransfersEditor({ value, onChange }: AllTransfersEditorProps)
               ×
             </button>
           </div>
-          <TransferOrOperandEditor value={item} onChange={(v) => setItem(idx, v)} />
+          <TransferOrOperandEditor
+            value={item}
+            onChange={(v) => setItem(idx, v)}
+          />
         </div>
       ))}
     </div>

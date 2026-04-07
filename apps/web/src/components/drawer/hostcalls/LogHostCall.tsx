@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import type { HostCallInfo } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import type { HostCallInfo } from "@pvmdbg/types";
+import { useEffect, useState } from "react";
 
 interface LogHostCallProps {
   info: HostCallInfo;
@@ -59,7 +59,10 @@ export function LogHostCall({ info, orchestrator }: LogHostCallProps) {
 
   useEffect(() => {
     // Try to decode from trace memory writes first (trace replay data)
-    if (resumeProposal?.memoryWrites && resumeProposal.memoryWrites.length > 0) {
+    if (
+      resumeProposal?.memoryWrites &&
+      resumeProposal.memoryWrites.length > 0
+    ) {
       // The trace may contain the memory segments we need
       for (const mw of resumeProposal.memoryWrites) {
         if (mw.address === msgPtr && mw.data.length >= msgLen) {
@@ -81,13 +84,21 @@ export function LogHostCall({ info, orchestrator }: LogHostCallProps) {
     const readMemory = async () => {
       try {
         if (msgLen > 0) {
-          const msgData = await orchestrator.getMemory(info.pvmId, msgPtr, msgLen);
+          const msgData = await orchestrator.getMemory(
+            info.pvmId,
+            msgPtr,
+            msgLen,
+          );
           if (cancelled) return;
           setMessageText(tryDecodeText(msgData));
           setMessageHex(toHexString(msgData));
         }
         if (targetLen > 0) {
-          const tgtData = await orchestrator.getMemory(info.pvmId, targetPtr, targetLen);
+          const tgtData = await orchestrator.getMemory(
+            info.pvmId,
+            targetPtr,
+            targetLen,
+          );
           if (cancelled) return;
           setTargetText(tryDecodeText(tgtData));
         }
@@ -100,7 +111,15 @@ export function LogHostCall({ info, orchestrator }: LogHostCallProps) {
     return () => {
       cancelled = true;
     };
-  }, [orchestrator, info.pvmId, resumeProposal, msgPtr, msgLen, targetPtr, targetLen]);
+  }, [
+    orchestrator,
+    info.pvmId,
+    resumeProposal,
+    msgPtr,
+    msgLen,
+    targetPtr,
+    targetLen,
+  ]);
 
   const levelLabel = LEVEL_LABELS[level] ?? `Level ${level}`;
 
@@ -157,7 +176,9 @@ export function LogHostCall({ info, orchestrator }: LogHostCallProps) {
 
       {msgLen === 0 && (
         <div className="mt-1">
-          <span className="text-muted-foreground italic">No message content (length 0).</span>
+          <span className="text-muted-foreground italic">
+            No message content (length 0).
+          </span>
         </div>
       )}
     </div>

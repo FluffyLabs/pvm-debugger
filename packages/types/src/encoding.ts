@@ -73,18 +73,32 @@ export function encodeVarU32(v: number): Uint8Array {
     return new Uint8Array([0xc0 | (v >> 16), v & 0xff, (v >> 8) & 0xff]);
   }
   if (v <= 0x0fffffff) {
-    return new Uint8Array([0xe0 | (v >> 24), v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff]);
+    return new Uint8Array([
+      0xe0 | (v >> 24),
+      v & 0xff,
+      (v >> 8) & 0xff,
+      (v >> 16) & 0xff,
+    ]);
   }
   // 5-byte encoding
   const leadByte = 0xf0 | ((v >>> 28) & 0x07);
-  return new Uint8Array([leadByte, v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff]);
+  return new Uint8Array([
+    leadByte,
+    v & 0xff,
+    (v >> 8) & 0xff,
+    (v >> 16) & 0xff,
+    (v >> 24) & 0xff,
+  ]);
 }
 
 /**
  * Decode a VarU32 from bytes at the given offset.
  * Returns the decoded value and number of bytes consumed.
  */
-export function decodeVarU32(bytes: Uint8Array, offset: number = 0): { value: number; bytesRead: number } {
+export function decodeVarU32(
+  bytes: Uint8Array,
+  offset: number = 0,
+): { value: number; bytesRead: number } {
   if (offset >= bytes.length) {
     throw new Error("decodeVarU32: offset out of bounds");
   }
@@ -94,26 +108,39 @@ export function decodeVarU32(bytes: Uint8Array, offset: number = 0): { value: nu
     return { value: lead, bytesRead: 1 };
   }
   if (lead <= 0xbf) {
-    if (offset + 1 >= bytes.length) throw new Error("decodeVarU32: not enough bytes for 2-byte encoding");
+    if (offset + 1 >= bytes.length)
+      throw new Error("decodeVarU32: not enough bytes for 2-byte encoding");
     const value = ((lead & 0x3f) << 8) | bytes[offset + 1];
     return { value, bytesRead: 2 };
   }
   if (lead <= 0xdf) {
-    if (offset + 2 >= bytes.length) throw new Error("decodeVarU32: not enough bytes for 3-byte encoding");
-    const value = ((lead & 0x1f) << 16) | (bytes[offset + 2] << 8) | bytes[offset + 1];
+    if (offset + 2 >= bytes.length)
+      throw new Error("decodeVarU32: not enough bytes for 3-byte encoding");
+    const value =
+      ((lead & 0x1f) << 16) | (bytes[offset + 2] << 8) | bytes[offset + 1];
     return { value, bytesRead: 3 };
   }
   if (lead <= 0xef) {
-    if (offset + 3 >= bytes.length) throw new Error("decodeVarU32: not enough bytes for 4-byte encoding");
-    const value = ((lead & 0x0f) << 24) | (bytes[offset + 3] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 1];
+    if (offset + 3 >= bytes.length)
+      throw new Error("decodeVarU32: not enough bytes for 4-byte encoding");
+    const value =
+      ((lead & 0x0f) << 24) |
+      (bytes[offset + 3] << 16) |
+      (bytes[offset + 2] << 8) |
+      bytes[offset + 1];
     return { value, bytesRead: 4 };
   }
   // 5-byte encoding: lead 0xf0..0xf7
   if (lead <= 0xf7) {
-    if (offset + 4 >= bytes.length) throw new Error("decodeVarU32: not enough bytes for 5-byte encoding");
+    if (offset + 4 >= bytes.length)
+      throw new Error("decodeVarU32: not enough bytes for 5-byte encoding");
     // Use unsigned right shift (>>>) to coerce to unsigned 32-bit
     const value =
-      ((bytes[offset + 4] << 24) | (bytes[offset + 3] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 1]) >>> 0;
+      ((bytes[offset + 4] << 24) |
+        (bytes[offset + 3] << 16) |
+        (bytes[offset + 2] << 8) |
+        bytes[offset + 1]) >>>
+      0;
     return { value, bytesRead: 5 };
   }
   throw new Error(`decodeVarU32: invalid lead byte 0x${lead.toString(16)}`);
@@ -157,14 +184,23 @@ export function encodePvmBlob(
   const jtItemLenByte = new Uint8Array([0]);
   const codeLenBytes = encodeVarU32(codeLength);
 
-  const totalLength = jtLenBytes.length + jtItemLenByte.length + codeLenBytes.length + codeLength + maskByteLength;
+  const totalLength =
+    jtLenBytes.length +
+    jtItemLenByte.length +
+    codeLenBytes.length +
+    codeLength +
+    maskByteLength;
   const blob = new Uint8Array(totalLength);
   let offset = 0;
 
-  blob.set(jtLenBytes, offset); offset += jtLenBytes.length;
-  blob.set(jtItemLenByte, offset); offset += jtItemLenByte.length;
-  blob.set(codeLenBytes, offset); offset += codeLenBytes.length;
-  blob.set(code, offset); offset += codeLength;
+  blob.set(jtLenBytes, offset);
+  offset += jtLenBytes.length;
+  blob.set(jtItemLenByte, offset);
+  offset += jtItemLenByte.length;
+  blob.set(codeLenBytes, offset);
+  offset += codeLenBytes.length;
+  blob.set(code, offset);
+  offset += codeLength;
   blob.set(mask, offset);
 
   return blob;
@@ -177,7 +213,9 @@ const TOTAL_REGISTER_BYTES = REGISTER_COUNT * BYTES_PER_REGISTER; // 104
 /** Convert 13 bigint registers to a 104-byte Uint8Array (little-endian). */
 export function regsToUint8(regs: bigint[]): Uint8Array {
   if (regs.length !== REGISTER_COUNT) {
-    throw new Error(`regsToUint8: expected ${REGISTER_COUNT} registers, got ${regs.length}`);
+    throw new Error(
+      `regsToUint8: expected ${REGISTER_COUNT} registers, got ${regs.length}`,
+    );
   }
   const buffer = new ArrayBuffer(TOTAL_REGISTER_BYTES);
   const view = new DataView(buffer);
@@ -190,7 +228,9 @@ export function regsToUint8(regs: bigint[]): Uint8Array {
 /** Convert a 104-byte Uint8Array to 13 bigint registers (little-endian). */
 export function uint8ToRegs(bytes: Uint8Array): bigint[] {
   if (bytes.length !== TOTAL_REGISTER_BYTES) {
-    throw new Error(`uint8ToRegs: expected ${TOTAL_REGISTER_BYTES} bytes, got ${bytes.length}`);
+    throw new Error(
+      `uint8ToRegs: expected ${TOTAL_REGISTER_BYTES} bytes, got ${bytes.length}`,
+    );
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const regs: bigint[] = [];

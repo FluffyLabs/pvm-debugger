@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import type { EcalliTrace } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import type { EcalliTrace } from "@pvmdbg/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { decodeLogMessage } from "../components/drawer/trace-display";
 
 export interface LogMessage {

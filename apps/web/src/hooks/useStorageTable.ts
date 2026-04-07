@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 import type { HostCallResumeEffects } from "@pvmdbg/types";
 import { fromHex } from "@pvmdbg/types";
+import { useCallback, useMemo, useRef, useSyncExternalStore } from "react";
 
 export interface StorageEntry {
   key: string;
@@ -29,7 +29,10 @@ class StorageStore {
 
   private notify() {
     this.revision++;
-    this.snapshot = [...this.entries.entries()].map(([key, value]) => ({ key, value }));
+    this.snapshot = [...this.entries.entries()].map(([key, value]) => ({
+      key,
+      value,
+    }));
     for (const cb of this.listeners) cb();
   }
 
@@ -92,7 +95,8 @@ class StorageStore {
  */
 function safeFromHex(hex: string): Uint8Array {
   try {
-    let clean = hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
+    let clean =
+      hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
     if (clean.length % 2 === 1) clean = "0" + clean;
     return fromHex("0x" + clean);
   } catch {
@@ -116,7 +120,9 @@ export interface UseStorageTable {
  * Creates a new StorageStore per orchestrator instance (resets when
  * orchestrator changes). Exposes reactive entries via useSyncExternalStore.
  */
-export function useStorageTable(orchestratorId: string | null): UseStorageTable {
+export function useStorageTable(
+  orchestratorId: string | null,
+): UseStorageTable {
   // Keep one store ref per orchestrator identity. When orchestratorId changes
   // (i.e. orchestrator is replaced), we create a fresh store.
   const storeRef = useRef<{ id: string | null; store: StorageStore }>({
@@ -133,7 +139,11 @@ export function useStorageTable(orchestratorId: string | null): UseStorageTable 
 
   const store = storeRef.current.store;
 
-  const entries = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const entries = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getSnapshot,
+  );
 
   const setEntry = useCallback(
     (key: string, value: string) => store.set(key, value),

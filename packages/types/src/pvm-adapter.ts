@@ -1,6 +1,9 @@
-import type { PvmStatus } from "./pvm-status.js";
-import type { InitialMachineState, MachineStateSnapshot } from "./machine-state.js";
+import type {
+  InitialMachineState,
+  MachineStateSnapshot,
+} from "./machine-state.js";
 import type { ProgramLoadContext } from "./program.js";
+import type { PvmStatus } from "./pvm-status.js";
 
 /** Async adapter interface — wraps a PVM interpreter (may run in a web worker or directly). */
 export interface PvmAdapter {
@@ -8,7 +11,11 @@ export interface PvmAdapter {
   readonly pvmName: string;
 
   /** Load program and set initial state. */
-  load(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): Promise<void>;
+  load(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): Promise<void>;
 
   /** Reset to initial state (equivalent to load with same program). */
   reset(): Promise<void>;

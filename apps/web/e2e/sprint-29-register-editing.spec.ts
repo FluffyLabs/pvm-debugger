@@ -1,16 +1,21 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 29 — Registers Inline Editing", () => {
   /**
    * Helper: load a program and wait for the debugger page.
    * Uses "step-test" — a single LOAD_IMM instruction, gives us a paused OK state.
    */
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "step-test",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("clicking a register value enters edit mode", async ({ page }) => {
@@ -185,13 +190,17 @@ test.describe("Sprint 29 — Registers Inline Editing", () => {
     await loadProgram(page);
 
     const row = page.getByTestId("register-row-0");
-    const heightBefore = await row.evaluate((el) => el.getBoundingClientRect().height);
+    const heightBefore = await row.evaluate(
+      (el) => el.getBoundingClientRect().height,
+    );
 
     // Enter edit mode
     await page.getByTestId("register-hex-0").click();
     await expect(page.getByTestId("register-edit-0")).toBeVisible();
 
-    const heightDuring = await row.evaluate((el) => el.getBoundingClientRect().height);
+    const heightDuring = await row.evaluate(
+      (el) => el.getBoundingClientRect().height,
+    );
 
     // Height should be the same (within 1px tolerance for sub-pixel rounding)
     expect(Math.abs(heightDuring - heightBefore)).toBeLessThanOrEqual(1);

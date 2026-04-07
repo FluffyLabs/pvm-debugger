@@ -92,7 +92,9 @@ export function useBasicBlocks(
   // This runs as a derived memo — no extra state needed.
   const blocksWithAutoExpand = useMemo(() => {
     return blocks.map((block) => {
-      const containsCurrentPc = block.instructions.some((i) => i.pc === currentPc);
+      const containsCurrentPc = block.instructions.some(
+        (i) => i.pc === currentPc,
+      );
       if (containsCurrentPc && block.isCollapsed) {
         return { ...block, isCollapsed: false };
       }

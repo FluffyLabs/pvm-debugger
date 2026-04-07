@@ -1,7 +1,7 @@
-import type { PvmAdapter } from "@pvmdbg/types";
 import { WorkerBridge } from "@pvmdbg/runtime-worker";
-import TypeberryWorker from "../workers/typeberry.worker.ts?worker";
+import type { PvmAdapter } from "@pvmdbg/types";
 import AnanasWorker from "../workers/ananas.worker.ts?worker";
+import TypeberryWorker from "../workers/typeberry.worker.ts?worker";
 
 /**
  * Create a PVM adapter for the given PVM id.

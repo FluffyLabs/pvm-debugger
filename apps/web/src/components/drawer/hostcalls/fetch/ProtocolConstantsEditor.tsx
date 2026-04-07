@@ -14,51 +14,171 @@ type FieldDef = {
 };
 
 const BALANCE_FIELDS: FieldDef[] = [
-  { key: "electiveItemBalance", label: "Elective Item Balance", symbol: "B_I", type: "u64" },
-  { key: "electiveByteBalance", label: "Elective Byte Balance", symbol: "B_L", type: "u64" },
-  { key: "baseServiceBalance", label: "Base Service Balance", symbol: "B_S", type: "u64" },
+  {
+    key: "electiveItemBalance",
+    label: "Elective Item Balance",
+    symbol: "B_I",
+    type: "u64",
+  },
+  {
+    key: "electiveByteBalance",
+    label: "Elective Byte Balance",
+    symbol: "B_L",
+    type: "u64",
+  },
+  {
+    key: "baseServiceBalance",
+    label: "Base Service Balance",
+    symbol: "B_S",
+    type: "u64",
+  },
 ];
 
 const GAS_FIELDS: FieldDef[] = [
-  { key: "gasAccumulateReport", label: "Gas Accumulate Report", symbol: "G_A", type: "u64" },
-  { key: "gasIsAuthorized", label: "Gas Is Authorized", symbol: "G_I", type: "u64" },
+  {
+    key: "gasAccumulateReport",
+    label: "Gas Accumulate Report",
+    symbol: "G_A",
+    type: "u64",
+  },
+  {
+    key: "gasIsAuthorized",
+    label: "Gas Is Authorized",
+    symbol: "G_I",
+    type: "u64",
+  },
   { key: "gasMaxRefine", label: "Gas Max Refine", symbol: "G_R", type: "u64" },
   { key: "gasMaxBlock", label: "Gas Max Block", symbol: "G_T", type: "u64" },
 ];
 
 const CAPACITY_FIELDS: FieldDef[] = [
   { key: "coreCount", label: "Core Count", symbol: "C", type: "u16" },
-  { key: "recentHistoryLength", label: "Recent History Length", symbol: "H", type: "u16" },
+  {
+    key: "recentHistoryLength",
+    label: "Recent History Length",
+    symbol: "H",
+    type: "u16",
+  },
   { key: "maxWorkItems", label: "Max Work Items", symbol: "I", type: "u16" },
   { key: "maxReportDeps", label: "Max Report Deps", symbol: "J", type: "u16" },
-  { key: "maxTicketsPerExtrinsic", label: "Max Tickets/Extrinsic", symbol: "K", type: "u16" },
-  { key: "ticketsPerValidator", label: "Tickets/Validator", symbol: "N", type: "u16" },
-  { key: "maxAuthorizersPerCore", label: "Max Authorizers/Core", symbol: "O", type: "u16" },
-  { key: "authorizersQueueSize", label: "Authorizers Queue Size", symbol: "Q", type: "u16" },
-  { key: "maxExtrinsicsPerWorkItem", label: "Max Extrinsics/WorkItem", symbol: "T", type: "u16" },
-  { key: "reportTimeoutGracePeriod", label: "Report Timeout Grace", symbol: "U", type: "u16" },
-  { key: "validatorsCount", label: "Validators Count", symbol: "V", type: "u16" },
+  {
+    key: "maxTicketsPerExtrinsic",
+    label: "Max Tickets/Extrinsic",
+    symbol: "K",
+    type: "u16",
+  },
+  {
+    key: "ticketsPerValidator",
+    label: "Tickets/Validator",
+    symbol: "N",
+    type: "u16",
+  },
+  {
+    key: "maxAuthorizersPerCore",
+    label: "Max Authorizers/Core",
+    symbol: "O",
+    type: "u16",
+  },
+  {
+    key: "authorizersQueueSize",
+    label: "Authorizers Queue Size",
+    symbol: "Q",
+    type: "u16",
+  },
+  {
+    key: "maxExtrinsicsPerWorkItem",
+    label: "Max Extrinsics/WorkItem",
+    symbol: "T",
+    type: "u16",
+  },
+  {
+    key: "reportTimeoutGracePeriod",
+    label: "Report Timeout Grace",
+    symbol: "U",
+    type: "u16",
+  },
+  {
+    key: "validatorsCount",
+    label: "Validators Count",
+    symbol: "V",
+    type: "u16",
+  },
 ];
 
 const TIMING_FIELDS: FieldDef[] = [
-  { key: "preimageExpungePeriod", label: "Preimage Expunge Period", symbol: "D", type: "u32" },
+  {
+    key: "preimageExpungePeriod",
+    label: "Preimage Expunge Period",
+    symbol: "D",
+    type: "u32",
+  },
   { key: "epochLength", label: "Epoch Length", symbol: "E", type: "u32" },
-  { key: "maxLookupAnchorAge", label: "Max Lookup Anchor Age", symbol: "L", type: "u32" },
+  {
+    key: "maxLookupAnchorAge",
+    label: "Max Lookup Anchor Age",
+    symbol: "L",
+    type: "u32",
+  },
   { key: "slotDuration", label: "Slot Duration", symbol: "P", type: "u16" },
   { key: "rotationPeriod", label: "Rotation Period", symbol: "R", type: "u16" },
   { key: "contestLength", label: "Contest Length", symbol: "Y", type: "u32" },
 ];
 
 const SIZE_FIELDS: FieldDef[] = [
-  { key: "maxAuthorizerCodeSize", label: "Max Auth Code Size", symbol: "W_A", type: "u32" },
-  { key: "maxBundleSize", label: "Max Bundle Size", symbol: "W_B", type: "u32" },
-  { key: "maxServiceCodeSize", label: "Max Service Code Size", symbol: "W_C", type: "u32" },
-  { key: "erasureCodedPieceSize", label: "EC Piece Size", symbol: "W_E", type: "u32" },
-  { key: "maxImportSegments", label: "Max Import Segments", symbol: "W_M", type: "u32" },
-  { key: "ecPiecesPerSegment", label: "EC Pieces/Segment", symbol: "W_P", type: "u32" },
-  { key: "maxWorkReportSize", label: "Max Work Report Size", symbol: "W_R", type: "u32" },
-  { key: "transferMemoSize", label: "Transfer Memo Size", symbol: "W_T", type: "u32" },
-  { key: "maxExportSegments", label: "Max Export Segments", symbol: "W_X", type: "u32" },
+  {
+    key: "maxAuthorizerCodeSize",
+    label: "Max Auth Code Size",
+    symbol: "W_A",
+    type: "u32",
+  },
+  {
+    key: "maxBundleSize",
+    label: "Max Bundle Size",
+    symbol: "W_B",
+    type: "u32",
+  },
+  {
+    key: "maxServiceCodeSize",
+    label: "Max Service Code Size",
+    symbol: "W_C",
+    type: "u32",
+  },
+  {
+    key: "erasureCodedPieceSize",
+    label: "EC Piece Size",
+    symbol: "W_E",
+    type: "u32",
+  },
+  {
+    key: "maxImportSegments",
+    label: "Max Import Segments",
+    symbol: "W_M",
+    type: "u32",
+  },
+  {
+    key: "ecPiecesPerSegment",
+    label: "EC Pieces/Segment",
+    symbol: "W_P",
+    type: "u32",
+  },
+  {
+    key: "maxWorkReportSize",
+    label: "Max Work Report Size",
+    symbol: "W_R",
+    type: "u32",
+  },
+  {
+    key: "transferMemoSize",
+    label: "Transfer Memo Size",
+    symbol: "W_T",
+    type: "u32",
+  },
+  {
+    key: "maxExportSegments",
+    label: "Max Export Segments",
+    symbol: "W_X",
+    type: "u32",
+  },
 ];
 
 const SECTIONS = [
@@ -80,7 +200,10 @@ function FieldInput({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <label className="text-[10px] text-muted-foreground w-24 shrink-0 truncate" title={`${field.symbol}: ${field.label}`}>
+      <label
+        className="text-[10px] text-muted-foreground w-24 shrink-0 truncate"
+        title={`${field.symbol}: ${field.label}`}
+      >
         <span className="font-semibold">{field.symbol}</span> {field.label}
       </label>
       <input
@@ -107,7 +230,10 @@ function FieldInput({
   );
 }
 
-export function ProtocolConstantsEditor({ value, onChange }: ProtocolConstantsEditorProps) {
+export function ProtocolConstantsEditor({
+  value,
+  onChange,
+}: ProtocolConstantsEditorProps) {
   const handleFieldChange = useCallback(
     (key: keyof ProtocolConstants, val: bigint | number) => {
       onChange({ ...value, [key]: val });
@@ -116,7 +242,10 @@ export function ProtocolConstantsEditor({ value, onChange }: ProtocolConstantsEd
   );
 
   return (
-    <div data-testid="protocol-constants-editor" className="flex flex-col gap-3">
+    <div
+      data-testid="protocol-constants-editor"
+      className="flex flex-col gap-3"
+    >
       {SECTIONS.map((section) => (
         <details key={section.title} open>
           <summary className="cursor-pointer text-xs font-semibold text-foreground mb-1">

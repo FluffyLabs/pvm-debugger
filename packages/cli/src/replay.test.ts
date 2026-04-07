@@ -1,65 +1,140 @@
-import { describe, it, expect } from "vitest";
 import * as path from "node:path";
-import { replay, allSessionsTerminal, compareFinalState } from "./replay.js";
-import type { MachineStateSnapshot, PvmLifecycle, EcalliTrace } from "@pvmdbg/types";
+import type {
+  EcalliTrace,
+  MachineStateSnapshot,
+  PvmLifecycle,
+} from "@pvmdbg/types";
+import { describe, expect, it } from "vitest";
+import { allSessionsTerminal, compareFinalState, replay } from "./replay.js";
 
 const FIXTURES_DIR = path.resolve(import.meta.dirname, "../../../fixtures");
 
 describe("allSessionsTerminal", () => {
   it("returns true when all sessions are terminated", () => {
-    const snapshots = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>([
-      ["pvm1", {
-        snapshot: { pc: 0, gas: 0n, status: "halt", registers: Array(13).fill(0n) },
-        lifecycle: "terminated",
-      }],
-      ["pvm2", {
-        snapshot: { pc: 0, gas: 0n, status: "panic", registers: Array(13).fill(0n) },
-        lifecycle: "terminated",
-      }],
+    const snapshots = new Map<
+      string,
+      { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+    >([
+      [
+        "pvm1",
+        {
+          snapshot: {
+            pc: 0,
+            gas: 0n,
+            status: "halt",
+            registers: Array(13).fill(0n),
+          },
+          lifecycle: "terminated",
+        },
+      ],
+      [
+        "pvm2",
+        {
+          snapshot: {
+            pc: 0,
+            gas: 0n,
+            status: "panic",
+            registers: Array(13).fill(0n),
+          },
+          lifecycle: "terminated",
+        },
+      ],
     ]);
     expect(allSessionsTerminal(snapshots)).toBe(true);
   });
 
   it("returns true for failed/timed_out sessions", () => {
-    const snapshots = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>([
-      ["pvm1", {
-        snapshot: { pc: 0, gas: 0n, status: "halt", registers: Array(13).fill(0n) },
-        lifecycle: "failed",
-      }],
-      ["pvm2", {
-        snapshot: { pc: 0, gas: 0n, status: "halt", registers: Array(13).fill(0n) },
-        lifecycle: "timed_out",
-      }],
+    const snapshots = new Map<
+      string,
+      { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+    >([
+      [
+        "pvm1",
+        {
+          snapshot: {
+            pc: 0,
+            gas: 0n,
+            status: "halt",
+            registers: Array(13).fill(0n),
+          },
+          lifecycle: "failed",
+        },
+      ],
+      [
+        "pvm2",
+        {
+          snapshot: {
+            pc: 0,
+            gas: 0n,
+            status: "halt",
+            registers: Array(13).fill(0n),
+          },
+          lifecycle: "timed_out",
+        },
+      ],
     ]);
     expect(allSessionsTerminal(snapshots)).toBe(true);
   });
 
   it("returns false when any session is paused", () => {
-    const snapshots = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>([
-      ["pvm1", {
-        snapshot: { pc: 0, gas: 0n, status: "halt", registers: Array(13).fill(0n) },
-        lifecycle: "terminated",
-      }],
-      ["pvm2", {
-        snapshot: { pc: 0, gas: 0n, status: "ok", registers: Array(13).fill(0n) },
-        lifecycle: "paused",
-      }],
+    const snapshots = new Map<
+      string,
+      { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+    >([
+      [
+        "pvm1",
+        {
+          snapshot: {
+            pc: 0,
+            gas: 0n,
+            status: "halt",
+            registers: Array(13).fill(0n),
+          },
+          lifecycle: "terminated",
+        },
+      ],
+      [
+        "pvm2",
+        {
+          snapshot: {
+            pc: 0,
+            gas: 0n,
+            status: "ok",
+            registers: Array(13).fill(0n),
+          },
+          lifecycle: "paused",
+        },
+      ],
     ]);
     expect(allSessionsTerminal(snapshots)).toBe(false);
   });
 
   it("returns false when any session is paused_host_call", () => {
-    const snapshots = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>([
-      ["pvm1", {
-        snapshot: { pc: 0, gas: 0n, status: "host", registers: Array(13).fill(0n) },
-        lifecycle: "paused_host_call",
-      }],
+    const snapshots = new Map<
+      string,
+      { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+    >([
+      [
+        "pvm1",
+        {
+          snapshot: {
+            pc: 0,
+            gas: 0n,
+            status: "host",
+            registers: Array(13).fill(0n),
+          },
+          lifecycle: "paused_host_call",
+        },
+      ],
     ]);
     expect(allSessionsTerminal(snapshots)).toBe(false);
   });
 
   it("returns true for empty snapshot map", () => {
-    const snapshots = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>();
+    const snapshots = new Map<
+      string,
+      { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+    >();
     expect(allSessionsTerminal(snapshots)).toBe(true);
   });
 });
@@ -103,7 +178,12 @@ describe("compareFinalState", () => {
   it("reports lifecycle mismatch for non-terminated PVM", () => {
     const result = compareFinalState(
       {
-        snapshot: { pc: 42, gas: 500n, status: "ok", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 42,
+          gas: 500n,
+          status: "ok",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "paused",
       },
       baseTrace,
@@ -116,7 +196,12 @@ describe("compareFinalState", () => {
   it("reports status mismatch", () => {
     const result = compareFinalState(
       {
-        snapshot: { pc: 42, gas: 500n, status: "panic", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 42,
+          gas: 500n,
+          status: "panic",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       baseTrace,
@@ -136,9 +221,7 @@ describe("compareFinalState", () => {
       },
       baseTrace,
     );
-    expect(result).toEqual([
-      { field: "pc", expected: "42", actual: "100" },
-    ]);
+    expect(result).toEqual([{ field: "pc", expected: "42", actual: "100" }]);
   });
 
   it("reports gas mismatch", () => {
@@ -153,15 +236,18 @@ describe("compareFinalState", () => {
       },
       baseTrace,
     );
-    expect(result).toEqual([
-      { field: "gas", expected: "500", actual: "999" },
-    ]);
+    expect(result).toEqual([{ field: "gas", expected: "500", actual: "999" }]);
   });
 
   it("reports register mismatches", () => {
     const result = compareFinalState(
       {
-        snapshot: { pc: 42, gas: 500n, status: "halt", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 42,
+          gas: 500n,
+          status: "halt",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       baseTrace,
@@ -194,7 +280,12 @@ describe("compareFinalState", () => {
 
     const result = compareFinalState(
       {
-        snapshot: { pc: 0, gas: 0n, status: "halt", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 0,
+          gas: 0n,
+          status: "halt",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       trace,
@@ -215,7 +306,12 @@ describe("compareFinalState", () => {
 
     const result = compareFinalState(
       {
-        snapshot: { pc: 10, gas: 0n, status: "out_of_gas", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 10,
+          gas: 0n,
+          status: "out_of_gas",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       trace,
@@ -237,7 +333,12 @@ describe("compareFinalState", () => {
 
     const result = compareFinalState(
       {
-        snapshot: { pc: 5, gas: 100n, status: "panic", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 5,
+          gas: 100n,
+          status: "panic",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       trace,
@@ -259,7 +360,12 @@ describe("compareFinalState", () => {
 
     const result = compareFinalState(
       {
-        snapshot: { pc: 8, gas: 200n, status: "fault", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 8,
+          gas: 200n,
+          status: "fault",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       trace,
@@ -272,7 +378,12 @@ describe("compareFinalState", () => {
     // may not match the trace — this should produce mismatches
     const result = compareFinalState(
       {
-        snapshot: { pc: 0, gas: 0n, status: "ok", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 0,
+          gas: 0n,
+          status: "ok",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "failed",
       },
       baseTrace,
@@ -286,7 +397,12 @@ describe("compareFinalState", () => {
   it("reports multiple mismatches simultaneously", () => {
     const result = compareFinalState(
       {
-        snapshot: { pc: 99, gas: 999n, status: "panic", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 99,
+          gas: 999n,
+          status: "panic",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       baseTrace,
@@ -307,7 +423,12 @@ describe("compareFinalState", () => {
 
     const result = compareFinalState(
       {
-        snapshot: { pc: 0, gas: 0n, status: "halt", registers: Array(13).fill(0n) },
+        snapshot: {
+          pc: 0,
+          gas: 0n,
+          status: "halt",
+          registers: Array(13).fill(0n),
+        },
         lifecycle: "terminated",
       },
       traceNoTerm,

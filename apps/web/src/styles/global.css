@@ -7,15 +7,17 @@
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
   --default-font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --default-mono-font-family: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --color-brand: #17AFA3;
-  --instruction-current-bg: #E4FFFD;
-  --instruction-current-text: #17AFA3;
+  --default-mono-font-family:
+    "Inconsolata", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-brand: #17afa3;
+  --instruction-current-bg: #e4fffd;
+  --instruction-current-text: #17afa3;
 }
 
-.dark, [data-color-mode="dark"] {
-  --instruction-current-bg: #00413B;
-  --instruction-current-text: #00FFEB;
+.dark,
+[data-color-mode="dark"] {
+  --instruction-current-bg: #00413b;
+  --instruction-current-text: #00ffeb;
 }
 
 body {
@@ -34,8 +36,12 @@ body {
 
 /* Sprint-38: register change flash animation using brand teal */
 @keyframes register-flash {
-  0% { background-color: rgba(23, 175, 163, 0.3); }
-  100% { background-color: transparent; }
+  0% {
+    background-color: rgba(23, 175, 163, 0.3);
+  }
+  100% {
+    background-color: transparent;
+  }
 }
 .register-flash {
   animation: register-flash 0.6s ease-out forwards;

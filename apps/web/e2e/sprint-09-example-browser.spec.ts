@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 09 — Full Example Browser", () => {
   test.beforeEach(async ({ page }) => {
@@ -37,13 +37,17 @@ test.describe("Sprint 09 — Full Example Browser", () => {
     await expect(card).toBeVisible();
   });
 
-  test("clicking a bundled example navigates to the debugger", async ({ page }) => {
+  test("clicking a bundled example navigates to the debugger", async ({
+    page,
+  }) => {
     const card = page.getByTestId("example-card-add");
     await expect(card).toBeVisible();
     await card.click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("remote examples render with format badge", async ({ page }) => {
@@ -72,7 +76,9 @@ test.describe("Sprint 09 — Full Example Browser", () => {
     await expect(traceBadge).toHaveText("Trace");
   });
 
-  test("remote example shows loading state while fetching", async ({ page }) => {
+  test("remote example shows loading state while fetching", async ({
+    page,
+  }) => {
     // Intercept the remote URL to add a delay so we can observe loading state
     await page.route("**/raw.githubusercontent.com/**", async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -86,12 +92,18 @@ test.describe("Sprint 09 — Full Example Browser", () => {
     await remoteCard.click();
 
     // Should show a loading indicator on the card
-    await expect(page.getByTestId("example-loading-inst-add-64")).toBeVisible({ timeout: 3000 });
+    await expect(page.getByTestId("example-loading-inst-add-64")).toBeVisible({
+      timeout: 3000,
+    });
   });
 
-  test("a failed remote fetch shows an error alert without crashing", async ({ page }) => {
+  test("a failed remote fetch shows an error alert without crashing", async ({
+    page,
+  }) => {
     // Block all remote requests to force an error
-    await page.route("**/raw.githubusercontent.com/**", (route) => route.abort());
+    await page.route("**/raw.githubusercontent.com/**", (route) =>
+      route.abort(),
+    );
 
     // json-test-vectors is collapsed by default, expand it
     await page.getByTestId("category-toggle-json-test-vectors").click();
@@ -100,7 +112,9 @@ test.describe("Sprint 09 — Full Example Browser", () => {
     await remoteCard.click();
 
     // Error alert should appear
-    await expect(page.getByTestId("example-error")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("example-error")).toBeVisible({
+      timeout: 10000,
+    });
 
     // The page should still be functional — other cards should still be visible
     await expect(page.getByTestId("example-card-add")).toBeVisible();
@@ -122,11 +136,15 @@ test.describe("Sprint 09 — Full Example Browser", () => {
     await expect(card).toBeVisible();
     await card.click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
 
     // Should navigate to debugger page
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
   });
 

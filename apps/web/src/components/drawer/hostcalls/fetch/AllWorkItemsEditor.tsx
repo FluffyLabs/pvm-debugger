@@ -8,7 +8,10 @@ interface AllWorkItemsEditorProps {
   onChange: (value: WorkItemSummary[]) => void;
 }
 
-export function AllWorkItemsEditor({ value, onChange }: AllWorkItemsEditorProps) {
+export function AllWorkItemsEditor({
+  value,
+  onChange,
+}: AllWorkItemsEditorProps) {
   const addItem = useCallback(() => {
     onChange([...value, { ...DEFAULT_WORK_ITEM_SUMMARY }]);
   }, [value, onChange]);
@@ -32,9 +35,14 @@ export function AllWorkItemsEditor({ value, onChange }: AllWorkItemsEditorProps)
   );
 
   return (
-    <div data-testid="all-work-items-editor" className="flex flex-col gap-2 text-xs">
+    <div
+      data-testid="all-work-items-editor"
+      className="flex flex-col gap-2 text-xs"
+    >
       <div className="flex items-center gap-2">
-        <span className="text-muted-foreground">{value.length} work item summary(ies)</span>
+        <span className="text-muted-foreground">
+          {value.length} work item summary(ies)
+        </span>
         <button
           className="cursor-pointer rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary hover:bg-primary/30"
           onClick={addItem}
@@ -45,7 +53,9 @@ export function AllWorkItemsEditor({ value, onChange }: AllWorkItemsEditorProps)
       {value.map((item, idx) => (
         <div key={idx} className="border border-border rounded p-2">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-muted-foreground">Item #{idx}</span>
+            <span className="text-[10px] text-muted-foreground">
+              Item #{idx}
+            </span>
             <button
               className="cursor-pointer text-xs text-muted-foreground hover:text-destructive"
               onClick={() => removeItem(idx)}

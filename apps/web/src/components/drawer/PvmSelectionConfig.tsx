@@ -1,7 +1,7 @@
+import { Alert, Switch } from "@fluffylabs/shared-ui";
 import { useCallback } from "react";
-import { Switch, Alert } from "@fluffylabs/shared-ui";
-import { AVAILABLE_PVMS } from "../../lib/debugger-settings";
 import { useDebuggerSettings } from "../../hooks/useDebuggerSettings";
+import { AVAILABLE_PVMS } from "../../lib/debugger-settings";
 
 interface PvmSelectionConfigProps {
   onPvmChange: (ids: string[]) => void;
@@ -30,9 +30,12 @@ export function PvmSelectionConfig({ onPvmChange }: PvmSelectionConfigProps) {
 
   return (
     <div data-testid="settings-pvm-selection">
-      <h3 className="text-sm font-normal text-foreground mb-1">PVM Selection</h3>
+      <h3 className="text-sm font-normal text-foreground mb-1">
+        PVM Selection
+      </h3>
       <p className="text-xs text-muted-foreground mb-2">
-        Choose which PVM interpreters to run. Changing this will reset the debugger to its initial state.
+        Choose which PVM interpreters to run. Changing this will reset the
+        debugger to its initial state.
       </p>
       <div className="flex flex-col gap-2 mb-2">
         {AVAILABLE_PVMS.map((pvm) => {
@@ -48,11 +51,18 @@ export function PvmSelectionConfig({ onPvmChange }: PvmSelectionConfigProps) {
                 data-testid={`pvm-switch-${pvm.id}`}
                 checked={isEnabled}
                 disabled={isLastEnabled}
-                onCheckedChange={(checked: boolean) => handleToggle(pvm.id, checked)}
+                onCheckedChange={(checked: boolean) =>
+                  handleToggle(pvm.id, checked)
+                }
               />
               <div className="flex flex-col">
-                <span className="text-xs font-medium text-foreground">{pvm.label}</span>
-                <span data-testid={`pvm-hint-${pvm.id}`} className="text-xs text-muted-foreground">
+                <span className="text-xs font-medium text-foreground">
+                  {pvm.label}
+                </span>
+                <span
+                  data-testid={`pvm-hint-${pvm.id}`}
+                  className="text-xs text-muted-foreground"
+                >
                   {pvm.hint}
                 </span>
               </div>

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import "../../styles/debugger-layout.css";
 
 type PanelName = "instructions" | "registers" | "memory";

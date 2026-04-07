@@ -8,7 +8,11 @@ export interface JsonTestVector {
   "initial-regs": number[];
   "initial-pc": number;
   "initial-gas": number;
-  "initial-page-map"?: Array<{ address: number; length: number; "is-writable": boolean }>;
+  "initial-page-map"?: Array<{
+    address: number;
+    length: number;
+    "is-writable": boolean;
+  }>;
   "initial-memory"?: Array<{ address: number; contents: number[] }>;
   "expected-status"?: string;
   "expected-regs"?: number[];
@@ -21,7 +25,11 @@ export interface JsonTestVector {
 export type DetectedFormat =
   | { kind: "trace_file"; text: string }
   | { kind: "json_test_vector"; data: JsonTestVector }
-  | { kind: "jam_spi_with_metadata"; metadata: Uint8Array; spiPayload: Uint8Array }
+  | {
+      kind: "jam_spi_with_metadata";
+      metadata: Uint8Array;
+      spiPayload: Uint8Array;
+    }
   | { kind: "jam_spi"; payload: Uint8Array }
   | { kind: "generic_pvm"; payload: Uint8Array };
 
@@ -29,7 +37,10 @@ export type DetectedFormat =
  * Attempt SPI decode. Returns true if the bytes are a valid SPI program.
  * Actually invokes the decoder in a try/catch — no heuristics.
  */
-export function canDecodeSpi(bytes: Uint8Array, withMetadata: boolean): boolean {
+export function canDecodeSpi(
+  bytes: Uint8Array,
+  withMetadata: boolean,
+): boolean {
   try {
     let spiPayload = bytes;
     if (withMetadata) {

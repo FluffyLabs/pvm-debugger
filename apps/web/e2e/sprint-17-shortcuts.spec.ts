@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /**
  * Dispatch a keyboard event from within the page.
@@ -30,12 +30,17 @@ async function pressKey(
 }
 
 test.describe("Sprint 17 — Keyboard Shortcuts", () => {
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "step-test",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("Ctrl+Shift+N advances execution (PC changes)", async ({ page }) => {
@@ -51,7 +56,9 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
     await expect(pcValue).not.toHaveText(initialPc!, { timeout: 5000 });
   });
 
-  test("Ctrl+Shift+P starts running, pressing again pauses", async ({ page }) => {
+  test("Ctrl+Shift+P starts running, pressing again pauses", async ({
+    page,
+  }) => {
     // Use game-of-life — runs for many thousands of steps (gas=10M)
     await loadProgram(page, "game-of-life");
 
@@ -63,10 +70,18 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
 
     // Verify execution started: either pause button appears (running) or execution completes.
     const pauseOrComplete = await Promise.race([
-      page.getByTestId("pause-button").waitFor({ state: "visible", timeout: 5000 }).then(() => "running" as const),
-      page.getByTestId("execution-complete-badge").waitFor({ state: "visible", timeout: 5000 }).then(() => "completed" as const),
+      page
+        .getByTestId("pause-button")
+        .waitFor({ state: "visible", timeout: 5000 })
+        .then(() => "running" as const),
+      page
+        .getByTestId("execution-complete-badge")
+        .waitFor({ state: "visible", timeout: 5000 })
+        .then(() => "completed" as const),
       // Fallback: PC changed significantly (execution happened)
-      expect(pcValue).not.toHaveText(initialPc!, { timeout: 5000 }).then(() => "pc-changed" as const),
+      expect(pcValue)
+        .not.toHaveText(initialPc!, { timeout: 5000 })
+        .then(() => "pc-changed" as const),
     ]);
 
     if (pauseOrComplete === "running") {
@@ -74,7 +89,9 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
       await pressKey(page, "P", { ctrlKey: true, shiftKey: true });
 
       // Run button should reappear (program paused or completed after stopping)
-      await expect(page.getByTestId("run-button")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByTestId("run-button")).toBeVisible({
+        timeout: 5000,
+      });
     }
     // If completed or pc-changed, shortcut successfully triggered run
   });
@@ -124,7 +141,9 @@ test.describe("Sprint 17 — Keyboard Shortcuts", () => {
     await expect(page.getByTestId("debugger-page")).toBeVisible();
   });
 
-  test("shortcuts do not fire when focus is inside an input", async ({ page }) => {
+  test("shortcuts do not fire when focus is inside an input", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Open drawer settings tab and switch to n_instructions mode to expose a text input.

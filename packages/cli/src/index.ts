@@ -85,7 +85,9 @@ export function parseArgs(argv: string[]): ParsedArgs {
         }
         const val = Number(args[i]);
         if (!Number.isFinite(val) || val <= 0) {
-          throw new Error(`Invalid --timeout value: "${args[i]}". Must be a positive number.`);
+          throw new Error(
+            `Invalid --timeout value: "${args[i]}". Must be a positive number.`,
+          );
         }
         result.timeout = val;
         break;
@@ -141,7 +143,9 @@ async function main(): Promise<void> {
       } else {
         console.log(`[${pvmId}] FAIL`);
         for (const m of pvmResult.mismatches) {
-          console.log(`  ${m.field}: expected=${m.expected} actual=${m.actual}`);
+          console.log(
+            `  ${m.field}: expected=${m.expected} actual=${m.actual}`,
+          );
         }
         allPassed = false;
       }

@@ -1,8 +1,26 @@
 /** Type-safe interface for the ananas WASM module exports we use. */
 export interface AnanasApi {
-  resetJAM(program: Array<number>, pc: number, initialGas: bigint, args: Array<number>, hasMetadata?: boolean): void;
-  resetGeneric(program: Array<number>, flatRegisters: Array<number>, initialGas: bigint, hasMetadata?: boolean): void;
-  resetGenericWithMemory(program: Array<number>, flatRegisters: Array<number>, pageMap: Uint8Array, chunks: Uint8Array, initialGas: bigint, hasMetadata?: boolean): void;
+  resetJAM(
+    program: Array<number>,
+    pc: number,
+    initialGas: bigint,
+    args: Array<number>,
+    hasMetadata?: boolean,
+  ): void;
+  resetGeneric(
+    program: Array<number>,
+    flatRegisters: Array<number>,
+    initialGas: bigint,
+    hasMetadata?: boolean,
+  ): void;
+  resetGenericWithMemory(
+    program: Array<number>,
+    flatRegisters: Array<number>,
+    pageMap: Uint8Array,
+    chunks: Uint8Array,
+    initialGas: bigint,
+    hasMetadata?: boolean,
+  ): void;
   nextStep(): boolean;
   nSteps(steps: number): boolean;
   getProgramCounter(): number;

@@ -1,15 +1,20 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 06 — Memory Panel", () => {
   /**
    * Load an example program and wait for the debugger page.
    */
-  async function loadProgram(page: import("@playwright/test").Page, exampleId: string) {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId: string,
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("memory panel shows collapsed page headers after loading a program with memory", async ({
@@ -30,7 +35,9 @@ test.describe("Sprint 06 — Memory Panel", () => {
     await expect(page.getByTestId("hex-dump")).not.toBeVisible();
   });
 
-  test("clicking a page header expands it to show hex dump", async ({ page }) => {
+  test("clicking a page header expands it to show hex dump", async ({
+    page,
+  }) => {
     await loadProgram(page, "store-u16");
 
     const header = page.getByTestId("memory-range-header-131072");
@@ -58,7 +65,9 @@ test.describe("Sprint 06 — Memory Panel", () => {
     await expect(page.getByTestId("hex-dump")).not.toBeVisible();
   });
 
-  test("hex dump shows address, hex bytes, and ASCII columns", async ({ page }) => {
+  test("hex dump shows address, hex bytes, and ASCII columns", async ({
+    page,
+  }) => {
     await loadProgram(page, "store-u16");
 
     // Expand the page
@@ -112,10 +121,14 @@ test.describe("Sprint 06 — Memory Panel", () => {
     // The hex dump should still be visible (re-fetch succeeded, not stuck on "Loading…")
     await expect(page.getByTestId("hex-dump")).toBeVisible();
     // Address column should still show the correct base address
-    await expect(page.getByTestId("hex-address").first()).toContainText("00020000");
+    await expect(page.getByTestId("hex-address").first()).toContainText(
+      "00020000",
+    );
   });
 
-  test("a program with empty page map shows 'No memory pages.'", async ({ page }) => {
+  test("a program with empty page map shows 'No memory pages.'", async ({
+    page,
+  }) => {
     // step-test has no pageMap
     await loadProgram(page, "step-test");
 

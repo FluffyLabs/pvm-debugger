@@ -1,86 +1,80 @@
 // PVM status and lifecycle
-export {
-  type PvmStatus,
-  PVM_STATUSES,
-  type PvmLifecycle,
-  TERMINAL_LIFECYCLES,
-  isTerminal,
-} from "./pvm-status.js";
-
-// Machine state
-export {
-  type InitialMachineState,
-  type PageMapEntry,
-  type MemoryChunk,
-  type MachineStateSnapshot,
-} from "./machine-state.js";
-
-// PVM adapter
-export {
-  type PvmAdapter,
-  type AdapterStepResult,
-} from "./pvm-adapter.js";
-
-// Program envelope and related types
-export {
-  type SpiProgram,
-  type ProgramLoadContext,
-  type ExpectedState,
-  type SpiEntrypoint,
-  type LoadSourceKind,
-  type ProgramEnvelope,
-} from "./program.js";
-
-// Trace types
-export {
-  type TracePrelude,
-  type TraceEntry,
-  type TraceTermination,
-  type EcalliTrace,
-} from "./trace-types.js";
-
-// Orchestrator types
-export {
-  type HostCallMismatch,
-  type HostCallResumeEffects,
-  type HostCallResumeProposal,
-  type HostCallInfo,
-  type PvmStepReport,
-  type StepResult,
-  type OrchestratorEvents,
-} from "./orchestrator.js";
 
 // Encoding helpers
 export {
-  toHex,
-  fromHex,
   bigintToDecStr,
-  decStrToBigint,
-  encodeVarU32,
   decodeVarU32,
+  decStrToBigint,
   encodePvmBlob,
+  encodeVarU32,
+  fromHex,
   regsToUint8,
+  toHex,
   uint8ToRegs,
 } from "./encoding.js";
-
 // JAM codec
 export {
   type DecodeResult,
-  tryDecode,
-  encodeVarU64,
-  decodeVarU64,
-  encodeU8,
-  decodeU8,
-  encodeU16LE,
-  decodeU16LE,
-  encodeU32LE,
-  decodeU32LE,
-  encodeU64LE,
-  decodeU64LE,
-  encodeBytes32,
   decodeBytes32,
-  encodeBytesVarLen,
   decodeBytesVarLen,
-  encodeSequenceVarLen,
   decodeSequenceVarLen,
+  decodeU8,
+  decodeU16LE,
+  decodeU32LE,
+  decodeU64LE,
+  decodeVarU64,
+  encodeBytes32,
+  encodeBytesVarLen,
+  encodeSequenceVarLen,
+  encodeU8,
+  encodeU16LE,
+  encodeU32LE,
+  encodeU64LE,
+  encodeVarU64,
+  tryDecode,
 } from "./jam-codec.js";
+// Machine state
+export type {
+  InitialMachineState,
+  MachineStateSnapshot,
+  MemoryChunk,
+  PageMapEntry,
+} from "./machine-state.js";
+// Orchestrator types
+export type {
+  HostCallInfo,
+  HostCallMismatch,
+  HostCallResumeEffects,
+  HostCallResumeProposal,
+  OrchestratorEvents,
+  PvmStepReport,
+  StepResult,
+} from "./orchestrator.js";
+// Program envelope and related types
+export type {
+  ExpectedState,
+  LoadSourceKind,
+  ProgramEnvelope,
+  ProgramLoadContext,
+  SpiEntrypoint,
+  SpiProgram,
+} from "./program.js";
+// PVM adapter
+export type {
+  AdapterStepResult,
+  PvmAdapter,
+} from "./pvm-adapter.js";
+export {
+  isTerminal,
+  PVM_STATUSES,
+  type PvmLifecycle,
+  type PvmStatus,
+  TERMINAL_LIFECYCLES,
+} from "./pvm-status.js";
+// Trace types
+export type {
+  EcalliTrace,
+  TraceEntry,
+  TracePrelude,
+  TraceTermination,
+} from "./trace-types.js";

@@ -1,15 +1,18 @@
-import type { ProgramEnvelope, LoadSourceKind } from "@pvmdbg/types";
-import { detectFormat } from "./detect.js";
+import type { LoadSourceKind, ProgramEnvelope } from "@pvmdbg/types";
 import { decodeGeneric } from "./decode-generic.js";
 import { decodeJsonTestVector } from "./decode-json-test-vector.js";
 import { decodeSpi } from "./decode-spi.js";
 import { decodeTrace } from "./decode-trace.js";
-import { encodeSpiEntrypoint, type SpiEntrypointParams } from "./spi-entrypoint.js";
+import { detectFormat } from "./detect.js";
 import {
   findExampleEntry,
   manifestEntrypointToParams,
   manifestInitialStateOverrides,
 } from "./examples-manifest.js";
+import {
+  encodeSpiEntrypoint,
+  type SpiEntrypointParams,
+} from "./spi-entrypoint.js";
 
 /** Raw bytes loaded from any source + provenance metadata. */
 export interface RawPayload {
@@ -34,7 +37,9 @@ export function createProgramEnvelope(
 
   // Look up example manifest for default entrypoint and initial state overrides
   let manifestEntrypoint: SpiEntrypointParams | undefined;
-  let manifestOverrides: ReturnType<typeof manifestInitialStateOverrides> | undefined;
+  let manifestOverrides:
+    | ReturnType<typeof manifestInitialStateOverrides>
+    | undefined;
 
   if (sourceKind === "example") {
     const entry = findExampleEntry(sourceId);
@@ -65,10 +70,19 @@ export function createProgramEnvelope(
     case "jam_spi_with_metadata":
     case "jam_spi": {
       const hasMetadata = detected.kind === "jam_spi_with_metadata";
-      const spiArgs = entrypoint ? encodeSpiEntrypoint(entrypoint) : new Uint8Array();
-      const envelope = decodeSpi(bytes, spiArgs, hasMetadata, sourceKind, sourceId, {
-        pc: entrypoint?.pc,
-      });
+      const spiArgs = entrypoint
+        ? encodeSpiEntrypoint(entrypoint)
+        : new Uint8Array();
+      const envelope = decodeSpi(
+        bytes,
+        spiArgs,
+        hasMetadata,
+        sourceKind,
+        sourceId,
+        {
+          pc: entrypoint?.pc,
+        },
+      );
       if (entrypoint) {
         envelope.spiEntrypoint = entrypoint.entrypoint;
       }

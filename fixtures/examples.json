@@ -47,7 +47,9 @@
             "pc": 0,
             "gas": 10000000,
             "registers": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            "pageMap": [{ "address": 131072, "length": 4096, "isWritable": true }]
+            "pageMap": [
+              { "address": 131072, "length": 4096, "isWritable": true }
+            ]
           }
         },
         {
@@ -59,7 +61,9 @@
             "pc": 0,
             "gas": 10000,
             "registers": [0, 0, 0, 0, 0, 0, 0, 305419896, 0, 0, 0, 0, 0],
-            "pageMap": [{ "address": 131072, "length": 4096, "isWritable": true }]
+            "pageMap": [
+              { "address": 131072, "length": 4096, "isWritable": true }
+            ]
           }
         },
         {
@@ -86,21 +90,30 @@
           "name": "Add",
           "file": "add.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         },
         {
           "id": "fibonacci-jam",
           "name": "Fibonacci",
           "file": "fibonacci.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         },
         {
           "id": "factorial-jam",
           "name": "Factorial",
           "file": "factorial.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         }
       ]
     },
@@ -115,35 +128,50 @@
           "name": "AS Add",
           "file": "as-add.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         },
         {
           "id": "as-fibonacci",
           "name": "AS Fibonacci",
           "file": "as-fibonacci.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         },
         {
           "id": "as-factorial",
           "name": "AS Factorial",
           "file": "as-factorial.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         },
         {
           "id": "all-ecalli-refine",
           "name": "All Ecalli (Refine)",
           "file": "all-ecalli.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "refine", "params": { "core": "0", "index": "0", "id": "0" } }
+          "entrypoint": {
+            "type": "refine",
+            "params": { "core": "0", "index": "0", "id": "0" }
+          }
         },
         {
           "id": "all-ecalli-accumulate",
           "name": "All Ecalli (Accumulate)",
           "file": "all-ecalli.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         }
       ]
     },
@@ -163,7 +191,10 @@
           "name": "Game of Life (JAM-SDK)",
           "file": "gol-jamsdk.jam",
           "format": "jam_spi_with_metadata",
-          "entrypoint": { "type": "accumulate", "params": { "slot": "42", "id": "0", "results": "0" } }
+          "entrypoint": {
+            "type": "accumulate",
+            "params": { "slot": "42", "id": "0", "results": "0" }
+          }
         }
       ]
     },

@@ -11,8 +11,8 @@ import {
   type RawPayload,
   type SpiEntrypointParams,
 } from "@pvmdbg/content";
-import { toHex, fromHex } from "@pvmdbg/types";
-import type { ProgramEnvelope, LoadSourceKind } from "@pvmdbg/types";
+import type { LoadSourceKind, ProgramEnvelope } from "@pvmdbg/types";
+import { fromHex, toHex } from "@pvmdbg/types";
 
 /** localStorage keys for program session persistence. */
 export const PROGRAM_SESSION_KEYS = {
@@ -79,7 +79,9 @@ function serializeSpiParams(params: SpiEntrypointParams): SerializedSpiParams {
 
 function requireNumber(value: unknown, field: string): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(`Invalid SPI field "${field}": expected number, got ${typeof value}`);
+    throw new Error(
+      `Invalid SPI field "${field}": expected number, got ${typeof value}`,
+    );
   }
   return value;
 }
@@ -168,10 +170,16 @@ export function persistSession(
 ): void {
   try {
     localStorage.setItem(PROGRAM_SESSION_KEYS.payload, toHex(rawBytes));
-    localStorage.setItem(PROGRAM_SESSION_KEYS.sourceMeta, JSON.stringify(sourceMeta));
+    localStorage.setItem(
+      PROGRAM_SESSION_KEYS.sourceMeta,
+      JSON.stringify(sourceMeta),
+    );
     localStorage.setItem(
       PROGRAM_SESSION_KEYS.detectedFormat,
-      JSON.stringify({ kind: detectedFormatKind, forceGeneric } satisfies PersistedFormatMeta),
+      JSON.stringify({
+        kind: detectedFormatKind,
+        forceGeneric,
+      } satisfies PersistedFormatMeta),
     );
     if (spiParams) {
       localStorage.setItem(
@@ -195,7 +203,9 @@ export function restoreSession(): ProgramEnvelope {
   const sourceMetaRaw = localStorage.getItem(PROGRAM_SESSION_KEYS.sourceMeta);
   if (!sourceMetaRaw) throw new Error("No persisted source metadata");
 
-  const formatMetaRaw = localStorage.getItem(PROGRAM_SESSION_KEYS.detectedFormat);
+  const formatMetaRaw = localStorage.getItem(
+    PROGRAM_SESSION_KEYS.detectedFormat,
+  );
   if (!formatMetaRaw) throw new Error("No persisted detected format");
 
   const rawBytes = fromHex(payloadHex);
@@ -223,7 +233,11 @@ export function restoreSession(): ProgramEnvelope {
   // Rebuild envelope
   let envelope: ProgramEnvelope;
   if (formatMeta.forceGeneric) {
-    envelope = decodeGeneric(rawBytes, rawPayload.sourceKind, rawPayload.sourceId);
+    envelope = decodeGeneric(
+      rawBytes,
+      rawPayload.sourceKind,
+      rawPayload.sourceId,
+    );
   } else {
     const options = spiParams ? { entrypoint: spiParams } : undefined;
     envelope = createProgramEnvelope(rawPayload, options);

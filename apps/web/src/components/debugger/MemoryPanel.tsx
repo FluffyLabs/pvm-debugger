@@ -1,6 +1,6 @@
-import { useMemo, useCallback } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { PageMapEntry, MemoryChunk } from "@pvmdbg/types";
+import type { MemoryChunk, PageMapEntry } from "@pvmdbg/types";
+import { useCallback, useMemo } from "react";
 import { useMemoryReader } from "../../hooks/useMemoryReader";
 import { MemoryRange } from "./MemoryRange";
 
@@ -42,7 +42,9 @@ export function expandPages(pageMap: PageMapEntry[]): ExpandedPage[] {
 }
 
 /** Compute the set of page addresses that overlap with any memory chunk (initialized data). */
-export function computeInitializedPages(memoryChunks: MemoryChunk[]): Set<number> {
+export function computeInitializedPages(
+  memoryChunks: MemoryChunk[],
+): Set<number> {
   const pages = new Set<number>();
   for (const chunk of memoryChunks) {
     const start = chunk.address;
@@ -87,8 +89,15 @@ export function MemoryPanel({
   onPendingWrite,
 }: MemoryPanelProps) {
   const pages = useMemo(() => expandPages(pageMap), [pageMap]);
-  const initializedPages = useMemo(() => computeInitializedPages(memoryChunks), [memoryChunks]);
-  const { getPage, isLoading, expandPage, getChangedOffsets } = useMemoryReader(orchestrator, pvmId, snapshotVersion);
+  const initializedPages = useMemo(
+    () => computeInitializedPages(memoryChunks),
+    [memoryChunks],
+  );
+  const { getPage, isLoading, expandPage, getChangedOffsets } = useMemoryReader(
+    orchestrator,
+    pvmId,
+    snapshotVersion,
+  );
 
   const onWriteBytes = useCallback(
     (address: number, data: Uint8Array) => {
@@ -102,7 +111,10 @@ export function MemoryPanel({
       const pvmIds = orchestrator.getPvmIds();
       for (const id of pvmIds) {
         orchestrator.setMemory(id, address, data).catch((err) => {
-          console.error(`Failed to write memory at 0x${address.toString(16)} on ${id}:`, err);
+          console.error(
+            `Failed to write memory at 0x${address.toString(16)} on ${id}:`,
+            err,
+          );
         });
       }
     },
@@ -111,17 +123,25 @@ export function MemoryPanel({
 
   if (pages.length === 0) {
     return (
-      <div data-testid="memory-panel" className="flex flex-col h-full overflow-hidden">
+      <div
+        data-testid="memory-panel"
+        className="flex flex-col h-full overflow-hidden"
+      >
         <div className="px-2 h-7 text-sm font-normal text-foreground border-b border-border shrink-0 flex items-center">
           Memory
         </div>
-        <div className="px-2 py-2 text-xs text-muted-foreground">No memory pages.</div>
+        <div className="px-2 py-2 text-xs text-muted-foreground">
+          No memory pages.
+        </div>
       </div>
     );
   }
 
   return (
-    <div data-testid="memory-panel" className="flex flex-col h-full overflow-hidden">
+    <div
+      data-testid="memory-panel"
+      className="flex flex-col h-full overflow-hidden"
+    >
       <div className="px-2 h-7 text-sm font-normal text-foreground border-b border-border shrink-0 flex items-center">
         Memory
       </div>
@@ -130,7 +150,12 @@ export function MemoryPanel({
           <MemoryRange
             key={pg.address}
             address={pg.address}
-            label={getPageLabel(pg.address, pg.isWritable, programKind, initializedPages)}
+            label={getPageLabel(
+              pg.address,
+              pg.isWritable,
+              programKind,
+              initializedPages,
+            )}
             isWritable={pg.isWritable}
             editable={editable && pg.isWritable}
             getData={() => getPage(pg.address)}

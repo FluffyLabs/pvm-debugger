@@ -1,31 +1,35 @@
-import { describe, it, expect, beforeAll } from "vitest";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { ProgramEnvelope } from "@pvmdbg/types";
+import { decodeVarU32 } from "@pvmdbg/types";
+import { beforeAll, describe, expect, it } from "vitest";
+import type {
+  DetectedFormat,
+  RawPayload,
+  SpiEntrypointParams,
+} from "./index.js";
 import {
-  detectFormat,
   canDecodeSpi,
-  createProgramEnvelope,
-  encodeSpiEntrypoint,
-  decodeSpiEntrypoint,
-  rewriteGitHubBlobUrl,
-  loadManualInput,
-  loadLocalStorage,
-  persistPayload,
   clearPersistedPayload,
-  initManifest,
-  findExampleEntry,
-  getExamplesManifest,
+  createProgramEnvelope,
   decodeGeneric,
   decodeJsonTestVector,
   decodeSpi,
+  decodeSpiEntrypoint,
   decodeTrace,
+  detectFormat,
+  encodeSpiEntrypoint,
+  findExampleEntry,
+  getExamplesManifest,
+  initManifest,
+  loadLocalStorage,
+  loadManualInput,
   manifestEntrypointToParams,
   manifestInitialStateOverrides,
+  persistPayload,
+  rewriteGitHubBlobUrl,
 } from "./index.js";
-import type { DetectedFormat, SpiEntrypointParams, RawPayload } from "./index.js";
-import type { ProgramEnvelope } from "@pvmdbg/types";
-import { decodeVarU32 } from "@pvmdbg/types";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = resolve(__dirname, "../../../fixtures");
@@ -40,7 +44,9 @@ function readFixtureText(path: string): string {
 
 // Initialize the manifest before all tests
 beforeAll(() => {
-  const manifestJson = JSON.parse(readFileSync(resolve(fixturesDir, "examples.json"), "utf-8"));
+  const manifestJson = JSON.parse(
+    readFileSync(resolve(fixturesDir, "examples.json"), "utf-8"),
+  );
   initManifest(manifestJson);
 });
 
@@ -50,7 +56,9 @@ beforeAll(() => {
 
 describe("detectFormat", () => {
   it("detects trace files by 'program 0x' marker", () => {
-    const data = new TextEncoder().encode("program 0xaabb\nstart pc=0 gas=1000\n");
+    const data = new TextEncoder().encode(
+      "program 0xaabb\nstart pc=0 gas=1000\n",
+    );
     const result = detectFormat(data);
     expect(result.kind).toBe("trace_file");
     if (result.kind === "trace_file") {
@@ -128,7 +136,9 @@ describe("detectFormat", () => {
   });
 
   it("falls back to generic_pvm for plain ASCII text without trace structure", () => {
-    const data = new TextEncoder().encode("just some regular text without trace markers");
+    const data = new TextEncoder().encode(
+      "just some regular text without trace markers",
+    );
     const result = detectFormat(data);
     expect(result.kind).toBe("generic_pvm");
   });
@@ -176,12 +186,16 @@ describe("canDecodeSpi", () => {
   });
 
   it("returns false for random bytes", () => {
-    expect(canDecodeSpi(new Uint8Array([0xde, 0xad, 0xbe, 0xef]), false)).toBe(false);
+    expect(canDecodeSpi(new Uint8Array([0xde, 0xad, 0xbe, 0xef]), false)).toBe(
+      false,
+    );
   });
 
   it("validates with actual decode, not just prefix heuristics", () => {
     // A blob that starts with valid varU32 prefix but isn't actually SPI
-    const fake = new Uint8Array([0x05, 0x00, 0x00, 0x00, 0x00, 0x42, 0x42, 0x42]);
+    const fake = new Uint8Array([
+      0x05, 0x00, 0x00, 0x00, 0x00, 0x42, 0x42, 0x42,
+    ]);
     expect(canDecodeSpi(fake, true)).toBe(false);
     expect(canDecodeSpi(fake, false)).toBe(false);
   });
@@ -194,14 +208,20 @@ describe("canDecodeSpi", () => {
 describe("rewriteGitHubBlobUrl", () => {
   it("rewrites GitHub blob URLs to raw URLs", () => {
     expect(
-      rewriteGitHubBlobUrl("https://github.com/user/repo/blob/main/path/file.jam"),
+      rewriteGitHubBlobUrl(
+        "https://github.com/user/repo/blob/main/path/file.jam",
+      ),
     ).toBe("https://raw.githubusercontent.com/user/repo/main/path/file.jam");
   });
 
   it("rewrites URLs with branch names", () => {
     expect(
-      rewriteGitHubBlobUrl("https://github.com/org/project/blob/feature-branch/dir/file.pvm"),
-    ).toBe("https://raw.githubusercontent.com/org/project/feature-branch/dir/file.pvm");
+      rewriteGitHubBlobUrl(
+        "https://github.com/org/project/blob/feature-branch/dir/file.pvm",
+      ),
+    ).toBe(
+      "https://raw.githubusercontent.com/org/project/feature-branch/dir/file.pvm",
+    );
   });
 
   it("passes non-GitHub URLs through unchanged", () => {
@@ -361,7 +381,9 @@ describe("decodeSpiEntrypoint", () => {
   });
 
   it("throws on truncated accumulate bytes", () => {
-    expect(() => decodeSpiEntrypoint("accumulate", new Uint8Array([0x2a]))).toThrow();
+    expect(() =>
+      decodeSpiEntrypoint("accumulate", new Uint8Array([0x2a])),
+    ).toThrow();
   });
 
   it("throws on empty bytes for refine", () => {
@@ -403,7 +425,9 @@ describe("SPI entrypoint encode/decode roundtrip", () => {
       expect(decoded.params.core).toBe(10);
       expect(decoded.params.index).toBe(20);
       expect(decoded.params.id).toBe(30);
-      expect(Array.from(decoded.params.payload)).toEqual([0xde, 0xad, 0xbe, 0xef]);
+      expect(Array.from(decoded.params.payload)).toEqual([
+        0xde, 0xad, 0xbe, 0xef,
+      ]);
       expect(decoded.params.workPackageHash.length).toBe(32);
       expect(decoded.params.workPackageHash[0]).toBe(0xca);
       expect(decoded.params.workPackageHash[1]).toBe(0xfe);
@@ -477,10 +501,20 @@ describe("local-storage", () => {
     const store: Record<string, string> = {};
     return {
       getItem: (key: string) => store[key] ?? null,
-      setItem: (key: string, value: string) => { store[key] = value; },
-      removeItem: (key: string) => { delete store[key]; },
-      clear: () => { Object.keys(store).forEach((k) => delete store[k]); },
-      get length() { return Object.keys(store).length; },
+      setItem: (key: string, value: string) => {
+        store[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete store[key];
+      },
+      clear: () => {
+        Object.keys(store).forEach((k) => {
+          delete store[k];
+        });
+      },
+      get length() {
+        return Object.keys(store).length;
+      },
       key: (index: number) => Object.keys(store)[index] ?? null,
     };
   }
@@ -607,7 +641,9 @@ describe("decodeGeneric", () => {
     const rawCode = new Uint8Array([0x04, 0x87, 0x03]);
     const envelope = decodeGeneric(rawCode, "manual_input", "test");
     // PVM blob: [jtLen=0, jtItemLen=0, codeLen=3, code..., mask=0x01]
-    expect(Array.from(envelope.programBytes)).toEqual([0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01]);
+    expect(Array.from(envelope.programBytes)).toEqual([
+      0x00, 0x00, 0x03, 0x04, 0x87, 0x03, 0x01,
+    ]);
   });
 
   it("wraps empty program in a valid PVM blob", () => {
@@ -630,7 +666,9 @@ describe("decodeJsonTestVector", () => {
     expect(envelope.programKind).toBe("generic");
     // The fixture contains pre-encoded PVM blob bytes [0, 0, 3, 190, 135, 9, 1]
     // (upstream jamtestvectors format). deblob succeeds so they're used as-is.
-    expect(Array.from(envelope.programBytes)).toEqual([0x00, 0x00, 0x03, 190, 135, 9, 0x01]);
+    expect(Array.from(envelope.programBytes)).toEqual([
+      0x00, 0x00, 0x03, 190, 135, 9, 0x01,
+    ]);
     expect(envelope.initialState.pc).toBe(0);
     expect(envelope.initialState.gas).toBe(10000n);
     expect(envelope.initialState.registers.length).toBe(13);
@@ -687,7 +725,13 @@ describe("decodeSpi", () => {
 
   it("produces page-aligned page map entries", () => {
     const bytes = readFixture("add.jam");
-    const envelope = decodeSpi(bytes, new Uint8Array(), true, "example", "add-jam");
+    const envelope = decodeSpi(
+      bytes,
+      new Uint8Array(),
+      true,
+      "example",
+      "add-jam",
+    );
     for (const entry of envelope.initialState.pageMap) {
       expect(entry.address % 4096).toBe(0);
     }
@@ -742,7 +786,9 @@ describe("createProgramEnvelope", () => {
     const result = createProgramEnvelope(payload);
     // Verify it's not a Promise
     expect(result).toBeDefined();
-    expect(typeof (result as unknown as Promise<unknown>).then).not.toBe("function");
+    expect(typeof (result as unknown as Promise<unknown>).then).not.toBe(
+      "function",
+    );
     expect(result.programKind).toBeDefined();
   });
 
@@ -842,7 +888,9 @@ describe("createProgramEnvelope", () => {
         workPackageHash: new Uint8Array(32),
       },
     };
-    const envelope = createProgramEnvelope(payload, { entrypoint: customEntrypoint });
+    const envelope = createProgramEnvelope(payload, {
+      entrypoint: customEntrypoint,
+    });
     expect(envelope.spiEntrypoint).toBe("refine");
     expect(envelope.initialState.pc).toBe(0);
   });

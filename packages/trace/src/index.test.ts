@@ -1,16 +1,16 @@
-import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+import type { EcalliTrace, TraceEntry } from "./index.js";
 import {
-  parseTrace,
-  serializeTrace,
   compareTraces,
-  traceMemoryWriteToBytes,
   getHostCallName,
   HOST_CALL_NAMES,
+  parseTrace,
+  serializeTrace,
+  traceMemoryWriteToBytes,
 } from "./index.js";
-import type { EcalliTrace, TraceEntry } from "./index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = resolve(__dirname, "../../../fixtures");
@@ -197,7 +197,9 @@ describe("parseTrace — validation", () => {
       "memwrite 0x00001000 len=5 <- 0xaabb",
       "start pc=0 gas=100",
     ].join("\n");
-    expect(() => parseTrace(input)).toThrow(/len=5 does not match hex data length 2/);
+    expect(() => parseTrace(input)).toThrow(
+      /len=5 does not match hex data length 2/,
+    );
   });
 
   it("throws on memread outside of ecalli entry", () => {
@@ -206,7 +208,9 @@ describe("parseTrace — validation", () => {
       "start pc=0 gas=100",
       "memread 0x00001000 len=2 -> 0xaabb",
     ].join("\n");
-    expect(() => parseTrace(input)).toThrow(/memread outside of a host call entry/);
+    expect(() => parseTrace(input)).toThrow(
+      /memread outside of a host call entry/,
+    );
   });
 
   it("throws on setreg outside of ecalli entry", () => {
@@ -215,16 +219,18 @@ describe("parseTrace — validation", () => {
       "start pc=0 gas=100",
       "setreg r07 <- 0xff",
     ].join("\n");
-    expect(() => parseTrace(input)).toThrow(/setreg outside of a host call entry/);
+    expect(() => parseTrace(input)).toThrow(
+      /setreg outside of a host call entry/,
+    );
   });
 
   it("throws on setgas outside of ecalli entry", () => {
-    const input = [
-      "program 0xaabb",
-      "start pc=0 gas=100",
-      "setgas <- 50",
-    ].join("\n");
-    expect(() => parseTrace(input)).toThrow(/setgas outside of a host call entry/);
+    const input = ["program 0xaabb", "start pc=0 gas=100", "setgas <- 50"].join(
+      "\n",
+    );
+    expect(() => parseTrace(input)).toThrow(
+      /setgas outside of a host call entry/,
+    );
   });
 });
 
@@ -288,10 +294,21 @@ describe("serializeTrace", () => {
         memoryWrites: [],
         startPc: 0,
         startGas: 100n,
-        startRegisters: new Map([[0, 0n], [1, 5n]]),
+        startRegisters: new Map([
+          [0, 0n],
+          [1, 5n],
+        ]),
       },
       entries: [],
-      termination: { kind: "halt", pc: 0, gas: 100n, registers: new Map([[0, 0n], [2, 0n]]) },
+      termination: {
+        kind: "halt",
+        pc: 0,
+        gas: 100n,
+        registers: new Map([
+          [0, 0n],
+          [2, 0n],
+        ]),
+      },
     };
     const text = serializeTrace(trace);
     // start should only have r01=0x5
@@ -312,7 +329,13 @@ describe("serializeTrace", () => {
         startRegisters: new Map(),
       },
       entries: [],
-      termination: { kind: "panic", arg: 7, pc: 5, gas: 80n, registers: new Map() },
+      termination: {
+        kind: "panic",
+        arg: 7,
+        pc: 5,
+        gas: 80n,
+        registers: new Map(),
+      },
     };
     const text = serializeTrace(trace);
     expect(text).toContain("PANIC=7 pc=5 gas=80");
@@ -328,7 +351,13 @@ describe("serializeTrace", () => {
         startRegisters: new Map(),
       },
       entries: [],
-      termination: { kind: "fault", arg: 42, pc: 10, gas: 50n, registers: new Map() },
+      termination: {
+        kind: "fault",
+        arg: 42,
+        pc: 10,
+        gas: 50n,
+        registers: new Map(),
+      },
     };
     const text = serializeTrace(trace);
     expect(text).toContain("FAULT=42 pc=10 gas=50");
@@ -401,8 +430,12 @@ describe("serializeTrace — roundtrip", () => {
       expect(parsed2.entries[i].pc).toBe(parsed1.entries[i].pc);
       expect(parsed2.entries[i].gas).toBe(parsed1.entries[i].gas);
       expect(parsed2.entries[i].gasAfter).toBe(parsed1.entries[i].gasAfter);
-      expect(parsed2.entries[i].memoryReads.length).toBe(parsed1.entries[i].memoryReads.length);
-      expect(parsed2.entries[i].memoryWrites.length).toBe(parsed1.entries[i].memoryWrites.length);
+      expect(parsed2.entries[i].memoryReads.length).toBe(
+        parsed1.entries[i].memoryReads.length,
+      );
+      expect(parsed2.entries[i].memoryWrites.length).toBe(
+        parsed1.entries[i].memoryWrites.length,
+      );
     }
 
     expect(parsed2.termination?.kind).toBe(parsed1.termination?.kind);
@@ -487,7 +520,9 @@ describe("compareTraces", () => {
     const b = parseTrace(serializeTrace(a));
 
     // Find an entry with memory writes — assert it exists
-    const entryWithWrites = b.entries.findIndex((e) => e.memoryWrites.length > 0);
+    const entryWithWrites = b.entries.findIndex(
+      (e) => e.memoryWrites.length > 0,
+    );
     expect(entryWithWrites).toBeGreaterThanOrEqual(0);
 
     b.entries[entryWithWrites].memoryWrites[0] = {
@@ -501,14 +536,32 @@ describe("compareTraces", () => {
 
   it("reports termination mismatches", () => {
     const a: EcalliTrace = {
-      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      prelude: {
+        programHex: "ff",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
       entries: [],
       termination: { kind: "halt", pc: 0, gas: 100n, registers: new Map() },
     };
     const b: EcalliTrace = {
-      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      prelude: {
+        programHex: "ff",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
       entries: [],
-      termination: { kind: "panic", arg: 1, pc: 0, gas: 100n, registers: new Map() },
+      termination: {
+        kind: "panic",
+        arg: 1,
+        pc: 0,
+        gas: 100n,
+        registers: new Map(),
+      },
     };
     const mismatches = compareTraces(a, b);
     const kindMismatch = mismatches.find((m) => m.path === "termination.kind");
@@ -519,12 +572,24 @@ describe("compareTraces", () => {
 
   it("reports when termination is missing in one trace", () => {
     const a: EcalliTrace = {
-      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      prelude: {
+        programHex: "ff",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
       entries: [],
       termination: { kind: "halt", pc: 0, gas: 100n, registers: new Map() },
     };
     const b: EcalliTrace = {
-      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      prelude: {
+        programHex: "ff",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
       entries: [],
     };
     const mismatches = compareTraces(a, b);
@@ -533,11 +598,23 @@ describe("compareTraces", () => {
 
   it("mismatch paths include field-level detail", () => {
     const a: EcalliTrace = {
-      prelude: { programHex: "aa", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      prelude: {
+        programHex: "aa",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
       entries: [],
     };
     const b: EcalliTrace = {
-      prelude: { programHex: "bb", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      prelude: {
+        programHex: "bb",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
       entries: [],
     };
     const mismatches = compareTraces(a, b);
@@ -650,15 +727,34 @@ describe("parseTrace — edge cases", () => {
 describe("compareTraces — entry count mismatch", () => {
   it("reports when trace B has more entries", () => {
     const a: EcalliTrace = {
-      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
+      prelude: {
+        programHex: "ff",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
       entries: [],
     };
     const b: EcalliTrace = {
-      prelude: { programHex: "ff", memoryWrites: [], startPc: 0, startGas: 100n, startRegisters: new Map() },
-      entries: [{
-        index: 0, pc: 10, gas: 90n, registers: new Map(),
-        memoryReads: [], memoryWrites: [], registerWrites: new Map(),
-      }],
+      prelude: {
+        programHex: "ff",
+        memoryWrites: [],
+        startPc: 0,
+        startGas: 100n,
+        startRegisters: new Map(),
+      },
+      entries: [
+        {
+          index: 0,
+          pc: 10,
+          gas: 90n,
+          registers: new Map(),
+          memoryReads: [],
+          memoryWrites: [],
+          registerWrites: new Map(),
+        },
+      ],
     };
     const mismatches = compareTraces(a, b);
     expect(mismatches.find((m) => m.path === "entries.length")).toBeDefined();
@@ -670,7 +766,10 @@ describe("compareTraces — entry count mismatch", () => {
 
 describe("traceMemoryWriteToBytes", () => {
   it("converts { address, dataHex } into { address, data }", () => {
-    const result = traceMemoryWriteToBytes({ address: 0x1000, dataHex: "aabbccdd" });
+    const result = traceMemoryWriteToBytes({
+      address: 0x1000,
+      dataHex: "aabbccdd",
+    });
     expect(result.address).toBe(0x1000);
     expect(result.data).toEqual(new Uint8Array([0xaa, 0xbb, 0xcc, 0xdd]));
   });

@@ -1,4 +1,8 @@
-import { AnanasSyncInterpreter, initAnanas, installWorkerEntry } from "@pvmdbg/runtime-worker";
+import {
+  AnanasSyncInterpreter,
+  initAnanas,
+  installWorkerEntry,
+} from "@pvmdbg/runtime-worker";
 
 // Queue messages received while the WASM module is still loading.
 const pending: MessageEvent[] = [];

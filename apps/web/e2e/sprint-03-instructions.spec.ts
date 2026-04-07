@@ -1,7 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 03 — Flat Instruction List", () => {
-  test("empty state shows 'No program loaded' before a program is loaded", async ({ page }) => {
+  test("empty state shows 'No program loaded' before a program is loaded", async ({
+    page,
+  }) => {
     // Without a loaded program, / redirects to /load (route guard).
     // Verify the redirect happens and no instructions panel is visible.
     await page.goto("/#/");
@@ -15,8 +17,9 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     await expect(card).toBeVisible();
     await card.click();
 
-
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("instructions-panel")).toBeVisible();
   });
 
@@ -26,8 +29,9 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     await expect(card).toBeVisible();
     await card.click();
 
-
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
 
     // The instructions panel should contain at least one row
     const panel = page.getByTestId("instructions-panel");
@@ -54,9 +58,13 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     await card.click();
 
     // SPI programs go through config step
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
 
     const panel = page.getByTestId("instructions-panel");
     await expect(panel).toBeVisible();
@@ -87,9 +95,13 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     await card.click();
 
     // SPI programs go through config step
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
 
     const panel = page.getByTestId("instructions-panel");
     await expect(panel).toBeVisible();

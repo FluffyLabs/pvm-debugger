@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 19 — Host Call Drawer Tab", () => {
   /** Load a trace-backed program and wait for the debugger page. */
-  async function loadTraceProgram(page: import("@playwright/test").Page, exampleId = "io-trace") {
+  async function loadTraceProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "io-trace",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Load a simple (non-trace) program for the empty state tests. */
@@ -16,7 +21,9 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -32,7 +39,9 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
   ) {
     await openSettings(page);
     await page.getByTestId(`auto-continue-radio-${policy}`).click();
-    await expect(page.getByTestId(`auto-continue-radio-${policy}`)).toBeChecked();
+    await expect(
+      page.getByTestId(`auto-continue-radio-${policy}`),
+    ).toBeChecked();
   }
 
   function pvmStatus(page: import("@playwright/test").Page) {
@@ -49,10 +58,14 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
     // Should show the empty state
     await expect(page.getByTestId("host-call-tab")).toBeVisible();
     await expect(page.getByTestId("host-call-empty")).toBeVisible();
-    await expect(page.getByTestId("host-call-empty")).toContainText("No host call is currently active");
+    await expect(page.getByTestId("host-call-empty")).toContainText(
+      "No host call is currently active",
+    );
   });
 
-  test("pausing on a host call auto-opens the drawer to Host Call tab", async ({ page }) => {
+  test("pausing on a host call auto-opens the drawer to Host Call tab", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
 
     // Set policy to "never" so run stops on host calls
@@ -103,7 +116,9 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
     // If not, click Next to move past and keep running.
     let foundLog = false;
     for (let i = 0; i < 50; i++) {
-      const headerText = await page.getByTestId("host-call-header").textContent();
+      const headerText = await page
+        .getByTestId("host-call-header")
+        .textContent();
       if (headerText && headerText.includes("log")) {
         foundLog = true;
         break;
@@ -116,7 +131,9 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
       await page.getByTestId("run-button").click();
       // Wait for either Host Call state or terminal state
       try {
-        await expect(pvmStatus(page)).toHaveText("Host Call", { timeout: 5000 });
+        await expect(pvmStatus(page)).toHaveText("Host Call", {
+          timeout: 5000,
+        });
       } catch {
         // May have terminated
         break;
@@ -130,7 +147,9 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
     // The trace may not contain log host calls. This is acceptable.
   });
 
-  test("generic fallback renders for unsupported host calls", async ({ page }) => {
+  test("generic fallback renders for unsupported host calls", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAutoContinuePolicy(page, "never");
 
@@ -142,13 +161,27 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
     await expect(page.getByTestId("host-call-tab")).toBeVisible();
 
     // At minimum, one of the contextual views should be rendered.
-    const gasVisible = await page.getByTestId("gas-host-call").isVisible().catch(() => false);
-    const logVisible = await page.getByTestId("log-host-call").isVisible().catch(() => false);
-    const storageVisible = await page.getByTestId("storage-host-call").isVisible().catch(() => false);
-    const genericVisible = await page.getByTestId("generic-host-call").isVisible().catch(() => false);
+    const gasVisible = await page
+      .getByTestId("gas-host-call")
+      .isVisible()
+      .catch(() => false);
+    const logVisible = await page
+      .getByTestId("log-host-call")
+      .isVisible()
+      .catch(() => false);
+    const storageVisible = await page
+      .getByTestId("storage-host-call")
+      .isVisible()
+      .catch(() => false);
+    const genericVisible = await page
+      .getByTestId("generic-host-call")
+      .isVisible()
+      .catch(() => false);
 
     // Exactly one should be visible
-    expect(gasVisible || logVisible || storageVisible || genericVisible).toBe(true);
+    expect(gasVisible || logVisible || storageVisible || genericVisible).toBe(
+      true,
+    );
   });
 
   test("no resume button is present in the tab", async ({ page }) => {

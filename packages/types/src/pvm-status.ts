@@ -1,5 +1,11 @@
 /** All possible PVM execution statuses. */
-export type PvmStatus = "ok" | "halt" | "panic" | "fault" | "host" | "out_of_gas";
+export type PvmStatus =
+  | "ok"
+  | "halt"
+  | "panic"
+  | "fault"
+  | "host"
+  | "out_of_gas";
 
 /** All valid PVM status values as a readonly array. */
 export const PVM_STATUSES: readonly PvmStatus[] = [

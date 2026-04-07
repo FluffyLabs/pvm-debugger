@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 /**
  * Returns a stable function identity that always calls the latest version of `fn`.

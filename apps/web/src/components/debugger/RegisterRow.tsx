@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Popover, PopoverTrigger, PopoverContent } from "@fluffylabs/shared-ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@fluffylabs/shared-ui";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatRegister, parseBigintInput } from "./value-format";
 
 export interface RegisterDivergence {
@@ -16,7 +16,14 @@ interface RegisterRowProps {
   onCommit?: (index: number, value: bigint) => void;
 }
 
-export function RegisterRow({ index, value, editable, changed, divergences, onCommit }: RegisterRowProps) {
+export function RegisterRow({
+  index,
+  value,
+  editable,
+  changed,
+  divergences,
+  onCommit,
+}: RegisterRowProps) {
   const { hex, decimal } = formatRegister(value);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
@@ -100,7 +107,10 @@ export function RegisterRow({ index, value, editable, changed, divergences, onCo
       className={`flex items-baseline gap-2 px-2 py-0.5 font-mono text-xs hover:bg-muted/50 ${flash ? "register-flash" : ""} ${isZero && !changed ? "opacity-40" : ""}`}
       style={{ minHeight: "1.5rem" }}
     >
-      <span data-testid={`register-label-${index}`} className="text-muted-foreground w-8 shrink-0 select-none">
+      <span
+        data-testid={`register-label-${index}`}
+        className="text-muted-foreground w-8 shrink-0 select-none"
+      >
         ω{index}:
       </span>
       {editing ? (
@@ -108,7 +118,12 @@ export function RegisterRow({ index, value, editable, changed, divergences, onCo
           ref={inputRef}
           data-testid={`register-edit-${index}`}
           className={`flex-1 bg-transparent border-b outline-none font-mono text-xs text-foreground ${error ? "border-red-500" : ""}`}
-          style={{ borderColor: error ? undefined : "var(--color-brand)", minHeight: "1.25rem", lineHeight: "1.25rem", padding: 0 }}
+          style={{
+            borderColor: error ? undefined : "var(--color-brand)",
+            minHeight: "1.25rem",
+            lineHeight: "1.25rem",
+            padding: 0,
+          }}
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value);
@@ -126,7 +141,10 @@ export function RegisterRow({ index, value, editable, changed, divergences, onCo
           >
             {hex}
           </span>
-          <span data-testid={`register-decimal-${index}`} className="text-muted-foreground">
+          <span
+            data-testid={`register-decimal-${index}`}
+            className="text-muted-foreground"
+          >
             ({decimal})
           </span>
           {changed && (
@@ -151,8 +169,13 @@ export function RegisterRow({ index, value, editable, changed, divergences, onCo
                 </span>
               </PopoverTrigger>
               <PopoverContent side="right" align="start" size="small">
-                <div className="text-xs font-mono space-y-1" data-testid={`register-divergence-popover-${index}`}>
-                  <div className="font-semibold text-amber-400 mb-1">Divergence</div>
+                <div
+                  className="text-xs font-mono space-y-1"
+                  data-testid={`register-divergence-popover-${index}`}
+                >
+                  <div className="font-semibold text-amber-400 mb-1">
+                    Divergence
+                  </div>
                   {divergences.map((d) => (
                     <div key={d.pvmId}>
                       <span className="text-muted-foreground">{d.pvmId}:</span>{" "}

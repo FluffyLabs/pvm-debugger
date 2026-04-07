@@ -1,5 +1,5 @@
-import type { SpiEntrypointParams } from "./spi-entrypoint.js";
 import type { InitialMachineState } from "@pvmdbg/types";
+import type { SpiEntrypointParams } from "./spi-entrypoint.js";
 
 /** Shape of a single example entry in the manifest. */
 export interface ExampleEntry {
@@ -42,9 +42,7 @@ function loadManifest(): ExamplesManifest {
   if (_manifest !== null) return _manifest;
   // At build time, the JSON will be resolved by the bundler or tsc.
   // We store a static copy for synchronous access.
-  throw new Error(
-    "Manifest not initialized. Call initManifest() first.",
-  );
+  throw new Error("Manifest not initialized. Call initManifest() first.");
 }
 
 /**
@@ -59,7 +57,9 @@ function loadManifest(): ExamplesManifest {
  * initManifest(manifest);
  * ```
  */
-export function initManifest(data: ExamplesManifest | { categories: unknown[] }): void {
+export function initManifest(
+  data: ExamplesManifest | { categories: unknown[] },
+): void {
   _manifest = data as ExamplesManifest;
 }
 
@@ -123,7 +123,8 @@ export function manifestInitialStateOverrides(
   const overrides: Partial<InitialMachineState> = {};
   if (entry.pc !== undefined) overrides.pc = entry.pc;
   if (entry.gas !== undefined) overrides.gas = BigInt(entry.gas);
-  if (entry.registers !== undefined) overrides.registers = entry.registers.map(BigInt);
+  if (entry.registers !== undefined)
+    overrides.registers = entry.registers.map(BigInt);
   if (entry.pageMap !== undefined) overrides.pageMap = entry.pageMap;
   return overrides;
 }

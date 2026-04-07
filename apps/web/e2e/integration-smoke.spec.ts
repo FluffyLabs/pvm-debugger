@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -14,10 +14,13 @@ const FIXTURES_DIR = path.resolve(__dirname, "../../../fixtures");
 const COLLAPSED_CATEGORY: Record<string, string> = {
   "inst-add-32": "json-test-vectors",
   "inst-add-64": "json-test-vectors",
-  "io-trace": "traces",  // traces is expanded, but kept for safety
+  "io-trace": "traces", // traces is expanded, but kept for safety
 };
 
-async function loadExample(page: import("@playwright/test").Page, exampleId: string) {
+async function loadExample(
+  page: import("@playwright/test").Page,
+  exampleId: string,
+) {
   await page.goto("/#/load");
   // Expand collapsed category if needed
   const categoryId = COLLAPSED_CATEGORY[exampleId];
@@ -34,13 +37,18 @@ async function loadExample(page: import("@playwright/test").Page, exampleId: str
   await expect(card).toBeVisible({ timeout: 15000 });
   await card.click();
   // Non-SPI programs skip config step and go directly to debugger
-  await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId("debugger-page")).toBeVisible({
+    timeout: 15000,
+  });
 }
 
 /**
  * Helper: upload a local fixture file, confirm detection, and load into debugger.
  */
-async function loadFile(page: import("@playwright/test").Page, fixturePath: string) {
+async function loadFile(
+  page: import("@playwright/test").Page,
+  fixturePath: string,
+) {
   await page.goto("/#/load");
   await expect(page.getByTestId("load-page")).toBeVisible();
   const fileInput = page.getByTestId("file-upload-input");
@@ -48,7 +56,9 @@ async function loadFile(page: import("@playwright/test").Page, fixturePath: stri
   await expect(page.getByTestId("file-upload-selected")).toBeVisible();
   await page.getByTestId("source-step-continue").click();
   // Non-SPI programs skip config step and go directly to debugger
-  await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId("debugger-page")).toBeVisible({
+    timeout: 15000,
+  });
 }
 
 /** Open the settings tab in the bottom drawer. */
@@ -71,7 +81,9 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
   // Increase timeout for the whole suite — up to 120s per test
   test.setTimeout(60_000);
 
-  test("JAM SPI example loads with correct format summary", async ({ page }) => {
+  test("JAM SPI example loads with correct format summary", async ({
+    page,
+  }) => {
     // Load a JAM SPI example (add-jam is in wat, collapsed by default)
     await page.goto("/#/load");
     await page.getByTestId("category-toggle-wat").click();
@@ -80,9 +92,13 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
     await card.click();
 
     // Verify step 2 shows detection summary with SPI format
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("detection-summary")).toBeVisible();
-    await expect(page.getByTestId("detection-summary-format")).toHaveText(/JAM SPI/);
+    await expect(page.getByTestId("detection-summary-format")).toHaveText(
+      /JAM SPI/,
+    );
 
     // SPI structural details should be present
     await expect(page.getByTestId("detection-summary-spi")).toBeVisible();
@@ -90,7 +106,9 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
 
     // Load and verify the debugger renders
     await page.getByTestId("config-step-load").click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Verify a real state exists (gas should be a non-zero number)
     const gasValue = page.getByTestId("gas-value");
@@ -112,8 +130,12 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
 
     // Run to completion
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 15000 });
-    await expect(page.getByTestId("execution-complete-badge")).toHaveText("Execution Complete");
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByTestId("execution-complete-badge")).toHaveText(
+      "Execution Complete",
+    );
 
     // Gas should have decreased (real state transition)
     const finalGas = await gasValue.textContent();
@@ -138,7 +160,9 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
 
     // Run to completion
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("register edit changes execution result", async ({ page }) => {
@@ -162,7 +186,9 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
 
     // Step once — add_64 executes: r9 = r7(100) + r8(2) = 102 (0x66)
     await page.getByTestId("next-button").click();
-    await expect(page.getByTestId("pc-value")).not.toHaveText("0x0000", { timeout: 5000 });
+    await expect(page.getByTestId("pc-value")).not.toHaveText("0x0000", {
+      timeout: 5000,
+    });
 
     // r9 should be 102 (0x66) — proving editing ω7 changed the downstream result
     const regHex9 = page.getByTestId("register-hex-9");
@@ -211,13 +237,18 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
 
     // Run — should stop at the first host call
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("Host Call", {
-      timeout: 15000,
-    });
+    await expect(page.getByTestId("pvm-status-typeberry")).toHaveText(
+      "Host Call",
+      {
+        timeout: 15000,
+      },
+    );
 
     // The host call tab should be visible (drawer auto-opens on host call)
     // Per spec pitfall: assert the rendered panel directly, don't click the tab
-    await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("host-call-tab")).toBeVisible({
+      timeout: 5000,
+    });
     await expect(page.getByTestId("host-call-header")).toBeVisible();
 
     // Verify host call hint text is present
@@ -227,8 +258,12 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
     await page.getByTestId("drawer-tab-ecalli_trace").click();
     await expect(page.getByTestId("ecalli-trace-tab")).toBeVisible();
     // Default view is "formatted" with two trace columns
-    await expect(page.getByTestId("trace-column-execution-trace")).toBeVisible();
-    await expect(page.getByTestId("trace-column-reference-trace")).toBeVisible();
+    await expect(
+      page.getByTestId("trace-column-execution-trace"),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("trace-column-reference-trace"),
+    ).toBeVisible();
   });
 
   test("JSON vector reaches expected terminal status", async ({ page }) => {
@@ -237,7 +272,9 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
 
     // Run to completion
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({
+      timeout: 15000,
+    });
 
     // The PVM should be in a terminal state
     const statusBadge = page.getByTestId("status-badge");

@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import { useCallback, useRef, useState } from "react";
 
 const PAGE_SIZE = 4096;
 
@@ -20,7 +20,10 @@ interface MemoryReaderResult {
 }
 
 /** Compare two page buffers and return the set of byte offsets that differ. */
-export function computeChangedOffsets(prev: Uint8Array, curr: Uint8Array): Set<number> {
+export function computeChangedOffsets(
+  prev: Uint8Array,
+  curr: Uint8Array,
+): Set<number> {
   const changed = new Set<number>();
   const len = Math.min(prev.length, curr.length);
   for (let i = 0; i < len; i++) {
@@ -97,7 +100,10 @@ export function useMemoryReader(
             // Compute changed offsets by comparing against the previous snapshot
             const prevData = prevCacheRef.current.get(address);
             if (prevData) {
-              changedOffsetsRef.current.set(address, computeChangedOffsets(prevData, data));
+              changedOffsetsRef.current.set(
+                address,
+                computeChangedOffsets(prevData, data),
+              );
             } else {
               // First fetch — no previous data, so no highlights
               changedOffsetsRef.current.delete(address);
@@ -122,7 +128,8 @@ export function useMemoryReader(
   );
 
   const isLoading = useCallback(
-    (address: number) => fetchingRef.current.has(address) && !cacheRef.current.has(address),
+    (address: number) =>
+      fetchingRef.current.has(address) && !cacheRef.current.has(address),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [snapshotVersion],
   );

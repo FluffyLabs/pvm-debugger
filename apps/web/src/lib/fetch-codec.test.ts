@@ -1,48 +1,48 @@
-import { describe, it, expect } from "vitest";
+import { decodeSequenceVarLen, encodeSequenceVarLen } from "@pvmdbg/types";
+import { describe, expect, it } from "vitest";
 import {
-  PROTOCOL_CONSTANTS_SIZE,
-  encodeProtocolConstants,
-  decodeProtocolConstants,
-  WORK_ITEM_SUMMARY_SIZE,
-  encodeWorkItemSummary,
-  decodeWorkItemSummary,
-  encodeRefinementContext,
-  decodeRefinementContext,
-  encodeTransferOrOperand,
-  decodeTransferOrOperand,
-  encodeWorkPackage,
-  decodeWorkPackage,
-  encodeImportRef,
-  decodeImportRef,
-  encodeExtrinsicRef,
   decodeExtrinsicRef,
-  encodeWorkItem,
-  decodeWorkItem,
-  encodeOResult,
+  decodeImportRef,
   decodeOResult,
-  tryDecodeBlob,
+  decodeProtocolConstants,
+  decodeRefinementContext,
+  decodeTransferOrOperand,
+  decodeWorkItem,
+  decodeWorkItemSummary,
+  decodeWorkPackage,
+  encodeExtrinsicRef,
+  encodeImportRef,
+  encodeOResult,
+  encodeProtocolConstants,
+  encodeRefinementContext,
+  encodeTransferOrOperand,
   encodeVariantData,
-  FetchKind,
+  encodeWorkItem,
+  encodeWorkItemSummary,
+  encodeWorkPackage,
   FETCH_KIND_INFO,
-  TRANSFER_MEMO_SIZE,
+  FetchKind,
+  PROTOCOL_CONSTANTS_SIZE,
   type ProtocolConstants,
-  type WorkItemSummary,
   type RefinementContext,
-  type TransferOrOperand,
-  type WorkPackageData,
-  type WorkItem,
+  TRANSFER_MEMO_SIZE,
   type Transfer,
+  type TransferOrOperand,
+  tryDecodeBlob,
+  WORK_ITEM_SUMMARY_SIZE,
+  type WorkItem,
+  type WorkItemSummary,
+  type WorkPackageData,
 } from "./fetch-codec";
 import {
-  DEFAULT_PROTOCOL_CONSTANTS,
-  DEFAULT_WORK_ITEM_SUMMARY,
-  DEFAULT_REFINEMENT_CONTEXT,
   DEFAULT_OPERAND,
+  DEFAULT_PROTOCOL_CONSTANTS,
+  DEFAULT_REFINEMENT_CONTEXT,
   DEFAULT_TRANSFER,
   DEFAULT_WORK_ITEM,
+  DEFAULT_WORK_ITEM_SUMMARY,
   DEFAULT_WORK_PACKAGE,
 } from "./fetch-defaults";
-import { encodeSequenceVarLen, decodeSequenceVarLen } from "@pvmdbg/types";
 
 describe("ProtocolConstants", () => {
   it("encodes to exactly 134 bytes", () => {
@@ -75,7 +75,7 @@ describe("WorkItemSummary", () => {
   it("roundtrips through encode/decode", () => {
     const summary: WorkItemSummary = {
       serviceindex: 42,
-      codehash: new Uint8Array(32).fill(0xAB),
+      codehash: new Uint8Array(32).fill(0xab),
       refgaslimit: 123456n,
       accgaslimit: 789012n,
       exportcount: 3,
@@ -119,19 +119,31 @@ describe("RefinementContext", () => {
 
 describe("ImportRef", () => {
   it("encodes to 34 bytes", () => {
-    const ref = { hash: new Uint8Array(32), index: 0, isWorkPackageHash: false };
+    const ref = {
+      hash: new Uint8Array(32),
+      index: 0,
+      isWorkPackageHash: false,
+    };
     expect(encodeImportRef(ref).length).toBe(34);
   });
 
   it("roundtrips normal import", () => {
-    const ref = { hash: new Uint8Array(32).fill(0xAA), index: 42, isWorkPackageHash: false };
+    const ref = {
+      hash: new Uint8Array(32).fill(0xaa),
+      index: 42,
+      isWorkPackageHash: false,
+    };
     const decoded = decodeImportRef(encodeImportRef(ref));
     expect(decoded.value.index).toBe(42);
     expect(decoded.value.isWorkPackageHash).toBe(false);
   });
 
   it("roundtrips work-package hash import (high bit)", () => {
-    const ref = { hash: new Uint8Array(32).fill(0xBB), index: 100, isWorkPackageHash: true };
+    const ref = {
+      hash: new Uint8Array(32).fill(0xbb),
+      index: 100,
+      isWorkPackageHash: true,
+    };
     const decoded = decodeImportRef(encodeImportRef(ref));
     expect(decoded.value.index).toBe(100);
     expect(decoded.value.isWorkPackageHash).toBe(true);
@@ -145,7 +157,7 @@ describe("ExtrinsicRef", () => {
   });
 
   it("roundtrips", () => {
-    const ref = { hash: new Uint8Array(32).fill(0xCC), length: 65535 };
+    const ref = { hash: new Uint8Array(32).fill(0xcc), length: 65535 };
     const decoded = decodeExtrinsicRef(encodeExtrinsicRef(ref));
     expect(decoded.value.length).toBe(65535);
   });
@@ -196,18 +208,24 @@ describe("WorkItem", () => {
   it("roundtrips with non-empty imports and extrinsics", () => {
     const item: WorkItem = {
       serviceindex: 5,
-      codehash: new Uint8Array(32).fill(0xCC),
+      codehash: new Uint8Array(32).fill(0xcc),
       refgaslimit: 100000n,
       accgaslimit: 50000n,
       exportcount: 3,
       payload: new Uint8Array([0x01, 0x02, 0x03]),
       importsegments: [
-        { hash: new Uint8Array(32).fill(0xAA), index: 7, isWorkPackageHash: false },
-        { hash: new Uint8Array(32).fill(0xBB), index: 42, isWorkPackageHash: true },
+        {
+          hash: new Uint8Array(32).fill(0xaa),
+          index: 7,
+          isWorkPackageHash: false,
+        },
+        {
+          hash: new Uint8Array(32).fill(0xbb),
+          index: 42,
+          isWorkPackageHash: true,
+        },
       ],
-      extrinsics: [
-        { hash: new Uint8Array(32).fill(0xDD), length: 1024 },
-      ],
+      extrinsics: [{ hash: new Uint8Array(32).fill(0xdd), length: 1024 }],
     };
     const encoded = encodeWorkItem(item);
     const decoded = decodeWorkItem(encoded);
@@ -224,7 +242,7 @@ describe("WorkItem", () => {
 
 describe("Transfer memo truncation", () => {
   it("truncates memo longer than 128 bytes", () => {
-    const longMemo = new Uint8Array(200).fill(0xFF);
+    const longMemo = new Uint8Array(200).fill(0xff);
     const xfer: Transfer = {
       ...DEFAULT_TRANSFER,
       memo: longMemo,
@@ -235,8 +253,8 @@ describe("Transfer memo truncation", () => {
     if (decoded.value.tag === "transfer") {
       expect(decoded.value.memo.length).toBe(128);
       // Should be 0xFF (truncated from the original), not zeros
-      expect(decoded.value.memo[0]).toBe(0xFF);
-      expect(decoded.value.memo[127]).toBe(0xFF);
+      expect(decoded.value.memo[0]).toBe(0xff);
+      expect(decoded.value.memo[127]).toBe(0xff);
     }
   });
 });
@@ -267,7 +285,7 @@ describe("WorkPackage", () => {
       context: {
         ...DEFAULT_REFINEMENT_CONTEXT,
         lookupanchortime: 999,
-        prerequisites: [new Uint8Array(32).fill(0xAA)],
+        prerequisites: [new Uint8Array(32).fill(0xaa)],
       },
       authtoken: new Uint8Array([0x01, 0x02]),
       authconfig: new Uint8Array([0x03]),
@@ -276,7 +294,7 @@ describe("WorkPackage", () => {
           ...DEFAULT_WORK_ITEM,
           serviceindex: 7,
           exportcount: 2,
-          payload: new Uint8Array([0xDE, 0xAD]),
+          payload: new Uint8Array([0xde, 0xad]),
         },
       ],
     };
@@ -291,7 +309,9 @@ describe("WorkPackage", () => {
     expect(decoded!.value.workitems.length).toBe(1);
     expect(decoded!.value.workitems[0].serviceindex).toBe(7);
     expect(decoded!.value.workitems[0].exportcount).toBe(2);
-    expect(Array.from(decoded!.value.workitems[0].payload)).toEqual([0xDE, 0xAD]);
+    expect(Array.from(decoded!.value.workitems[0].payload)).toEqual([
+      0xde, 0xad,
+    ]);
   });
 });
 
@@ -317,7 +337,7 @@ describe("tryDecodeBlob", () => {
     const blob = new Uint8Array([1, 2, 3]);
     const result = tryDecodeBlob(FetchKind.AuthorizerTrace, blob);
     expect(result).not.toBeNull();
-    expect(Array.from((result!.data as Uint8Array))).toEqual([1, 2, 3]);
+    expect(Array.from(result!.data as Uint8Array)).toEqual([1, 2, 3]);
   });
 });
 
@@ -333,7 +353,10 @@ describe("FETCH_KIND_INFO", () => {
 
 describe("encodeVariantData roundtrip", () => {
   it("roundtrips ProtocolConstants through encodeVariantData/tryDecodeBlob", () => {
-    const data = { kind: FetchKind.Constants as const, data: DEFAULT_PROTOCOL_CONSTANTS };
+    const data = {
+      kind: FetchKind.Constants as const,
+      data: DEFAULT_PROTOCOL_CONSTANTS,
+    };
     const blob = encodeVariantData(data);
     const result = tryDecodeBlob(FetchKind.Constants, blob);
     expect(result).not.toBeNull();

@@ -1,15 +1,15 @@
 import type {
+  EcalliTrace,
+  HostCallInfo,
+  HostCallResumeEffects,
+  MachineStateSnapshot,
+  PageMapEntry,
+  ProgramEnvelope,
   PvmAdapter,
   PvmLifecycle,
   PvmStatus,
-  MachineStateSnapshot,
-  ProgramEnvelope,
-  EcalliTrace,
   TraceEntry,
   TraceTermination,
-  HostCallInfo,
-  HostCallResumeEffects,
-  PageMapEntry,
 } from "@pvmdbg/types";
 import { toHex } from "@pvmdbg/types";
 
@@ -204,7 +204,8 @@ export function buildRecordedTracePrelude(
   envelope: ProgramEnvelope,
 ): EcalliTrace {
   const s = envelope.initialState;
-  const programBytes = envelope.loadContext?.spiProgram?.program ?? envelope.programBytes;
+  const programBytes =
+    envelope.loadContext?.spiProgram?.program ?? envelope.programBytes;
 
   // For SPI programs, only include the SPI args at the arguments address (0xFEFF0000),
   // not all expanded memory chunks (stack, heap, RO data, etc.)
@@ -237,7 +238,11 @@ export function appendHostCallEntry(
   session: Session,
   effects: HostCallResumeEffects,
   hostCallInfo: HostCallInfo,
-  capturedMemoryReads?: Array<{ address: number; length: number; dataHex: string }>,
+  capturedMemoryReads?: Array<{
+    address: number;
+    length: number;
+    dataHex: string;
+  }>,
 ): void {
   // Captured memory reads (live from PVM) take precedence over reference trace
   let memoryReads: Array<{ address: number; length: number; dataHex: string }>;

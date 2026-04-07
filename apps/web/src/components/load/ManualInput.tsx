@@ -1,7 +1,12 @@
-import { useState, useCallback } from "react";
 import { Alert } from "@fluffylabs/shared-ui";
+import {
+  type DetectedFormat,
+  detectFormat,
+  loadManualInput,
+  type RawPayload,
+} from "@pvmdbg/content";
 import { Check } from "lucide-react";
-import { loadManualInput, detectFormat, type RawPayload, type DetectedFormat } from "@pvmdbg/content";
+import { useCallback, useState } from "react";
 import { formatByteCount } from "./format";
 
 export interface ManualInputResult {

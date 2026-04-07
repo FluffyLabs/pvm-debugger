@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 18 — Host Call Resume Flow", () => {
   /** Load a trace-backed program and wait for the debugger page. */
-  async function loadTraceProgram(page: import("@playwright/test").Page, exampleId = "io-trace") {
+  async function loadTraceProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "io-trace",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -23,7 +28,9 @@ test.describe("Sprint 18 — Host Call Resume Flow", () => {
   ) {
     await openSettings(page);
     await page.getByTestId(`auto-continue-radio-${policy}`).click();
-    await expect(page.getByTestId(`auto-continue-radio-${policy}`)).toBeChecked();
+    await expect(
+      page.getByTestId(`auto-continue-radio-${policy}`),
+    ).toBeChecked();
   }
 
   /** Get the PVM status text for the default (typeberry) PVM. */
@@ -31,7 +38,9 @@ test.describe("Sprint 18 — Host Call Resume Flow", () => {
     return page.getByTestId("pvm-status-typeberry");
   }
 
-  test("loading a trace-backed program and stepping past a host call works", async ({ page }) => {
+  test("loading a trace-backed program and stepping past a host call works", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
 
     // Set policy to "never" so run stops on host calls
@@ -81,7 +90,9 @@ test.describe("Sprint 18 — Host Call Resume Flow", () => {
     expect(pcAfter).not.toBe(pcBefore);
   });
 
-  test("Run with Always auto-continue policy runs past host calls", async ({ page }) => {
+  test("Run with Always auto-continue policy runs past host calls", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAutoContinuePolicy(page, "always_continue");
 
@@ -123,6 +134,8 @@ test.describe("Sprint 18 — Host Call Resume Flow", () => {
     await expect(page.getByTestId("next-button")).toBeEnabled();
 
     // Execution complete badge should NOT be visible (we stopped, not completed)
-    await expect(page.getByTestId("execution-complete-badge")).not.toBeVisible();
+    await expect(
+      page.getByTestId("execution-complete-badge"),
+    ).not.toBeVisible();
   });
 });

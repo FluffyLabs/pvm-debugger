@@ -1,13 +1,14 @@
-import { useMemo } from "react";
 import type { ProgramEnvelope } from "@pvmdbg/types";
 import {
-  ProgramDecoder,
-  BasicBlocks,
   args as argsModule,
+  BasicBlocks,
+  ProgramDecoder,
 } from "@typeberry/lib/pvm-interpreter";
+import { useMemo } from "react";
 import { INSTRUCTION_NAMES } from "../components/debugger/instruction-names";
 
-const { ArgsDecoder, ArgumentType, instructionArgumentTypeMap, createResults } = argsModule;
+const { ArgsDecoder, ArgumentType, instructionArgumentTypeMap, createResults } =
+  argsModule;
 
 export interface DecodedInstruction {
   pc: number;
@@ -116,11 +117,17 @@ function formatArgsWithReg(
   }
 }
 
-function formatArgs(argType: number, results: ReturnType<typeof createResults>): string {
+function formatArgs(
+  argType: number,
+  results: ReturnType<typeof createResults>,
+): string {
   return formatArgsWithReg(argType, results, regName);
 }
 
-function formatRawArgs(argType: number, results: ReturnType<typeof createResults>): string {
+function formatRawArgs(
+  argType: number,
+  results: ReturnType<typeof createResults>,
+): string {
   return formatArgsWithReg(argType, results, String);
 }
 
@@ -203,7 +210,9 @@ function disassemble(programBytes: Uint8Array): DecodedInstruction[] {
   return instructions;
 }
 
-export function useDisassembly(envelope: ProgramEnvelope | null): DecodedInstruction[] {
+export function useDisassembly(
+  envelope: ProgramEnvelope | null,
+): DecodedInstruction[] {
   return useMemo(() => {
     if (!envelope) return [];
     return disassemble(envelope.programBytes);

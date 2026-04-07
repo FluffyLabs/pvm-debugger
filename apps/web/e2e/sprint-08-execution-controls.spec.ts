@@ -1,15 +1,22 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "step-test",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
-  test("toolbar renders Load, Reset, Next, Run in the correct order", async ({ page }) => {
+  test("toolbar renders Load, Reset, Next, Run in the correct order", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     const controls = page.getByTestId("execution-controls");
@@ -42,7 +49,9 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     await expect(buttons.nth(3)).toHaveAttribute("data-testid", "run-button");
   });
 
-  test("Run starts continuous execution and becomes Pause", async ({ page }) => {
+  test("Run starts continuous execution and becomes Pause", async ({
+    page,
+  }) => {
     // Use game-of-life — runs for many thousands of steps (gas=10M)
     await loadProgram(page, "game-of-life");
 
@@ -78,7 +87,9 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     await expect(page.getByTestId("run-button")).toBeVisible({ timeout: 5000 });
   });
 
-  test("Reset returns PC, gas, and registers to initial values", async ({ page }) => {
+  test("Reset returns PC, gas, and registers to initial values", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     const pcValue = page.getByTestId("pc-value");
@@ -119,8 +130,12 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     await page.getByTestId("run-button").click();
 
     // Wait for completion
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId("execution-complete-badge")).toHaveText("Execution Complete");
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByTestId("execution-complete-badge")).toHaveText(
+      "Execution Complete",
+    );
 
     // Next and Run should be disabled
     await expect(page.getByTestId("next-button")).toBeDisabled();
@@ -132,14 +147,18 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
 
     // Run to completion
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({
+      timeout: 10000,
+    });
 
     // Reset and Load should still be enabled
     await expect(page.getByTestId("reset-button")).toBeEnabled();
     await expect(page.getByTestId("load-button")).toBeEnabled();
   });
 
-  test("Reset after completion restores state and allows re-execution", async ({ page }) => {
+  test("Reset after completion restores state and allows re-execution", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     const pcValue = page.getByTestId("pc-value");
@@ -147,7 +166,9 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
 
     // Run to completion
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("execution-complete-badge")).toBeVisible({
+      timeout: 10000,
+    });
 
     // Next/Run should be disabled
     await expect(page.getByTestId("next-button")).toBeDisabled();
@@ -159,10 +180,14 @@ test.describe("Sprint 08 — Run / Pause / Reset / Load Controls", () => {
     await expect(pcValue).toHaveText(initialPc!, { timeout: 5000 });
 
     // Completion badge should disappear
-    await expect(page.getByTestId("execution-complete-badge")).not.toBeVisible();
+    await expect(
+      page.getByTestId("execution-complete-badge"),
+    ).not.toBeVisible();
 
     // Next button should be re-enabled (PVM is paused, not terminal)
-    await expect(page.getByTestId("next-button")).toBeEnabled({ timeout: 5000 });
+    await expect(page.getByTestId("next-button")).toBeEnabled({
+      timeout: 5000,
+    });
 
     // Can step again
     await page.getByTestId("next-button").click();

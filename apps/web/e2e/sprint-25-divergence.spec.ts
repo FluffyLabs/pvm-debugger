@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 25 — Divergence Detection", () => {
   /** Load a program and wait for the debugger page to be visible. */
@@ -7,7 +7,9 @@ test.describe("Sprint 25 — Divergence Detection", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -24,13 +26,17 @@ test.describe("Sprint 25 — Divergence Detection", () => {
    * tests fail identically). When PVM switching doesn't stabilize within
    * the timeout, the test should be skipped gracefully.
    */
-  async function tryEnableAnanas(page: import("@playwright/test").Page): Promise<boolean> {
+  async function tryEnableAnanas(
+    page: import("@playwright/test").Page,
+  ): Promise<boolean> {
     await openSettings(page);
     const ananasSwitch = page.getByTestId("pvm-switch-ananas");
     await expect(ananasSwitch).toBeVisible();
     await ananasSwitch.click();
     try {
-      await expect(page.getByTestId("pvm-tab-ananas")).toHaveRole("tab", { timeout: 15000 });
+      await expect(page.getByTestId("pvm-tab-ananas")).toHaveRole("tab", {
+        timeout: 15000,
+      });
       return true;
     } catch {
       return false;
@@ -54,7 +60,10 @@ test.describe("Sprint 25 — Divergence Detection", () => {
   test("both PVMs agree after running to completion", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(!enabled, "PVM switching did not stabilize (pre-existing sprint-24 issue)");
+    test.skip(
+      !enabled,
+      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
+    );
 
     // Run to completion
     const runBtn = page.getByTestId("run-button");
@@ -62,26 +71,37 @@ test.describe("Sprint 25 — Divergence Detection", () => {
     await runBtn.click();
 
     // Wait for terminal state
-    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(/bg-gray-500/, {
-      timeout: 15000,
-    });
+    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(
+      /bg-gray-500/,
+      {
+        timeout: 15000,
+      },
+    );
 
     // Both PVMs execute the same program correctly — no divergence should appear
     await expect(page.getByTestId("divergence-summary")).not.toBeVisible();
   });
 
-  test("both PVMs show matching status dots after completion", async ({ page }) => {
+  test("both PVMs show matching status dots after completion", async ({
+    page,
+  }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(!enabled, "PVM switching did not stabilize (pre-existing sprint-24 issue)");
+    test.skip(
+      !enabled,
+      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
+    );
 
     // Run to completion
     const runBtn = page.getByTestId("run-button");
     await expect(runBtn).toBeVisible({ timeout: 10000 });
     await runBtn.click();
-    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(/bg-gray-500/, {
-      timeout: 15000,
-    });
+    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(
+      /bg-gray-500/,
+      {
+        timeout: 15000,
+      },
+    );
 
     // Both PVMs should reach terminal state (gray dot)
     await expect(page.getByTestId("pvm-dot-ananas")).toHaveClass(/bg-gray-500/);
@@ -93,15 +113,21 @@ test.describe("Sprint 25 — Divergence Detection", () => {
   test("divergence clears after reset", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(!enabled, "PVM switching did not stabilize (pre-existing sprint-24 issue)");
+    test.skip(
+      !enabled,
+      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
+    );
 
     // Run to completion
     const runBtn = page.getByTestId("run-button");
     await expect(runBtn).toBeVisible({ timeout: 10000 });
     await runBtn.click();
-    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(/bg-gray-500/, {
-      timeout: 15000,
-    });
+    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(
+      /bg-gray-500/,
+      {
+        timeout: 15000,
+      },
+    );
 
     // Reset
     const resetBtn = page.getByTestId("reset-button");
@@ -109,9 +135,12 @@ test.describe("Sprint 25 — Divergence Detection", () => {
     await resetBtn.click();
 
     // After reset, PVMs return to paused with identical initial state
-    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(/bg-blue-500/, {
-      timeout: 15000,
-    });
+    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(
+      /bg-blue-500/,
+      {
+        timeout: 15000,
+      },
+    );
 
     // Divergence should be gone
     await expect(page.getByTestId("divergence-summary")).not.toBeVisible();

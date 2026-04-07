@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
 export type DrawerTab = "settings" | "ecalli_trace" | "host_call" | "logs";
 
@@ -28,7 +34,9 @@ export function DrawerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <DrawerContext.Provider value={{ activeTab, height, setActiveTab, setHeight, openToTab }}>
+    <DrawerContext.Provider
+      value={{ activeTab, height, setActiveTab, setHeight, openToTab }}
+    >
       {children}
     </DrawerContext.Provider>
   );

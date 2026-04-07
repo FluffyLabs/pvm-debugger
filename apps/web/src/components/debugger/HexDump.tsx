@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const BYTES_PER_ROW = 16;
 
@@ -27,7 +27,12 @@ const HEX_CHARS = new Set("0123456789abcdefABCDEF");
 
 /** Strip common hex separators and 0x prefixes, return only hex chars. */
 export function sanitizeHexInput(text: string): string {
-  return text.replace(/0x/gi, "").replace(/[\s,;:-]/g, "").split("").filter((c) => HEX_CHARS.has(c)).join("");
+  return text
+    .replace(/0x/gi, "")
+    .replace(/[\s,;:-]/g, "")
+    .split("")
+    .filter((c) => HEX_CHARS.has(c))
+    .join("");
 }
 
 interface ByteCellProps {
@@ -59,10 +64,7 @@ function ByteCell({
 
   if (isEditing) {
     return (
-      <span
-        className="inline-block"
-        style={{ width: "1.5em" }}
-      >
+      <span className="inline-block" style={{ width: "1.5em" }}>
         <input
           ref={(el) => inputRef(offset, el)}
           data-testid={`hex-byte-input-${offset}`}
@@ -109,11 +111,22 @@ function ByteCell({
     <span
       data-testid={`hex-byte-${offset}`}
       className={`inline-block ${editable ? "cursor-pointer hover:bg-accent/50 rounded" : "cursor-default"} ${
-        isChanged ? "rounded" : byte === 0 ? "text-muted-foreground/40" : "text-foreground"
+        isChanged
+          ? "rounded"
+          : byte === 0
+            ? "text-muted-foreground/40"
+            : "text-foreground"
       }`}
-      style={isChanged
-        ? { color: "var(--color-brand)", backgroundColor: "rgba(23, 175, 163, 0.2)", width: "1.5em", textAlign: "center" as const }
-        : { width: "1.5em", textAlign: "center" as const }}
+      style={
+        isChanged
+          ? {
+              color: "var(--color-brand)",
+              backgroundColor: "rgba(23, 175, 163, 0.2)",
+              width: "1.5em",
+              textAlign: "center" as const,
+            }
+          : { width: "1.5em", textAlign: "center" as const }
+      }
       data-changed={isChanged ? "true" : undefined}
       onClick={editable ? () => onStartEdit(offset) : undefined}
     >
@@ -122,19 +135,28 @@ function ByteCell({
   );
 }
 
-export function HexDump({ data, baseAddress, editable = false, onWriteBytes, changedOffsets }: HexDumpProps) {
+export function HexDump({
+  data,
+  baseAddress,
+  editable = false,
+  onWriteBytes,
+  changedOffsets,
+}: HexDumpProps) {
   const [editingOffset, setEditingOffset] = useState<number | null>(null);
   const inputRefs = useRef<Map<number, HTMLInputElement>>(new Map());
   const rowCount = Math.ceil(data.length / BYTES_PER_ROW);
 
-  const setInputRef = useCallback((offset: number, el: HTMLInputElement | null) => {
-    if (el) {
-      inputRefs.current.set(offset, el);
-      el.focus();
-    } else {
-      inputRefs.current.delete(offset);
-    }
-  }, []);
+  const setInputRef = useCallback(
+    (offset: number, el: HTMLInputElement | null) => {
+      if (el) {
+        inputRefs.current.set(offset, el);
+        el.focus();
+      } else {
+        inputRefs.current.delete(offset);
+      }
+    },
+    [],
+  );
 
   const startEdit = useCallback(
     (offset: number) => {
@@ -161,16 +183,13 @@ export function HexDump({ data, baseAddress, editable = false, onWriteBytes, cha
     [baseAddress, data.length, onWriteBytes],
   );
 
-  const movePrev = useCallback(
-    (offset: number) => {
-      if (offset > 0) {
-        setEditingOffset(offset - 1);
-      } else {
-        setEditingOffset(null);
-      }
-    },
-    [],
-  );
+  const movePrev = useCallback((offset: number) => {
+    if (offset > 0) {
+      setEditingOffset(offset - 1);
+    } else {
+      setEditingOffset(null);
+    }
+  }, []);
 
   const handlePaste = useCallback(
     (offset: number, hex: string) => {
@@ -180,7 +199,11 @@ export function HexDump({ data, baseAddress, editable = false, onWriteBytes, cha
       // Limit to remaining bytes within the page (4096 bytes per page)
       const PAGE_SIZE = 4096;
       const offsetInPage = offset;
-      const maxBytes = Math.min(byteCount, PAGE_SIZE - offsetInPage, data.length - offset);
+      const maxBytes = Math.min(
+        byteCount,
+        PAGE_SIZE - offsetInPage,
+        data.length - offset,
+      );
       if (maxBytes <= 0) return;
 
       const bytes = new Uint8Array(maxBytes);
@@ -238,7 +261,10 @@ export function HexDump({ data, baseAddress, editable = false, onWriteBytes, cha
                 );
               })}
             </span>
-            <span data-testid="hex-ascii" className="text-muted-foreground select-none">
+            <span
+              data-testid="hex-ascii"
+              className="text-muted-foreground select-none"
+            >
               {Array.from(rowBytes, (byte, i) => (
                 <span
                   key={i}

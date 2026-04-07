@@ -1,5 +1,14 @@
-import { describe, it, expect } from "vitest";
-import { formatRegister, formatPc, formatGas, formatGasHex, lifecycleLabel, bytesToHex, parseBigintInput, parsePcInput } from "./value-format";
+import { describe, expect, it } from "vitest";
+import {
+  bytesToHex,
+  formatGas,
+  formatGasHex,
+  formatPc,
+  formatRegister,
+  lifecycleLabel,
+  parseBigintInput,
+  parsePcInput,
+} from "./value-format";
 
 describe("formatRegister", () => {
   it("formats zero with 16-digit hex", () => {

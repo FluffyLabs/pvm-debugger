@@ -1,12 +1,17 @@
-import { describe, it, expect, afterEach } from "vitest";
-import { render, screen, cleanup, act } from "@testing-library/react";
-import { RegistersPanel } from "./RegistersPanel";
 import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
-import type { UsePendingChanges, PendingChangesData } from "../../hooks/usePendingChanges";
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import type {
+  PendingChangesData,
+  UsePendingChanges,
+} from "../../hooks/usePendingChanges";
+import { RegistersPanel } from "./RegistersPanel";
 
 afterEach(cleanup);
 
-function makeSnapshot(overrides?: Partial<MachineStateSnapshot>): MachineStateSnapshot {
+function makeSnapshot(
+  overrides?: Partial<MachineStateSnapshot>,
+): MachineStateSnapshot {
   return {
     pc: 0,
     gas: 1_000_000n,
@@ -20,13 +25,18 @@ function makeSnapshots(
   entries: Array<[string, PvmLifecycle, Partial<MachineStateSnapshot>?]>,
 ): Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }> {
   return new Map(
-    entries.map(([id, lifecycle, overrides]) => [id, { snapshot: makeSnapshot(overrides), lifecycle }]),
+    entries.map(([id, lifecycle, overrides]) => [
+      id,
+      { snapshot: makeSnapshot(overrides), lifecycle },
+    ]),
   );
 }
 
 const noop = () => {};
 
-function makePendingChanges(pending: PendingChangesData | null = null): UsePendingChanges {
+function makePendingChanges(
+  pending: PendingChangesData | null = null,
+): UsePendingChanges {
   return {
     pending,
     setRegister: noop,
@@ -83,7 +93,13 @@ describe("RegistersPanel — Change Highlighting", () => {
         lifecycle="paused"
         orchestrator={null}
         selectedPvmId="typeberry"
-        snapshots={makeSnapshots([["typeberry", "paused", { registers: snap2Regs, pc: 4, gas: 999_990n }]])}
+        snapshots={makeSnapshots([
+          [
+            "typeberry",
+            "paused",
+            { registers: snap2Regs, pc: 4, gas: 999_990n },
+          ],
+        ])}
         pendingChanges={noPending}
       />,
     );
@@ -124,7 +140,9 @@ describe("RegistersPanel — Change Highlighting", () => {
         lifecycle="paused"
         orchestrator={null}
         selectedPvmId="typeberry"
-        snapshots={makeSnapshots([["typeberry", "paused", { registers: snap2Regs, pc: 4 }]])}
+        snapshots={makeSnapshots([
+          ["typeberry", "paused", { registers: snap2Regs, pc: 4 }],
+        ])}
         pendingChanges={noPending}
       />,
     );
@@ -137,7 +155,9 @@ describe("RegistersPanel — Change Highlighting", () => {
         lifecycle="paused"
         orchestrator={null}
         selectedPvmId="typeberry"
-        snapshots={makeSnapshots([["typeberry", "paused", { registers: [...snap2Regs], pc: 4 }]])}
+        snapshots={makeSnapshots([
+          ["typeberry", "paused", { registers: [...snap2Regs], pc: 4 }],
+        ])}
         pendingChanges={noPending}
       />,
     );
@@ -170,7 +190,9 @@ describe("RegistersPanel — Change Highlighting", () => {
         lifecycle="paused"
         orchestrator={null}
         selectedPvmId="typeberry"
-        snapshots={makeSnapshots([["typeberry", "paused", { registers: snap2Regs, pc: 2 }]])}
+        snapshots={makeSnapshots([
+          ["typeberry", "paused", { registers: snap2Regs, pc: 2 }],
+        ])}
         pendingChanges={noPending}
       />,
     );
@@ -183,7 +205,9 @@ describe("RegistersPanel — Change Highlighting", () => {
         lifecycle="paused"
         orchestrator={null}
         selectedPvmId="ananas"
-        snapshots={makeSnapshots([["ananas", "paused", { registers: Array(13).fill(99n), pc: 10 }]])}
+        snapshots={makeSnapshots([
+          ["ananas", "paused", { registers: Array(13).fill(99n), pc: 10 }],
+        ])}
         pendingChanges={noPending}
       />,
     );
@@ -214,9 +238,24 @@ describe("RegistersPanel — Multi-PVM Divergence", () => {
     const otherRegs = Array(13).fill(0n);
     otherRegs[7] = 999n;
 
-    const snapshots = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>([
-      ["typeberry", { snapshot: makeSnapshot({ registers: selectedRegs }), lifecycle: "paused" }],
-      ["ananas", { snapshot: makeSnapshot({ registers: otherRegs }), lifecycle: "paused" }],
+    const snapshots = new Map<
+      string,
+      { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+    >([
+      [
+        "typeberry",
+        {
+          snapshot: makeSnapshot({ registers: selectedRegs }),
+          lifecycle: "paused",
+        },
+      ],
+      [
+        "ananas",
+        {
+          snapshot: makeSnapshot({ registers: otherRegs }),
+          lifecycle: "paused",
+        },
+      ],
     ]);
 
     render(

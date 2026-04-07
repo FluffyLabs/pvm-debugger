@@ -8,7 +8,10 @@ export const FORMAT_LABELS: Record<string, string> = {
   trace_file: "Trace",
 };
 
-export const FORMAT_BADGE_INTENT: Record<string, "info" | "success" | "warning" | "primary"> = {
+export const FORMAT_BADGE_INTENT: Record<
+  string,
+  "info" | "success" | "warning" | "primary"
+> = {
   generic_pvm: "info",
   jam_spi: "success",
   jam_spi_with_metadata: "success",
@@ -20,7 +23,9 @@ export function formatLabel(kind: DetectedFormat["kind"]): string {
   return FORMAT_LABELS[kind] ?? kind;
 }
 
-export function formatBadgeIntent(kind: DetectedFormat["kind"]): "info" | "success" | "warning" | "primary" {
+export function formatBadgeIntent(
+  kind: DetectedFormat["kind"],
+): "info" | "success" | "warning" | "primary" {
   return FORMAT_BADGE_INTENT[kind] ?? "info";
 }
 

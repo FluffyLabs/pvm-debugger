@@ -1,5 +1,5 @@
-import { useRef, useEffect, useCallback } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
+import { useCallback, useEffect, useRef } from "react";
 import { useLogMessages } from "../../hooks/useLogMessages";
 import { LogEntry } from "./LogEntry";
 
@@ -12,8 +12,16 @@ interface LogsTabProps {
 /** Threshold (in px) from the bottom to consider the user "near the bottom". */
 const AUTO_SCROLL_THRESHOLD = 40;
 
-export function LogsTab({ orchestrator, selectedPvmId, snapshotVersion }: LogsTabProps) {
-  const { messages, clear, copy } = useLogMessages(orchestrator, selectedPvmId, snapshotVersion);
+export function LogsTab({
+  orchestrator,
+  selectedPvmId,
+  snapshotVersion,
+}: LogsTabProps) {
+  const { messages, clear, copy } = useLogMessages(
+    orchestrator,
+    selectedPvmId,
+    snapshotVersion,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
 
@@ -27,7 +35,9 @@ export function LogsTab({ orchestrator, selectedPvmId, snapshotVersion }: LogsTa
 
   const handleDownload = useCallback(() => {
     if (messages.length === 0) return;
-    const lines = messages.map((msg) => `[Step ${msg.traceIndex}] ${msg.text}\n`);
+    const lines = messages.map(
+      (msg) => `[Step ${msg.traceIndex}] ${msg.text}\n`,
+    );
     const text = lines.join("");
     const timestamp = Date.now();
     const filename = `log-messages-${timestamp}.log`;
@@ -90,7 +100,9 @@ export function LogsTab({ orchestrator, selectedPvmId, snapshotVersion }: LogsTa
             No log messages yet.
           </p>
         ) : (
-          messages.map((msg, i) => <LogEntry key={`${msg.traceIndex}-${i}`} message={msg} />)
+          messages.map((msg, i) => (
+            <LogEntry key={`${msg.traceIndex}-${i}`} message={msg} />
+          ))
         )}
       </div>
     </div>

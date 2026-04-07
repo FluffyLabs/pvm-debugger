@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 07 — 3-Column Debugger Layout", () => {
   /** Load a program and wait for the debugger page to be visible. */
@@ -7,7 +7,9 @@ test.describe("Sprint 07 — 3-Column Debugger Layout", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("three panel columns are visible side by side", async ({ page }) => {
@@ -118,7 +120,9 @@ test.describe("Sprint 07 — 3-Column Debugger Layout", () => {
     expect(isPageScrollable).toBe(false);
   });
 
-  test("previous sprint functionality still works (Next button)", async ({ page }) => {
+  test("previous sprint functionality still works (Next button)", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     const nextBtn = page.getByTestId("next-button");

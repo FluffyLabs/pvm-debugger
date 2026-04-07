@@ -1,8 +1,19 @@
+import { fromHex, toHex } from "@pvmdbg/types";
 import { useCallback } from "react";
-import { toHex, fromHex } from "@pvmdbg/types";
-import type { TransferOrOperand, Operand, Transfer, ResultKind } from "../../../../lib/fetch-codec";
-import { RESULT_KIND_NAMES, TRANSFER_MEMO_SIZE } from "../../../../lib/fetch-codec";
-import { DEFAULT_OPERAND, DEFAULT_TRANSFER } from "../../../../lib/fetch-defaults";
+import type {
+  Operand,
+  ResultKind,
+  Transfer,
+  TransferOrOperand,
+} from "../../../../lib/fetch-codec";
+import {
+  RESULT_KIND_NAMES,
+  TRANSFER_MEMO_SIZE,
+} from "../../../../lib/fetch-codec";
+import {
+  DEFAULT_OPERAND,
+  DEFAULT_TRANSFER,
+} from "../../../../lib/fetch-defaults";
 import { BytesBlobEditor } from "./BytesBlobEditor";
 
 interface TransferOrOperandEditorProps {
@@ -10,9 +21,18 @@ interface TransferOrOperandEditorProps {
   onChange: (value: TransferOrOperand) => void;
 }
 
-function OperandEditor({ value, onChange }: { value: Operand; onChange: (v: Operand) => void }) {
+function OperandEditor({
+  value,
+  onChange,
+}: {
+  value: Operand;
+  onChange: (v: Operand) => void;
+}) {
   const setHash = useCallback(
-    (key: "packagehash" | "segroot" | "authorizer" | "payloadhash", v: Uint8Array) => {
+    (
+      key: "packagehash" | "segroot" | "authorizer" | "payloadhash",
+      v: Uint8Array,
+    ) => {
       onChange({ ...value, [key]: v });
     },
     [value, onChange],
@@ -20,29 +40,48 @@ function OperandEditor({ value, onChange }: { value: Operand; onChange: (v: Oper
 
   return (
     <div className="flex flex-col gap-1.5">
-      {(["packagehash", "segroot", "authorizer", "payloadhash"] as const).map((key) => (
-        <div key={key} className="flex items-center gap-2">
-          <label className="text-muted-foreground w-24 shrink-0 text-[10px]">{key}</label>
-          <input
-            className="flex-1 rounded border border-border bg-background px-1 py-0.5 font-mono text-[10px] text-foreground"
-            value={toHex(value[key])}
-            onChange={(e) => {
-              try { const b = fromHex(e.target.value); if (b.length === 32) setHash(key, b); } catch { /* ignore */ }
-            }}
-          />
-        </div>
-      ))}
+      {(["packagehash", "segroot", "authorizer", "payloadhash"] as const).map(
+        (key) => (
+          <div key={key} className="flex items-center gap-2">
+            <label className="text-muted-foreground w-24 shrink-0 text-[10px]">
+              {key}
+            </label>
+            <input
+              className="flex-1 rounded border border-border bg-background px-1 py-0.5 font-mono text-[10px] text-foreground"
+              value={toHex(value[key])}
+              onChange={(e) => {
+                try {
+                  const b = fromHex(e.target.value);
+                  if (b.length === 32) setHash(key, b);
+                } catch {
+                  /* ignore */
+                }
+              }}
+            />
+          </div>
+        ),
+      )}
       <div className="flex items-center gap-2">
-        <label className="text-muted-foreground w-24 shrink-0 text-[10px]">gaslimit (u64)</label>
+        <label className="text-muted-foreground w-24 shrink-0 text-[10px]">
+          gaslimit (u64)
+        </label>
         <input
           className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 font-mono text-xs text-foreground"
           value={value.gaslimit.toString()}
-          onChange={(e) => { try { onChange({ ...value, gaslimit: BigInt(e.target.value) }); } catch { /* ignore */ } }}
+          onChange={(e) => {
+            try {
+              onChange({ ...value, gaslimit: BigInt(e.target.value) });
+            } catch {
+              /* ignore */
+            }
+          }}
         />
       </div>
       {/* O(result) */}
       <div className="flex items-center gap-2">
-        <label className="text-muted-foreground w-24 shrink-0 text-[10px]">result kind</label>
+        <label className="text-muted-foreground w-24 shrink-0 text-[10px]">
+          result kind
+        </label>
         <select
           className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 text-xs text-foreground"
           value={value.result.kind}
@@ -50,12 +89,17 @@ function OperandEditor({ value, onChange }: { value: Operand; onChange: (v: Oper
             const kind = parseInt(e.target.value, 10) as ResultKind;
             onChange({
               ...value,
-              result: kind === 0 ? { kind: 0, blob: value.result.blob ?? new Uint8Array(0) } : { kind },
+              result:
+                kind === 0
+                  ? { kind: 0, blob: value.result.blob ?? new Uint8Array(0) }
+                  : { kind },
             });
           }}
         >
           {([0, 1, 2, 3, 4, 5, 6] as ResultKind[]).map((k) => (
-            <option key={k} value={k}>{k} — {RESULT_KIND_NAMES[k]}</option>
+            <option key={k} value={k}>
+              {k} — {RESULT_KIND_NAMES[k]}
+            </option>
           ))}
         </select>
       </div>
@@ -64,12 +108,16 @@ function OperandEditor({ value, onChange }: { value: Operand; onChange: (v: Oper
           <span className="text-[10px] text-muted-foreground">Result blob</span>
           <BytesBlobEditor
             value={value.result.blob ?? new Uint8Array(0)}
-            onChange={(b) => onChange({ ...value, result: { kind: 0, blob: b } })}
+            onChange={(b) =>
+              onChange({ ...value, result: { kind: 0, blob: b } })
+            }
           />
         </div>
       )}
       <div className="flex flex-col gap-1">
-        <span className="text-[10px] text-muted-foreground">authtrace blob</span>
+        <span className="text-[10px] text-muted-foreground">
+          authtrace blob
+        </span>
         <BytesBlobEditor
           value={value.authtrace}
           onChange={(b) => onChange({ ...value, authtrace: b })}
@@ -79,50 +127,91 @@ function OperandEditor({ value, onChange }: { value: Operand; onChange: (v: Oper
   );
 }
 
-function TransferEditor({ value, onChange }: { value: Transfer; onChange: (v: Transfer) => void }) {
+function TransferEditor({
+  value,
+  onChange,
+}: {
+  value: Transfer;
+  onChange: (v: Transfer) => void;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
-        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">source (u32)</label>
+        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">
+          source (u32)
+        </label>
         <input
           className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 font-mono text-xs text-foreground"
           value={value.source}
-          onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n)) onChange({ ...value, source: n }); }}
+          onChange={(e) => {
+            const n = parseInt(e.target.value, 10);
+            if (!isNaN(n)) onChange({ ...value, source: n });
+          }}
         />
       </div>
       <div className="flex items-center gap-2">
-        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">dest (u32)</label>
+        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">
+          dest (u32)
+        </label>
         <input
           className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 font-mono text-xs text-foreground"
           value={value.dest}
-          onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n)) onChange({ ...value, dest: n }); }}
+          onChange={(e) => {
+            const n = parseInt(e.target.value, 10);
+            if (!isNaN(n)) onChange({ ...value, dest: n });
+          }}
         />
       </div>
       <div className="flex items-center gap-2">
-        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">amount (u64)</label>
+        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">
+          amount (u64)
+        </label>
         <input
           className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 font-mono text-xs text-foreground"
           value={value.amount.toString()}
-          onChange={(e) => { try { onChange({ ...value, amount: BigInt(e.target.value) }); } catch { /* ignore */ } }}
+          onChange={(e) => {
+            try {
+              onChange({ ...value, amount: BigInt(e.target.value) });
+            } catch {
+              /* ignore */
+            }
+          }}
         />
       </div>
       <div className="flex flex-col gap-1">
-        <span className="text-[10px] text-muted-foreground">memo ({TRANSFER_MEMO_SIZE} bytes)</span>
-        <BytesBlobEditor value={value.memo} onChange={(b) => onChange({ ...value, memo: b })} defaultSize={TRANSFER_MEMO_SIZE} />
+        <span className="text-[10px] text-muted-foreground">
+          memo ({TRANSFER_MEMO_SIZE} bytes)
+        </span>
+        <BytesBlobEditor
+          value={value.memo}
+          onChange={(b) => onChange({ ...value, memo: b })}
+          defaultSize={TRANSFER_MEMO_SIZE}
+        />
       </div>
       <div className="flex items-center gap-2">
-        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">gas (u64)</label>
+        <label className="text-muted-foreground w-20 shrink-0 text-[10px]">
+          gas (u64)
+        </label>
         <input
           className="flex-1 rounded border border-border bg-background px-1.5 py-0.5 font-mono text-xs text-foreground"
           value={value.gas.toString()}
-          onChange={(e) => { try { onChange({ ...value, gas: BigInt(e.target.value) }); } catch { /* ignore */ } }}
+          onChange={(e) => {
+            try {
+              onChange({ ...value, gas: BigInt(e.target.value) });
+            } catch {
+              /* ignore */
+            }
+          }}
         />
       </div>
     </div>
   );
 }
 
-export function TransferOrOperandEditor({ value, onChange }: TransferOrOperandEditorProps) {
+export function TransferOrOperandEditor({
+  value,
+  onChange,
+}: TransferOrOperandEditorProps) {
   const handleTagSwitch = useCallback(
     (newTag: "operand" | "transfer") => {
       if (newTag === value.tag) return;
@@ -136,7 +225,10 @@ export function TransferOrOperandEditor({ value, onChange }: TransferOrOperandEd
   );
 
   return (
-    <div data-testid="transfer-or-operand-editor" className="flex flex-col gap-2 text-xs">
+    <div
+      data-testid="transfer-or-operand-editor"
+      className="flex flex-col gap-2 text-xs"
+    >
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground text-[10px]">Type:</span>
         <button

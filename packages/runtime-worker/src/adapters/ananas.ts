@@ -1,7 +1,12 @@
-import type { InitialMachineState, ProgramLoadContext, PageMapEntry, MemoryChunk } from "@pvmdbg/types";
+import type {
+  InitialMachineState,
+  MemoryChunk,
+  PageMapEntry,
+  ProgramLoadContext,
+} from "@pvmdbg/types";
 import { getMemoryRange } from "../utils.js";
-import type { SyncPvmInterpreter } from "./types.js";
 import type { AnanasApi } from "./ananas-shell.js";
+import type { SyncPvmInterpreter } from "./types.js";
 
 /** Encode page map to Uint8Array for ananas resetGenericWithMemory. */
 function encodePageMap(pageMap: PageMapEntry[]): Uint8Array {
@@ -45,14 +50,22 @@ export class AnanasSyncInterpreter implements SyncPvmInterpreter {
 
   constructor(private api: AnanasApi) {}
 
-  load(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): void {
+  load(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): void {
     this.storedProgram = program;
     this.storedInitialState = initialState;
     this.storedLoadContext = loadContext;
     this.doLoad(program, initialState, loadContext);
   }
 
-  private doLoad(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): void {
+  private doLoad(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): void {
     if (loadContext?.spiProgram) {
       this.api.resetJAM(
         Array.from(loadContext.spiProgram.program),
@@ -90,7 +103,11 @@ export class AnanasSyncInterpreter implements SyncPvmInterpreter {
     if (!this.storedProgram || !this.storedInitialState) {
       throw new Error("Cannot reset: no program has been loaded");
     }
-    this.doLoad(this.storedProgram, this.storedInitialState, this.storedLoadContext);
+    this.doLoad(
+      this.storedProgram,
+      this.storedInitialState,
+      this.storedLoadContext,
+    );
   }
 
   step(n: number): { finished: boolean } {

@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { toHex, fromHex } from "@pvmdbg/types";
+import { fromHex, toHex } from "@pvmdbg/types";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface BytesBlobEditorProps {
   value: Uint8Array;
@@ -11,7 +11,11 @@ interface BytesBlobEditorProps {
  * Simple hex textarea for arbitrary-length blobs.
  * Uses editingRef to prevent parent syncs from clobbering user input mid-edit.
  */
-export function BytesBlobEditor({ value, onChange, defaultSize }: BytesBlobEditorProps) {
+export function BytesBlobEditor({
+  value,
+  onChange,
+  defaultSize,
+}: BytesBlobEditorProps) {
   const [text, setText] = useState(() => toHex(value));
   const editingRef = useRef(false);
 
@@ -22,26 +26,31 @@ export function BytesBlobEditor({ value, onChange, defaultSize }: BytesBlobEdito
     }
   }, [value]);
 
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    editingRef.current = true;
-    const raw = e.target.value;
-    setText(raw);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      editingRef.current = true;
+      const raw = e.target.value;
+      setText(raw);
 
-    // Only notify parent on valid even-length hex
-    const clean = raw.startsWith("0x") || raw.startsWith("0X") ? raw.slice(2) : raw;
-    if (clean.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(clean)) {
-      try {
-        onChange(fromHex("0x" + clean));
-      } catch {
-        // ignore invalid
+      // Only notify parent on valid even-length hex
+      const clean =
+        raw.startsWith("0x") || raw.startsWith("0X") ? raw.slice(2) : raw;
+      if (clean.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(clean)) {
+        try {
+          onChange(fromHex("0x" + clean));
+        } catch {
+          // ignore invalid
+        }
       }
-    }
-  }, [onChange]);
+    },
+    [onChange],
+  );
 
   const handleBlur = useCallback(() => {
     editingRef.current = false;
     // On blur, try to notify parent with whatever we have
-    const clean = text.startsWith("0x") || text.startsWith("0X") ? text.slice(2) : text;
+    const clean =
+      text.startsWith("0x") || text.startsWith("0X") ? text.slice(2) : text;
     if (clean.length % 2 === 1) {
       // Pad odd-length and sync
       const padded = "0" + clean;

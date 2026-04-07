@@ -1,45 +1,45 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  encodeVarU64,
-  decodeVarU64,
-  tryDecode,
-  encodeU8,
-  decodeU8,
-  encodeU16LE,
-  decodeU16LE,
-  encodeU32LE,
-  decodeU32LE,
-  encodeU64LE,
-  decodeU64LE,
-  encodeBytes32,
   decodeBytes32,
-  encodeBytesVarLen,
   decodeBytesVarLen,
-  encodeSequenceVarLen,
   decodeSequenceVarLen,
+  decodeU8,
+  decodeU16LE,
+  decodeU32LE,
+  decodeU64LE,
+  decodeVarU64,
+  encodeBytes32,
+  encodeBytesVarLen,
+  encodeSequenceVarLen,
+  encodeU8,
+  encodeU16LE,
+  encodeU32LE,
+  encodeU64LE,
+  encodeVarU64,
+  tryDecode,
 } from "./jam-codec.js";
 
 describe("VarU64 encode/decode", () => {
   const boundaryTests: [bigint, number][] = [
-    [0n, 1],               // min 1-byte
-    [127n, 1],             // max 1-byte
-    [128n, 2],             // min 2-byte
-    [0x3FFFn, 2],          // max 2-byte (2^14-1)
-    [0x4000n, 3],          // min 3-byte (2^14)
-    [0x1FFFFFn, 3],        // max 3-byte (2^21-1)
-    [0x200000n, 4],        // min 4-byte (2^21)
-    [0xFFFFFFFn, 4],       // max 4-byte (2^28-1)
-    [0x10000000n, 5],      // min 5-byte (2^28)
-    [0x7FFFFFFFFn, 5],     // max 5-byte (2^35-1)
-    [0x800000000n, 6],     // min 6-byte (2^35)
-    [0x3FFFFFFFFFFn, 6],   // max 6-byte (2^42-1)
-    [0x40000000000n, 7],   // min 7-byte (2^42)
-    [0x1FFFFFFFFFFFFn, 7], // max 7-byte (2^49-1)
-    [0x200000000000n, 7],  // within 7-byte (2^45 — not a boundary but exercises 7-byte path)
+    [0n, 1], // min 1-byte
+    [127n, 1], // max 1-byte
+    [128n, 2], // min 2-byte
+    [0x3fffn, 2], // max 2-byte (2^14-1)
+    [0x4000n, 3], // min 3-byte (2^14)
+    [0x1fffffn, 3], // max 3-byte (2^21-1)
+    [0x200000n, 4], // min 4-byte (2^21)
+    [0xfffffffn, 4], // max 4-byte (2^28-1)
+    [0x10000000n, 5], // min 5-byte (2^28)
+    [0x7ffffffffn, 5], // max 5-byte (2^35-1)
+    [0x800000000n, 6], // min 6-byte (2^35)
+    [0x3ffffffffffn, 6], // max 6-byte (2^42-1)
+    [0x40000000000n, 7], // min 7-byte (2^42)
+    [0x1ffffffffffffn, 7], // max 7-byte (2^49-1)
+    [0x200000000000n, 7], // within 7-byte (2^45 — not a boundary but exercises 7-byte path)
     [0x2000000000000n, 8], // min 8-byte (2^49)
-    [0xFFFFFFFFFFFFFFn, 8],// max 8-byte (2^56-1)
-    [0x100000000000000n, 9],// min 9-byte (2^56)
-    [(1n << 63n), 9],      // 2^63
+    [0xffffffffffffffn, 8], // max 8-byte (2^56-1)
+    [0x100000000000000n, 9], // min 9-byte (2^56)
+    [1n << 63n, 9], // 2^63
     [(1n << 64n) - 1n, 9], // max u64
   ];
 
@@ -58,7 +58,7 @@ describe("VarU64 encode/decode", () => {
   });
 
   it("encodes 127 as 0x7F", () => {
-    expect(Array.from(encodeVarU64(127n))).toEqual([0x7F]);
+    expect(Array.from(encodeVarU64(127n))).toEqual([0x7f]);
   });
 
   it("encodes 128 with lead byte having top bit set", () => {
@@ -68,8 +68,8 @@ describe("VarU64 encode/decode", () => {
   });
 
   it("9-byte encoding has lead byte 0xFF", () => {
-    const enc = encodeVarU64((1n << 56n));
-    expect(enc[0]).toBe(0xFF);
+    const enc = encodeVarU64(1n << 56n);
+    expect(enc[0]).toBe(0xff);
   });
 
   it("rejects negative values", () => {
@@ -81,7 +81,7 @@ describe("VarU64 encode/decode", () => {
   });
 
   it("decodes from offset within larger buffer", () => {
-    const prefix = new Uint8Array([0xAA, 0xBB]);
+    const prefix = new Uint8Array([0xaa, 0xbb]);
     const encoded = encodeVarU64(12345n);
     const combined = new Uint8Array(prefix.length + encoded.length);
     combined.set(prefix);
@@ -95,7 +95,9 @@ describe("VarU64 encode/decode", () => {
   });
 
   it("decodeVarU64 throws on truncated data", () => {
-    expect(() => decodeVarU64(new Uint8Array([0x80]))).toThrow("not enough bytes");
+    expect(() => decodeVarU64(new Uint8Array([0x80]))).toThrow(
+      "not enough bytes",
+    );
   });
 
   // Specifically test the 6-byte encoding lead byte payload bits (pitfall #1)
@@ -134,7 +136,7 @@ describe("LE integer primitives", () => {
   });
 
   it("encodeU16LE / decodeU16LE roundtrips", () => {
-    for (const v of [0, 1, 0x1234, 0xFFFF]) {
+    for (const v of [0, 1, 0x1234, 0xffff]) {
       const enc = encodeU16LE(v);
       expect(enc.length).toBe(2);
       expect(decodeU16LE(enc).value).toBe(v);
@@ -148,7 +150,7 @@ describe("LE integer primitives", () => {
   });
 
   it("encodeU32LE / decodeU32LE roundtrips", () => {
-    for (const v of [0, 1, 0x12345678, 0xFFFFFFFF]) {
+    for (const v of [0, 1, 0x12345678, 0xffffffff]) {
       const enc = encodeU32LE(v);
       expect(enc.length).toBe(4);
       expect(decodeU32LE(enc).value).toBe(v);
@@ -156,7 +158,7 @@ describe("LE integer primitives", () => {
   });
 
   it("encodeU64LE / decodeU64LE roundtrips", () => {
-    for (const v of [0n, 1n, 0x123456789ABCDEF0n, 0xFFFFFFFFFFFFFFFFn]) {
+    for (const v of [0n, 1n, 0x123456789abcdef0n, 0xffffffffffffffffn]) {
       const enc = encodeU64LE(v);
       expect(enc.length).toBe(8);
       expect(decodeU64LE(enc).value).toBe(v);
@@ -164,26 +166,26 @@ describe("LE integer primitives", () => {
   });
 
   it("decodeU16LE works with subarray (non-zero byteOffset)", () => {
-    const buf = new Uint8Array([0xFF, 0x34, 0x12]);
+    const buf = new Uint8Array([0xff, 0x34, 0x12]);
     const sub = buf.subarray(1, 3);
     expect(sub.byteOffset).toBe(1);
     expect(decodeU16LE(sub).value).toBe(0x1234);
   });
 
   it("decodeU32LE works with subarray (non-zero byteOffset)", () => {
-    const buf = new Uint8Array([0xFF, 0x78, 0x56, 0x34, 0x12]);
+    const buf = new Uint8Array([0xff, 0x78, 0x56, 0x34, 0x12]);
     const sub = buf.subarray(1, 5);
     expect(sub.byteOffset).toBe(1);
     expect(decodeU32LE(sub).value).toBe(0x12345678);
   });
 
   it("decodeU64LE works with subarray (non-zero byteOffset)", () => {
-    const enc = encodeU64LE(0xDEADBEEFCAFEBABEn);
+    const enc = encodeU64LE(0xdeadbeefcafebaben);
     const padded = new Uint8Array(4 + enc.length);
     padded.set(enc, 4);
     const sub = padded.subarray(4, 4 + enc.length);
     expect(sub.byteOffset).toBe(4);
-    expect(decodeU64LE(sub).value).toBe(0xDEADBEEFCAFEBABEn);
+    expect(decodeU64LE(sub).value).toBe(0xdeadbeefcafebaben);
   });
 });
 
@@ -198,8 +200,12 @@ describe("encodeBytes32 / decodeBytes32", () => {
   });
 
   it("rejects non-32-byte input", () => {
-    expect(() => encodeBytes32(new Uint8Array(31))).toThrow("expected 32 bytes");
-    expect(() => encodeBytes32(new Uint8Array(33))).toThrow("expected 32 bytes");
+    expect(() => encodeBytes32(new Uint8Array(31))).toThrow(
+      "expected 32 bytes",
+    );
+    expect(() => encodeBytes32(new Uint8Array(33))).toThrow(
+      "expected 32 bytes",
+    );
   });
 });
 
@@ -237,14 +243,18 @@ describe("encodeSequenceVarLen / decodeSequenceVarLen", () => {
   it("roundtrips sequence of u32 values", () => {
     const items = [100, 200, 300];
     const enc = encodeSequenceVarLen(items, (v) => encodeU32LE(v));
-    const dec = decodeSequenceVarLen(enc, 0, (bytes, off) => decodeU32LE(bytes, off));
+    const dec = decodeSequenceVarLen(enc, 0, (bytes, off) =>
+      decodeU32LE(bytes, off),
+    );
     expect(dec.value).toEqual([100, 200, 300]);
   });
 
   it("roundtrips mixed-size items (var-len blobs)", () => {
     const blobs = [new Uint8Array([1, 2]), new Uint8Array([3, 4, 5, 6])];
     const enc = encodeSequenceVarLen(blobs, (b) => encodeBytesVarLen(b));
-    const dec = decodeSequenceVarLen(enc, 0, (bytes, off) => decodeBytesVarLen(bytes, off));
+    const dec = decodeSequenceVarLen(enc, 0, (bytes, off) =>
+      decodeBytesVarLen(bytes, off),
+    );
     expect(dec.value.length).toBe(2);
     expect(Array.from(dec.value[0])).toEqual([1, 2]);
     expect(Array.from(dec.value[1])).toEqual([3, 4, 5, 6]);

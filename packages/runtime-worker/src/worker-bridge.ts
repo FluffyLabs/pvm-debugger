@@ -1,7 +1,24 @@
-import type { PvmAdapter, AdapterStepResult, MachineStateSnapshot, InitialMachineState, ProgramLoadContext, PvmStatus } from "@pvmdbg/types";
+import type {
+  AdapterStepResult,
+  InitialMachineState,
+  MachineStateSnapshot,
+  ProgramLoadContext,
+  PvmAdapter,
+  PvmStatus,
+} from "@pvmdbg/types";
 import { bigintToDecStr, decStrToBigint } from "@pvmdbg/types";
-import type { WorkerRequest, WorkerResponse, WorkerOkResponse } from "./commands.js";
-import { serializeInitialState, regsToUint8, validateRegisterIndices, applyRegisterPatch, uint8ToRegs } from "./utils.js";
+import type {
+  WorkerOkResponse,
+  WorkerRequest,
+  WorkerResponse,
+} from "./commands.js";
+import {
+  applyRegisterPatch,
+  regsToUint8,
+  serializeInitialState,
+  uint8ToRegs,
+  validateRegisterIndices,
+} from "./utils.js";
 
 const DEFAULT_TIMEOUT = 30_000;
 
@@ -16,8 +33,14 @@ export class TimeoutError extends Error {
 /** Minimal interface for a Worker-like object. */
 interface WorkerLike {
   postMessage(data: unknown): void;
-  addEventListener(type: "message", listener: (event: { data: WorkerResponse }) => void): void;
-  removeEventListener(type: "message", listener: (event: { data: WorkerResponse }) => void): void;
+  addEventListener(
+    type: "message",
+    listener: (event: { data: WorkerResponse }) => void,
+  ): void;
+  removeEventListener(
+    type: "message",
+    listener: (event: { data: WorkerResponse }) => void,
+  ): void;
 }
 
 /**
@@ -28,7 +51,10 @@ export class WorkerBridge implements PvmAdapter {
   readonly pvmId: string;
   readonly pvmName: string;
   private messageIdCounter = 0;
-  private pendingRequests = new Map<string, { resolve: (resp: WorkerOkResponse) => void; reject: (err: Error) => void }>();
+  private pendingRequests = new Map<
+    string,
+    { resolve: (resp: WorkerOkResponse) => void; reject: (err: Error) => void }
+  >();
   private messageListener: (event: { data: WorkerResponse }) => void;
   private cachedRegisters: bigint[] | null = null;
 
@@ -59,7 +85,10 @@ export class WorkerBridge implements PvmAdapter {
     return String(++this.messageIdCounter);
   }
 
-  private sendCommand(request: WorkerRequest, timeoutMs?: number): Promise<WorkerOkResponse> {
+  private sendCommand(
+    request: WorkerRequest,
+    timeoutMs?: number,
+  ): Promise<WorkerOkResponse> {
     const timeout = timeoutMs ?? this.defaultTimeout;
     return new Promise<WorkerOkResponse>((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -82,7 +111,11 @@ export class WorkerBridge implements PvmAdapter {
     });
   }
 
-  async load(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): Promise<void> {
+  async load(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): Promise<void> {
     const request: WorkerRequest = {
       type: "load",
       messageId: this.nextMessageId(),
@@ -106,7 +139,8 @@ export class WorkerBridge implements PvmAdapter {
       timeoutMs,
     );
     const payload = resp.payload;
-    if (payload.command !== "step") throw new Error("Unexpected response command");
+    if (payload.command !== "step")
+      throw new Error("Unexpected response command");
     this.cachedRegisters = null;
     return {
       status: payload.status as PvmStatus,
@@ -117,9 +151,13 @@ export class WorkerBridge implements PvmAdapter {
   }
 
   async getState(): Promise<MachineStateSnapshot> {
-    const resp = await this.sendCommand({ type: "getState", messageId: this.nextMessageId() });
+    const resp = await this.sendCommand({
+      type: "getState",
+      messageId: this.nextMessageId(),
+    });
     const payload = resp.payload;
-    if (payload.command !== "getState") throw new Error("Unexpected response command");
+    if (payload.command !== "getState")
+      throw new Error("Unexpected response command");
     const registers = payload.registers.map(decStrToBigint);
     this.cachedRegisters = registers;
     return {
@@ -138,8 +176,11 @@ export class WorkerBridge implements PvmAdapter {
       length,
     });
     const payload = resp.payload;
-    if (payload.command !== "getMemory") throw new Error("Unexpected response command");
-    return payload.data instanceof Uint8Array ? payload.data : new Uint8Array(payload.data);
+    if (payload.command !== "getMemory")
+      throw new Error("Unexpected response command");
+    return payload.data instanceof Uint8Array
+      ? payload.data
+      : new Uint8Array(payload.data);
   }
 
   async setRegisters(regs: Map<number, bigint>): Promise<void> {
@@ -151,12 +192,20 @@ export class WorkerBridge implements PvmAdapter {
     }
     const patched = applyRegisterPatch(this.cachedRegisters, regs);
     const data = regsToUint8(patched);
-    await this.sendCommand({ type: "setRegisters", messageId: this.nextMessageId(), data });
+    await this.sendCommand({
+      type: "setRegisters",
+      messageId: this.nextMessageId(),
+      data,
+    });
     this.cachedRegisters = patched;
   }
 
   async setPc(pc: number): Promise<void> {
-    await this.sendCommand({ type: "setPc", messageId: this.nextMessageId(), pc });
+    await this.sendCommand({
+      type: "setPc",
+      messageId: this.nextMessageId(),
+      pc,
+    });
   }
 
   async setGas(gas: bigint): Promise<void> {
@@ -177,7 +226,10 @@ export class WorkerBridge implements PvmAdapter {
   }
 
   async shutdown(): Promise<void> {
-    await this.sendCommand({ type: "shutdown", messageId: this.nextMessageId() });
+    await this.sendCommand({
+      type: "shutdown",
+      messageId: this.nextMessageId(),
+    });
     this.worker.removeEventListener("message", this.messageListener);
     this.pendingRequests.clear();
   }

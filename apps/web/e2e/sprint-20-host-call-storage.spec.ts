@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 20 — Host Call Storage Table", () => {
   /** Load a trace-backed program and wait for the debugger page. */
-  async function loadTraceProgram(page: import("@playwright/test").Page, exampleId = "io-trace") {
+  async function loadTraceProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "io-trace",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -23,7 +28,9 @@ test.describe("Sprint 20 — Host Call Storage Table", () => {
   ) {
     await openSettings(page);
     await page.getByTestId(`auto-continue-radio-${policy}`).click();
-    await expect(page.getByTestId(`auto-continue-radio-${policy}`)).toBeChecked();
+    await expect(
+      page.getByTestId(`auto-continue-radio-${policy}`),
+    ).toBeChecked();
   }
 
   function pvmStatus(page: import("@playwright/test").Page) {
@@ -34,7 +41,9 @@ test.describe("Sprint 20 — Host Call Storage Table", () => {
    * Step through host calls until we find one matching a storage-type index (3=read, 4=write).
    * Returns true if found, false if execution terminated without finding one.
    */
-  async function stepToStorageHostCall(page: import("@playwright/test").Page): Promise<boolean> {
+  async function stepToStorageHostCall(
+    page: import("@playwright/test").Page,
+  ): Promise<boolean> {
     for (let attempt = 0; attempt < 30; attempt++) {
       // Check if we're on a host call
       const status = await pvmStatus(page).textContent();
@@ -42,7 +51,9 @@ test.describe("Sprint 20 — Host Call Storage Table", () => {
         // Try running to find the next host call
         await page.getByTestId("run-button").click();
         try {
-          await expect(pvmStatus(page)).toHaveText("Host Call", { timeout: 5000 });
+          await expect(pvmStatus(page)).toHaveText("Host Call", {
+            timeout: 5000,
+          });
         } catch {
           // May have terminated
           return false;
@@ -189,7 +200,9 @@ test.describe("Sprint 20 — Host Call Storage Table", () => {
     ).toBe(true);
   });
 
-  test("storage entries persist across multiple host calls in the same session", async ({ page }) => {
+  test("storage entries persist across multiple host calls in the same session", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAutoContinuePolicy(page, "never");
 

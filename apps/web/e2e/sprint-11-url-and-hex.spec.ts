@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
   test.beforeEach(async ({ page }) => {
@@ -24,7 +24,9 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await fetchBtn.click();
 
     // URL auto-advances to debugger for non-SPI programs
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("URL fetch shows loading state", async ({ page }) => {
@@ -51,7 +53,9 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await urlField.fill("http://localhost:19876/test.pvm");
     await fetchBtn.click();
 
-    await expect(page.getByTestId("url-input-error")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("url-input-error")).toBeVisible({
+      timeout: 15000,
+    });
     // Continue should remain disabled
     await expect(page.getByTestId("source-step-continue")).toBeDisabled();
   });
@@ -67,7 +71,9 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await expect(page.getByTestId("source-step-continue")).toBeDisabled();
   });
 
-  test("valid manual hex enables Continue and shows byte count", async ({ page }) => {
+  test("valid manual hex enables Continue and shows byte count", async ({
+    page,
+  }) => {
     const hexField = page.getByTestId("manual-input-field");
 
     // A minimal valid generic PVM program (a few instructions)
@@ -75,7 +81,9 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await hexField.blur();
 
     await expect(page.getByTestId("manual-input-success")).toBeVisible();
-    const byteText = await page.getByTestId("manual-input-bytecount").textContent();
+    const byteText = await page
+      .getByTestId("manual-input-bytecount")
+      .textContent();
     expect(byteText).toMatch(/Parsed \d+(\.\d+)?\s*(B|KB|MB)/);
 
     await expect(page.getByTestId("source-step-continue")).toBeEnabled();
@@ -97,7 +105,9 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
 
   // --- Edge case tests added during reflection ---
 
-  test("empty hex on blur does not show error or enable Continue", async ({ page }) => {
+  test("empty hex on blur does not show error or enable Continue", async ({
+    page,
+  }) => {
     const hexField = page.getByTestId("manual-input-field");
 
     // Focus and blur with empty text
@@ -119,10 +129,14 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await page.getByTestId("source-step-continue").click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
-  test("URL fetch auto-advances to debugger for non-SPI programs", async ({ page }) => {
+  test("URL fetch auto-advances to debugger for non-SPI programs", async ({
+    page,
+  }) => {
     const urlField = page.getByTestId("url-input-field");
     const fetchBtn = page.getByTestId("url-input-fetch");
 
@@ -130,7 +144,9 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
     await fetchBtn.click();
 
     // Non-SPI URL fetches auto-advance directly to the debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("file upload clears previous hex selection", async ({ page }) => {

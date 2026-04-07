@@ -21,7 +21,12 @@ export interface ExpectedState {
 
 export type SpiEntrypoint = "refine" | "accumulate" | "is_authorized";
 
-export type LoadSourceKind = "example" | "url_payload" | "local_storage" | "upload" | "manual_input";
+export type LoadSourceKind =
+  | "example"
+  | "url_payload"
+  | "local_storage"
+  | "upload"
+  | "manual_input";
 
 export interface ProgramEnvelope {
   programKind: "generic" | "jam_spi";

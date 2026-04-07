@@ -1,9 +1,14 @@
-import type { ProgramEnvelope, LoadSourceKind, PageMapEntry, MemoryChunk } from "@pvmdbg/types";
-import { fromHex } from "@pvmdbg/types";
 import { parseTrace } from "@pvmdbg/trace";
-import { canDecodeSpi } from "./detect.js";
+import type {
+  LoadSourceKind,
+  MemoryChunk,
+  PageMapEntry,
+  ProgramEnvelope,
+} from "@pvmdbg/types";
+import { fromHex } from "@pvmdbg/types";
+import { buildGenericInitialState, decodeGeneric } from "./decode-generic.js";
 import { decodeSpi } from "./decode-spi.js";
-import { decodeGeneric, buildGenericInitialState } from "./decode-generic.js";
+import { canDecodeSpi } from "./detect.js";
 
 const PAGE_SIZE = 4096;
 const MAX_SPI_ARGS_SIZE = 16 * 1024 * 1024; // 16 MiB
@@ -28,7 +33,9 @@ function buildSpiArgsFromMemoryWrites(
   const totalSize = lastAddr - firstAddr;
 
   if (totalSize > MAX_SPI_ARGS_SIZE) {
-    throw new Error(`Trace memory span too large: ${totalSize} bytes (max: ${MAX_SPI_ARGS_SIZE})`);
+    throw new Error(
+      `Trace memory span too large: ${totalSize} bytes (max: ${MAX_SPI_ARGS_SIZE})`,
+    );
   }
 
   const result = new Uint8Array(totalSize);
@@ -94,12 +101,17 @@ export function decodeTrace(
   for (const mw of memoryWrites) {
     const startPage = Math.floor(mw.address / PAGE_SIZE);
     const endAddr = mw.address + mw.data.length;
-    const endPage = endAddr > 0 ? Math.floor((endAddr - 1) / PAGE_SIZE) : startPage;
+    const endPage =
+      endAddr > 0 ? Math.floor((endAddr - 1) / PAGE_SIZE) : startPage;
     for (let pageIdx = startPage; pageIdx <= endPage; pageIdx++) {
       const pageAddr = pageIdx * PAGE_SIZE;
       if (!seenPages.has(pageAddr)) {
         seenPages.add(pageAddr);
-        pageMap.push({ address: pageAddr, length: PAGE_SIZE, isWritable: true });
+        pageMap.push({
+          address: pageAddr,
+          length: PAGE_SIZE,
+          isWritable: true,
+        });
       }
     }
   }

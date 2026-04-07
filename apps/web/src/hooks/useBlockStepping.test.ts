@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
+import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
+import { describe, expect, it } from "vitest";
+import type { BasicBlock } from "./useBasicBlocks";
 import {
-  computeBlockStepCount,
   buildBlocksFromInstructions,
+  computeBlockStepCount,
   computeMultiPvmBlockStepCount,
 } from "./useBlockStepping";
-import type { BasicBlock } from "./useBasicBlocks";
 import type { DecodedInstruction } from "./useDisassembly";
-import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 
 // --- Test helpers ---
 
@@ -42,7 +42,10 @@ const EMPTY_SNAPSHOT: MachineStateSnapshot = {
 function makeSnapshots(
   entries: Array<{ pvmId: string; pc: number; lifecycle: PvmLifecycle }>,
 ): Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }> {
-  const map = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>();
+  const map = new Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >();
   for (const e of entries) {
     map.set(e.pvmId, {
       snapshot: { ...EMPTY_SNAPSHOT, pc: e.pc },
@@ -129,7 +132,7 @@ describe("buildBlocksFromInstructions", () => {
 
 describe("computeMultiPvmBlockStepCount", () => {
   const blocks = [
-    makeBlock(0, [0, 2, 5]),     // 3 instructions
+    makeBlock(0, [0, 2, 5]), // 3 instructions
     makeBlock(1, [8, 10, 12, 15]), // 4 instructions
   ];
 
@@ -165,14 +168,14 @@ describe("computeMultiPvmBlockStepCount", () => {
   it("ignores terminal PVMs and uses only paused ones", () => {
     const snapshots = makeSnapshots([
       { pvmId: "pvm1", pc: 0, lifecycle: "terminated" }, // ignored
-      { pvmId: "pvm2", pc: 10, lifecycle: "paused" },    // remaining = 3
+      { pvmId: "pvm2", pc: 10, lifecycle: "paused" }, // remaining = 3
     ]);
     expect(computeMultiPvmBlockStepCount(blocks, snapshots)).toBe(3);
   });
 
   it("considers paused_host_call PVMs", () => {
     const snapshots = makeSnapshots([
-      { pvmId: "pvm1", pc: 5, lifecycle: "paused" },          // remaining = 1
+      { pvmId: "pvm1", pc: 5, lifecycle: "paused" }, // remaining = 1
       { pvmId: "pvm2", pc: 8, lifecycle: "paused_host_call" }, // remaining = 4
     ]);
     expect(computeMultiPvmBlockStepCount(blocks, snapshots)).toBe(1);
@@ -181,7 +184,7 @@ describe("computeMultiPvmBlockStepCount", () => {
   it("falls back to 1 when a PVM has an unknown PC", () => {
     const snapshots = makeSnapshots([
       { pvmId: "pvm1", pc: 99, lifecycle: "paused" }, // unknown PC → 1
-      { pvmId: "pvm2", pc: 8, lifecycle: "paused" },  // remaining = 4
+      { pvmId: "pvm2", pc: 8, lifecycle: "paused" }, // remaining = 4
     ]);
     expect(computeMultiPvmBlockStepCount(blocks, snapshots)).toBe(1);
   });

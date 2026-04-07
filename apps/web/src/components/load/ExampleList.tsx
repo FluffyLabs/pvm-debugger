@@ -1,16 +1,16 @@
-import { useState } from "react";
 import { Alert } from "@fluffylabs/shared-ui";
-import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import {
+  type DetectedFormat,
+  detectFormat,
+  type ExampleCategory,
+  type ExampleEntry,
   getExamplesManifest,
   loadExample,
-  detectFormat,
   type RawPayload,
-  type DetectedFormat,
-  type ExampleEntry,
-  type ExampleCategory,
 } from "@pvmdbg/content";
-import { FORMAT_LABELS, FORMAT_BADGE_INTENT } from "./format";
+import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { FORMAT_BADGE_INTENT, FORMAT_LABELS } from "./format";
 
 /** Categories that start expanded by default. */
 const DEFAULT_EXPANDED = new Set(["generic", "assemblyscript", "traces"]);
@@ -24,7 +24,11 @@ const BADGE_COLORS: Record<string, string> = {
 };
 
 interface ExampleListProps {
-  onAdvance: (rawPayload: RawPayload, detectedFormat: DetectedFormat, exampleEntry: ExampleEntry) => void;
+  onAdvance: (
+    rawPayload: RawPayload,
+    detectedFormat: DetectedFormat,
+    exampleEntry: ExampleEntry,
+  ) => void;
 }
 
 export function ExampleList({ onAdvance }: ExampleListProps) {
@@ -78,7 +82,11 @@ export function ExampleList({ onAdvance }: ExampleListProps) {
       <h2 className="text-sm font-medium text-foreground mb-3">Examples</h2>
 
       {error && (
-        <Alert intent="destructive" className="mb-4" data-testid="example-error">
+        <Alert
+          intent="destructive"
+          className="mb-4"
+          data-testid="example-error"
+        >
           <Alert.Title>Failed to load example</Alert.Title>
           <Alert.Text>{error}</Alert.Text>
         </Alert>
@@ -134,7 +142,9 @@ function CategorySection({
       {!collapsed && (
         <div
           className="grid gap-2 mt-1 ml-5"
-          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(11rem, 1fr))" }}
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(11rem, 1fr))",
+          }}
         >
           {category.examples.map((example) => (
             <ExampleCard
@@ -176,7 +186,10 @@ function ExampleCard({
     >
       <span className="flex items-center gap-1.5 min-w-0">
         {loading ? (
-          <Loader2 className="w-3 h-3 animate-spin shrink-0" data-testid={`example-loading-${example.id}`} />
+          <Loader2
+            className="w-3 h-3 animate-spin shrink-0"
+            data-testid={`example-loading-${example.id}`}
+          />
         ) : null}
         <span className="truncate">{example.name}</span>
       </span>

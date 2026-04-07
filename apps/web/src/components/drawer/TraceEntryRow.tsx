@@ -8,7 +8,11 @@ interface TraceEntryRowProps {
   isActive?: boolean;
 }
 
-export function TraceEntryRow({ row, isMismatched, isActive }: TraceEntryRowProps) {
+export function TraceEntryRow({
+  row,
+  isMismatched,
+  isActive,
+}: TraceEntryRowProps) {
   const lines =
     row.kind === "entry"
       ? formatEntryLines(row.entry)
@@ -22,9 +26,7 @@ export function TraceEntryRow({ row, isMismatched, isActive }: TraceEntryRowProp
   return (
     <div
       data-testid={
-        row.kind === "entry"
-          ? `trace-entry-${row.index}`
-          : "trace-termination"
+        row.kind === "entry" ? `trace-entry-${row.index}` : "trace-termination"
       }
       className={`px-2 py-1 border-b border-border/50 ${
         isActive ? "bg-blue-500/20 ring-1 ring-inset ring-blue-500/40" : ""

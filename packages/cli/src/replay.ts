@@ -1,21 +1,21 @@
 import * as fs from "node:fs/promises";
-import type {
-  PvmLifecycle,
-  MachineStateSnapshot,
-  HostCallMismatch,
-  EcalliTrace,
-  ProgramEnvelope,
-  HostCallResumeEffects,
-} from "@pvmdbg/types";
-import { isTerminal } from "@pvmdbg/types";
 import { decodeTrace } from "@pvmdbg/content";
 import { Orchestrator } from "@pvmdbg/orchestrator";
 import {
-  DirectAdapter,
-  TypeberrySyncInterpreter,
   AnanasSyncInterpreter,
+  DirectAdapter,
   initAnanas,
+  TypeberrySyncInterpreter,
 } from "@pvmdbg/runtime-worker";
+import type {
+  EcalliTrace,
+  HostCallMismatch,
+  HostCallResumeEffects,
+  MachineStateSnapshot,
+  ProgramEnvelope,
+  PvmLifecycle,
+} from "@pvmdbg/types";
+import { isTerminal } from "@pvmdbg/types";
 
 export type Logger = (message: string) => void;
 
@@ -46,7 +46,10 @@ export interface ReplayPvmResult {
  * Check if all sessions in the orchestrator are in a terminal state.
  */
 export function allSessionsTerminal(
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>,
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >,
 ): boolean {
   for (const { lifecycle } of snapshots.values()) {
     if (!isTerminal(lifecycle)) {
@@ -61,7 +64,10 @@ export function allSessionsTerminal(
  * Produces structured HostCallMismatch[] for any differences.
  */
 export function compareFinalState(
-  snapshotWithLifecycle: { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle },
+  snapshotWithLifecycle: {
+    snapshot: MachineStateSnapshot;
+    lifecycle: PvmLifecycle;
+  },
   trace: EcalliTrace,
 ): HostCallMismatch[] {
   const mismatches: HostCallMismatch[] = [];
@@ -199,7 +205,7 @@ export async function replay(
         if (options.verbose) {
           log(
             `[${pvmId}] Host call #${hcInfo.hostCallIndex} (${hcInfo.hostCallName}) ` +
-            `trace=${hcInfo.resumeProposal ? (hcInfo.resumeProposal.traceMatches ? "match" : "MISMATCH") : "no-proposal"}`,
+              `trace=${hcInfo.resumeProposal ? (hcInfo.resumeProposal.traceMatches ? "match" : "MISMATCH") : "no-proposal"}`,
           );
         }
 
@@ -234,7 +240,7 @@ export async function replay(
     if (options.verbose) {
       log(
         `[${pvmId}] ${passed ? "PASS" : "FAIL"} — ` +
-        `status=${snapshotEntry.snapshot.status} pc=${snapshotEntry.snapshot.pc} gas=${snapshotEntry.snapshot.gas}`,
+          `status=${snapshotEntry.snapshot.status} pc=${snapshotEntry.snapshot.pc} gas=${snapshotEntry.snapshot.gas}`,
       );
       if (!passed) {
         for (const m of mismatches) {

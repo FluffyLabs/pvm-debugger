@@ -1,7 +1,7 @@
-import { useEffect } from "react";
 import type { HostCallInfo } from "@pvmdbg/types";
-import type { HostCallEffects } from "../../../lib/fetch-utils";
+import { useEffect } from "react";
 import { useStableCallback } from "../../../hooks/useStableCallback";
+import type { HostCallEffects } from "../../../lib/fetch-utils";
 
 interface GasHostCallProps {
   info: HostCallInfo;

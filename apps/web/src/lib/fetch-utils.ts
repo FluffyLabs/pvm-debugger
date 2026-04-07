@@ -31,7 +31,8 @@ export function formatRegValue(value: bigint, format: RegisterFormat): string {
  */
 export function safeFromHex(hex: string): Uint8Array {
   try {
-    let clean = hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
+    let clean =
+      hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
     if (clean.length % 2 === 1) clean = "0" + clean;
     return fromHex("0x" + clean);
   } catch {
@@ -72,6 +73,7 @@ export function computeFetchEffects(
 
   return {
     registerWrites: new Map([[7, BigInt(totalLen)]]),
-    memoryWrites: sliced.length > 0 ? [{ address: destAddr, data: sliced }] : [],
+    memoryWrites:
+      sliced.length > 0 ? [{ address: destAddr, data: sliced }] : [],
   };
 }

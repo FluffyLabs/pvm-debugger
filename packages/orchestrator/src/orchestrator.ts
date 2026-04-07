@@ -1,32 +1,32 @@
 import type {
+  AdapterStepResult,
+  EcalliTrace,
+  HostCallInfo,
+  HostCallResumeEffects,
+  MachineStateSnapshot,
+  OrchestratorEvents,
+  PageMapEntry,
+  ProgramEnvelope,
   PvmAdapter,
   PvmLifecycle,
   PvmStatus,
-  MachineStateSnapshot,
-  ProgramEnvelope,
-  EcalliTrace,
-  HostCallResumeEffects,
-  HostCallInfo,
-  StepResult,
   PvmStepReport,
-  OrchestratorEvents,
-  PageMapEntry,
-  AdapterStepResult,
+  StepResult,
 } from "@pvmdbg/types";
-import { TypedEventEmitter } from "./typed-event-emitter.js";
+import { buildHostCallInfo } from "./host-call-handler.js";
 import {
-  type Session,
-  createSession,
-  cloneSnapshot,
-  cloneTrace,
+  appendHostCallEntry,
+  appendTermination,
+  buildRecordedTracePrelude,
   cloneEnvelope,
   cloneHostCallInfo,
   clonePageMap,
-  buildRecordedTracePrelude,
-  appendHostCallEntry,
-  appendTermination,
+  cloneSnapshot,
+  cloneTrace,
+  createSession,
+  type Session,
 } from "./session.js";
-import { buildHostCallInfo } from "./host-call-handler.js";
+import { TypedEventEmitter } from "./typed-event-emitter.js";
 
 export interface OrchestratorConfig {
   stepTimeoutMs?: number;
@@ -112,7 +112,9 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
         ? {
             spiProgram: envelope.loadContext.spiProgram
               ? {
-                  program: new Uint8Array(envelope.loadContext.spiProgram.program),
+                  program: new Uint8Array(
+                    envelope.loadContext.spiProgram.program,
+                  ),
                   hasMetadata: envelope.loadContext.spiProgram.hasMetadata,
                 }
               : undefined,
@@ -153,9 +155,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     session.pendingHostCall = null;
 
     if (session.loadedEnvelope) {
-      session.recordedTrace = buildRecordedTracePrelude(
-        session.loadedEnvelope,
-      );
+      session.recordedTrace = buildRecordedTracePrelude(session.loadedEnvelope);
     }
 
     const snapshot = await session.adapter.getState();
@@ -221,10 +221,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     return { results };
   }
 
-  private stepWithTimeout(
-    session: Session,
-    n: number,
-  ): Promise<PvmStepReport> {
+  private stepWithTimeout(session: Session, n: number): Promise<PvmStepReport> {
     return new Promise<PvmStepReport>((resolve, reject) => {
       const timer = setTimeout(
         () => reject(new StepTimeoutError()),
@@ -435,10 +432,11 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     session: Session,
     registers: bigint[],
   ): Promise<Array<{ address: number; length: number; dataHex: string }>> {
-    const reads: Array<{ address: number; length: number; dataHex: string }> = [];
+    const reads: Array<{ address: number; length: number; dataHex: string }> =
+      [];
     const segments = [
-      { ptr: Number(registers[8] ?? 0n), len: Number(registers[9] ?? 0n) },   // target
-      { ptr: Number(registers[10] ?? 0n), len: Number(registers[11] ?? 0n) },  // message
+      { ptr: Number(registers[8] ?? 0n), len: Number(registers[9] ?? 0n) }, // target
+      { ptr: Number(registers[10] ?? 0n), len: Number(registers[11] ?? 0n) }, // message
     ];
     for (const { ptr, len } of segments) {
       if (len <= 0) continue;
@@ -449,7 +447,10 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
         ).join("");
         reads.push({ address: ptr, length: len, dataHex: hex });
       } catch (err) {
-        console.warn(`Failed to capture log memory at 0x${ptr.toString(16)} len=${len}:`, err);
+        console.warn(
+          `Failed to capture log memory at 0x${ptr.toString(16)} len=${len}:`,
+          err,
+        );
       }
     }
     return reads;
@@ -471,15 +472,23 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
 
   getReferenceTrace(pvmId: string): EcalliTrace | undefined {
     const session = this.requireSession(pvmId);
-    return session.referenceTrace ? cloneTrace(session.referenceTrace) : undefined;
+    return session.referenceTrace
+      ? cloneTrace(session.referenceTrace)
+      : undefined;
   }
 
   // -----------------------------------------------------------------------
   // State access
   // -----------------------------------------------------------------------
 
-  getSnapshots(): Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }> {
-    const result = new Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>();
+  getSnapshots(): Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  > {
+    const result = new Map<
+      string,
+      { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+    >();
     for (const [pvmId, session] of this.sessions) {
       result.set(pvmId, {
         snapshot: cloneSnapshot(session.lastSnapshot),
@@ -489,7 +498,9 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     return result;
   }
 
-  getSnapshot(pvmId: string): { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle } | undefined {
+  getSnapshot(
+    pvmId: string,
+  ): { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle } | undefined {
     const session = this.sessions.get(pvmId);
     if (!session) return undefined;
     return {
@@ -531,7 +542,12 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setRegisters(regs);
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
+    this.emit(
+      "pvmStateChanged",
+      pvmId,
+      cloneSnapshot(snapshot),
+      session.lifecycle,
+    );
   }
 
   async setPc(pvmId: string, pc: number): Promise<void> {
@@ -540,7 +556,12 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setPc(pc);
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
+    this.emit(
+      "pvmStateChanged",
+      pvmId,
+      cloneSnapshot(snapshot),
+      session.lifecycle,
+    );
   }
 
   async setGas(pvmId: string, gas: bigint): Promise<void> {
@@ -549,7 +570,12 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setGas(gas);
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
+    this.emit(
+      "pvmStateChanged",
+      pvmId,
+      cloneSnapshot(snapshot),
+      session.lifecycle,
+    );
   }
 
   async getMemory(
@@ -572,7 +598,12 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     await session.adapter.setMemory(address, new Uint8Array(data));
     const snapshot = await session.adapter.getState();
     session.lastSnapshot = cloneSnapshot(snapshot);
-    this.emit("pvmStateChanged", pvmId, cloneSnapshot(snapshot), session.lifecycle);
+    this.emit(
+      "pvmStateChanged",
+      pvmId,
+      cloneSnapshot(snapshot),
+      session.lifecycle,
+    );
   }
 
   // -----------------------------------------------------------------------
@@ -590,7 +621,10 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     pvmId: string,
     operation: string,
   ): void {
-    if (session.lifecycle !== "paused" && session.lifecycle !== "paused_host_call") {
+    if (
+      session.lifecycle !== "paused" &&
+      session.lifecycle !== "paused_host_call"
+    ) {
       throw new Error(
         `${operation} is only allowed while paused (PVM ${pvmId} is ${session.lifecycle})`,
       );

@@ -1,12 +1,17 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 26 — Instructions Breakpoints", () => {
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "fibonacci") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "fibonacci",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   test("clicking the gutter shows a red dot", async ({ page }) => {
@@ -55,7 +60,9 @@ test.describe("Sprint 26 — Instructions Breakpoints", () => {
     await expect(dot).not.toBeVisible();
   });
 
-  test("setting a breakpoint and running stops at that PC", async ({ page }) => {
+  test("setting a breakpoint and running stops at that PC", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Step a few times to discover a valid PC further along in execution
@@ -83,7 +90,9 @@ test.describe("Sprint 26 — Instructions Breakpoints", () => {
     await page.getByTestId("run-button").click();
 
     // Wait for execution to stop (run button should reappear)
-    await expect(page.getByTestId("run-button")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("run-button")).toBeVisible({
+      timeout: 10000,
+    });
 
     // PC should match the breakpoint
     await expect(pcValue).toHaveText(targetPcText!, { timeout: 5000 });

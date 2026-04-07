@@ -1,5 +1,5 @@
-import { useMemo } from "react";
 import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
+import { useMemo } from "react";
 
 export interface DivergenceResult {
   /** Concise inline summary, e.g. "PC, Gas, 2 registers". Null when no divergence. */
@@ -19,7 +19,10 @@ export interface DivergenceResult {
  * - Details list each divergent field with values
  */
 export function useDivergenceCheck(
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>,
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >,
   selectedPvmId: string | null,
   snapshotVersion: number,
 ): DivergenceResult {
@@ -44,15 +47,23 @@ export function useDivergenceCheck(
     let gasDiverges = false;
     const divergentRegIndices = new Set<number>();
 
-    for (const [pvmId, { snapshot: other, lifecycle: otherLifecycle }] of snapshots) {
+    for (const [
+      pvmId,
+      { snapshot: other, lifecycle: otherLifecycle },
+    ] of snapshots) {
       if (pvmId === selectedPvmId) continue;
 
       if (selected.pc !== other.pc) {
         pcDiverges = true;
-        detailLines.push(`PC: ${selectedPvmId}=0x${selected.pc.toString(16)}, ${pvmId}=0x${other.pc.toString(16)}`);
+        detailLines.push(
+          `PC: ${selectedPvmId}=0x${selected.pc.toString(16)}, ${pvmId}=0x${other.pc.toString(16)}`,
+        );
       }
 
-      if (selectedLifecycle !== otherLifecycle || selected.status !== other.status) {
+      if (
+        selectedLifecycle !== otherLifecycle ||
+        selected.status !== other.status
+      ) {
         statusDiverges = true;
         detailLines.push(
           `Status: ${selectedPvmId}=${selected.status}/${selectedLifecycle}, ${pvmId}=${other.status}/${otherLifecycle}`,
@@ -61,7 +72,9 @@ export function useDivergenceCheck(
 
       if (selected.gas !== other.gas) {
         gasDiverges = true;
-        detailLines.push(`Gas: ${selectedPvmId}=${selected.gas.toString()}, ${pvmId}=${other.gas.toString()}`);
+        detailLines.push(
+          `Gas: ${selectedPvmId}=${selected.gas.toString()}, ${pvmId}=${other.gas.toString()}`,
+        );
       }
 
       for (let i = 0; i < selected.registers.length; i++) {

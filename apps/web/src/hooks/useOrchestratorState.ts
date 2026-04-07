@@ -1,9 +1,17 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import type { MachineStateSnapshot, PvmLifecycle, PvmStatus, HostCallInfo } from "@pvmdbg/types";
+import type {
+  HostCallInfo,
+  MachineStateSnapshot,
+  PvmLifecycle,
+  PvmStatus,
+} from "@pvmdbg/types";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useOrchestrator } from "./useOrchestrator";
 
 export interface OrchestratorReactiveState {
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >;
   selectedPvmId: string | null;
   setSelectedPvmId: (pvmId: string) => void;
   hostCallInfo: Map<string, HostCallInfo>;
@@ -30,15 +38,22 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>
   >(new Map());
   const [selectedPvmId, setSelectedPvmId] = useState<string | null>(null);
-  const [hostCallInfo, setHostCallInfo] = useState<Map<string, HostCallInfo>>(new Map());
+  const [hostCallInfo, setHostCallInfo] = useState<Map<string, HostCallInfo>>(
+    new Map(),
+  );
   const [isStepInProgress, setIsStepInProgress] = useState(false);
   const [snapshotVersion, setSnapshotVersion] = useState(0);
-  const [perPvmErrors, setPerPvmErrors] = useState<Map<string, string>>(new Map());
+  const [perPvmErrors, setPerPvmErrors] = useState<Map<string, string>>(
+    new Map(),
+  );
   const versionRef = useRef(0);
 
   // --- Buffered flush mechanism ---
   // Events write into these refs; a single rAF flushes to React state.
-  const pendingSnapshots = useRef<Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }> | null>(null);
+  const pendingSnapshots = useRef<Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  > | null>(null);
   const pendingSelectedPvmId = useRef<string | null>(null);
   const pendingHostCallInfo = useRef<Map<string, HostCallInfo> | null>(null);
   const pendingPerPvmErrors = useRef<Map<string, string> | null>(null);
@@ -102,12 +117,18 @@ export function useOrchestratorState(): OrchestratorReactiveState {
 
     // Select a PVM that exists in the new orchestrator
     const pvmIds = [...initial.keys()];
-    setSelectedPvmId((prev) => (prev && pvmIds.includes(prev)) ? prev : (pvmIds[0] ?? null));
+    setSelectedPvmId((prev) =>
+      prev && pvmIds.includes(prev) ? prev : (pvmIds[0] ?? null),
+    );
 
     // Use `initial` (from this orchestrator) as the fallback base for event
     // accumulation — NOT the stale `snapshots` React state from the closure.
     // This prevents disabled-PVM data from leaking into the new orchestrator.
-    const onStateChanged = (pvmId: string, snapshot: MachineStateSnapshot, lifecycle: PvmLifecycle) => {
+    const onStateChanged = (
+      pvmId: string,
+      snapshot: MachineStateSnapshot,
+      lifecycle: PvmLifecycle,
+    ) => {
       const base = pendingSnapshots.current ?? new Map(initial);
       base.set(pvmId, { snapshot, lifecycle });
       pendingSnapshots.current = base;
@@ -193,5 +214,14 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     setSelectedPvmId(pvmId);
   }, []);
 
-  return { snapshots, selectedPvmId, setSelectedPvmId: selectPvm, hostCallInfo, isStepInProgress, setIsStepInProgress, snapshotVersion, perPvmErrors };
+  return {
+    snapshots,
+    selectedPvmId,
+    setSelectedPvmId: selectPvm,
+    hostCallInfo,
+    isStepInProgress,
+    setIsStepInProgress,
+    snapshotVersion,
+    perPvmErrors,
+  };
 }

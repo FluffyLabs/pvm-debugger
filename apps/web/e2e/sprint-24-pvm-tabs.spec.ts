@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 24 — Multi-PVM Tabs", () => {
   /** Load a program and wait for the debugger page to be visible. */
@@ -7,7 +7,9 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -24,7 +26,9 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
    * clears program state briefly, which can cause the tabs to not appear
    * within the timeout. Tests that depend on this should skip gracefully.
    */
-  async function tryEnableAnanas(page: import("@playwright/test").Page): Promise<boolean> {
+  async function tryEnableAnanas(
+    page: import("@playwright/test").Page,
+  ): Promise<boolean> {
     await openSettings(page);
     const ananasSwitch = page.getByTestId("pvm-switch-ananas");
     await expect(ananasSwitch).toBeVisible();
@@ -32,7 +36,11 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     try {
       // Ananas tab is always visible (grayed out when inactive).
       // Check it becomes an active button (role="tab") rather than a span.
-      await expect(page.getByTestId("pvm-tab-ananas")).toHaveAttribute("role", "tab", { timeout: 15000 });
+      await expect(page.getByTestId("pvm-tab-ananas")).toHaveAttribute(
+        "role",
+        "tab",
+        { timeout: 15000 },
+      );
       return true;
     } catch {
       return false;
@@ -63,7 +71,9 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     await expect(page.getByTestId("pvm-tab-ananas")).toBeVisible();
   });
 
-  test("clicking a tab changes the rendered register values", async ({ page }) => {
+  test("clicking a tab changes the rendered register values", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Enable ananas (this resets the session — both PVMs start at initial state)
@@ -82,14 +92,20 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
 
     // Click ananas tab
     await page.getByTestId("pvm-tab-ananas").click();
-    await expect(page.getByTestId("pvm-tab-ananas")).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByTestId("pvm-tab-ananas")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
 
     // Register panel should now show ananas state (same step applied to both PVMs)
     const ananasText = await regPanel.innerText();
 
     // Click back to typeberry
     await page.getByTestId("pvm-tab-typeberry").click();
-    await expect(page.getByTestId("pvm-tab-typeberry")).toHaveAttribute("aria-selected", "true");
+    await expect(page.getByTestId("pvm-tab-typeberry")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
 
     // Verify switching back shows typeberry is selected (tab switch works)
     // Both PVMs execute the same program so register values should match,
@@ -103,15 +119,25 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     test.skip(!enabled, "PVM switching did not stabilize (timing issue)");
 
     // Both tabs should be active buttons
-    await expect(page.getByTestId("pvm-tab-typeberry")).toHaveAttribute("role", "tab");
-    await expect(page.getByTestId("pvm-tab-ananas")).toHaveAttribute("role", "tab");
+    await expect(page.getByTestId("pvm-tab-typeberry")).toHaveAttribute(
+      "role",
+      "tab",
+    );
+    await expect(page.getByTestId("pvm-tab-ananas")).toHaveAttribute(
+      "role",
+      "tab",
+    );
 
     // Disable ananas via settings (settings already open from tryEnableAnanas)
     const ananasSwitch = page.getByTestId("pvm-switch-ananas");
     await ananasSwitch.click();
 
     // Ananas tab should revert to grayed-out (no role="tab")
-    await expect(page.getByTestId("pvm-tab-ananas")).not.toHaveAttribute("role", "tab", { timeout: 15000 });
+    await expect(page.getByTestId("pvm-tab-ananas")).not.toHaveAttribute(
+      "role",
+      "tab",
+      { timeout: 15000 },
+    );
     await expect(page.getByTestId("pvm-tab-typeberry")).toBeVisible();
   });
 

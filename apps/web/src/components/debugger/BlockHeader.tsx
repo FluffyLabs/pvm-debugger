@@ -1,5 +1,5 @@
-import { memo } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { memo } from "react";
 import type { BasicBlock } from "../../hooks/useBasicBlocks";
 
 interface BlockHeaderProps {
@@ -7,7 +7,10 @@ interface BlockHeaderProps {
   onToggle: (blockIndex: number) => void;
 }
 
-export const BlockHeader = memo(function BlockHeader({ block, onToggle }: BlockHeaderProps) {
+export const BlockHeader = memo(function BlockHeader({
+  block,
+  onToggle,
+}: BlockHeaderProps) {
   return (
     <div
       data-testid={`block-header-${block.index}`}

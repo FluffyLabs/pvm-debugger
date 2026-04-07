@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import * as path from "path";
 import * as url from "url";
 
@@ -12,7 +12,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await expect(page.getByTestId("load-page")).toBeVisible();
   });
 
-  test("step 2 renders after selecting a source in step 1", async ({ page }) => {
+  test("step 2 renders after selecting a source in step 1", async ({
+    page,
+  }) => {
     // Upload an SPI file (non-SPI programs skip config step)
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
@@ -22,13 +24,17 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await page.getByTestId("source-step-continue").click();
 
     // Step 2 should render
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.getByTestId("detection-summary")).toBeVisible();
     await expect(page.getByTestId("config-step-load")).toBeVisible();
     await expect(page.getByTestId("config-step-back")).toBeVisible();
   });
 
-  test("SPI example shows structural details and jump table count", async ({ page }) => {
+  test("SPI example shows structural details and jump table count", async ({
+    page,
+  }) => {
     // Upload an SPI fixture file directly
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
@@ -36,7 +42,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await page.getByTestId("source-step-continue").click();
 
     // Step 2 should render with SPI-specific summary
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("detection-summary")).toBeVisible();
     await expect(page.getByTestId("detection-summary-spi")).toBeVisible();
 
@@ -50,18 +58,26 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await expect(page.getByTestId("summary-registers")).toBeVisible();
   });
 
-  test("JSON vector skips config step and loads directly into debugger", async ({ page }) => {
+  test("JSON vector skips config step and loads directly into debugger", async ({
+    page,
+  }) => {
     // Upload a JSON test vector fixture directly
     const fileInput = page.getByTestId("file-upload-input");
-    await fileInput.setInputFiles(path.join(fixturesDir, "json/inst_add_32.json"));
+    await fileInput.setInputFiles(
+      path.join(fixturesDir, "json/inst_add_32.json"),
+    );
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
-  test("trace file skips config step and loads directly into debugger", async ({ page }) => {
+  test("trace file skips config step and loads directly into debugger", async ({
+    page,
+  }) => {
     // Upload a trace fixture file
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "trace-001.log"));
@@ -69,10 +85,14 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await page.getByTestId("source-step-continue").click();
 
     // Non-SPI programs skip config step and go directly to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
-  test("Load Program navigates to debugger with OK status", async ({ page }) => {
+  test("Load Program navigates to debugger with OK status", async ({
+    page,
+  }) => {
     // Upload an SPI file (non-SPI programs skip config step)
     const fileInput = page.getByTestId("file-upload-input");
     await fileInput.setInputFiles(path.join(fixturesDir, "add.jam"));
@@ -80,13 +100,17 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
 
     // Advance to step 2
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 10000,
+    });
 
     // Click Load Program
     await page.getByTestId("config-step-load").click();
 
     // Should navigate to debugger
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   });
 
   test("Back returns to step 1 with candidate preserved", async ({ page }) => {
@@ -97,7 +121,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
 
     // Advance to step 2
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 10000,
+    });
 
     // Click Back
     await page.getByTestId("config-step-back").click();
@@ -108,10 +134,14 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
 
     // The Continue button on the candidate preview should work
     await page.getByTestId("load-page-candidate-continue").click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 5000,
+    });
   });
 
-  test("invalid payload shows error and generic fallback option", async ({ page }) => {
+  test("invalid payload shows error and generic fallback option", async ({
+    page,
+  }) => {
     // Use manual hex input with bytes that might be detected as a text format but fail parsing
     // Use a trace-like prefix that will fail trace parsing
     const hexField = page.getByTestId("manual-input-field");
@@ -122,7 +152,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await expect(page.getByTestId("manual-input-success")).toBeVisible();
     await page.getByTestId("source-step-continue").click();
 
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 10000,
+    });
 
     // Should show decode error
     await expect(page.getByTestId("config-step-decode-error")).toBeVisible();
@@ -135,7 +167,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     // Summary should now render with generic format
     await expect(page.getByTestId("detection-summary")).toBeVisible();
     // Fallback button should be hidden now
-    await expect(page.getByTestId("config-step-force-generic")).not.toBeVisible();
+    await expect(
+      page.getByTestId("config-step-force-generic"),
+    ).not.toBeVisible();
   });
 
   test("step 2 renders after selecting an SPI example", async ({ page }) => {
@@ -146,7 +180,9 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await card.click();
 
     // Step 2 should render
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("detection-summary")).toBeVisible();
     await expect(page.getByTestId("config-step-load")).toBeEnabled();
   });
@@ -158,10 +194,14 @@ test.describe("Sprint 12 — Detection Summary (Wizard Step 2)", () => {
     await expect(page.getByTestId("file-upload-selected")).toBeVisible();
 
     await page.getByTestId("source-step-continue").click();
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 10000,
+    });
 
     // Verify there's no gas editor/input field
-    const gasInput = page.locator('input[data-testid="gas-editor"], [data-testid="gas-input"]');
+    const gasInput = page.locator(
+      'input[data-testid="gas-editor"], [data-testid="gas-input"]',
+    );
     await expect(gasInput).not.toBeVisible();
   });
 });

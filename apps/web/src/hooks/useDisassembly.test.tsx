@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { renderHook } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { ProgramEnvelope } from "@pvmdbg/types";
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { useDisassembly } from "./useDisassembly";
 
 const fixturesDir = resolve(__dirname, "../../../../fixtures");
@@ -29,7 +29,9 @@ describe("useDisassembly", () => {
   });
 
   it("args use omega notation, rawArgs use numeric indices", () => {
-    const bytes = new Uint8Array(readFileSync(resolve(fixturesDir, "generic/add.pvm")));
+    const bytes = new Uint8Array(
+      readFileSync(resolve(fixturesDir, "generic/add.pvm")),
+    );
     const envelope = makeEnvelope(bytes);
     const { result } = renderHook(() => useDisassembly(envelope));
 
@@ -51,7 +53,9 @@ describe("useDisassembly", () => {
   });
 
   it("instructions with no args have empty args and rawArgs", () => {
-    const bytes = new Uint8Array(readFileSync(resolve(fixturesDir, "generic/add.pvm")));
+    const bytes = new Uint8Array(
+      readFileSync(resolve(fixturesDir, "generic/add.pvm")),
+    );
     const envelope = makeEnvelope(bytes);
     const { result } = renderHook(() => useDisassembly(envelope));
 
@@ -65,7 +69,9 @@ describe("useDisassembly", () => {
   });
 
   it("all instructions have rawBytes populated", () => {
-    const bytes = new Uint8Array(readFileSync(resolve(fixturesDir, "generic/add.pvm")));
+    const bytes = new Uint8Array(
+      readFileSync(resolve(fixturesDir, "generic/add.pvm")),
+    );
     const envelope = makeEnvelope(bytes);
     const { result } = renderHook(() => useDisassembly(envelope));
 

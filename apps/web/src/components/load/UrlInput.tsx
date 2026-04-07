@@ -1,7 +1,12 @@
-import { useState, useCallback } from "react";
 import { Alert } from "@fluffylabs/shared-ui";
-import { Loader2, Globe, Check } from "lucide-react";
-import { loadUrl, detectFormat, type RawPayload, type DetectedFormat } from "@pvmdbg/content";
+import {
+  type DetectedFormat,
+  detectFormat,
+  loadUrl,
+  type RawPayload,
+} from "@pvmdbg/content";
+import { Check, Globe, Loader2 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { formatByteCount } from "./format";
 
 export interface UrlInputResult {
@@ -78,7 +83,10 @@ export function UrlInput({ onLoaded, onClear, result }: UrlInputProps) {
           className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-sm text-foreground hover:bg-muted/60 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors"
         >
           {loading ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" data-testid="url-input-loading" />
+            <Loader2
+              className="w-3.5 h-3.5 animate-spin"
+              data-testid="url-input-loading"
+            />
           ) : (
             <Globe className="w-3.5 h-3.5" />
           )}

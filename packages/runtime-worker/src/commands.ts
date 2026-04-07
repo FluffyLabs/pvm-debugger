@@ -2,7 +2,14 @@ import type { SerializedInitialMachineState } from "./utils.js";
 
 /** Worker request message. */
 export type WorkerRequest =
-  | { type: "load"; messageId: string; program: Uint8Array; initialState: SerializedInitialMachineState; spiProgram?: { program: Uint8Array; hasMetadata: boolean }; spiArgs?: Uint8Array }
+  | {
+      type: "load";
+      messageId: string;
+      program: Uint8Array;
+      initialState: SerializedInitialMachineState;
+      spiProgram?: { program: Uint8Array; hasMetadata: boolean };
+      spiArgs?: Uint8Array;
+    }
   | { type: "reset"; messageId: string }
   | { type: "step"; messageId: string; n: number }
   | { type: "getState"; messageId: string }
@@ -14,9 +21,7 @@ export type WorkerRequest =
   | { type: "shutdown"; messageId: string };
 
 /** Worker response message. */
-export type WorkerResponse =
-  | WorkerOkResponse
-  | WorkerErrorResponse;
+export type WorkerResponse = WorkerOkResponse | WorkerErrorResponse;
 
 export interface WorkerOkResponse {
   type: "ok";
@@ -34,8 +39,21 @@ export interface WorkerErrorResponse {
 export type WorkerResponsePayload =
   | { command: "load" }
   | { command: "reset" }
-  | { command: "step"; status: string; pc: number; gas: string; exitArg?: number; finished: boolean }
-  | { command: "getState"; status: string; pc: number; gas: string; registers: string[] }
+  | {
+      command: "step";
+      status: string;
+      pc: number;
+      gas: string;
+      exitArg?: number;
+      finished: boolean;
+    }
+  | {
+      command: "getState";
+      status: string;
+      pc: number;
+      gas: string;
+      registers: string[];
+    }
   | { command: "getMemory"; data: Uint8Array }
   | { command: "setRegisters" }
   | { command: "setPc" }

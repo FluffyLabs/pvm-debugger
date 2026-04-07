@@ -1,14 +1,18 @@
-import { useCallback, useRef } from "react";
-import { useDrawer, type DrawerTab } from "./DrawerContext";
-import { SettingsTab } from "../drawer/SettingsTab";
-import { HostCallTab } from "../drawer/HostCallTab";
-import { EcalliTraceTab } from "../drawer/EcalliTraceTab";
-import { LogsTab } from "../drawer/LogsTab";
-import type { HostCallInfo, MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { UseStorageTable } from "../../hooks/useStorageTable";
-import type { UsePendingChanges } from "../../hooks/usePendingChanges";
+import type {
+  HostCallInfo,
+  MachineStateSnapshot,
+  PvmLifecycle,
+} from "@pvmdbg/types";
+import { useCallback, useRef } from "react";
 import { useHostCallState } from "../../hooks/useHostCallState";
+import type { UsePendingChanges } from "../../hooks/usePendingChanges";
+import type { UseStorageTable } from "../../hooks/useStorageTable";
+import { EcalliTraceTab } from "../drawer/EcalliTraceTab";
+import { HostCallTab } from "../drawer/HostCallTab";
+import { LogsTab } from "../drawer/LogsTab";
+import { SettingsTab } from "../drawer/SettingsTab";
+import { type DrawerTab, useDrawer } from "./DrawerContext";
 
 const TABS: { id: DrawerTab; label: string }[] = [
   { id: "settings", label: "Settings" },
@@ -28,16 +32,32 @@ interface BottomDrawerProps {
   onPvmChange: (ids: string[]) => void;
   hostCallInfo: Map<string, HostCallInfo>;
   selectedPvmId: string | null;
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >;
   orchestrator: Orchestrator | null;
   storageTable: UseStorageTable;
   pendingChanges: UsePendingChanges;
   snapshotVersion: number;
 }
 
-export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapshots, orchestrator, storageTable, pendingChanges, snapshotVersion }: BottomDrawerProps) {
+export function BottomDrawer({
+  onPvmChange,
+  hostCallInfo,
+  selectedPvmId,
+  snapshots,
+  orchestrator,
+  storageTable,
+  pendingChanges,
+  snapshotVersion,
+}: BottomDrawerProps) {
   const { activeTab, height, setActiveTab, setHeight } = useDrawer();
-  const { activeHostCall } = useHostCallState(hostCallInfo, selectedPvmId, snapshots);
+  const { activeHostCall } = useHostCallState(
+    hostCallInfo,
+    selectedPvmId,
+    snapshots,
+  );
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
   const isExpanded = activeTab !== null;
@@ -117,7 +137,11 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
                 ? "text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
             }`}
-            style={activeTab === id ? { borderBottomColor: "var(--color-brand)" } : undefined}
+            style={
+              activeTab === id
+                ? { borderBottomColor: "var(--color-brand)" }
+                : undefined
+            }
           >
             {label}
           </button>
@@ -129,7 +153,15 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
             onClick={() => setActiveTab(null)}
             className="ml-auto p-0.5 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
           >
-            <svg width="10" height="10" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <line x1="2" y1="2" x2="12" y2="12" />
               <line x1="12" y1="2" x2="2" y2="12" />
             </svg>
@@ -143,10 +175,32 @@ export function BottomDrawer({ onPvmChange, hostCallInfo, selectedPvmId, snapsho
           data-testid="drawer-content"
           className="flex-1 overflow-auto px-3 py-2 text-sm text-muted-foreground min-h-0"
         >
-          {activeTab === "settings" && <SettingsTab onPvmChange={onPvmChange} />}
-          {activeTab === "ecalli_trace" && <EcalliTraceTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} activeHostCall={activeHostCall} />}
-          {activeTab === "host_call" && <HostCallTab activeHostCall={activeHostCall} orchestrator={orchestrator} storageTable={storageTable} pendingChanges={pendingChanges} />}
-          {activeTab === "logs" && <LogsTab orchestrator={orchestrator} selectedPvmId={selectedPvmId} snapshotVersion={snapshotVersion} />}
+          {activeTab === "settings" && (
+            <SettingsTab onPvmChange={onPvmChange} />
+          )}
+          {activeTab === "ecalli_trace" && (
+            <EcalliTraceTab
+              orchestrator={orchestrator}
+              selectedPvmId={selectedPvmId}
+              snapshotVersion={snapshotVersion}
+              activeHostCall={activeHostCall}
+            />
+          )}
+          {activeTab === "host_call" && (
+            <HostCallTab
+              activeHostCall={activeHostCall}
+              orchestrator={orchestrator}
+              storageTable={storageTable}
+              pendingChanges={pendingChanges}
+            />
+          )}
+          {activeTab === "logs" && (
+            <LogsTab
+              orchestrator={orchestrator}
+              selectedPvmId={selectedPvmId}
+              snapshotVersion={snapshotVersion}
+            />
+          )}
         </div>
       )}
     </div>

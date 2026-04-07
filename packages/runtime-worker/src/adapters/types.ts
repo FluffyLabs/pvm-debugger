@@ -2,7 +2,11 @@ import type { InitialMachineState, ProgramLoadContext } from "@pvmdbg/types";
 
 /** Synchronous PVM interpreter abstraction — used by both DirectAdapter and worker entry. */
 export interface SyncPvmInterpreter {
-  load(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): void;
+  load(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): void;
   reset(): void;
   step(n: number): { finished: boolean };
   getStatus(): number;

@@ -1,7 +1,17 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.0/schema.json",
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "a11y": "warn",
+      "correctness": {
+        "useExhaustiveDependencies": "warn",
+        "useHookAtTopLevel": "warn"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn"
+      }
+    }
   },
   "formatter": {
     "enabled": true,
@@ -9,11 +19,6 @@
     "indentWidth": 2
   },
   "files": {
-    "includes": [
-      "**",
-      "!**/dist/**",
-      "!**/node_modules/**",
-      "!**/.changeset/**"
-    ]
+    "includes": ["**", "!**/dist", "!**/node_modules", "!**/.changeset"]
   }
 }

@@ -1,7 +1,18 @@
-import type { PvmAdapter, AdapterStepResult, MachineStateSnapshot, InitialMachineState, ProgramLoadContext } from "@pvmdbg/types";
+import type {
+  AdapterStepResult,
+  InitialMachineState,
+  MachineStateSnapshot,
+  ProgramLoadContext,
+  PvmAdapter,
+} from "@pvmdbg/types";
 import type { SyncPvmInterpreter } from "./adapters/types.js";
 import { mapStatus } from "./status-map.js";
-import { uint8ToRegs, regsToUint8, validateRegisterIndices, applyRegisterPatch } from "./utils.js";
+import {
+  applyRegisterPatch,
+  regsToUint8,
+  uint8ToRegs,
+  validateRegisterIndices,
+} from "./utils.js";
 
 /**
  * DirectAdapter wraps a SyncPvmInterpreter and exposes the async PvmAdapter interface.
@@ -20,7 +31,11 @@ export class DirectAdapter implements PvmAdapter {
     this.pvmName = pvmName;
   }
 
-  async load(program: Uint8Array, initialState: InitialMachineState, loadContext?: ProgramLoadContext): Promise<void> {
+  async load(
+    program: Uint8Array,
+    initialState: InitialMachineState,
+    loadContext?: ProgramLoadContext,
+  ): Promise<void> {
     this.interpreter.load(program, initialState, loadContext);
   }
 

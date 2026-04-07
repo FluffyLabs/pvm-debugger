@@ -1,4 +1,10 @@
-import type { ProgramEnvelope, LoadSourceKind, ExpectedState, PageMapEntry, MemoryChunk } from "@pvmdbg/types";
+import type {
+  ExpectedState,
+  LoadSourceKind,
+  MemoryChunk,
+  PageMapEntry,
+  ProgramEnvelope,
+} from "@pvmdbg/types";
 import { encodePvmBlob } from "@pvmdbg/types";
 import { ProgramDecoder } from "@typeberry/lib/pvm-interpreter";
 import type { JsonTestVector } from "./detect.js";
@@ -29,16 +35,19 @@ export function decodeJsonTestVector(
     isWritable: p["is-writable"],
   }));
 
-  const memoryChunks: MemoryChunk[] = (data["initial-memory"] ?? []).map((m) => ({
+  const memoryChunks: MemoryChunk[] = (data["initial-memory"] ?? []).map(
+    (m) => ({
+      address: m.address,
+      data: Uint8Array.from(m.contents),
+    }),
+  );
+
+  const expectedMemory: Array<{ address: number; data: Uint8Array }> = (
+    data["expected-memory"] ?? []
+  ).map((m) => ({
     address: m.address,
     data: Uint8Array.from(m.contents),
   }));
-
-  const expectedMemory: Array<{ address: number; data: Uint8Array }> =
-    (data["expected-memory"] ?? []).map((m) => ({
-      address: m.address,
-      data: Uint8Array.from(m.contents),
-    }));
 
   const expectedState: ExpectedState | undefined =
     data["expected-status"] !== undefined

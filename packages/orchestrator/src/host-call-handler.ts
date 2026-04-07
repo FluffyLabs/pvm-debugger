@@ -1,11 +1,15 @@
+import {
+  getHostCallName,
+  serializeTrace,
+  traceMemoryWriteToBytes,
+} from "@pvmdbg/trace";
 import type {
+  EcalliTrace,
   HostCallInfo,
   HostCallMismatch,
   HostCallResumeProposal,
   MachineStateSnapshot,
-  EcalliTrace,
 } from "@pvmdbg/types";
-import { getHostCallName, traceMemoryWriteToBytes, serializeTrace } from "@pvmdbg/trace";
 import { cloneSnapshot } from "./session.js";
 
 export interface BuildHostCallResult {

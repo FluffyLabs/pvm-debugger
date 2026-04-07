@@ -1,5 +1,14 @@
-import { regsToUint8, uint8ToRegs, bigintToDecStr, decStrToBigint } from "@pvmdbg/types";
-import type { InitialMachineState, PageMapEntry, MemoryChunk } from "@pvmdbg/types";
+import type {
+  InitialMachineState,
+  MemoryChunk,
+  PageMapEntry,
+} from "@pvmdbg/types";
+import {
+  bigintToDecStr,
+  decStrToBigint,
+  regsToUint8,
+  uint8ToRegs,
+} from "@pvmdbg/types";
 
 export { regsToUint8, uint8ToRegs };
 
@@ -23,11 +32,17 @@ export function getMemoryRange(
   while (bytesRead < length) {
     const pageNumber = Math.floor(currentAddress / PAGE_SIZE);
     const offsetInPage = currentAddress % PAGE_SIZE;
-    const bytesInThisPage = Math.min(PAGE_SIZE - offsetInPage, length - bytesRead);
+    const bytesInThisPage = Math.min(
+      PAGE_SIZE - offsetInPage,
+      length - bytesRead,
+    );
 
     const page = getPageDump(pageNumber);
     if (page !== null) {
-      result.set(page.subarray(offsetInPage, offsetInPage + bytesInThisPage), bytesRead);
+      result.set(
+        page.subarray(offsetInPage, offsetInPage + bytesInThisPage),
+        bytesRead,
+      );
     }
     // If page is null, the bytes remain as zeros
 
@@ -48,27 +63,36 @@ export interface SerializedInitialMachineState {
 }
 
 /** Serialize InitialMachineState for worker transfer (bigints → decimal strings). */
-export function serializeInitialState(state: InitialMachineState): SerializedInitialMachineState {
+export function serializeInitialState(
+  state: InitialMachineState,
+): SerializedInitialMachineState {
   return {
     pc: state.pc,
     gas: bigintToDecStr(state.gas),
     registers: state.registers.map(bigintToDecStr),
     pageMap: state.pageMap,
-    memoryChunks: state.memoryChunks.map((c) => ({ address: c.address, data: c.data })),
+    memoryChunks: state.memoryChunks.map((c) => ({
+      address: c.address,
+      data: c.data,
+    })),
   };
 }
 
 /** Deserialize InitialMachineState from worker transfer (decimal strings → bigints). */
-export function deserializeInitialState(s: SerializedInitialMachineState): InitialMachineState {
+export function deserializeInitialState(
+  s: SerializedInitialMachineState,
+): InitialMachineState {
   return {
     pc: s.pc,
     gas: decStrToBigint(s.gas),
     registers: s.registers.map(decStrToBigint),
     pageMap: s.pageMap,
-    memoryChunks: s.memoryChunks.map((c: { address: number; data: Uint8Array }) => ({
-      address: c.address,
-      data: c.data instanceof Uint8Array ? c.data : new Uint8Array(c.data),
-    })),
+    memoryChunks: s.memoryChunks.map(
+      (c: { address: number; data: Uint8Array }) => ({
+        address: c.address,
+        data: c.data instanceof Uint8Array ? c.data : new Uint8Array(c.data),
+      }),
+    ),
   };
 }
 
@@ -76,13 +100,18 @@ export function deserializeInitialState(s: SerializedInitialMachineState): Initi
 export function validateRegisterIndices(regs: Map<number, bigint>): void {
   for (const idx of regs.keys()) {
     if (idx < 0 || idx >= 13 || !Number.isInteger(idx)) {
-      throw new Error(`Invalid register index: ${idx}. Must be an integer in [0, 13).`);
+      throw new Error(
+        `Invalid register index: ${idx}. Must be an integer in [0, 13).`,
+      );
     }
   }
 }
 
 /** Apply partial register writes to a full 13-register array. */
-export function applyRegisterPatch(currentRegs: bigint[], patch: Map<number, bigint>): bigint[] {
+export function applyRegisterPatch(
+  currentRegs: bigint[],
+  patch: Map<number, bigint>,
+): bigint[] {
   const result = [...currentRegs];
   for (const [idx, value] of patch) {
     result[idx] = value;

@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
+  DEFAULT_SETTINGS,
+  type DebuggerSettings,
   loadSettings,
   saveSettings,
-  DEFAULT_SETTINGS,
   stepTooltip,
-  type DebuggerSettings,
 } from "./debugger-settings";
 
 describe("debugger-settings persistence", () => {
@@ -43,19 +43,34 @@ describe("debugger-settings persistence", () => {
       autoContinuePolicy: "always_continue",
     };
     saveSettings(custom);
-    expect(localStorage.getItem("pvmdbg.settings.selectedPvmIds")).toBe('["ananas"]');
-    expect(localStorage.getItem("pvmdbg.settings.steppingMode")).toBe("n_instructions");
-    expect(localStorage.getItem("pvmdbg.settings.nInstructionsCount")).toBe("7");
-    expect(localStorage.getItem("pvmdbg.settings.autoContinuePolicy")).toBe("always_continue");
+    expect(localStorage.getItem("pvmdbg.settings.selectedPvmIds")).toBe(
+      '["ananas"]',
+    );
+    expect(localStorage.getItem("pvmdbg.settings.steppingMode")).toBe(
+      "n_instructions",
+    );
+    expect(localStorage.getItem("pvmdbg.settings.nInstructionsCount")).toBe(
+      "7",
+    );
+    expect(localStorage.getItem("pvmdbg.settings.autoContinuePolicy")).toBe(
+      "always_continue",
+    );
   });
 
   it("falls back to defaults for missing fields in stored blob", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ steppingMode: "block" }));
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ steppingMode: "block" }),
+    );
     const settings = loadSettings();
     expect(settings.steppingMode).toBe("block");
     expect(settings.selectedPvmIds).toEqual(DEFAULT_SETTINGS.selectedPvmIds);
-    expect(settings.nInstructionsCount).toBe(DEFAULT_SETTINGS.nInstructionsCount);
-    expect(settings.autoContinuePolicy).toBe(DEFAULT_SETTINGS.autoContinuePolicy);
+    expect(settings.nInstructionsCount).toBe(
+      DEFAULT_SETTINGS.nInstructionsCount,
+    );
+    expect(settings.autoContinuePolicy).toBe(
+      DEFAULT_SETTINGS.autoContinuePolicy,
+    );
   });
 });
 
@@ -69,7 +84,9 @@ describe("debugger-settings validators", () => {
       "pvmdbg.settings",
       JSON.stringify({ selectedPvmIds: ["unknown_pvm"] }),
     );
-    expect(loadSettings().selectedPvmIds).toEqual(DEFAULT_SETTINGS.selectedPvmIds);
+    expect(loadSettings().selectedPvmIds).toEqual(
+      DEFAULT_SETTINGS.selectedPvmIds,
+    );
   });
 
   it("filters out unknown PVM IDs but keeps valid ones", () => {
@@ -81,38 +98,69 @@ describe("debugger-settings validators", () => {
   });
 
   it("rejects empty PVM array and falls back to default", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ selectedPvmIds: [] }));
-    expect(loadSettings().selectedPvmIds).toEqual(DEFAULT_SETTINGS.selectedPvmIds);
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ selectedPvmIds: [] }),
+    );
+    expect(loadSettings().selectedPvmIds).toEqual(
+      DEFAULT_SETTINGS.selectedPvmIds,
+    );
   });
 
   it("rejects invalid stepping mode and falls back to default", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ steppingMode: "turbo" }));
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ steppingMode: "turbo" }),
+    );
     expect(loadSettings().steppingMode).toBe(DEFAULT_SETTINGS.steppingMode);
   });
 
   it("rejects zero N-instructions count", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ nInstructionsCount: 0 }));
-    expect(loadSettings().nInstructionsCount).toBe(DEFAULT_SETTINGS.nInstructionsCount);
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ nInstructionsCount: 0 }),
+    );
+    expect(loadSettings().nInstructionsCount).toBe(
+      DEFAULT_SETTINGS.nInstructionsCount,
+    );
   });
 
   it("rejects negative N-instructions count", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ nInstructionsCount: -5 }));
-    expect(loadSettings().nInstructionsCount).toBe(DEFAULT_SETTINGS.nInstructionsCount);
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ nInstructionsCount: -5 }),
+    );
+    expect(loadSettings().nInstructionsCount).toBe(
+      DEFAULT_SETTINGS.nInstructionsCount,
+    );
   });
 
   it("floors fractional N-instructions count", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ nInstructionsCount: 10.7 }));
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ nInstructionsCount: 10.7 }),
+    );
     expect(loadSettings().nInstructionsCount).toBe(10);
   });
 
   it("rejects NaN and Infinity counts", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ nInstructionsCount: "NaN" }));
-    expect(loadSettings().nInstructionsCount).toBe(DEFAULT_SETTINGS.nInstructionsCount);
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ nInstructionsCount: "NaN" }),
+    );
+    expect(loadSettings().nInstructionsCount).toBe(
+      DEFAULT_SETTINGS.nInstructionsCount,
+    );
   });
 
   it("rejects invalid auto-continue policy", () => {
-    localStorage.setItem("pvmdbg.settings", JSON.stringify({ autoContinuePolicy: "yolo" }));
-    expect(loadSettings().autoContinuePolicy).toBe(DEFAULT_SETTINGS.autoContinuePolicy);
+    localStorage.setItem(
+      "pvmdbg.settings",
+      JSON.stringify({ autoContinuePolicy: "yolo" }),
+    );
+    expect(loadSettings().autoContinuePolicy).toBe(
+      DEFAULT_SETTINGS.autoContinuePolicy,
+    );
   });
 });
 

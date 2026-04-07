@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 23 — Logs Tab", () => {
   /** Load a simple (non-trace) program. */
@@ -7,7 +7,9 @@ test.describe("Sprint 23 — Logs Tab", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /**
@@ -20,7 +22,9 @@ test.describe("Sprint 23 — Logs Tab", () => {
     const card = page.getByTestId("example-card-trace-001");
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the Logs tab. */
@@ -34,7 +38,9 @@ test.describe("Sprint 23 — Logs Tab", () => {
     await page.getByTestId("drawer-tab-settings").click();
     await expect(page.getByTestId("settings-tab")).toBeVisible();
     await page.getByTestId("auto-continue-radio-always_continue").click();
-    await expect(page.getByTestId("auto-continue-radio-always_continue")).toBeChecked();
+    await expect(
+      page.getByTestId("auto-continue-radio-always_continue"),
+    ).toBeChecked();
   }
 
   /**
@@ -56,10 +62,14 @@ test.describe("Sprint 23 — Logs Tab", () => {
     await openLogsTab(page);
 
     await expect(page.getByTestId("logs-empty")).toBeVisible();
-    await expect(page.getByTestId("logs-empty")).toHaveText("No log messages yet.");
+    await expect(page.getByTestId("logs-empty")).toHaveText(
+      "No log messages yet.",
+    );
   });
 
-  test("after a log host call, decoded text appears with step number", async ({ page }) => {
+  test("after a log host call, decoded text appears with step number", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAlwaysContinue(page);
     await runAndPause(page);
@@ -85,13 +95,17 @@ test.describe("Sprint 23 — Logs Tab", () => {
     await openLogsTab(page);
 
     // Grant clipboard permissions
-    await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page
+      .context()
+      .grantPermissions(["clipboard-read", "clipboard-write"]);
 
     // Click Copy
     await page.getByTestId("logs-copy-button").click();
 
     // Read clipboard content
-    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    const clipboardText = await page.evaluate(() =>
+      navigator.clipboard.readText(),
+    );
 
     const entries = page.getByTestId("log-entry");
     const count = await entries.count();
@@ -116,7 +130,9 @@ test.describe("Sprint 23 — Logs Tab", () => {
       // Entries exist — clicking Clear should hide them
       await page.getByTestId("logs-clear-button").click();
       await expect(page.getByTestId("logs-empty")).toBeVisible();
-      await expect(page.getByTestId("logs-empty")).toHaveText("No log messages yet.");
+      await expect(page.getByTestId("logs-empty")).toHaveText(
+        "No log messages yet.",
+      );
     } else {
       // No entries yet — Clear on empty should keep the empty state
       await page.getByTestId("logs-clear-button").click();

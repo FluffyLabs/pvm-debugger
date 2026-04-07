@@ -1,14 +1,20 @@
-import type { SyncPvmInterpreter } from "./adapters/types.js";
-import type { WorkerRequest, WorkerResponse, WorkerResponsePayload } from "./commands.js";
-import { deserializeInitialState } from "./utils.js";
-import { mapStatus } from "./status-map.js";
 import { bigintToDecStr, decStrToBigint, uint8ToRegs } from "@pvmdbg/types";
+import type { SyncPvmInterpreter } from "./adapters/types.js";
+import type {
+  WorkerRequest,
+  WorkerResponse,
+  WorkerResponsePayload,
+} from "./commands.js";
+import { mapStatus } from "./status-map.js";
+import { deserializeInitialState } from "./utils.js";
 
 /**
  * Create a handler function that processes WorkerRequest messages
  * and returns WorkerResponse messages.
  */
-export function createWorkerCommandHandler(interpreter: SyncPvmInterpreter): (msg: WorkerRequest) => WorkerResponse {
+export function createWorkerCommandHandler(
+  interpreter: SyncPvmInterpreter,
+): (msg: WorkerRequest) => WorkerResponse {
   return (msg: WorkerRequest): WorkerResponse => {
     try {
       const payload = handleCommand(interpreter, msg);
@@ -20,7 +26,10 @@ export function createWorkerCommandHandler(interpreter: SyncPvmInterpreter): (ms
   };
 }
 
-function handleCommand(interpreter: SyncPvmInterpreter, msg: WorkerRequest): WorkerResponsePayload {
+function handleCommand(
+  interpreter: SyncPvmInterpreter,
+  msg: WorkerRequest,
+): WorkerResponsePayload {
   switch (msg.type) {
     case "load": {
       const initialState = deserializeInitialState(msg.initialState);
@@ -97,7 +106,10 @@ interface WorkerSelf {
  * Install the worker entry point on a worker-like object (typically `self` in a web worker).
  * Listens for messages and dispatches them to the handler.
  */
-export function installWorkerEntry(workerSelf: WorkerSelf, interpreter: SyncPvmInterpreter): void {
+export function installWorkerEntry(
+  workerSelf: WorkerSelf,
+  interpreter: SyncPvmInterpreter,
+): void {
   const handler = createWorkerCommandHandler(interpreter);
   workerSelf.onmessage = (event: { data: WorkerRequest }) => {
     const response = handler(event.data);

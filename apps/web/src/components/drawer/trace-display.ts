@@ -1,6 +1,10 @@
-import type { TraceEntry, TraceTermination, EcalliTrace } from "@pvmdbg/types";
+import {
+  compareTraces,
+  getHostCallName,
+  type TraceMismatch,
+} from "@pvmdbg/trace";
+import type { EcalliTrace, TraceEntry, TraceTermination } from "@pvmdbg/types";
 import { fromHex } from "@pvmdbg/types";
-import { getHostCallName, compareTraces, type TraceMismatch } from "@pvmdbg/trace";
 
 /** A displayable row — either a host-call entry or a termination. */
 export type TraceDisplayRow =
@@ -50,7 +54,9 @@ export function formatEntryLines(entry: TraceEntry): string[] {
 
   // Memory reads
   for (const mr of entry.memoryReads) {
-    lines.push(`  mem read [0x${mr.address.toString(16)}] len=${mr.length} ${mr.dataHex}`);
+    lines.push(
+      `  mem read [0x${mr.address.toString(16)}] len=${mr.length} ${mr.dataHex}`,
+    );
   }
 
   // Memory writes
@@ -81,7 +87,9 @@ export function formatEntryLines(entry: TraceEntry): string[] {
 
 /** Format a termination row. */
 export function formatTerminationLines(term: TraceTermination): string[] {
-  const lines: string[] = [`${term.kind}${term.arg !== undefined ? ` ${term.arg}` : ""}`];
+  const lines: string[] = [
+    `${term.kind}${term.arg !== undefined ? ` ${term.arg}` : ""}`,
+  ];
   lines.push(`  pc = ${term.pc}, gas = ${term.gas}`);
   return lines;
 }
@@ -104,6 +112,8 @@ export function decodeLogMessage(entry: TraceEntry): string | null {
     const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     return text;
   } catch {
-    return longest.dataHex.startsWith("0x") ? longest.dataHex : `0x${longest.dataHex}`;
+    return longest.dataHex.startsWith("0x")
+      ? longest.dataHex
+      : `0x${longest.dataHex}`;
   }
 }

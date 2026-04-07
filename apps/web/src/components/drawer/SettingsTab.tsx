@@ -1,6 +1,6 @@
+import { AutoContinueConfig } from "./AutoContinueConfig";
 import { PvmSelectionConfig } from "./PvmSelectionConfig";
 import { SteppingModeConfig } from "./SteppingModeConfig";
-import { AutoContinueConfig } from "./AutoContinueConfig";
 
 interface SettingsTabProps {
   onPvmChange: (ids: string[]) => void;

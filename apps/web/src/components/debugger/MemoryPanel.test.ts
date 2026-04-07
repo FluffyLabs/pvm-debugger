@@ -1,8 +1,12 @@
-import { describe, it, expect } from "vitest";
-import type { PageMapEntry, MemoryChunk } from "@pvmdbg/types";
-import { expandPages, computeInitializedPages, getPageLabel } from "./MemoryPanel";
-import { sanitizeHexInput } from "./HexDump";
+import type { MemoryChunk, PageMapEntry } from "@pvmdbg/types";
+import { describe, expect, it } from "vitest";
 import { computeChangedOffsets } from "../../hooks/useMemoryReader";
+import { sanitizeHexInput } from "./HexDump";
+import {
+  computeInitializedPages,
+  expandPages,
+  getPageLabel,
+} from "./MemoryPanel";
 
 describe("expandPages", () => {
   it("returns empty array for empty page map", () => {
@@ -13,7 +17,9 @@ describe("expandPages", () => {
     const pageMap: PageMapEntry[] = [
       { address: 0x20000, length: 4096, isWritable: true },
     ];
-    expect(expandPages(pageMap)).toEqual([{ address: 0x20000, isWritable: true }]);
+    expect(expandPages(pageMap)).toEqual([
+      { address: 0x20000, isWritable: true },
+    ]);
   });
 
   it("expands multi-page segment into individual 4 KiB pages", () => {
@@ -54,7 +60,9 @@ describe("expandPages", () => {
     const pageMap: PageMapEntry[] = [
       { address: 0x20000, length: 100, isWritable: true },
     ];
-    expect(expandPages(pageMap)).toEqual([{ address: 0x20000, isWritable: true }]);
+    expect(expandPages(pageMap)).toEqual([
+      { address: 0x20000, isWritable: true },
+    ]);
   });
 
   it("handles zero-length segment by producing no pages", () => {
@@ -81,7 +89,9 @@ describe("computeInitializedPages", () => {
     const chunks: MemoryChunk[] = [
       { address: 0x10ff0, data: new Uint8Array(32) }, // spans 0x10000 and 0x11000
     ];
-    expect(computeInitializedPages(chunks)).toEqual(new Set([0x10000, 0x11000]));
+    expect(computeInitializedPages(chunks)).toEqual(
+      new Set([0x10000, 0x11000]),
+    );
   });
 
   it("returns empty set for zero-length chunk", () => {
@@ -96,7 +106,9 @@ describe("computeInitializedPages", () => {
       { address: 0x10000, data: new Uint8Array(10) },
       { address: 0x30000, data: new Uint8Array(10) },
     ];
-    expect(computeInitializedPages(chunks)).toEqual(new Set([0x10000, 0x30000]));
+    expect(computeInitializedPages(chunks)).toEqual(
+      new Set([0x10000, 0x30000]),
+    );
   });
 });
 
@@ -104,11 +116,15 @@ describe("getPageLabel", () => {
   const emptyInit = new Set<number>();
 
   it("returns generic label for non-SPI programs", () => {
-    expect(getPageLabel(0x20000, true, "generic", emptyInit)).toBe("Page @ 0x20000");
+    expect(getPageLabel(0x20000, true, "generic", emptyInit)).toBe(
+      "Page @ 0x20000",
+    );
   });
 
   it("returns Arguments for SPI page at 0xFEFF0000", () => {
-    expect(getPageLabel(0xfeff0000, true, "jam_spi", emptyInit)).toBe("Arguments");
+    expect(getPageLabel(0xfeff0000, true, "jam_spi", emptyInit)).toBe(
+      "Arguments",
+    );
   });
 
   it("returns Stack for SPI pages in 0xFEFE0000..0xFEFF0000 range", () => {
@@ -130,7 +146,9 @@ describe("getPageLabel", () => {
   });
 
   it("falls back to generic label for SPI non-writable pages below 0x10000", () => {
-    expect(getPageLabel(0x5000, false, "jam_spi", emptyInit)).toBe("Page @ 0x5000");
+    expect(getPageLabel(0x5000, false, "jam_spi", emptyInit)).toBe(
+      "Page @ 0x5000",
+    );
   });
 
   it("returns Stack not Arguments at 0xFEFEF000 (one page below Arguments)", () => {
@@ -204,8 +222,8 @@ describe("computeChangedOffsets", () => {
   });
 
   it("detects single byte change at offset 0", () => {
-    const a = new Uint8Array([0x00, 0xFF]);
-    const b = new Uint8Array([0x01, 0xFF]);
+    const a = new Uint8Array([0x00, 0xff]);
+    const b = new Uint8Array([0x01, 0xff]);
     expect(computeChangedOffsets(a, b)).toEqual(new Set([0]));
   });
 });

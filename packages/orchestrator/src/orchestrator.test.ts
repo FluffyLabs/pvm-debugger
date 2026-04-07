@@ -1,25 +1,30 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { parseTrace, serializeTrace } from "@pvmdbg/trace";
 import type {
-  PvmAdapter,
   AdapterStepResult,
-  MachineStateSnapshot,
-  InitialMachineState,
-  ProgramEnvelope,
   EcalliTrace,
   HostCallInfo,
-  PvmLifecycle,
+  InitialMachineState,
+  MachineStateSnapshot,
   OrchestratorEvents,
+  ProgramEnvelope,
+  PvmAdapter,
+  PvmLifecycle,
 } from "@pvmdbg/types";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  buildHostCallInfo,
+  serializeRecordedTrace,
+} from "./host-call-handler.js";
 import { Orchestrator } from "./orchestrator.js";
-import { buildHostCallInfo, serializeRecordedTrace } from "./host-call-handler.js";
 import { TypedEventEmitter } from "./typed-event-emitter.js";
-import { parseTrace, serializeTrace } from "@pvmdbg/trace";
 
 // ---------------------------------------------------------------------------
 // Mock PvmAdapter — controllable behavior for orchestrator tests
 // ---------------------------------------------------------------------------
 
-function defaultSnapshot(overrides?: Partial<MachineStateSnapshot>): MachineStateSnapshot {
+function defaultSnapshot(
+  overrides?: Partial<MachineStateSnapshot>,
+): MachineStateSnapshot {
   return {
     pc: 0,
     gas: 1_000_000n,
@@ -56,7 +61,11 @@ class MockAdapter implements PvmAdapter {
     this._state = defaultSnapshot(opts?.initialSnapshot);
     this._stepBehavior =
       opts?.stepBehavior ??
-      (() => ({ status: "ok" as const, pc: this._state.pc, gas: this._state.gas }));
+      (() => ({
+        status: "ok" as const,
+        pc: this._state.pc,
+        gas: this._state.gas,
+      }));
   }
 
   /** Configure a sequence of step results (one per step(1) call). */
@@ -323,7 +332,9 @@ describe("Orchestrator", () => {
       await orchestrator.loadProgram(envelope);
 
       const pm = orchestrator.getPageMap();
-      expect(pm).toEqual([{ address: 0x10000, length: 4096, isWritable: true }]);
+      expect(pm).toEqual([
+        { address: 0x10000, length: 4096, isWritable: true },
+      ]);
     });
   });
 
@@ -437,9 +448,7 @@ describe("Orchestrator", () => {
 
     it("emits pvmStateChanged('paused') on breakpoint hit", async () => {
       const adapter = new MockAdapter("pvm-a", "A");
-      adapter.setStepSequence([
-        { status: "ok", pc: 5, gas: 999n },
-      ]);
+      adapter.setStepSequence([{ status: "ok", pc: 5, gas: 999n }]);
 
       orchestrator.addPvm(adapter);
       await orchestrator.loadProgram(makeEnvelope());
@@ -626,7 +635,9 @@ describe("Orchestrator", () => {
 
       const proposal = result.results.get("pvm-a")!.hostCall!.resumeProposal!;
       expect(proposal.traceMatches).toBe(false);
-      expect(proposal.mismatches.some((m) => m.field === "hostCallIndex")).toBe(true);
+      expect(proposal.mismatches.some((m) => m.field === "hostCallIndex")).toBe(
+        true,
+      );
     });
 
     it("resumeHostCall applies effects and transitions to paused", async () => {
@@ -638,7 +649,9 @@ describe("Orchestrator", () => {
       await orchestrator.step(1);
 
       // Verify PVM is in paused_host_call
-      expect(orchestrator.getSnapshot("pvm-a")!.lifecycle).toBe("paused_host_call");
+      expect(orchestrator.getSnapshot("pvm-a")!.lifecycle).toBe(
+        "paused_host_call",
+      );
 
       const events: PvmLifecycle[] = [];
       orchestrator.on("pvmStateChanged", (_id, _s, lc) => events.push(lc));
@@ -657,9 +670,9 @@ describe("Orchestrator", () => {
       orchestrator.addPvm(adapter);
       await orchestrator.loadProgram(makeEnvelope());
 
-      await expect(
-        orchestrator.resumeHostCall("pvm-a", {}),
-      ).rejects.toThrow("paused_host_call");
+      await expect(orchestrator.resumeHostCall("pvm-a", {})).rejects.toThrow(
+        "paused_host_call",
+      );
     });
 
     it("resumeHostCall records trace entry using actual applied effects", async () => {
@@ -825,7 +838,9 @@ describe("Orchestrator", () => {
       await orchestrator.loadProgram(makeEnvelope());
 
       const errors: Array<[string, string]> = [];
-      orchestrator.on("error", (pvmId, err) => errors.push([pvmId, err.message]));
+      orchestrator.on("error", (pvmId, err) =>
+        errors.push([pvmId, err.message]),
+      );
 
       const result = await orchestrator.step(1);
 
@@ -940,8 +955,12 @@ describe("Orchestrator", () => {
       await expect(
         orchestrator.setRegisters("pvm-a", new Map([[0, 1n]])),
       ).rejects.toThrow("only allowed while paused");
-      await expect(orchestrator.setPc("pvm-a", 0)).rejects.toThrow("only allowed while paused");
-      await expect(orchestrator.setGas("pvm-a", 0n)).rejects.toThrow("only allowed while paused");
+      await expect(orchestrator.setPc("pvm-a", 0)).rejects.toThrow(
+        "only allowed while paused",
+      );
+      await expect(orchestrator.setGas("pvm-a", 0n)).rejects.toThrow(
+        "only allowed while paused",
+      );
       await expect(
         orchestrator.setMemory("pvm-a", 0, new Uint8Array(1)),
       ).rejects.toThrow("only allowed while paused");
@@ -1034,7 +1053,9 @@ describe("Orchestrator", () => {
 
       // Mutation of original should not affect stored copy
       trace.prelude.programHex = "ccdd";
-      expect(orchestrator.getReferenceTrace("pvm-a")!.prelude.programHex).toBe("aabb");
+      expect(orchestrator.getReferenceTrace("pvm-a")!.prelude.programHex).toBe(
+        "aabb",
+      );
     });
 
     it("getReferenceTrace returns undefined when no trace is set", () => {
@@ -1071,8 +1092,12 @@ describe("Orchestrator", () => {
     });
 
     it("requireSession throws for unknown pvmId", () => {
-      expect(() => orchestrator.getRecordedTrace("ghost")).toThrow("Unknown PVM");
-      expect(() => orchestrator.getPendingHostCall("ghost")).toThrow("Unknown PVM");
+      expect(() => orchestrator.getRecordedTrace("ghost")).toThrow(
+        "Unknown PVM",
+      );
+      expect(() => orchestrator.getPendingHostCall("ghost")).toThrow(
+        "Unknown PVM",
+      );
     });
   });
 
@@ -1091,14 +1116,20 @@ describe("Orchestrator", () => {
 
       const envelope = makeEnvelope({
         loadContext: {
-          spiProgram: { program: new Uint8Array([0x01, 0x02]), hasMetadata: false },
+          spiProgram: {
+            program: new Uint8Array([0x01, 0x02]),
+            hasMetadata: false,
+          },
           spiArgs: new Uint8Array([0x03]),
         },
       });
       await orchestrator.loadProgram(envelope);
 
       expect(receivedContext).toBeDefined();
-      const ctx = receivedContext as { spiProgram: { program: Uint8Array }; spiArgs: Uint8Array };
+      const ctx = receivedContext as {
+        spiProgram: { program: Uint8Array };
+        spiArgs: Uint8Array;
+      };
       expect(ctx.spiProgram.program).toEqual(new Uint8Array([0x01, 0x02]));
       expect(ctx.spiArgs).toEqual(new Uint8Array([0x03]));
 
@@ -1167,7 +1198,12 @@ describe("Orchestrator", () => {
       await orchestrator.loadProgram(makeEnvelope({ trace: referenceTrace }));
 
       // Trigger first host call — consumes entry[0]
-      adapter.setStepBehavior(() => ({ status: "host", pc: 10, gas: 900n, exitArg: 0 }));
+      adapter.setStepBehavior(() => ({
+        status: "host",
+        pc: 10,
+        gas: 900n,
+        exitArg: 0,
+      }));
       adapter.setSnapshot({ pc: 10, gas: 900n });
       await orchestrator.step(1);
       await orchestrator.resumeHostCall("pvm-a", {});
@@ -1176,7 +1212,12 @@ describe("Orchestrator", () => {
       await orchestrator.reset();
 
       // Trigger host call again — should match entry[0] again
-      adapter.setStepBehavior(() => ({ status: "host", pc: 10, gas: 900n, exitArg: 0 }));
+      adapter.setStepBehavior(() => ({
+        status: "host",
+        pc: 10,
+        gas: 900n,
+        exitArg: 0,
+      }));
       adapter.setSnapshot({ pc: 10, gas: 900n });
       const result = await orchestrator.step(1);
 
@@ -1213,7 +1254,9 @@ describe("Orchestrator", () => {
       });
       await orchestrator.loadProgram(newEnvelope);
 
-      expect(orchestrator.getProgramBytes()).toEqual(new Uint8Array([0xaa, 0xbb]));
+      expect(orchestrator.getProgramBytes()).toEqual(
+        new Uint8Array([0xaa, 0xbb]),
+      );
       expect(orchestrator.getSnapshot("pvm-a")!.lifecycle).toBe("paused");
 
       const trace = orchestrator.getRecordedTrace("pvm-a");

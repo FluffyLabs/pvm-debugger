@@ -1,9 +1,12 @@
 import type { MachineStateSnapshot, PvmLifecycle } from "@pvmdbg/types";
-import { lifecycleLabel } from "./value-format";
 import { AVAILABLE_PVMS } from "../../lib/debugger-settings";
+import { lifecycleLabel } from "./value-format";
 
 interface PvmTabsProps {
-  snapshots: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
+  snapshots: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >;
   selectedPvmId: string | null;
   onSelect: (pvmId: string) => void;
   /** Concise divergence summary text (e.g. "PC, Gas, 2 registers"). */
@@ -34,7 +37,10 @@ function dotColor(lifecycle: PvmLifecycle): string {
 }
 
 /** Format error text for inline display. */
-function formatErrorText(lifecycle: PvmLifecycle, errorMsg?: string): string | null {
+function formatErrorText(
+  lifecycle: PvmLifecycle,
+  errorMsg?: string,
+): string | null {
   if (lifecycle === "timed_out") return "Timeout";
   if (lifecycle === "failed") return `Error: ${errorMsg ?? "unknown"}`;
   return null;
@@ -76,7 +82,11 @@ export function PvmTabs({
   }
 
   return (
-    <div data-testid="pvm-tabs" className="flex items-center gap-1 ml-auto" role="tablist">
+    <div
+      data-testid="pvm-tabs"
+      className="flex items-center gap-1 ml-auto"
+      role="tablist"
+    >
       {allIds.map((pvmId) => {
         const entry = snapshots.get(pvmId);
         const isActive = active.has(pvmId);

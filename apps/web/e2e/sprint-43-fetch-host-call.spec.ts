@@ -1,19 +1,26 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 43 — Fetch Host Call Handler", () => {
   /** Load an all-ecalli example and navigate through SPI config to debugger. */
-  async function loadAllEcalliExample(page: import("@playwright/test").Page, variant: "refine" | "accumulate") {
+  async function loadAllEcalliExample(
+    page: import("@playwright/test").Page,
+    variant: "refine" | "accumulate",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-all-ecalli-${variant}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
 
     // Wait for config step and click load
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
 
     // Wait for debugger page
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   function pvmStatus(page: import("@playwright/test").Page) {
@@ -37,7 +44,10 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
   }
 
   /** Step through host calls until we find a fetch (index 1), up to maxSteps. */
-  async function stepToFetchHostCall(page: import("@playwright/test").Page, maxSteps = 30) {
+  async function stepToFetchHostCall(
+    page: import("@playwright/test").Page,
+    maxSteps = 30,
+  ) {
     for (let i = 0; i < maxSteps; i++) {
       const fetchHandler = page.getByTestId("fetch-host-call");
       const isVisible = await fetchHandler.isVisible().catch(() => false);
@@ -48,7 +58,9 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
       // Wait a moment for the PVM to process
       const status = await pvmStatus(page).textContent();
       if (!status?.includes("Host Call")) {
-        await expect(pvmStatus(page)).toHaveText("Host Call", { timeout: 10000 }).catch(() => {});
+        await expect(pvmStatus(page))
+          .toHaveText("Host Call", { timeout: 10000 })
+          .catch(() => {});
         const newStatus = await pvmStatus(page).textContent();
         if (!newStatus?.includes("Host Call")) return false;
       }
@@ -62,7 +74,9 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
       await setNeverAutoContinue(page);
       await runToHostCall(page);
 
-      await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByTestId("host-call-tab")).toBeVisible({
+        timeout: 5000,
+      });
 
       // Step to a fetch host call
       const found = await stepToFetchHostCall(page);
@@ -78,7 +92,9 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
       await setNeverAutoContinue(page);
       await runToHostCall(page);
 
-      await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByTestId("host-call-tab")).toBeVisible({
+        timeout: 5000,
+      });
       const found = await stepToFetchHostCall(page);
       expect(found).toBe(true);
 
@@ -99,7 +115,9 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
       await setNeverAutoContinue(page);
       await runToHostCall(page);
 
-      await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByTestId("host-call-tab")).toBeVisible({
+        timeout: 5000,
+      });
       const found = await stepToFetchHostCall(page);
       expect(found).toBe(true);
 
@@ -146,7 +164,9 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
 
       // Count fetch-specific badges (those containing "fetch")
       const allBadges = await badges.allTextContents();
-      const fetchCount = allBadges.filter((b) => b.toLowerCase().includes("fetch")).length;
+      const fetchCount = allBadges.filter((b) =>
+        b.toLowerCase().includes("fetch"),
+      ).length;
       expect(fetchCount).toBeGreaterThan(0);
     });
   });
@@ -157,7 +177,9 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
       await setNeverAutoContinue(page);
       await runToHostCall(page);
 
-      await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+      await expect(page.getByTestId("host-call-tab")).toBeVisible({
+        timeout: 5000,
+      });
 
       // Step to a fetch host call
       const found = await stepToFetchHostCall(page);

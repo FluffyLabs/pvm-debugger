@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
   /** Load a trace-backed program and wait for the debugger page. */
-  async function loadTraceProgram(page: import("@playwright/test").Page, exampleId = "io-trace") {
+  async function loadTraceProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "io-trace",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open settings and set auto-continue to never. */
@@ -28,13 +33,17 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
     await expect(pvmStatus(page)).toHaveText("Host Call", { timeout: 15000 });
   }
 
-  test("two-column layout renders with sidebar and content", async ({ page }) => {
+  test("two-column layout renders with sidebar and content", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setNeverAutoContinue(page);
     await runToHostCall(page);
 
     // Drawer should auto-open to host call tab
-    await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("host-call-tab")).toBeVisible({
+      timeout: 5000,
+    });
 
     // Verify two-column layout
     await expect(page.getByTestId("host-call-sidebar")).toBeVisible();
@@ -46,11 +55,15 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
     await setNeverAutoContinue(page);
     await runToHostCall(page);
 
-    await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("host-call-tab")).toBeVisible({
+      timeout: 5000,
+    });
 
     // Verify "Changes auto-applied" text appears
     await expect(page.getByTestId("auto-applied-text")).toBeVisible();
-    await expect(page.getByTestId("auto-applied-text")).toContainText("Changes auto-applied");
+    await expect(page.getByTestId("auto-applied-text")).toContainText(
+      "Changes auto-applied",
+    );
   });
 
   test("memory write count visible in sidebar", async ({ page }) => {
@@ -58,7 +71,9 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
     await setNeverAutoContinue(page);
     await runToHostCall(page);
 
-    await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("host-call-tab")).toBeVisible({
+      timeout: 5000,
+    });
 
     // The sidebar should be visible
     await expect(page.getByTestId("host-call-sidebar")).toBeVisible();
@@ -99,7 +114,9 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
     await setNeverAutoContinue(page);
     await runToHostCall(page);
 
-    await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("host-call-tab")).toBeVisible({
+      timeout: 5000,
+    });
 
     // Check if NONE toggle is available (only for lookup/read/info)
     const noneToggle = page.getByTestId("none-toggle");
@@ -139,7 +156,9 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
     expect(count).toBeGreaterThanOrEqual(0); // May not always be visible if host call index doesn't match
   });
 
-  test("pending changes shows coalesced memory write ranges", async ({ page }) => {
+  test("pending changes shows coalesced memory write ranges", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setNeverAutoContinue(page);
     await runToHostCall(page);
@@ -161,13 +180,17 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
     }
   });
 
-  test("storage read handler shows key info and status indicator", async ({ page }) => {
+  test("storage read handler shows key info and status indicator", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setNeverAutoContinue(page);
     await runToHostCall(page);
 
     // Check if we landed on a storage host call
-    await expect(page.getByTestId("host-call-tab")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("host-call-tab")).toBeVisible({
+      timeout: 5000,
+    });
 
     // Step through host calls looking for a storage host call
     // Try using "next-button" to continue past host calls
@@ -184,7 +207,9 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
       // Wait for next host call pause
       const status = await pvmStatus(page).textContent();
       if (status?.includes("Host Call")) continue;
-      await expect(pvmStatus(page)).toHaveText("Host Call", { timeout: 5000 }).catch(() => {});
+      await expect(pvmStatus(page))
+        .toHaveText("Host Call", { timeout: 5000 })
+        .catch(() => {});
       const newStatus = await pvmStatus(page).textContent();
       if (!newStatus?.includes("Host Call")) break;
     }
@@ -203,7 +228,9 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
 
     // Both all-ecalli examples should be visible
     const refineCard = page.getByTestId("example-card-all-ecalli-refine");
-    const accumulateCard = page.getByTestId("example-card-all-ecalli-accumulate");
+    const accumulateCard = page.getByTestId(
+      "example-card-all-ecalli-accumulate",
+    );
 
     await expect(refineCard).toBeVisible({ timeout: 15000 });
     await expect(accumulateCard).toBeVisible({ timeout: 15000 });
@@ -232,7 +259,9 @@ test.describe("Sprint 42 — Host Call UX Redesign and GP 0.7.2", () => {
     }
 
     // Wait for debugger page
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Open ecalli trace tab
     await page.getByTestId("drawer-tab-ecalli_trace").click();

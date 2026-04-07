@@ -1,5 +1,5 @@
-import type { RawPayload } from "../program-envelope.js";
 import { findExampleEntry } from "../examples-manifest.js";
+import type { RawPayload } from "../program-envelope.js";
 
 /**
  * Load an example by ID from the manifest.
@@ -23,7 +23,9 @@ export async function loadExample(
     // Remote example — fetch directly
     const response = await fetch(entry.url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch example ${exampleId}: ${response.status}`);
+      throw new Error(
+        `Failed to fetch example ${exampleId}: ${response.status}`,
+      );
     }
     bytes = new Uint8Array(await response.arrayBuffer());
   } else if (entry.file) {
@@ -32,7 +34,9 @@ export async function loadExample(
     const url = new URL(entry.file, base);
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to load fixture ${entry.file}: ${response.status}`);
+      throw new Error(
+        `Failed to load fixture ${entry.file}: ${response.status}`,
+      );
     }
     bytes = new Uint8Array(await response.arrayBuffer());
   } else {

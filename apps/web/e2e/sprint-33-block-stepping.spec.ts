@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 33 — Block Stepping (Real)", () => {
   /** Load a program and wait for the debugger page to be visible. */
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "fibonacci") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "fibonacci",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Switch to Block stepping mode in the settings drawer tab. */
@@ -19,13 +24,17 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
   }
 
   /** Get the current PC value as a number. */
-  async function getCurrentPc(page: import("@playwright/test").Page): Promise<number> {
+  async function getCurrentPc(
+    page: import("@playwright/test").Page,
+  ): Promise<number> {
     const text = await page.getByTestId("pc-value").textContent();
     return parseInt(text!.replace("0x", ""), 16);
   }
 
   /** Get the block header PCs visible in the instructions panel. */
-  async function getBlockHeaderPcs(page: import("@playwright/test").Page): Promise<number[]> {
+  async function getBlockHeaderPcs(
+    page: import("@playwright/test").Page,
+  ): Promise<number[]> {
     const headers = page.locator("[data-testid^='block-header-']");
     const count = await headers.count();
     const pcs: number[] = [];
@@ -38,7 +47,9 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     return pcs;
   }
 
-  test("block stepping advances past the current block boundary", async ({ page }) => {
+  test("block stepping advances past the current block boundary", async ({
+    page,
+  }) => {
     await loadProgram(page);
     await setBlockMode(page);
 
@@ -49,9 +60,12 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     await page.getByTestId("step-button").click();
 
     // Wait for PC to change
-    await expect(pcValue).not.toHaveText(`0x${initialPc.toString(16).padStart(4, "0")}`, {
-      timeout: 5000,
-    });
+    await expect(pcValue).not.toHaveText(
+      `0x${initialPc.toString(16).padStart(4, "0")}`,
+      {
+        timeout: 5000,
+      },
+    );
 
     const newPc = await getCurrentPc(page);
 
@@ -60,7 +74,9 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     expect(newPc).not.toBe(initialPc);
   });
 
-  test("stepping from an unknown PC falls back to single step", async ({ page }) => {
+  test("stepping from an unknown PC falls back to single step", async ({
+    page,
+  }) => {
     await loadProgram(page, "step-test");
     await setBlockMode(page);
 
@@ -71,12 +87,17 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
 
     // Step once to verify it works
     await page.getByTestId("step-button").click();
-    await expect(pcValue).not.toHaveText(`0x${initialPc.toString(16).padStart(4, "0")}`, {
-      timeout: 5000,
-    });
+    await expect(pcValue).not.toHaveText(
+      `0x${initialPc.toString(16).padStart(4, "0")}`,
+      {
+        timeout: 5000,
+      },
+    );
   });
 
-  test("block stepping follows branch targets, not sequential block order", async ({ page }) => {
+  test("block stepping follows branch targets, not sequential block order", async ({
+    page,
+  }) => {
     // Use fibonacci which has conditional branches
     await loadProgram(page, "fibonacci");
     await setBlockMode(page);
@@ -89,9 +110,12 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
       await page.getByTestId("step-button").click();
       // Wait for PC to change from last known value
       const lastPc = visitedPcs[visitedPcs.length - 1];
-      await expect(pcValue).not.toHaveText(`0x${lastPc.toString(16).padStart(4, "0")}`, {
-        timeout: 5000,
-      });
+      await expect(pcValue).not.toHaveText(
+        `0x${lastPc.toString(16).padStart(4, "0")}`,
+        {
+          timeout: 5000,
+        },
+      );
       visitedPcs.push(await getCurrentPc(page));
     }
 
@@ -101,7 +125,9 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     expect(new Set(visitedPcs).size).toBeGreaterThanOrEqual(2);
   });
 
-  test("run mode with block stepping stops on a breakpoint inside a block", async ({ page }) => {
+  test("run mode with block stepping stops on a breakpoint inside a block", async ({
+    page,
+  }) => {
     await loadProgram(page, "fibonacci");
     await setBlockMode(page);
 
@@ -134,7 +160,9 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     await page.getByTestId("run-button").click();
 
     // Wait for execution to stop
-    await expect(page.getByTestId("run-button")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByTestId("run-button")).toBeVisible({
+      timeout: 10000,
+    });
 
     // PC should match the breakpoint
     await expect(pcValue).toHaveText(targetPcText!, { timeout: 5000 });

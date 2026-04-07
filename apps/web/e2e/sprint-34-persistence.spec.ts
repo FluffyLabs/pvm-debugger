@@ -1,10 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 34 — Persistence + Reload", () => {
   /** Load an example program by card ID and wait for the debugger page. */
-  const SPI_EXAMPLES: Record<string, string> = { "add-jam": "wat", "fibonacci-jam": "wat" };
+  const SPI_EXAMPLES: Record<string, string> = {
+    "add-jam": "wat",
+    "fibonacci-jam": "wat",
+  };
 
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "step-test",
+  ) {
     await page.goto("/#/load");
     const categoryId = SPI_EXAMPLES[exampleId];
     if (categoryId) {
@@ -14,10 +20,14 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
     await expect(card).toBeVisible({ timeout: 15000 });
     await card.click();
     if (categoryId) {
-      await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+      await expect(page.getByTestId("config-step")).toBeVisible({
+        timeout: 15000,
+      });
       await page.getByTestId("config-step-load").click();
     }
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -26,7 +36,9 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
     await expect(page.getByTestId("settings-tab")).toBeVisible();
   }
 
-  test("refreshing restores the same program at initial state", async ({ page }) => {
+  test("refreshing restores the same program at initial state", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Verify debugger page and PVM status
@@ -40,14 +52,18 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
     await page.reload();
 
     // Should restore to debugger page without going through load wizard
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
 
     // PC should be the same initial value (fresh initial state)
     await expect(page.getByTestId("pc-value")).toHaveText(initialPc!);
   });
 
-  test("restored state is fresh initial state, not mid-execution", async ({ page }) => {
+  test("restored state is fresh initial state, not mid-execution", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Capture the initial PC before stepping
@@ -63,7 +79,9 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
 
     // Reload — should restore to initial state, not the stepped state
     await page.reload();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("pc-value")).toHaveText(initialPc!);
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
   });
@@ -93,7 +111,9 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
 
     // Reload the page — program should restore, settings should persist
     await page.reload();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await openSettings(page);
 
     // Block mode should still be selected
@@ -111,16 +131,23 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
           (window as any).__loadPageEverSeen = true;
         }
       });
-      observer.observe(document.documentElement, { childList: true, subtree: true });
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
     });
 
     await page.reload();
 
     // Wait for the debugger page to appear (restore complete)
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
 
     // Verify load page was never rendered during restore
-    const loadPageEverSeen = await page.evaluate(() => (window as any).__loadPageEverSeen);
+    const loadPageEverSeen = await page.evaluate(
+      () => (window as any).__loadPageEverSeen,
+    );
     expect(loadPageEverSeen).toBe(false);
   });
 
@@ -135,12 +162,16 @@ test.describe("Sprint 34 — Persistence + Reload", () => {
     await page.reload();
 
     // Should restore to the debugger with the same SPI entrypoint
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await expect(page.getByTestId("pc-value")).toHaveText("0x0005");
     await expect(page.getByTestId("pvm-status-typeberry")).toHaveText("OK");
   });
 
-  test("corrupted persistence falls back to loader silently", async ({ page }) => {
+  test("corrupted persistence falls back to loader silently", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Corrupt the persisted payload

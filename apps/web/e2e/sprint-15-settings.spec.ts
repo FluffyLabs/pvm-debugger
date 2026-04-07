@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 15 — Settings Tab", () => {
   /** Load a program and wait for the debugger page to be visible. */
@@ -7,7 +7,9 @@ test.describe("Sprint 15 — Settings Tab", () => {
     const card = page.getByTestId("example-card-step-test");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -45,7 +47,9 @@ test.describe("Sprint 15 — Settings Tab", () => {
 
     // Reload — RestoreGate restores the session and stays on debugger
     await page.reload();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await openSettings(page);
 
     // Block mode should still be selected
@@ -58,18 +62,26 @@ test.describe("Sprint 15 — Settings Tab", () => {
 
     // Switch to Always
     await page.getByTestId("auto-continue-radio-always_continue").click();
-    await expect(page.getByTestId("auto-continue-radio-always_continue")).toBeChecked();
+    await expect(
+      page.getByTestId("auto-continue-radio-always_continue"),
+    ).toBeChecked();
 
     // Reload — RestoreGate restores the session and stays on debugger
     await page.reload();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await openSettings(page);
 
     // Always should still be selected
-    await expect(page.getByTestId("auto-continue-radio-always_continue")).toBeChecked();
+    await expect(
+      page.getByTestId("auto-continue-radio-always_continue"),
+    ).toBeChecked();
   });
 
-  test("changing N-instructions count updates the stored value", async ({ page }) => {
+  test("changing N-instructions count updates the stored value", async ({
+    page,
+  }) => {
     await loadProgram(page);
     await openSettings(page);
 
@@ -83,11 +95,15 @@ test.describe("Sprint 15 — Settings Tab", () => {
 
     // Reload — RestoreGate restores the session and stays on debugger
     await page.reload();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
     await openSettings(page);
 
     // N-Instructions mode should still be selected
-    await expect(page.getByTestId("stepping-radio-n_instructions")).toBeChecked();
+    await expect(
+      page.getByTestId("stepping-radio-n_instructions"),
+    ).toBeChecked();
     await expect(page.getByTestId("n-instructions-count")).toHaveValue("25");
   });
 

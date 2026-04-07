@@ -55,7 +55,8 @@ export function tryDecode<T>(
  */
 export function encodeVarU64(v: bigint): Uint8Array {
   if (v < 0n) throw new Error("encodeVarU64: negative value");
-  if (v > 0xFFFF_FFFF_FFFF_FFFFn) throw new Error("encodeVarU64: value exceeds u64");
+  if (v > 0xffff_ffff_ffff_ffffn)
+    throw new Error("encodeVarU64: value exceeds u64");
 
   // Determine width: find smallest n (1..9) such that v < 2^(7*n)
   // For n=1: v < 2^7 = 128
@@ -80,10 +81,10 @@ export function encodeVarU64(v: bigint): Uint8Array {
 
   if (n === 9) {
     // Lead byte is 0xFF, remaining 8 bytes are LE
-    result[0] = 0xFF;
+    result[0] = 0xff;
     let rem = v;
     for (let i = 1; i < 9; i++) {
-      result[i] = Number(rem & 0xFFn);
+      result[i] = Number(rem & 0xffn);
       rem >>= 8n;
     }
     return result;
@@ -98,7 +99,7 @@ export function encodeVarU64(v: bigint): Uint8Array {
 
   // Lead byte: (n-1) leading 1-bits as prefix, then (8-n) payload bits
   // n=2 → 10xxxxxx (0x80), n=3 → 110xxxxx (0xC0), etc.
-  const prefix = (0xFF << (9 - n)) & 0xFF;
+  const prefix = (0xff << (9 - n)) & 0xff;
   const payloadBits = 8 - n;
   const leadByte = prefix | (Number(leadPayload) & ((1 << payloadBits) - 1));
 
@@ -107,7 +108,7 @@ export function encodeVarU64(v: bigint): Uint8Array {
   // Write trailing bytes LE
   let rem = trailingValue;
   for (let i = 1; i < n; i++) {
-    result[i] = Number(rem & 0xFFn);
+    result[i] = Number(rem & 0xffn);
     rem >>= 8n;
   }
 
@@ -118,8 +119,12 @@ export function encodeVarU64(v: bigint): Uint8Array {
  * Decode a VarU64 from bytes at offset.
  * Returns { value, bytesRead }.
  */
-export function decodeVarU64(bytes: Uint8Array, offset: number = 0): DecodeResult<bigint> {
-  if (offset >= bytes.length) throw new Error("decodeVarU64: offset out of bounds");
+export function decodeVarU64(
+  bytes: Uint8Array,
+  offset: number = 0,
+): DecodeResult<bigint> {
+  if (offset >= bytes.length)
+    throw new Error("decodeVarU64: offset out of bounds");
 
   const lead = bytes[offset];
 
@@ -132,7 +137,9 @@ export function decodeVarU64(bytes: Uint8Array, offset: number = 0): DecodeResul
   }
 
   if (offset + n > bytes.length) {
-    throw new Error(`decodeVarU64: not enough bytes (need ${n}, have ${bytes.length - offset})`);
+    throw new Error(
+      `decodeVarU64: not enough bytes (need ${n}, have ${bytes.length - offset})`,
+    );
   }
 
   if (n === 1) {
@@ -170,10 +177,13 @@ export function decodeVarU64(bytes: Uint8Array, offset: number = 0): DecodeResul
 // ---------------------------------------------------------------------------
 
 export function encodeU8(v: number): Uint8Array {
-  return new Uint8Array([v & 0xFF]);
+  return new Uint8Array([v & 0xff]);
 }
 
-export function decodeU8(bytes: Uint8Array, offset: number = 0): DecodeResult<number> {
+export function decodeU8(
+  bytes: Uint8Array,
+  offset: number = 0,
+): DecodeResult<number> {
   if (offset >= bytes.length) throw new Error("decodeU8: not enough bytes");
   return { value: bytes[offset], bytesRead: 1 };
 }
@@ -185,8 +195,12 @@ export function encodeU16LE(v: number): Uint8Array {
   return buf;
 }
 
-export function decodeU16LE(bytes: Uint8Array, offset: number = 0): DecodeResult<number> {
-  if (offset + 2 > bytes.length) throw new Error("decodeU16LE: not enough bytes");
+export function decodeU16LE(
+  bytes: Uint8Array,
+  offset: number = 0,
+): DecodeResult<number> {
+  if (offset + 2 > bytes.length)
+    throw new Error("decodeU16LE: not enough bytes");
   const dv = new DataView(bytes.buffer, bytes.byteOffset + offset, 2);
   return { value: dv.getUint16(0, true), bytesRead: 2 };
 }
@@ -198,8 +212,12 @@ export function encodeU32LE(v: number): Uint8Array {
   return buf;
 }
 
-export function decodeU32LE(bytes: Uint8Array, offset: number = 0): DecodeResult<number> {
-  if (offset + 4 > bytes.length) throw new Error("decodeU32LE: not enough bytes");
+export function decodeU32LE(
+  bytes: Uint8Array,
+  offset: number = 0,
+): DecodeResult<number> {
+  if (offset + 4 > bytes.length)
+    throw new Error("decodeU32LE: not enough bytes");
   const dv = new DataView(bytes.buffer, bytes.byteOffset + offset, 4);
   return { value: dv.getUint32(0, true), bytesRead: 4 };
 }
@@ -211,8 +229,12 @@ export function encodeU64LE(v: bigint): Uint8Array {
   return buf;
 }
 
-export function decodeU64LE(bytes: Uint8Array, offset: number = 0): DecodeResult<bigint> {
-  if (offset + 8 > bytes.length) throw new Error("decodeU64LE: not enough bytes");
+export function decodeU64LE(
+  bytes: Uint8Array,
+  offset: number = 0,
+): DecodeResult<bigint> {
+  if (offset + 8 > bytes.length)
+    throw new Error("decodeU64LE: not enough bytes");
   const dv = new DataView(bytes.buffer, bytes.byteOffset + offset, 8);
   return { value: dv.getBigUint64(0, true), bytesRead: 8 };
 }
@@ -228,8 +250,12 @@ export function encodeBytes32(data: Uint8Array): Uint8Array {
   return new Uint8Array(data);
 }
 
-export function decodeBytes32(bytes: Uint8Array, offset: number = 0): DecodeResult<Uint8Array> {
-  if (offset + 32 > bytes.length) throw new Error("decodeBytes32: not enough bytes");
+export function decodeBytes32(
+  bytes: Uint8Array,
+  offset: number = 0,
+): DecodeResult<Uint8Array> {
+  if (offset + 32 > bytes.length)
+    throw new Error("decodeBytes32: not enough bytes");
   return { value: bytes.slice(offset, offset + 32), bytesRead: 32 };
 }
 
@@ -247,7 +273,10 @@ export function encodeBytesVarLen(data: Uint8Array): Uint8Array {
 }
 
 /** Decode a variable-length byte blob. */
-export function decodeBytesVarLen(bytes: Uint8Array, offset: number = 0): DecodeResult<Uint8Array> {
+export function decodeBytesVarLen(
+  bytes: Uint8Array,
+  offset: number = 0,
+): DecodeResult<Uint8Array> {
   const lenResult = decodeVarU64(bytes, offset);
   const dataLen = Number(lenResult.value);
   const dataStart = offset + lenResult.bytesRead;
@@ -264,7 +293,10 @@ export function decodeBytesVarLen(bytes: Uint8Array, offset: number = 0): Decode
  * Encode a variable-length sequence: VarU64 count + items.
  * Uses a callback to encode each item, avoiding intermediate allocation.
  */
-export function encodeSequenceVarLen<T>(items: T[], encodeFn: (item: T) => Uint8Array): Uint8Array {
+export function encodeSequenceVarLen<T>(
+  items: T[],
+  encodeFn: (item: T) => Uint8Array,
+): Uint8Array {
   const countBytes = encodeVarU64(BigInt(items.length));
   const encodedItems = items.map(encodeFn);
   const totalItemBytes = encodedItems.reduce((sum, b) => sum + b.length, 0);

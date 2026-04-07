@@ -1,12 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { Orchestrator } from "@pvmdbg/orchestrator";
-import type { PvmLifecycle, MachineStateSnapshot, HostCallResumeEffects, HostCallResumeProposal, HostCallInfo, StepResult } from "@pvmdbg/types";
+import type {
+  HostCallInfo,
+  HostCallResumeEffects,
+  HostCallResumeProposal,
+  MachineStateSnapshot,
+  PvmLifecycle,
+  StepResult,
+} from "@pvmdbg/types";
 import { isTerminal, toHex } from "@pvmdbg/types";
-import type { SteppingMode, AutoContinuePolicy } from "../lib/debugger-settings";
-import type { UseStorageTable } from "./useStorageTable";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type {
+  AutoContinuePolicy,
+  SteppingMode,
+} from "../lib/debugger-settings";
 import { deriveKeyHex } from "../lib/storage-utils";
+import {
+  buildBlocksFromInstructions,
+  computeMultiPvmBlockStepCount,
+} from "./useBlockStepping";
 import type { DecodedInstruction } from "./useDisassembly";
-import { buildBlocksFromInstructions, computeMultiPvmBlockStepCount } from "./useBlockStepping";
+import type { UseStorageTable } from "./useStorageTable";
 
 interface UseDebuggerActionsParams {
   orchestrator: Orchestrator | null;
@@ -26,7 +39,10 @@ interface UseDebuggerActionsParams {
   /** Decoded instructions for block stepping (from useDisassembly). */
   instructions?: DecodedInstruction[];
   /** Current PVM snapshots for multi-PVM block stepping. */
-  snapshots?: Map<string, { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }>;
+  snapshots?: Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  >;
   /** Get pending host-call effects from the usePendingChanges hook. */
   getHostCallEffects?: () => HostCallResumeEffects | null;
   /** Clear pending host-call effects (e.g. on reset). */
@@ -49,7 +65,10 @@ interface DebuggerActions {
 /** Resolve stepping mode to the number of steps to execute.
  *  For block mode, use computeBlockStepSize() instead — it needs
  *  disassembly + snapshot data that this simple resolver doesn't have. */
-export function stepsForMode(mode: SteppingMode, nInstructionsCount: number): number {
+export function stepsForMode(
+  mode: SteppingMode,
+  nInstructionsCount: number,
+): number {
   switch (mode) {
     case "instruction":
       return 1;
@@ -63,7 +82,9 @@ export function stepsForMode(mode: SteppingMode, nInstructionsCount: number): nu
 }
 
 /** Convert a trace-backed resume proposal to effects, or return empty effects. */
-export function proposalToEffects(proposal?: HostCallResumeProposal): HostCallResumeEffects {
+export function proposalToEffects(
+  proposal?: HostCallResumeProposal,
+): HostCallResumeEffects {
   if (!proposal) return {};
   return {
     registerWrites: proposal.registerWrites,
@@ -266,7 +287,19 @@ export function useDebuggerActions({
       setIsStepInProgress(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, steppingMode, nInstructionsCount, storageTable, instructions, snapshots, getHostCallEffects]);
+  }, [
+    orchestrator,
+    isStepInProgress,
+    isRunning,
+    selectedLifecycle,
+    setIsStepInProgress,
+    steppingMode,
+    nInstructionsCount,
+    storageTable,
+    instructions,
+    snapshots,
+    getHostCallEffects,
+  ]);
 
   /** Step button: always executes exactly one instruction. */
   const step = useCallback(() => {
@@ -284,7 +317,15 @@ export function useDebuggerActions({
       setError(err instanceof Error ? err.message : String(err));
       setIsStepInProgress(false);
     });
-  }, [orchestrator, isStepInProgress, isRunning, selectedLifecycle, setIsStepInProgress, storageTable, getHostCallEffects]);
+  }, [
+    orchestrator,
+    isStepInProgress,
+    isRunning,
+    selectedLifecycle,
+    setIsStepInProgress,
+    storageTable,
+    getHostCallEffects,
+  ]);
 
   const run = useCallback(() => {
     if (!orchestrator || isRunning || isRunningRef.current) return;
@@ -298,7 +339,11 @@ export function useDebuggerActions({
       try {
         // Resume any pending host calls before starting the run loop
         // (user explicitly clicked Run, so always resume).
-        await resumeAllHostCalls(orchestrator, storageTable, getHostCallEffects);
+        await resumeAllHostCalls(
+          orchestrator,
+          storageTable,
+          getHostCallEffects,
+        );
 
         while (!stopFlagRef.current) {
           // Batch multiple steps before yielding to React.
@@ -359,7 +404,16 @@ export function useDebuggerActions({
 
     loop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orchestrator, isRunning, selectedLifecycle, steppingMode, nInstructionsCount, autoContinuePolicy, storageTable, getHostCallEffects]);
+  }, [
+    orchestrator,
+    isRunning,
+    selectedLifecycle,
+    steppingMode,
+    nInstructionsCount,
+    autoContinuePolicy,
+    storageTable,
+    getHostCallEffects,
+  ]);
 
   const pause = useCallback(() => {
     stopFlagRef.current = true;
@@ -441,5 +495,16 @@ export function useDebuggerActions({
     return () => document.removeEventListener("keydown", handler);
   }, [next, step, run, pause, reset]);
 
-  return { next, step, run, pause, reset, load, canStep, isRunning, error, clearError };
+  return {
+    next,
+    step,
+    run,
+    pause,
+    reset,
+    load,
+    canStep,
+    isRunning,
+    error,
+    clearError,
+  };
 }

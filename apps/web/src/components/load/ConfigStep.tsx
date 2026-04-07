@@ -1,18 +1,18 @@
-import { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router";
-import { Button, Alert } from "@fluffylabs/shared-ui";
-import { ArrowLeft, Loader2, Play } from "lucide-react";
+import { Alert, Button } from "@fluffylabs/shared-ui";
 import {
   createProgramEnvelope,
-  decodeGeneric,
-  type RawPayload,
   type DetectedFormat,
+  decodeGeneric,
   type ExampleEntry,
+  type RawPayload,
   type SpiEntrypointParams,
 } from "@pvmdbg/content";
 import type { ProgramEnvelope } from "@pvmdbg/types";
-import { useOrchestrator } from "../../hooks/useOrchestrator";
+import { ArrowLeft, Loader2, Play } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { useDebuggerSettings } from "../../hooks/useDebuggerSettings";
+import { useOrchestrator } from "../../hooks/useOrchestrator";
 import { persistSession } from "../../hooks/usePersistence";
 import { DetectionSummary } from "./DetectionSummary";
 import { SpiEntrypointConfig } from "./SpiEntrypointConfig";
@@ -29,7 +29,12 @@ function isSpiFormat(kind: DetectedFormat["kind"]): boolean {
   return kind === "jam_spi" || kind === "jam_spi_with_metadata";
 }
 
-export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }: ConfigStepProps) {
+export function ConfigStep({
+  rawPayload,
+  detectedFormat,
+  exampleEntry,
+  onBack,
+}: ConfigStepProps) {
   const navigate = useNavigate();
   const { initialize, setEnvelope } = useOrchestrator();
   const { settings } = useDebuggerSettings();
@@ -59,9 +64,14 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
     try {
       let env: ProgramEnvelope;
       if (forceGeneric) {
-        env = decodeGeneric(rawPayload.bytes, rawPayload.sourceKind, rawPayload.sourceId);
+        env = decodeGeneric(
+          rawPayload.bytes,
+          rawPayload.sourceKind,
+          rawPayload.sourceId,
+        );
       } else {
-        const options = showSpiConfig && spiParams ? { entrypoint: spiParams } : undefined;
+        const options =
+          showSpiConfig && spiParams ? { entrypoint: spiParams } : undefined;
         env = createProgramEnvelope(rawPayload, options);
       }
       return { envelope: env, decodeError: null };
@@ -77,7 +87,10 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
   // - No envelope (decode error)
   // - Loading in progress
   // - SPI config is shown but has validation error (spiParams === null after config reported)
-  const loadDisabled = !envelope || loading || (showSpiConfig && spiConfigReady && spiParams === null);
+  const loadDisabled =
+    !envelope ||
+    loading ||
+    (showSpiConfig && spiConfigReady && spiParams === null);
 
   async function handleLoad() {
     if (!envelope) return;
@@ -113,8 +126,13 @@ export function ConfigStep({ rawPayload, detectedFormat, exampleEntry, onBack }:
   }
 
   return (
-    <div data-testid="config-step" className="flex flex-col items-start p-8 h-full overflow-auto max-w-2xl mx-auto w-full">
-      <h1 className="text-lg font-semibold text-foreground mb-1">Program Summary</h1>
+    <div
+      data-testid="config-step"
+      className="flex flex-col items-start p-8 h-full overflow-auto max-w-2xl mx-auto w-full"
+    >
+      <h1 className="text-lg font-semibold text-foreground mb-1">
+        Program Summary
+      </h1>
       <p className="text-sm text-muted-foreground mb-6">
         Review the detected program before loading it into the debugger.
       </p>

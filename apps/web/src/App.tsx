@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef, type ReactNode } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router";
-import { Header, AppsSidebar, Content } from "@fluffylabs/shared-ui";
+import manifest from "@fixtures/examples.json";
+import { AppsSidebar, Content, Header } from "@fluffylabs/shared-ui";
 import { initManifest } from "@pvmdbg/content";
-import { OrchestratorProvider } from "./context/orchestrator";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { Navigate, Route, Routes, useNavigate } from "react-router";
 import { DebuggerSettingsProvider } from "./context/debugger-settings";
-import { LoadPage } from "./pages/LoadPage";
-import { DebuggerPage } from "./pages/DebuggerPage";
+import { OrchestratorProvider } from "./context/orchestrator";
 import { useOrchestrator } from "./hooks/useOrchestrator";
-import { loadSettings } from "./lib/debugger-settings";
 import {
+  clearProgramSession,
   hasPersistedSession,
   restoreSession,
-  clearProgramSession,
 } from "./hooks/usePersistence";
-import manifest from "@fixtures/examples.json";
+import { loadSettings } from "./lib/debugger-settings";
+import { DebuggerPage } from "./pages/DebuggerPage";
+import { LoadPage } from "./pages/LoadPage";
 
 // Initialize the examples manifest once at module load
 initManifest(manifest);
@@ -74,8 +74,13 @@ function RestoreGate({ children }: { children: ReactNode }) {
 
   if (restoring) {
     return (
-      <div data-testid="restore-gate" className="flex items-center justify-center h-full">
-        <span className="text-sm text-muted-foreground">Restoring session...</span>
+      <div
+        data-testid="restore-gate"
+        className="flex items-center justify-center h-full"
+      >
+        <span className="text-sm text-muted-foreground">
+          Restoring session...
+        </span>
       </div>
     );
   }
@@ -86,23 +91,23 @@ function RestoreGate({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <DebuggerSettingsProvider>
-    <OrchestratorProvider>
-      <div className="app-shell" data-testid="app-shell">
-        <Header toolNameSrc="/tool-name.svg" ghRepoName="pvm-debugger" />
-        <div className="app-body">
-          <AppsSidebar activeLink="debugger" enableDarkModeToggle />
-          <Content className="app-content">
-            <RestoreGate>
-              <Routes>
-                <Route path="/" element={<DebuggerPage />} />
-                <Route path="/load" element={<LoadPage />} />
-                <Route path="*" element={<Navigate to="/load" replace />} />
-              </Routes>
-            </RestoreGate>
-          </Content>
+      <OrchestratorProvider>
+        <div className="app-shell" data-testid="app-shell">
+          <Header toolNameSrc="/tool-name.svg" ghRepoName="pvm-debugger" />
+          <div className="app-body">
+            <AppsSidebar activeLink="debugger" enableDarkModeToggle />
+            <Content className="app-content">
+              <RestoreGate>
+                <Routes>
+                  <Route path="/" element={<DebuggerPage />} />
+                  <Route path="/load" element={<LoadPage />} />
+                  <Route path="*" element={<Navigate to="/load" replace />} />
+                </Routes>
+              </RestoreGate>
+            </Content>
+          </div>
         </div>
-      </div>
-    </OrchestratorProvider>
+      </OrchestratorProvider>
     </DebuggerSettingsProvider>
   );
 }

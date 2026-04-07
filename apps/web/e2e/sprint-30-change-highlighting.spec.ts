@@ -1,13 +1,18 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 30 — Registers Change Highlighting", () => {
   /** Load a program and wait for the debugger page. */
-  async function loadProgram(page: import("@playwright/test").Page, exampleId = "step-test") {
+  async function loadProgram(
+    page: import("@playwright/test").Page,
+    exampleId = "step-test",
+  ) {
     await page.goto("/#/load");
     const card = page.getByTestId(`example-card-${exampleId}`);
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Open the settings tab in the bottom drawer. */
@@ -17,13 +22,17 @@ test.describe("Sprint 30 — Registers Change Highlighting", () => {
   }
 
   /** Attempt to enable the Ananas PVM via settings. */
-  async function tryEnableAnanas(page: import("@playwright/test").Page): Promise<boolean> {
+  async function tryEnableAnanas(
+    page: import("@playwright/test").Page,
+  ): Promise<boolean> {
     await openSettings(page);
     const ananasSwitch = page.getByTestId("pvm-switch-ananas");
     await expect(ananasSwitch).toBeVisible();
     await ananasSwitch.click();
     try {
-      await expect(page.getByTestId("pvm-tab-ananas")).toHaveRole("tab", { timeout: 15000 });
+      await expect(page.getByTestId("pvm-tab-ananas")).toHaveRole("tab", {
+        timeout: 15000,
+      });
       return true;
     } catch {
       return false;
@@ -36,7 +45,9 @@ test.describe("Sprint 30 — Registers Change Highlighting", () => {
     const card = page.getByTestId("example-card-io-trace");
     await expect(card).toBeVisible();
     await card.click();
-    await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("debugger-page")).toBeVisible({
+      timeout: 15000,
+    });
   }
 
   /** Set auto-continue policy. */
@@ -46,14 +57,18 @@ test.describe("Sprint 30 — Registers Change Highlighting", () => {
   ) {
     await openSettings(page);
     await page.getByTestId(`auto-continue-radio-${policy}`).click();
-    await expect(page.getByTestId(`auto-continue-radio-${policy}`)).toBeChecked();
+    await expect(
+      page.getByTestId(`auto-continue-radio-${policy}`),
+    ).toBeChecked();
   }
 
   test("stepping marks changed registers with Δ", async ({ page }) => {
     await loadProgram(page);
 
     // Before stepping, no delta markers should be visible
-    await expect(page.locator("[data-testid^='register-delta-']")).not.toBeVisible();
+    await expect(
+      page.locator("[data-testid^='register-delta-']"),
+    ).not.toBeVisible();
 
     // Step once — the step-test program uses LOAD_IMM which changes a register
     const nextBtn = page.getByTestId("next-button");
@@ -102,11 +117,15 @@ test.describe("Sprint 30 — Registers Change Highlighting", () => {
     // The register delta from step 1 should no longer be visible
     // (registers didn't change in the terminal step)
     if (firstDeltaTestId) {
-      await expect(page.getByTestId(firstDeltaTestId)).not.toBeVisible({ timeout: 5000 });
+      await expect(page.getByTestId(firstDeltaTestId)).not.toBeVisible({
+        timeout: 5000,
+      });
     }
   });
 
-  test("PC and gas show changed-border state after stepping", async ({ page }) => {
+  test("PC and gas show changed-border state after stepping", async ({
+    page,
+  }) => {
     await loadProgram(page);
 
     // Step once — PC and gas should change
@@ -123,23 +142,32 @@ test.describe("Sprint 30 — Registers Change Highlighting", () => {
     await expect(gasDelta).toBeVisible({ timeout: 5000 });
   });
 
-  test("pending host-call changes render during a paused host call", async ({ page }) => {
+  test("pending host-call changes render during a paused host call", async ({
+    page,
+  }) => {
     await loadTraceProgram(page);
     await setAutoContinuePolicy(page, "never");
 
     // Run to first host call
     await page.getByTestId("run-button").click();
-    await expect(page.getByTestId("status-badge")).toHaveText("Host Call", { timeout: 15000 });
+    await expect(page.getByTestId("status-badge")).toHaveText("Host Call", {
+      timeout: 15000,
+    });
 
     // The pending changes panel should be visible (the trace provides a resume proposal)
     const pending = page.getByTestId("pending-changes");
     await expect(pending).toBeVisible({ timeout: 5000 });
   });
 
-  test("multi-PVM register divergence shows a warning indicator", async ({ page }) => {
+  test("multi-PVM register divergence shows a warning indicator", async ({
+    page,
+  }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(!enabled, "PVM switching did not stabilize (pre-existing sprint-24 issue)");
+    test.skip(
+      !enabled,
+      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
+    );
 
     // Run to completion — PVMs may diverge
     const runBtn = page.getByTestId("run-button");
@@ -147,17 +175,24 @@ test.describe("Sprint 30 — Registers Change Highlighting", () => {
     await runBtn.click();
 
     // Wait for terminal state
-    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(/bg-gray-500/, {
-      timeout: 15000,
-    });
+    await expect(page.getByTestId("pvm-dot-typeberry")).toHaveClass(
+      /bg-gray-500/,
+      {
+        timeout: 15000,
+      },
+    );
 
     // If PVMs diverged on registers, a divergence indicator should appear
-    const divergenceIndicators = page.locator("[data-testid^='register-divergence-']");
+    const divergenceIndicators = page.locator(
+      "[data-testid^='register-divergence-']",
+    );
     const count = await divergenceIndicators.count();
     if (count > 0) {
       // Click the first one — popover should open
       await divergenceIndicators.first().click();
-      const popover = page.locator("[data-testid^='register-divergence-popover-']");
+      const popover = page.locator(
+        "[data-testid^='register-divergence-popover-']",
+      );
       await expect(popover.first()).toBeVisible({ timeout: 5000 });
     }
   });

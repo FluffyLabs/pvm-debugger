@@ -1,9 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /** SPI examples that require expanding a collapsed category and going through config step. */
-const SPI_EXAMPLES: Record<string, string> = { "add-jam": "wat", "fibonacci-jam": "wat", "as-add": "assemblyscript" };
+const SPI_EXAMPLES: Record<string, string> = {
+  "add-jam": "wat",
+  "fibonacci-jam": "wat",
+  "as-add": "assemblyscript",
+};
 
-async function loadProgram(page: import("@playwright/test").Page, exampleId = "fibonacci") {
+async function loadProgram(
+  page: import("@playwright/test").Page,
+  exampleId = "fibonacci",
+) {
   await page.goto("/#/load");
   const categoryId = SPI_EXAMPLES[exampleId];
   if (categoryId) {
@@ -13,10 +20,14 @@ async function loadProgram(page: import("@playwright/test").Page, exampleId = "f
   await expect(card).toBeVisible();
   await card.click();
   if (categoryId) {
-    await expect(page.getByTestId("config-step")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("config-step")).toBeVisible({
+      timeout: 15000,
+    });
     await page.getByTestId("config-step-load").click();
   }
-  await expect(page.getByTestId("debugger-page")).toBeVisible({ timeout: 15000 });
+  await expect(page.getByTestId("debugger-page")).toBeVisible({
+    timeout: 15000,
+  });
 }
 
 test.describe("Sprint 27 — Block Folding + Virtualization", () => {
@@ -32,7 +43,9 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     await expect(header0).toContainText("Block 0");
   });
 
-  test("clicking a block header collapses its instructions", async ({ page }) => {
+  test("clicking a block header collapses its instructions", async ({
+    page,
+  }) => {
     await loadProgram(page, "add-jam");
 
     const panel = page.getByTestId("instructions-panel");
@@ -45,7 +58,9 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     // Count instruction rows visible in block 0 before collapse.
     // We rely on instruction-row-* testids being present when expanded.
     const scrollArea = page.getByTestId("instructions-scroll");
-    const rowsBefore = await scrollArea.locator("[data-testid^='instruction-row-']").count();
+    const rowsBefore = await scrollArea
+      .locator("[data-testid^='instruction-row-']")
+      .count();
     expect(rowsBefore).toBeGreaterThan(0);
 
     // Find a block that is NOT the one containing the current PC
@@ -64,7 +79,9 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     await expect(lastHeader).toHaveAttribute("aria-expanded", "false");
 
     // Instruction rows should decrease
-    const rowsAfter = await scrollArea.locator("[data-testid^='instruction-row-']").count();
+    const rowsAfter = await scrollArea
+      .locator("[data-testid^='instruction-row-']")
+      .count();
     expect(rowsAfter).toBeLessThan(rowsBefore);
   });
 
@@ -85,17 +102,23 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     // Collapse
     await lastHeader.click();
     await expect(lastHeader).toHaveAttribute("aria-expanded", "false");
-    const rowsCollapsed = await scrollArea.locator("[data-testid^='instruction-row-']").count();
+    const rowsCollapsed = await scrollArea
+      .locator("[data-testid^='instruction-row-']")
+      .count();
 
     // Expand
     await lastHeader.click();
     await expect(lastHeader).toHaveAttribute("aria-expanded", "true");
-    const rowsExpanded = await scrollArea.locator("[data-testid^='instruction-row-']").count();
+    const rowsExpanded = await scrollArea
+      .locator("[data-testid^='instruction-row-']")
+      .count();
 
     expect(rowsExpanded).toBeGreaterThan(rowsCollapsed);
   });
 
-  test("large program keeps DOM row count bounded via virtualization", async ({ page }) => {
+  test("large program keeps DOM row count bounded via virtualization", async ({
+    page,
+  }) => {
     // Load a larger program (fibonacci has many instructions)
     await loadProgram(page, "fibonacci");
 
@@ -104,7 +127,11 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
 
     const scrollArea = page.getByTestId("instructions-scroll");
     // Count all mounted rows (both headers and instruction rows)
-    const mountedItems = await scrollArea.locator("[data-testid^='instruction-row-'], [data-testid^='block-header-']").count();
+    const mountedItems = await scrollArea
+      .locator(
+        "[data-testid^='instruction-row-'], [data-testid^='block-header-']",
+      )
+      .count();
 
     // With virtualization, the mounted count should be much less than the total
     // instruction count. A reasonable upper bound: the overscan (15) * 2 + visible rows
@@ -114,7 +141,9 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     expect(mountedItems).toBeGreaterThan(0);
   });
 
-  test("current PC highlight still works with block headers", async ({ page }) => {
+  test("current PC highlight still works with block headers", async ({
+    page,
+  }) => {
     await loadProgram(page, "add-jam");
 
     // add-jam starts at PC=5
