@@ -23,7 +23,10 @@ jobs:
         run: npm ci
 
       - name: Build packages
-        run: npm run build
+        run: |
+          for pkg in packages/*/; do
+            npm run build -w "$pkg"
+          done
 
       - name: Lint
         run: npx biome check .

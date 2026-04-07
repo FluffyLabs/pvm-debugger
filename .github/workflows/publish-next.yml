@@ -54,9 +54,7 @@ jobs:
         run: |
           for pkg_dir in packages/*/; do
             echo "Publishing $pkg_dir..."
-            cd "$pkg_dir"
-            npm publish --tag next --provenance --access public || echo "Failed to publish $pkg_dir (may already exist)"
-            cd "${{ github.workspace }}"
+            (cd "$pkg_dir" && npm publish --tag next --provenance --access public) || echo "Failed to publish $pkg_dir (may already exist)"
           done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
