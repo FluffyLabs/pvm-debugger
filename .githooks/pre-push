@@ -1,0 +1,16 @@
+#!/bin/sh
+# Pre-push hook: runs the same checks as CI to prevent failures.
+# Install: git config core.hooksPath .githooks
+
+set -e
+
+echo "==> Building all packages..."
+npm run build
+
+echo "==> Running lint..."
+npx biome check .
+
+echo "==> Running unit tests..."
+npm test
+
+echo "==> All checks passed."
