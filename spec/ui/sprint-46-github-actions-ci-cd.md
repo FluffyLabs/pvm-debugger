@@ -52,7 +52,9 @@ Each workflow has a single trigger and a clear purpose:
 
 Trigger: `on: pull_request` targeting `main`.
 
-Steps (sequential — project is small enough that parallelism adds complexity without meaningful speed gain):
+Two jobs: `ci` (required) and `e2e` (runs after `ci` passes).
+
+**Job: `ci` — Lint, Test & Build**
 
 1. Checkout code
 2. Setup Node.js 22.x with npm cache
@@ -60,8 +62,13 @@ Steps (sequential — project is small enough that parallelism adds complexity w
 4. **Build all packages and web app** — `npm run build` (builds packages in dependency order: types → trace → runtime-worker → content → orchestrator → cli → web)
 5. **Lint** — `npx biome check .`
 6. **Unit tests** — `npm test`
-7. **E2E tests** — Install Playwright Chromium, then `npm run test:e2e -w apps/web`
-8. **Changeset check** — Verify a `.changeset/*.md` file is present in the PR (skip for PRs from the changesets bot)
+7. **Changeset check** — Verify a `.changeset/*.md` file is present in the PR (skip for PRs from the changesets bot)
+
+**Job: `e2e` — E2E Tests** (needs: `ci`)
+
+1. Checkout, setup Node.js, `npm ci`, build (same as above)
+2. Install Playwright Chromium
+3. `npm run test:e2e -w apps/web`
 
 ### Publish Next Workflow (`publish-next.yml`)
 
