@@ -164,10 +164,7 @@ test.describe("Sprint 30 — Registers Change Highlighting", () => {
   }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(
-      !enabled,
-      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
-    );
+    expect(enabled).toBe(true);
 
     // Run to completion — PVMs may diverge
     const runBtn = page.getByTestId("run-button");

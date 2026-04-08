@@ -60,10 +60,7 @@ test.describe("Sprint 25 — Divergence Detection", () => {
   test("both PVMs agree after running to completion", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(
-      !enabled,
-      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
-    );
+    expect(enabled).toBe(true);
 
     // Run to completion
     const runBtn = page.getByTestId("run-button");
@@ -87,10 +84,7 @@ test.describe("Sprint 25 — Divergence Detection", () => {
   }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(
-      !enabled,
-      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
-    );
+    expect(enabled).toBe(true);
 
     // Run to completion
     const runBtn = page.getByTestId("run-button");
@@ -113,10 +107,7 @@ test.describe("Sprint 25 — Divergence Detection", () => {
   test("divergence clears after reset", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(
-      !enabled,
-      "PVM switching did not stabilize (pre-existing sprint-24 issue)",
-    );
+    expect(enabled).toBe(true);
 
     // Run to completion
     const runBtn = page.getByTestId("run-button");
