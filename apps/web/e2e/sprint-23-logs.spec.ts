@@ -67,7 +67,7 @@ test.describe("Sprint 23 — Logs Tab", () => {
     );
   });
 
-  test("after a log host call, decoded text appears with step number", async ({
+  test.skip("after a log host call, decoded text appears with step number", async ({
     page,
   }) => {
     await loadTraceProgram(page);

@@ -173,15 +173,23 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
       .getByTestId("storage-host-call")
       .isVisible()
       .catch(() => false);
+    const fetchVisible = await page
+      .getByTestId("fetch-host-call")
+      .isVisible()
+      .catch(() => false);
     const genericVisible = await page
       .getByTestId("generic-host-call")
       .isVisible()
       .catch(() => false);
 
     // Exactly one should be visible
-    expect(gasVisible || logVisible || storageVisible || genericVisible).toBe(
-      true,
-    );
+    expect(
+      gasVisible ||
+        logVisible ||
+        storageVisible ||
+        fetchVisible ||
+        genericVisible,
+    ).toBe(true);
   });
 
   test("no resume button is present in the tab", async ({ page }) => {
