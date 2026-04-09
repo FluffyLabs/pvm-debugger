@@ -317,6 +317,7 @@ export function SpiEntrypointConfig({
   }, [encodeFromFields, isRawMode, onChange]);
 
   // When in RAW mode, decode rawHex → fields and notify parent
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onChange/fields intentionally excluded to prevent infinite re-render loop
   useEffect(() => {
     if (isRawMode) {
       const hexErr = validateRawHex(rawHex);
@@ -346,7 +347,7 @@ export function SpiEntrypointConfig({
         onChange(null);
       }
     }
-  }, [rawHex, isRawMode, entrypoint, onChange, fields]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rawHex, isRawMode, entrypoint]);
 
   // Persist to localStorage on every state change
   useEffect(() => {
