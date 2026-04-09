@@ -131,6 +131,7 @@ export function FileUpload({
             {formatLabel(fmtKind)}
           </Badge>
           <button
+            type="button"
             onClick={handleClear}
             data-testid="file-upload-clear"
             className="ml-auto text-muted-foreground hover:text-foreground cursor-pointer"
@@ -145,12 +146,21 @@ export function FileUpload({
 
   return (
     <div data-testid="file-upload" className="flex flex-col gap-2">
+      {/* biome-ignore lint/a11y/useSemanticElements: dropzone requires div for drag-and-drop support */}
       <div
         data-testid="file-upload-dropzone"
+        role="button"
+        tabIndex={0}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         className={`flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-6 cursor-pointer transition-colors ${
           dragging
             ? "border-primary bg-primary/10"

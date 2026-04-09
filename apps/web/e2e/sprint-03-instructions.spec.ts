@@ -78,7 +78,7 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     let foundOmega = false;
     for (let i = 0; i < count; i++) {
       const text = await argsElements.nth(i).textContent();
-      if (text && text.includes("ω")) {
+      if (text?.includes("ω")) {
         foundOmega = true;
         break;
       }

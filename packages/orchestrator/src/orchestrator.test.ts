@@ -1,11 +1,9 @@
-import { parseTrace, serializeTrace } from "@pvmdbg/trace";
+import { parseTrace } from "@pvmdbg/trace";
 import type {
   AdapterStepResult,
   EcalliTrace,
-  HostCallInfo,
   InitialMachineState,
   MachineStateSnapshot,
-  OrchestratorEvents,
   ProgramEnvelope,
   PvmAdapter,
   PvmLifecycle,
@@ -388,10 +386,10 @@ describe("Orchestrator", () => {
       const result = await orchestrator.step(5);
 
       expect(result.results.size).toBe(2);
-      expect(result.results.get("pvm-a")!.lifecycle).toBe("paused");
-      expect(result.results.get("pvm-a")!.snapshot.pc).toBe(10);
-      expect(result.results.get("pvm-b")!.lifecycle).toBe("paused");
-      expect(result.results.get("pvm-b")!.snapshot.pc).toBe(20);
+      expect(result.results.get("pvm-a")?.lifecycle).toBe("paused");
+      expect(result.results.get("pvm-a")?.snapshot.pc).toBe(10);
+      expect(result.results.get("pvm-b")?.lifecycle).toBe("paused");
+      expect(result.results.get("pvm-b")?.snapshot.pc).toBe(20);
     });
 
     it("skips non-paused PVMs but still includes them in StepResult", async () => {
@@ -411,9 +409,9 @@ describe("Orchestrator", () => {
       // Second step — A is terminated (skipped), B still runs
       const result = await orchestrator.step(1);
       expect(result.results.size).toBe(2);
-      expect(result.results.get("pvm-a")!.lifecycle).toBe("terminated");
-      expect(result.results.get("pvm-a")!.stepsExecuted).toBe(0);
-      expect(result.results.get("pvm-b")!.lifecycle).toBe("paused");
+      expect(result.results.get("pvm-a")?.lifecycle).toBe("terminated");
+      expect(result.results.get("pvm-a")?.stepsExecuted).toBe(0);
+      expect(result.results.get("pvm-b")?.lifecycle).toBe("paused");
     });
   });
 
@@ -486,7 +484,7 @@ describe("Orchestrator", () => {
 
         const result = await orchestrator.step(1);
 
-        expect(result.results.get("pvm-a")!.lifecycle).toBe("terminated");
+        expect(result.results.get("pvm-a")?.lifecycle).toBe("terminated");
         expect(terminatedEvents).toEqual(["pvm-a"]);
       });
     }
@@ -520,8 +518,8 @@ describe("Orchestrator", () => {
 
       const trace = orchestrator.getRecordedTrace("pvm-a");
       expect(trace.termination).toBeDefined();
-      expect(trace.termination!.kind).toBe("halt");
-      expect(trace.termination!.pc).toBe(42);
+      expect(trace.termination?.kind).toBe("halt");
+      expect(trace.termination?.pc).toBe(42);
     });
   });
 
@@ -539,9 +537,9 @@ describe("Orchestrator", () => {
 
       const result = await orchestrator.step(1);
 
-      expect(result.results.get("pvm-a")!.lifecycle).toBe("paused_host_call");
-      expect(result.results.get("pvm-a")!.hostCall).toBeDefined();
-      expect(result.results.get("pvm-a")!.hostCall!.hostCallName).toBe("gas");
+      expect(result.results.get("pvm-a")?.lifecycle).toBe("paused_host_call");
+      expect(result.results.get("pvm-a")?.hostCall).toBeDefined();
+      expect(result.results.get("pvm-a")?.hostCall?.hostCallName).toBe("gas");
     });
 
     it("emits pvmStateChanged('paused_host_call') before hostCallPaused", async () => {
@@ -593,13 +591,13 @@ describe("Orchestrator", () => {
       await orchestrator.loadProgram(makeEnvelope({ trace: referenceTrace }));
       const result = await orchestrator.step(1);
 
-      const info = result.results.get("pvm-a")!.hostCall!;
+      const info = result.results.get("pvm-a")!.hostCall;
       expect(info.resumeProposal).toBeDefined();
-      expect(info.resumeProposal!.traceMatches).toBe(true);
-      expect(info.resumeProposal!.mismatches).toEqual([]);
-      expect(info.resumeProposal!.registerWrites.get(7)).toBe(42n);
-      expect(info.resumeProposal!.memoryWrites[0].address).toBe(0x1000);
-      expect(info.resumeProposal!.gasAfter).toBe(800n);
+      expect(info.resumeProposal?.traceMatches).toBe(true);
+      expect(info.resumeProposal?.mismatches).toEqual([]);
+      expect(info.resumeProposal?.registerWrites.get(7)).toBe(42n);
+      expect(info.resumeProposal?.memoryWrites[0].address).toBe(0x1000);
+      expect(info.resumeProposal?.gasAfter).toBe(800n);
     });
 
     it("reports mismatches when trace entry index differs", async () => {
@@ -633,7 +631,7 @@ describe("Orchestrator", () => {
       await orchestrator.loadProgram(makeEnvelope({ trace: referenceTrace }));
       const result = await orchestrator.step(1);
 
-      const proposal = result.results.get("pvm-a")!.hostCall!.resumeProposal!;
+      const proposal = result.results.get("pvm-a")!.hostCall!.resumeProposal;
       expect(proposal.traceMatches).toBe(false);
       expect(proposal.mismatches.some((m) => m.field === "hostCallIndex")).toBe(
         true,
@@ -649,7 +647,7 @@ describe("Orchestrator", () => {
       await orchestrator.step(1);
 
       // Verify PVM is in paused_host_call
-      expect(orchestrator.getSnapshot("pvm-a")!.lifecycle).toBe(
+      expect(orchestrator.getSnapshot("pvm-a")?.lifecycle).toBe(
         "paused_host_call",
       );
 
@@ -661,7 +659,7 @@ describe("Orchestrator", () => {
         gasAfter: 800n,
       });
 
-      expect(orchestrator.getSnapshot("pvm-a")!.lifecycle).toBe("paused");
+      expect(orchestrator.getSnapshot("pvm-a")?.lifecycle).toBe("paused");
       expect(events).toContain("paused");
     });
 
@@ -708,8 +706,8 @@ describe("Orchestrator", () => {
 
       const pending = orchestrator.getPendingHostCall("pvm-a");
       expect(pending).not.toBeNull();
-      expect(pending!.hostCallIndex).toBe(0);
-      expect(pending!.hostCallName).toBe("gas");
+      expect(pending?.hostCallIndex).toBe(0);
+      expect(pending?.hostCallName).toBe("gas");
     });
 
     it("host call counter increments for sequential host calls", async () => {
@@ -762,16 +760,16 @@ describe("Orchestrator", () => {
       adapter.setSnapshot({ pc: 10, gas: 900n });
 
       const r1 = await orchestrator.step(1);
-      const info1 = r1.results.get("pvm-a")!.hostCall!;
-      expect(info1.resumeProposal!.registerWrites.get(7)).toBe(1n);
+      const info1 = r1.results.get("pvm-a")!.hostCall;
+      expect(info1.resumeProposal?.registerWrites.get(7)).toBe(1n);
 
       await orchestrator.resumeHostCall("pvm-a", {});
 
       // Second host call
       adapter.setSnapshot({ pc: 20, gas: 800n });
       const r2 = await orchestrator.step(1);
-      const info2 = r2.results.get("pvm-a")!.hostCall!;
-      expect(info2.resumeProposal!.registerWrites.get(7)).toBe(2n);
+      const info2 = r2.results.get("pvm-a")!.hostCall;
+      expect(info2.resumeProposal?.registerWrites.get(7)).toBe(2n);
     });
   });
 
@@ -844,9 +842,9 @@ describe("Orchestrator", () => {
 
       const result = await orchestrator.step(1);
 
-      expect(result.results.get("good")!.lifecycle).toBe("paused");
-      expect(result.results.get("good")!.snapshot.pc).toBe(10);
-      expect(result.results.get("bad")!.lifecycle).toBe("failed");
+      expect(result.results.get("good")?.lifecycle).toBe("paused");
+      expect(result.results.get("good")?.snapshot.pc).toBe(10);
+      expect(result.results.get("bad")?.lifecycle).toBe("failed");
       expect(errors).toEqual([["bad", "adapter crash"]]);
     });
 
@@ -874,8 +872,8 @@ describe("Orchestrator", () => {
 
       const result = await orchestrator.step(1);
 
-      expect(result.results.get("fast")!.lifecycle).toBe("paused");
-      expect(result.results.get("slow")!.lifecycle).toBe("timed_out");
+      expect(result.results.get("fast")?.lifecycle).toBe("paused");
+      expect(result.results.get("slow")?.lifecycle).toBe("timed_out");
       expect(errors).toContain("slow");
     });
   });
@@ -909,7 +907,7 @@ describe("Orchestrator", () => {
       await orchestrator.setPc("pvm-a", 100);
 
       expect(setPcSpy).toHaveBeenCalledWith(100);
-      expect(orchestrator.getSnapshot("pvm-a")!.snapshot.pc).toBe(100);
+      expect(orchestrator.getSnapshot("pvm-a")?.snapshot.pc).toBe(100);
     });
 
     it("setGas updates adapter and refreshes snapshot", async () => {
@@ -919,7 +917,7 @@ describe("Orchestrator", () => {
 
       await orchestrator.setGas("pvm-a", 500n);
 
-      expect(orchestrator.getSnapshot("pvm-a")!.snapshot.gas).toBe(500n);
+      expect(orchestrator.getSnapshot("pvm-a")?.snapshot.gas).toBe(500n);
     });
 
     it("setMemory delegates to adapter and emits event", async () => {
@@ -1049,11 +1047,11 @@ describe("Orchestrator", () => {
       orchestrator.setTrace("pvm-a", trace);
       const retrieved = orchestrator.getReferenceTrace("pvm-a");
       expect(retrieved).toBeDefined();
-      expect(retrieved!.prelude.programHex).toBe("aabb");
+      expect(retrieved?.prelude.programHex).toBe("aabb");
 
       // Mutation of original should not affect stored copy
       trace.prelude.programHex = "ccdd";
-      expect(orchestrator.getReferenceTrace("pvm-a")!.prelude.programHex).toBe(
+      expect(orchestrator.getReferenceTrace("pvm-a")?.prelude.programHex).toBe(
         "aabb",
       );
     });
@@ -1079,8 +1077,8 @@ describe("Orchestrator", () => {
 
       const snapshots = orchestrator.getSnapshots();
       expect(snapshots.size).toBe(2);
-      expect(snapshots.get("pvm-a")!.lifecycle).toBe("paused");
-      expect(snapshots.get("pvm-b")!.lifecycle).toBe("paused");
+      expect(snapshots.get("pvm-a")?.lifecycle).toBe("paused");
+      expect(snapshots.get("pvm-b")?.lifecycle).toBe("paused");
     });
 
     it("getSnapshot returns undefined for unknown PVM", () => {
@@ -1166,7 +1164,7 @@ describe("Orchestrator", () => {
       await orchestrator.loadProgram(makeEnvelope({ trace: referenceTrace }));
       const result = await orchestrator.step(1);
 
-      const info = result.results.get("pvm-a")!.hostCall!;
+      const info = result.results.get("pvm-a")!.hostCall;
       expect(info.resumeProposal).toBeUndefined();
     });
 
@@ -1221,9 +1219,9 @@ describe("Orchestrator", () => {
       adapter.setSnapshot({ pc: 10, gas: 900n });
       const result = await orchestrator.step(1);
 
-      const info = result.results.get("pvm-a")!.hostCall!;
+      const info = result.results.get("pvm-a")!.hostCall;
       expect(info.resumeProposal).toBeDefined();
-      expect(info.resumeProposal!.registerWrites.get(7)).toBe(99n);
+      expect(info.resumeProposal?.registerWrites.get(7)).toBe(99n);
     });
 
     it("getPendingHostCall returns null when not in host call state", async () => {
@@ -1257,7 +1255,7 @@ describe("Orchestrator", () => {
       expect(orchestrator.getProgramBytes()).toEqual(
         new Uint8Array([0xaa, 0xbb]),
       );
-      expect(orchestrator.getSnapshot("pvm-a")!.lifecycle).toBe("paused");
+      expect(orchestrator.getSnapshot("pvm-a")?.lifecycle).toBe("paused");
 
       const trace = orchestrator.getRecordedTrace("pvm-a");
       expect(trace.prelude.programHex).toBe("aabb");
@@ -1319,7 +1317,7 @@ describe("buildHostCallInfo", () => {
     };
 
     const result = buildHostCallInfo("pvm-a", 0, state, trace, 0);
-    const mismatches = result.info.resumeProposal!.mismatches;
+    const mismatches = result.info.resumeProposal?.mismatches;
     expect(mismatches.some((m) => m.field === "pc")).toBe(true);
     expect(mismatches.some((m) => m.field === "gas")).toBe(true);
   });

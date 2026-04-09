@@ -276,7 +276,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     return this.processStepOutcome(
       session,
       pvmId,
-      lastResult!,
+      lastResult as AdapterStepResult,
       snapshot,
       stepsExecuted,
       hitBreakpoint,
@@ -295,7 +295,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     if (result.status === "host") {
       const hcResult = buildHostCallInfo(
         pvmId,
-        result.exitArg!,
+        result.exitArg ?? 0,
         snapshot,
         session.referenceTrace,
         session.hostCallCounter,
@@ -387,7 +387,9 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
     // For log host calls (index 100), capture memory reads from the PVM
     // before applying effects. This provides memoryReads for the recorded
     // trace entry when no reference trace is available.
-    const pendingHc = session.pendingHostCall!;
+    const pendingHc = session.pendingHostCall as NonNullable<
+      typeof session.pendingHostCall
+    >;
     let capturedMemoryReads:
       | Array<{ address: number; length: number; dataHex: string }>
       | undefined;

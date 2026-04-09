@@ -28,7 +28,7 @@ test.describe("Sprint 26 — Instructions Breakpoints", () => {
 
     // Get the second row's data-testid to extract its PC
     const secondRowTestId = await rows.nth(1).getAttribute("data-testid");
-    const pc = secondRowTestId!.replace("instruction-row-", "");
+    const pc = secondRowTestId?.replace("instruction-row-", "");
 
     // Click the gutter
     const gutter = page.getByTestId(`breakpoint-gutter-${pc}`);
@@ -46,7 +46,7 @@ test.describe("Sprint 26 — Instructions Breakpoints", () => {
     const panel = page.getByTestId("instructions-panel");
     const rows = panel.locator("[data-testid^='instruction-row-']");
     const secondRowTestId = await rows.nth(1).getAttribute("data-testid");
-    const pc = secondRowTestId!.replace("instruction-row-", "");
+    const pc = secondRowTestId?.replace("instruction-row-", "");
 
     const gutter = page.getByTestId(`breakpoint-gutter-${pc}`);
 
@@ -75,7 +75,7 @@ test.describe("Sprint 26 — Instructions Breakpoints", () => {
 
     // Record the new PC — we'll use it as a breakpoint target
     const targetPcText = await pcValue.textContent();
-    const targetPc = parseInt(targetPcText!.replace("0x", ""), 16);
+    const targetPc = parseInt(targetPcText?.replace("0x", ""), 16);
 
     // Reset to go back to start
     await page.getByTestId("reset-button").click();
@@ -104,7 +104,7 @@ test.describe("Sprint 26 — Instructions Breakpoints", () => {
     const panel = page.getByTestId("instructions-panel");
     const rows = panel.locator("[data-testid^='instruction-row-']");
     const secondRowTestId = await rows.nth(1).getAttribute("data-testid");
-    const pc = secondRowTestId!.replace("instruction-row-", "");
+    const pc = secondRowTestId?.replace("instruction-row-", "");
 
     // Set breakpoint
     const gutter = page.getByTestId(`breakpoint-gutter-${pc}`);

@@ -41,7 +41,6 @@ import {
   DEFAULT_TRANSFER,
   DEFAULT_WORK_ITEM,
   DEFAULT_WORK_ITEM_SUMMARY,
-  DEFAULT_WORK_PACKAGE,
 } from "./fetch-defaults";
 
 describe("ProtocolConstants", () => {
@@ -55,8 +54,8 @@ describe("ProtocolConstants", () => {
     const encoded = encodeProtocolConstants(DEFAULT_PROTOCOL_CONSTANTS);
     const decoded = decodeProtocolConstants(encoded);
     expect(decoded).not.toBeNull();
-    expect(decoded!.value).toEqual(DEFAULT_PROTOCOL_CONSTANTS);
-    expect(decoded!.bytesRead).toBe(134);
+    expect(decoded?.value).toEqual(DEFAULT_PROTOCOL_CONSTANTS);
+    expect(decoded?.bytesRead).toBe(134);
   });
 
   it("returns null on too-short buffer", () => {
@@ -86,9 +85,9 @@ describe("WorkItemSummary", () => {
     const encoded = encodeWorkItemSummary(summary);
     const decoded = decodeWorkItemSummary(encoded);
     expect(decoded).not.toBeNull();
-    expect(decoded!.value.serviceindex).toBe(42);
-    expect(decoded!.value.exportcount).toBe(3);
-    expect(decoded!.value.payloadLength).toBe(1024);
+    expect(decoded?.value.serviceindex).toBe(42);
+    expect(decoded?.value.exportcount).toBe(3);
+    expect(decoded?.value.payloadLength).toBe(1024);
   });
 });
 
@@ -97,8 +96,8 @@ describe("RefinementContext", () => {
     const encoded = encodeRefinementContext(DEFAULT_REFINEMENT_CONTEXT);
     const decoded = decodeRefinementContext(encoded);
     expect(decoded).not.toBeNull();
-    expect(decoded!.value.lookupanchortime).toBe(0);
-    expect(decoded!.value.prerequisites.length).toBe(0);
+    expect(decoded?.value.lookupanchortime).toBe(0);
+    expect(decoded?.value.prerequisites.length).toBe(0);
   });
 
   it("roundtrips with prerequisites", () => {
@@ -110,10 +109,10 @@ describe("RefinementContext", () => {
     const encoded = encodeRefinementContext(ctx);
     const decoded = decodeRefinementContext(encoded);
     expect(decoded).not.toBeNull();
-    expect(decoded!.value.lookupanchortime).toBe(12345);
-    expect(decoded!.value.prerequisites.length).toBe(2);
-    expect(decoded!.value.prerequisites[0][0]).toBe(1);
-    expect(decoded!.value.prerequisites[1][0]).toBe(2);
+    expect(decoded?.value.lookupanchortime).toBe(12345);
+    expect(decoded?.value.prerequisites.length).toBe(2);
+    expect(decoded?.value.prerequisites[0][0]).toBe(1);
+    expect(decoded?.value.prerequisites[1][0]).toBe(2);
   });
 });
 
@@ -302,14 +301,14 @@ describe("WorkPackage", () => {
     const encoded = encodeWorkPackage(wp);
     const decoded = decodeWorkPackage(encoded);
     expect(decoded).not.toBeNull();
-    expect(decoded!.value.authcodehost).toBe(42);
-    expect(decoded!.value.context.lookupanchortime).toBe(999);
-    expect(decoded!.value.context.prerequisites.length).toBe(1);
-    expect(decoded!.value.authtoken.length).toBe(2);
-    expect(decoded!.value.workitems.length).toBe(1);
-    expect(decoded!.value.workitems[0].serviceindex).toBe(7);
-    expect(decoded!.value.workitems[0].exportcount).toBe(2);
-    expect(Array.from(decoded!.value.workitems[0].payload)).toEqual([
+    expect(decoded?.value.authcodehost).toBe(42);
+    expect(decoded?.value.context.lookupanchortime).toBe(999);
+    expect(decoded?.value.context.prerequisites.length).toBe(1);
+    expect(decoded?.value.authtoken.length).toBe(2);
+    expect(decoded?.value.workitems.length).toBe(1);
+    expect(decoded?.value.workitems[0].serviceindex).toBe(7);
+    expect(decoded?.value.workitems[0].exportcount).toBe(2);
+    expect(Array.from(decoded?.value.workitems[0].payload)).toEqual([
       0xde, 0xad,
     ]);
   });
@@ -320,7 +319,7 @@ describe("tryDecodeBlob", () => {
     const blob = encodeProtocolConstants(DEFAULT_PROTOCOL_CONSTANTS);
     const result = tryDecodeBlob(FetchKind.Constants, blob);
     expect(result).not.toBeNull();
-    expect(result!.kind).toBe(FetchKind.Constants);
+    expect(result?.kind).toBe(FetchKind.Constants);
   });
 
   it("decodes Entropy (32 bytes)", () => {
@@ -337,7 +336,7 @@ describe("tryDecodeBlob", () => {
     const blob = new Uint8Array([1, 2, 3]);
     const result = tryDecodeBlob(FetchKind.AuthorizerTrace, blob);
     expect(result).not.toBeNull();
-    expect(Array.from(result!.data as Uint8Array)).toEqual([1, 2, 3]);
+    expect(Array.from(result?.data as Uint8Array)).toEqual([1, 2, 3]);
   });
 });
 
@@ -360,6 +359,6 @@ describe("encodeVariantData roundtrip", () => {
     const blob = encodeVariantData(data);
     const result = tryDecodeBlob(FetchKind.Constants, blob);
     expect(result).not.toBeNull();
-    expect((result!.data as ProtocolConstants).coreCount).toBe(2);
+    expect((result?.data as ProtocolConstants).coreCount).toBe(2);
   });
 });

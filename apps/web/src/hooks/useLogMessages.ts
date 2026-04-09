@@ -38,14 +38,14 @@ export interface UseLogMessagesResult {
 export function useLogMessages(
   orchestrator: Orchestrator | null,
   selectedPvmId: string | null,
-  snapshotVersion: number,
+  _snapshotVersion: number,
 ): UseLogMessagesResult {
   const [clearOffset, setClearOffset] = useState(0);
 
   // Reset clear offset when PVM or orchestrator changes
   useEffect(() => {
     setClearOffset(0);
-  }, [orchestrator, selectedPvmId]);
+  }, []);
 
   // Extract all log messages from recorded trace
   const allMessages = useMemo(() => {
@@ -57,7 +57,7 @@ export function useLogMessages(
       return [];
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orchestrator, selectedPvmId, snapshotVersion]);
+  }, [orchestrator, selectedPvmId]);
 
   // Visible messages = all messages after the clear offset
   const messages = useMemo(() => {

@@ -60,7 +60,7 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     // Drawer should be taller than just the tab bar
     const box = await drawer.boundingBox();
     expect(box).toBeTruthy();
-    expect(box!.height).toBeGreaterThan(40);
+    expect(box?.height).toBeGreaterThan(40);
   });
 
   test("clicking the active tab collapses the drawer", async ({ page }) => {
@@ -101,15 +101,15 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     const drawer = page.getByTestId("bottom-drawer");
     const initialBox = await drawer.boundingBox();
     expect(initialBox).toBeTruthy();
-    const initialHeight = initialBox!.height;
+    const initialHeight = initialBox?.height;
 
     // Drag the handle upward to expand
     const handle = page.getByTestId("drawer-drag-handle");
     const handleBox = await handle.boundingBox();
     expect(handleBox).toBeTruthy();
 
-    const startX = handleBox!.x + handleBox!.width / 2;
-    const startY = handleBox!.y + handleBox!.height / 2;
+    const startX = handleBox?.x + handleBox?.width / 2;
+    const startY = handleBox?.y + handleBox?.height / 2;
 
     await page.mouse.move(startX, startY);
     await page.mouse.down();
@@ -119,7 +119,7 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     const afterBox = await drawer.boundingBox();
     expect(afterBox).toBeTruthy();
     // Drawer should be taller after dragging up
-    expect(afterBox!.height).toBeGreaterThan(initialHeight + 50);
+    expect(afterBox?.height).toBeGreaterThan(initialHeight + 50);
   });
 
   test("drawer height clamps to 60% of viewport maximum", async ({ page }) => {
@@ -133,8 +133,8 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     const handleBox = await handle.boundingBox();
     expect(handleBox).toBeTruthy();
 
-    const startX = handleBox!.x + handleBox!.width / 2;
-    const startY = handleBox!.y + handleBox!.height / 2;
+    const startX = handleBox?.x + handleBox?.width / 2;
+    const startY = handleBox?.y + handleBox?.height / 2;
 
     // Drag far upward — well beyond 60% of viewport
     await page.mouse.move(startX, startY);
@@ -148,7 +148,7 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     const drawer = page.getByTestId("bottom-drawer");
     const box = await drawer.boundingBox();
     expect(box).toBeTruthy();
-    expect(box!.height).toBeLessThanOrEqual(maxAllowed);
+    expect(box?.height).toBeLessThanOrEqual(maxAllowed);
   });
 
   test("drawer is positioned below the panel area", async ({ page }) => {
@@ -164,8 +164,8 @@ test.describe("Sprint 14 — Bottom Drawer Shell", () => {
     expect(drawerBox).toBeTruthy();
 
     // Drawer top should be at or below panels bottom
-    expect(drawerBox!.y).toBeGreaterThanOrEqual(
-      panelsBox!.y + panelsBox!.height - 2,
+    expect(drawerBox?.y).toBeGreaterThanOrEqual(
+      panelsBox?.y + panelsBox?.height - 2,
     );
   });
 });

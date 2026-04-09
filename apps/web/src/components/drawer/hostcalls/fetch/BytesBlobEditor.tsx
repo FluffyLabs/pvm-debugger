@@ -37,7 +37,7 @@ export function BytesBlobEditor({
         raw.startsWith("0x") || raw.startsWith("0X") ? raw.slice(2) : raw;
       if (clean.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(clean)) {
         try {
-          onChange(fromHex("0x" + clean));
+          onChange(fromHex(`0x${clean}`));
         } catch {
           // ignore invalid
         }
@@ -53,9 +53,9 @@ export function BytesBlobEditor({
       text.startsWith("0x") || text.startsWith("0X") ? text.slice(2) : text;
     if (clean.length % 2 === 1) {
       // Pad odd-length and sync
-      const padded = "0" + clean;
+      const padded = `0${clean}`;
       try {
-        const bytes = fromHex("0x" + padded);
+        const bytes = fromHex(`0x${padded}`);
         onChange(bytes);
         setText(toHex(bytes));
       } catch {

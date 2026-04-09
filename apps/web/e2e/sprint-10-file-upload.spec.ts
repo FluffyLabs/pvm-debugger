@@ -1,6 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
-import path from "path";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -122,7 +122,7 @@ test.describe("Sprint 10 — File Upload Source", () => {
     expect(leftBox).toBeTruthy();
     expect(rightBox).toBeTruthy();
     // In stacked layout, the left column top should be above right column top
-    expect(leftBox!.y).toBeLessThan(rightBox!.y);
+    expect(leftBox?.y).toBeLessThan(rightBox?.y);
   });
 
   test("example cards still work in two-column layout", async ({ page }) => {

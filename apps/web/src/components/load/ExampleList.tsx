@@ -124,6 +124,7 @@ function CategorySection({
   return (
     <div data-testid={`example-category-${category.id}`}>
       <button
+        type="button"
         onClick={onToggle}
         data-testid={`category-toggle-${category.id}`}
         className="flex items-center gap-1.5 w-full text-left text-sm font-medium text-foreground cursor-pointer hover:text-foreground/80 py-1"
@@ -178,6 +179,7 @@ function ExampleCard({
 
   return (
     <button
+      type="button"
       data-testid={`example-card-${example.id}`}
       disabled={disabled}
       onClick={onSelect}

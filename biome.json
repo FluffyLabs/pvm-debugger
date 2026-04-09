@@ -1,15 +1,21 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
   "linter": {
     "enabled": true,
     "rules": {
-      "a11y": "warn",
+      "a11y": {
+        "recommended": true,
+        "noLabelWithoutControl": "off"
+      },
       "correctness": {
-        "useExhaustiveDependencies": "warn",
-        "useHookAtTopLevel": "warn"
+        "useExhaustiveDependencies": "error",
+        "useHookAtTopLevel": "error"
       },
       "suspicious": {
-        "noArrayIndexKey": "warn"
+        "noArrayIndexKey": "error"
+      },
+      "style": {
+        "noNonNullAssertion": "error"
       }
     }
   },
@@ -19,6 +25,27 @@
     "indentWidth": 2
   },
   "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules", "!**/.changeset"]
-  }
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/.changeset",
+      "!**/test-results"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": ["**/e2e/**", "**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ]
 }

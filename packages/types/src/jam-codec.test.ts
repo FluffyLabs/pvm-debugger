@@ -234,7 +234,7 @@ describe("encodeBytesVarLen / decodeBytesVarLen", () => {
 describe("encodeSequenceVarLen / decodeSequenceVarLen", () => {
   it("roundtrips empty sequence", () => {
     const enc = encodeSequenceVarLen<number>([], () => new Uint8Array(0));
-    const dec = decodeSequenceVarLen(enc, 0, (bytes, off) => {
+    const dec = decodeSequenceVarLen(enc, 0, (_bytes, _off) => {
       return { value: 0, bytesRead: 0 };
     });
     expect(dec.value).toEqual([]);

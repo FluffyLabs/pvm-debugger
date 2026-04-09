@@ -1,14 +1,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ProgramEnvelope } from "@pvmdbg/types";
 import { decodeVarU32 } from "@pvmdbg/types";
 import { beforeAll, describe, expect, it } from "vitest";
-import type {
-  DetectedFormat,
-  RawPayload,
-  SpiEntrypointParams,
-} from "./index.js";
+import type { RawPayload, SpiEntrypointParams } from "./index.js";
 import {
   canDecodeSpi,
   clearPersistedPayload,
@@ -536,9 +531,9 @@ describe("local-storage", () => {
     const restored = loadLocalStorage(storage, "test");
 
     expect(restored).not.toBeNull();
-    expect(restored!.sourceKind).toBe("local_storage");
-    expect(restored!.sourceId).toBe("test.pvm");
-    expect(Array.from(restored!.bytes)).toEqual([0xaa, 0xbb, 0xcc]);
+    expect(restored?.sourceKind).toBe("local_storage");
+    expect(restored?.sourceId).toBe("test.pvm");
+    expect(Array.from(restored?.bytes)).toEqual([0xaa, 0xbb, 0xcc]);
   });
 
   it("returns null after clearing", () => {
@@ -568,15 +563,15 @@ describe("examples manifest", () => {
   it("finds example entries by ID", () => {
     const entry = findExampleEntry("add");
     expect(entry).toBeDefined();
-    expect(entry!.name).toBe("ADD instruction");
-    expect(entry!.file).toBe("generic/add.pvm");
+    expect(entry?.name).toBe("ADD instruction");
+    expect(entry?.file).toBe("generic/add.pvm");
   });
 
   it("finds JAM SPI examples", () => {
     const entry = findExampleEntry("add-jam");
     expect(entry).toBeDefined();
-    expect(entry!.format).toBe("jam_spi_with_metadata");
-    expect(entry!.entrypoint?.type).toBe("accumulate");
+    expect(entry?.format).toBe("jam_spi_with_metadata");
+    expect(entry?.entrypoint?.type).toBe("accumulate");
   });
 
   it("returns undefined for unknown example ID", () => {
@@ -586,7 +581,7 @@ describe("examples manifest", () => {
   it("converts manifest entrypoint to SpiEntrypointParams", () => {
     const entry = findExampleEntry("add-jam");
     expect(entry?.entrypoint).toBeDefined();
-    const params = manifestEntrypointToParams(entry!.entrypoint!);
+    const params = manifestEntrypointToParams(entry!.entrypoint);
     expect(params.entrypoint).toBe("accumulate");
     expect(params.pc).toBe(5);
     if (params.entrypoint === "accumulate") {
@@ -597,12 +592,12 @@ describe("examples manifest", () => {
   it("converts manifest initialState overrides", () => {
     const entry = findExampleEntry("add");
     expect(entry?.initialState).toBeDefined();
-    const overrides = manifestInitialStateOverrides(entry!.initialState!);
+    const overrides = manifestInitialStateOverrides(entry!.initialState);
     expect(overrides.pc).toBe(0);
     expect(overrides.gas).toBe(10000n);
     expect(overrides.registers).toBeDefined();
-    expect(overrides.registers![7]).toBe(1n);
-    expect(overrides.registers![8]).toBe(2n);
+    expect(overrides.registers?.[7]).toBe(1n);
+    expect(overrides.registers?.[8]).toBe(2n);
   });
 });
 
@@ -690,10 +685,10 @@ describe("decodeJsonTestVector", () => {
     };
     const envelope = decodeJsonTestVector(data, "example", "test-panic");
     expect(envelope.expectedState).toBeDefined();
-    expect(envelope.expectedState!.status).toBe("panic");
-    expect(envelope.expectedState!.pc).toBe(5);
-    expect(envelope.expectedState!.gas).toBe(99n);
-    expect(envelope.expectedState!.registers[0]).toBe(1n);
+    expect(envelope.expectedState?.status).toBe("panic");
+    expect(envelope.expectedState?.pc).toBe(5);
+    expect(envelope.expectedState?.gas).toBe(99n);
+    expect(envelope.expectedState?.registers[0]).toBe(1n);
   });
 });
 
@@ -715,10 +710,10 @@ describe("decodeSpi", () => {
     expect(envelope.programKind).toBe("jam_spi");
     expect(envelope.programBytes.length).toBeGreaterThan(0);
     expect(envelope.metadata).toBeDefined();
-    expect(envelope.metadata!.length).toBeGreaterThan(0);
+    expect(envelope.metadata?.length).toBeGreaterThan(0);
     expect(envelope.loadContext).toBeDefined();
-    expect(envelope.loadContext!.spiProgram).toBeDefined();
-    expect(envelope.loadContext!.spiProgram!.hasMetadata).toBe(true);
+    expect(envelope.loadContext?.spiProgram).toBeDefined();
+    expect(envelope.loadContext?.spiProgram?.hasMetadata).toBe(true);
     expect(envelope.initialState.pageMap.length).toBeGreaterThanOrEqual(0);
     expect(envelope.initialState.registers.length).toBe(13);
   });
@@ -748,7 +743,7 @@ describe("decodeTrace", () => {
     const envelope = decodeTrace(text, "example", "trace-001");
 
     expect(envelope.trace).toBeDefined();
-    expect(envelope.trace!.prelude.programHex.length).toBeGreaterThan(0);
+    expect(envelope.trace?.prelude.programHex.length).toBeGreaterThan(0);
     expect(envelope.initialState.gas).toBeGreaterThan(0n);
     expect(envelope.sourceMeta.sourceId).toBe("trace-001");
   });
@@ -758,7 +753,7 @@ describe("decodeTrace", () => {
     const envelope = decodeTrace(text, "example", "io-trace");
 
     expect(envelope.trace).toBeDefined();
-    expect(envelope.trace!.entries.length).toBeGreaterThan(0);
+    expect(envelope.trace?.entries.length).toBeGreaterThan(0);
     expect(envelope.programBytes.length).toBeGreaterThan(0);
   });
 
@@ -816,7 +811,7 @@ describe("createProgramEnvelope", () => {
     expect(envelope.programKind).toBe("jam_spi");
     expect(envelope.metadata).toBeDefined();
     expect(envelope.loadContext).toBeDefined();
-    expect(envelope.loadContext!.spiArgs).toBeDefined();
+    expect(envelope.loadContext?.spiArgs).toBeDefined();
     expect(envelope.spiEntrypoint).toBe("accumulate");
   });
 
@@ -842,7 +837,7 @@ describe("createProgramEnvelope", () => {
     expect(envelope.programKind).toBe("generic");
     expect(envelope.initialState.registers[7]).toBe(7n);
     expect(envelope.expectedState).toBeDefined();
-    expect(envelope.expectedState!.status).toBe("halt");
+    expect(envelope.expectedState?.status).toBe("halt");
   });
 
   it("applies generic manifest overrides for example payloads", () => {

@@ -8,13 +8,15 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build -w packages/types && npm run build -w packages/trace && npm run build -w packages/runtime-worker && npm run build -w packages/content && npm run build -w packages/orchestrator && npm run build -w packages/cli && npm run build -w apps/web",
+    "build:packages": "npm run build -w packages/types && npm run build -w packages/trace && npm run build -w packages/runtime-worker && npm run build -w packages/content && npm run build -w packages/orchestrator && npm run build -w packages/cli",
     "test": "vitest run",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "dev": "npm run dev --workspace=apps/web",
     "test:e2e": "npm run test:e2e --workspace=apps/web",
-    "cli": "node packages/cli/dist/index.js"
+    "cli": "node packages/cli/dist/index.js",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",

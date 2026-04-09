@@ -77,6 +77,7 @@ export function UrlInput({ onLoaded, onClear, result }: UrlInputProps) {
           disabled={loading}
         />
         <button
+          type="button"
           data-testid="url-input-fetch"
           onClick={handleFetch}
           disabled={loading || !url.trim()}

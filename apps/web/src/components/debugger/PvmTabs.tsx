@@ -110,6 +110,7 @@ export function PvmTabs({
 
         return (
           <button
+            type="button"
             key={pvmId}
             role="tab"
             aria-selected={isSelected}

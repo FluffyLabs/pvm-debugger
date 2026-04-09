@@ -86,7 +86,7 @@ function mergeChunks(chunks: Uint8Array[], _totalBytes: number): Uint8Array {
 
 function formatPreview(data: Uint8Array): string {
   if (data.length > MAX_MEMORY_BYTES_PREVIEW) {
-    return bytesToHex(data.slice(0, MAX_MEMORY_BYTES_PREVIEW)) + " \u2026";
+    return `${bytesToHex(data.slice(0, MAX_MEMORY_BYTES_PREVIEW))} \u2026`;
   }
   return bytesToHex(data);
 }
@@ -141,13 +141,14 @@ export function PendingChanges({ pending }: PendingChangesProps) {
           {hasGasChange && (
             <div data-testid="pending-gas-change">
               <span className="text-amber-800 dark:text-amber-300">
-                Gas {"\u2190"} {formatGas(pending.gasAfter!)}
+                Gas {"\u2190"} {formatGas(pending.gasAfter ?? 0n)}
               </span>
             </div>
           )}
           {coalescedWrites.length > 0 && (
             <div data-testid="pending-memory-writes" className="space-y-0.5">
               {coalescedWrites.map((range, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: index is the only stable key
                 <div key={i} className="flex items-baseline gap-1">
                   <span className="text-amber-800 dark:text-amber-300">
                     [0x{range.address.toString(16)}] {"\u2190"} {range.preview}

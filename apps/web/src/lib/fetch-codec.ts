@@ -12,7 +12,6 @@ import {
   decodeU16LE,
   decodeU32LE,
   decodeU64LE,
-  decodeVarU64,
   encodeBytes32,
   encodeBytesVarLen,
   encodeSequenceVarLen,
@@ -20,7 +19,6 @@ import {
   encodeU16LE,
   encodeU32LE,
   encodeU64LE,
-  encodeVarU64,
 } from "@pvmdbg/types";
 
 // ---------------------------------------------------------------------------

@@ -1,8 +1,4 @@
-import type {
-  InitialMachineState,
-  MemoryChunk,
-  PageMapEntry,
-} from "@pvmdbg/types";
+import type { InitialMachineState, PageMapEntry } from "@pvmdbg/types";
 import {
   bigintToDecStr,
   decStrToBigint,

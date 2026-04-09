@@ -131,13 +131,26 @@ function InlineEdit({
   }
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: interactivity is conditional on editable prop
     <span
       data-testid={testId}
       className={`text-foreground ${editable ? "cursor-pointer hover:underline" : ""}`}
       style={
         changed ? { borderBottom: "1px solid var(--color-brand)" } : undefined
       }
+      role={editable ? "button" : undefined}
+      tabIndex={editable ? 0 : undefined}
       onClick={startEditing}
+      onKeyDown={
+        editable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                startEditing();
+              }
+            }
+          : undefined
+      }
     >
       {displayValue}
     </span>

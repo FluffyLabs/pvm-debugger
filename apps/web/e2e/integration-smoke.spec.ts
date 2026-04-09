@@ -1,6 +1,6 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
-import path from "path";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -116,7 +116,7 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
     const gasText = await gasValue.textContent();
     expect(gasText).toBeTruthy();
     // Gas should be parseable as a number (may have thousands separators)
-    const gasNum = Number(gasText!.replace(/,/g, ""));
+    const gasNum = Number(gasText?.replace(/,/g, ""));
     expect(gasNum).toBeGreaterThan(0);
   });
 

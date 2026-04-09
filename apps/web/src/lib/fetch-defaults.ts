@@ -15,7 +15,7 @@ import {
   type WorkPackageData,
 } from "./fetch-codec";
 
-const ZERO_HASH = new Uint8Array(32);
+const _ZERO_HASH = new Uint8Array(32);
 
 export const DEFAULT_PROTOCOL_CONSTANTS: ProtocolConstants = {
   electiveItemBalance: 100000n,

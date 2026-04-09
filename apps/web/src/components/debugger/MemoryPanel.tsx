@@ -66,7 +66,7 @@ export function getPageLabel(
   initializedPages: Set<number>,
 ): string {
   if (programKind !== "jam_spi") {
-    return "Page @ 0x" + address.toString(16).toUpperCase();
+    return `Page @ 0x${address.toString(16).toUpperCase()}`;
   }
 
   if (address >= 0xfeff0000) return "Arguments";
@@ -75,7 +75,7 @@ export function getPageLabel(
   if (isWritable && initializedPages.has(address)) return "RW Data";
   if (isWritable) return "Heap";
 
-  return "Page @ 0x" + address.toString(16).toUpperCase();
+  return `Page @ 0x${address.toString(16).toUpperCase()}`;
 }
 
 export function MemoryPanel({

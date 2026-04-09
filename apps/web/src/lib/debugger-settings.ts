@@ -116,19 +116,19 @@ export function saveSettings(settings: DebuggerSettings): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     // Mirror per-setting keys for future reuse
     localStorage.setItem(
-      PER_KEY_PREFIX + "selectedPvmIds",
+      `${PER_KEY_PREFIX}selectedPvmIds`,
       JSON.stringify(settings.selectedPvmIds),
     );
     localStorage.setItem(
-      PER_KEY_PREFIX + "steppingMode",
+      `${PER_KEY_PREFIX}steppingMode`,
       settings.steppingMode,
     );
     localStorage.setItem(
-      PER_KEY_PREFIX + "nInstructionsCount",
+      `${PER_KEY_PREFIX}nInstructionsCount`,
       String(settings.nInstructionsCount),
     );
     localStorage.setItem(
-      PER_KEY_PREFIX + "autoContinuePolicy",
+      `${PER_KEY_PREFIX}autoContinuePolicy`,
       settings.autoContinuePolicy,
     );
   } catch {

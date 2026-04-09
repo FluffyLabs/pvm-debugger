@@ -100,7 +100,7 @@ test.describe("Sprint 29 — Registers Inline Editing", () => {
     await loadProgram(page);
 
     const gasValue = page.getByTestId("gas-value");
-    const originalGas = await gasValue.textContent();
+    const _originalGas = await gasValue.textContent();
 
     await gasValue.click();
     const gasEdit = page.getByTestId("gas-value-edit");
@@ -118,7 +118,7 @@ test.describe("Sprint 29 — Registers Inline Editing", () => {
     await loadProgram(page);
 
     const pcValue = page.getByTestId("pc-value");
-    const originalPc = await pcValue.textContent();
+    const _originalPc = await pcValue.textContent();
 
     await pcValue.click();
     const pcEdit = page.getByTestId("pc-value-edit");

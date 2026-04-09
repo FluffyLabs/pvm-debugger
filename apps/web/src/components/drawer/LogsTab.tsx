@@ -55,7 +55,7 @@ export function LogsTab({
     if (isNearBottomRef.current && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, []);
 
   return (
     <div data-testid="logs-tab" className="flex flex-col h-full min-h-0">
@@ -63,6 +63,7 @@ export function LogsTab({
       <div className="flex items-center gap-2 px-2 py-1 border-b border-border">
         <div className="flex-1" />
         <button
+          type="button"
           data-testid="logs-copy-button"
           onClick={copy}
           disabled={messages.length === 0}
@@ -71,6 +72,7 @@ export function LogsTab({
           Copy
         </button>
         <button
+          type="button"
           data-testid="logs-clear-button"
           onClick={clear}
           disabled={messages.length === 0}
@@ -79,6 +81,7 @@ export function LogsTab({
           Clear
         </button>
         <button
+          type="button"
           data-testid="logs-download-button"
           onClick={handleDownload}
           disabled={messages.length === 0}
@@ -101,6 +104,7 @@ export function LogsTab({
           </p>
         ) : (
           messages.map((msg, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: index is the only stable key
             <LogEntry key={`${msg.traceIndex}-${i}`} message={msg} />
           ))
         )}

@@ -6,7 +6,7 @@ import type {
   ProgramEnvelope,
 } from "@pvmdbg/types";
 import { fromHex } from "@pvmdbg/types";
-import { buildGenericInitialState, decodeGeneric } from "./decode-generic.js";
+import { decodeGeneric } from "./decode-generic.js";
 import { decodeSpi } from "./decode-spi.js";
 import { canDecodeSpi } from "./detect.js";
 

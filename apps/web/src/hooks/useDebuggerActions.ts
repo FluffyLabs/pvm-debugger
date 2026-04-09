@@ -251,14 +251,14 @@ export function useDebuggerActions({
   snapshotsRef.current = snapshots;
 
   /** Compute the step size for the current mode, using block data when in block mode. */
-  function computeStepSize(): number {
+  const computeStepSize = useCallback((): number => {
     if (steppingMode === "block") {
       const snaps = snapshotsRef.current;
       if (!snaps || snaps.size === 0) return 1;
       return computeMultiPvmBlockStepCount(blocksRef.current, snaps);
     }
     return stepsForMode(steppingMode, nInstructionsCount);
-  }
+  }, [steppingMode, nInstructionsCount]);
 
   // Note: isStepInProgress is intentionally excluded here to avoid a
   // disabled-flash on every step. The next/step callbacks already guard
@@ -293,12 +293,9 @@ export function useDebuggerActions({
     isRunning,
     selectedLifecycle,
     setIsStepInProgress,
-    steppingMode,
-    nInstructionsCount,
     storageTable,
-    instructions,
-    snapshots,
     getHostCallEffects,
+    computeStepSize,
   ]);
 
   /** Step button: always executes exactly one instruction. */
@@ -408,11 +405,10 @@ export function useDebuggerActions({
     orchestrator,
     isRunning,
     selectedLifecycle,
-    steppingMode,
-    nInstructionsCount,
     autoContinuePolicy,
     storageTable,
     getHostCallEffects,
+    computeStepSize,
   ]);
 
   const pause = useCallback(() => {

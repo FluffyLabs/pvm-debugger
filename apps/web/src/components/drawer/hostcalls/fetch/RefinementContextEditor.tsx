@@ -121,7 +121,7 @@ export function RefinementContextEditor({
           value={value.lookupanchortime}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) setTimeslot(n);
+            if (!Number.isNaN(n)) setTimeslot(n);
           }}
         />
       </div>
@@ -132,6 +132,7 @@ export function RefinementContextEditor({
             Prerequisites ({value.prerequisites.length})
           </span>
           <button
+            type="button"
             className="cursor-pointer rounded bg-primary/20 px-1.5 py-0.5 text-[10px] text-primary hover:bg-primary/30"
             onClick={addPrerequisite}
           >
@@ -139,6 +140,7 @@ export function RefinementContextEditor({
           </button>
         </div>
         {value.prerequisites.map((prereq, idx) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: index is the only stable key
           <div key={idx} className="flex items-center gap-1">
             <input
               className="flex-1 rounded border border-border bg-background px-1 py-0.5 font-mono text-[10px] text-foreground"
@@ -153,6 +155,7 @@ export function RefinementContextEditor({
               }}
             />
             <button
+              type="button"
               className="cursor-pointer text-xs text-muted-foreground hover:text-destructive"
               onClick={() => removePrerequisite(idx)}
             >

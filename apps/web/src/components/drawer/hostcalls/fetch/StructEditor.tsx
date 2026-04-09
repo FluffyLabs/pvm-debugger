@@ -20,7 +20,6 @@ import {
 } from "../../../../lib/fetch-defaults";
 import { AllTransfersEditor } from "./AllTransfersEditor";
 import { AllWorkItemsEditor } from "./AllWorkItemsEditor";
-import { AuthorizerInfoEditor } from "./AuthorizerInfoEditor";
 import { BytesBlobEditor } from "./BytesBlobEditor";
 import { ProtocolConstantsEditor } from "./ProtocolConstantsEditor";
 import { RefinementContextEditor } from "./RefinementContextEditor";

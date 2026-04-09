@@ -45,10 +45,10 @@ export const InstructionRow = memo(function InstructionRow({
             : undefined
         }
       >
-        <span
+        <button
+          type="button"
           data-testid={`breakpoint-gutter-${instruction.pc}`}
-          className="group/bp w-3 h-3 flex items-center justify-center cursor-pointer shrink-0 select-none"
-          role="button"
+          className="group/bp w-3 h-3 flex items-center justify-center cursor-pointer shrink-0 select-none bg-transparent border-none p-0"
           aria-label={
             isBreakpoint
               ? `Remove breakpoint at ${instruction.pc}`
@@ -64,7 +64,7 @@ export const InstructionRow = memo(function InstructionRow({
           ) : (
             <span className="block w-2.5 h-2.5 rounded-full opacity-0 group-hover/bp:opacity-30 bg-red-500 transition-opacity" />
           )}
-        </span>
+        </button>
         <PopoverTrigger asChild>
           <span
             className="flex items-center gap-2 cursor-pointer flex-1 min-w-0"

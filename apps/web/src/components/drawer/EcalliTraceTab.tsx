@@ -1,6 +1,6 @@
 import type { Orchestrator } from "@pvmdbg/orchestrator";
 import { serializeTrace } from "@pvmdbg/trace";
-import type { EcalliTrace, HostCallInfo } from "@pvmdbg/types";
+import type { HostCallInfo } from "@pvmdbg/types";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { TraceColumn } from "./TraceColumn";
 import { TraceRawView } from "./TraceRawView";
@@ -20,7 +20,7 @@ type ViewMode = "formatted" | "raw";
 export function EcalliTraceTab({
   orchestrator,
   selectedPvmId,
-  snapshotVersion,
+  snapshotVersion: _snapshotVersion,
   activeHostCall,
 }: EcalliTraceTabProps) {
   const [linkScroll, setLinkScroll] = useState(true);
@@ -43,7 +43,7 @@ export function EcalliTraceTab({
       return { recorded: undefined, reference: undefined };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orchestrator, selectedPvmId, snapshotVersion]);
+  }, [orchestrator, selectedPvmId]);
 
   // Compute mismatched entry indices
   const mismatchedIndices = useMemo(() => {
@@ -111,6 +111,7 @@ export function EcalliTraceTab({
           data-testid="view-mode-toggle"
         >
           <button
+            type="button"
             data-testid="view-mode-formatted"
             onClick={() => setViewMode("formatted")}
             className={`px-2 py-0.5 rounded cursor-pointer ${
@@ -122,6 +123,7 @@ export function EcalliTraceTab({
             Formatted
           </button>
           <button
+            type="button"
             data-testid="view-mode-raw"
             onClick={() => setViewMode("raw")}
             className={`px-2 py-0.5 rounded cursor-pointer ${
@@ -151,6 +153,7 @@ export function EcalliTraceTab({
 
         {/* Download button */}
         <button
+          type="button"
           data-testid="download-trace-button"
           onClick={handleDownload}
           disabled={!recorded}

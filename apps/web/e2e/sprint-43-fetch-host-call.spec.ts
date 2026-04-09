@@ -53,16 +53,18 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
       const isVisible = await fetchHandler.isVisible().catch(() => false);
       if (isVisible) return true;
 
-      // Continue to next host call
+      // Resume past this host call (single step)
       await page.getByTestId("next-button").click();
-      // Wait a moment for the PVM to process
-      const status = await pvmStatus(page).textContent();
-      if (!status?.includes("Host Call")) {
-        await expect(pvmStatus(page))
-          .toHaveText("Host Call", { timeout: 10000 })
-          .catch(() => {});
-        const newStatus = await pvmStatus(page).textContent();
-        if (!newStatus?.includes("Host Call")) return false;
+      await page.waitForTimeout(200);
+
+      // Run to the next host call
+      await page.getByTestId("run-button").click();
+      try {
+        await expect(pvmStatus(page)).toHaveText("Host Call", {
+          timeout: 10000,
+        });
+      } catch {
+        return false;
       }
     }
     return false;
@@ -143,15 +145,19 @@ test.describe("Sprint 43 — Fetch Host Call Handler", () => {
       await loadAllEcalliExample(page, "refine");
       await setNeverAutoContinue(page);
 
-      // Run to generate some trace entries
+      // Step through several host calls to generate trace data with fetch entries
       await runToHostCall(page);
-
-      // Step through a few host calls to generate trace data
       for (let i = 0; i < 5; i++) {
         await page.getByTestId("next-button").click();
         await page.waitForTimeout(200);
-        const status = await pvmStatus(page).textContent();
-        if (!status?.includes("Host Call")) break;
+        await page.getByTestId("run-button").click();
+        try {
+          await expect(pvmStatus(page)).toHaveText("Host Call", {
+            timeout: 10000,
+          });
+        } catch {
+          break;
+        }
       }
 
       // Open ecalli trace tab

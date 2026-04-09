@@ -124,20 +124,20 @@ export function useMemoryReader(
   const getPage = useCallback(
     (address: number) => cacheRef.current.get(address)?.data,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reads from ref, tick forces re-read
-    [snapshotVersion],
+    [],
   );
 
   const isLoading = useCallback(
     (address: number) =>
       fetchingRef.current.has(address) && !cacheRef.current.has(address),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [snapshotVersion],
+    [],
   );
 
   const getChangedOffsets = useCallback(
     (address: number) => changedOffsetsRef.current.get(address),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [snapshotVersion],
+    [],
   );
 
   return { getPage, isLoading, expandPage, getChangedOffsets };

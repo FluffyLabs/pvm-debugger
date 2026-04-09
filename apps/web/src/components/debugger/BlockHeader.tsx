@@ -12,10 +12,10 @@ export const BlockHeader = memo(function BlockHeader({
   onToggle,
 }: BlockHeaderProps) {
   return (
-    <div
+    <button
+      type="button"
       data-testid={`block-header-${block.index}`}
-      className="flex items-center gap-1 px-2 py-0.5 text-xs font-normal text-muted-foreground bg-muted/30 border-b border-border cursor-pointer select-none hover:bg-muted/50"
-      role="button"
+      className="flex items-center gap-1 px-2 py-0.5 text-xs font-normal text-muted-foreground bg-muted/30 border-b border-border cursor-pointer select-none hover:bg-muted/50 w-full text-left border-none"
       aria-expanded={!block.isCollapsed}
       aria-label={`Block ${block.index}`}
       onClick={() => onToggle(block.index)}
@@ -29,6 +29,6 @@ export const BlockHeader = memo(function BlockHeader({
       <span className="text-muted-foreground/60 ml-1">
         ({block.instructions.length} instr)
       </span>
-    </div>
+    </button>
   );
 });

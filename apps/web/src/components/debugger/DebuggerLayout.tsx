@@ -40,6 +40,7 @@ export function DebuggerLayout({
       <div data-testid="panel-switcher" className="debugger-panel-switcher">
         {(Object.keys(PANEL_LABELS) as PanelName[]).map((key) => (
           <button
+            type="button"
             key={key}
             data-testid={`panel-switcher-${key}`}
             data-active={activePanel === key}

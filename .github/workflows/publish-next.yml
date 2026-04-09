@@ -59,8 +59,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Build web app
+      - name: Build web app for GitHub Pages
         run: npm run build -w apps/web
+        env:
+          VITE_BASE_PATH: /pvm-debugger/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

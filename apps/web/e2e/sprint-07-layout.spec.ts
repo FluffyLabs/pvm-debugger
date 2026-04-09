@@ -33,9 +33,9 @@ test.describe("Sprint 07 — 3-Column Debugger Layout", () => {
     expect(mBox).toBeTruthy();
 
     // Instructions is to the left of Registers
-    expect(iBox!.x + iBox!.width).toBeLessThanOrEqual(rBox!.x + 2);
+    expect(iBox?.x + iBox?.width).toBeLessThanOrEqual(rBox?.x + 2);
     // Registers is to the left of Memory
-    expect(rBox!.x + rBox!.width).toBeLessThanOrEqual(mBox!.x + 2);
+    expect(rBox?.x + rBox?.width).toBeLessThanOrEqual(mBox?.x + 2);
   });
 
   test("panel headers align at the same height", async ({ page }) => {
@@ -54,8 +54,8 @@ test.describe("Sprint 07 — 3-Column Debugger Layout", () => {
     expect(mBox).toBeTruthy();
 
     // All panels start at the same Y coordinate (header alignment)
-    expect(Math.abs(iBox!.y - rBox!.y)).toBeLessThan(2);
-    expect(Math.abs(rBox!.y - mBox!.y)).toBeLessThan(2);
+    expect(Math.abs(iBox?.y - rBox?.y)).toBeLessThan(2);
+    expect(Math.abs(rBox?.y - mBox?.y)).toBeLessThan(2);
   });
 
   test("toolbar row is visible above the panels", async ({ page }) => {
@@ -74,7 +74,7 @@ test.describe("Sprint 07 — 3-Column Debugger Layout", () => {
     expect(pBox).toBeTruthy();
 
     // Toolbar is above the panel area
-    expect(tBox!.y + tBox!.height).toBeLessThanOrEqual(pBox!.y + 2);
+    expect(tBox?.y + tBox?.height).toBeLessThanOrEqual(pBox?.y + 2);
   });
 
   test("each panel scrolls independently", async ({ page }) => {

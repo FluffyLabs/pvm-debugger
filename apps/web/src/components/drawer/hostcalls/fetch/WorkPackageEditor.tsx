@@ -28,7 +28,7 @@ function WorkItemEditor({
           value={value.serviceindex}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) onChange({ ...value, serviceindex: n });
+            if (!Number.isNaN(n)) onChange({ ...value, serviceindex: n });
           }}
         />
       </div>
@@ -92,7 +92,7 @@ function WorkItemEditor({
           value={value.exportcount}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) onChange({ ...value, exportcount: n });
+            if (!Number.isNaN(n)) onChange({ ...value, exportcount: n });
           }}
         />
       </div>
@@ -148,7 +148,7 @@ export function WorkPackageEditor({ value, onChange }: WorkPackageEditorProps) {
           value={value.authcodehost}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) onChange({ ...value, authcodehost: n });
+            if (!Number.isNaN(n)) onChange({ ...value, authcodehost: n });
           }}
         />
       </div>
@@ -210,6 +210,7 @@ export function WorkPackageEditor({ value, onChange }: WorkPackageEditorProps) {
             {value.workitems.length} work item(s)
           </span>
           <button
+            type="button"
             className="cursor-pointer rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary hover:bg-primary/30"
             onClick={addWorkItem}
           >
@@ -217,12 +218,14 @@ export function WorkPackageEditor({ value, onChange }: WorkPackageEditorProps) {
           </button>
         </div>
         {value.workitems.map((item, idx) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: index is the only stable key
           <div key={idx} className="border border-border rounded p-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-muted-foreground">
                 Work Item #{idx}
               </span>
               <button
+                type="button"
                 className="cursor-pointer text-xs text-muted-foreground hover:text-destructive"
                 onClick={() => removeWorkItem(idx)}
               >

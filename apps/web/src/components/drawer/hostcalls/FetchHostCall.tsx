@@ -43,7 +43,7 @@ function getTraceTotalLength(info: HostCallInfo): number {
 export function FetchHostCall({
   info,
   onEffectsReady,
-  traceVersion,
+  traceVersion: _traceVersion,
 }: FetchHostCallProps) {
   const regs = info.currentState.registers;
   const destAddr = Number(regs[7] ?? 0n);
@@ -79,7 +79,7 @@ export function FetchHostCall({
     setMode(hasProposal ? "trace" : "struct");
     setBlob(initialBlob);
     setStructInitialBlob(undefined);
-  }, [traceVersion, hasProposal, initialBlob]);
+  }, [hasProposal, initialBlob]);
 
   const stableOnEffects = useStableCallback(onEffectsReady);
 
@@ -138,6 +138,7 @@ export function FetchHostCall({
       <div data-testid="fetch-mode-tabs" className="flex gap-1">
         {hasProposal && (
           <button
+            type="button"
             data-testid="fetch-mode-trace"
             className={`cursor-pointer rounded px-2 py-0.5 text-[10px] font-medium ${mode === "trace" ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground"}`}
             onClick={() => handleModeChange("trace")}
@@ -146,6 +147,7 @@ export function FetchHostCall({
           </button>
         )}
         <button
+          type="button"
           data-testid="fetch-mode-raw"
           className={`cursor-pointer rounded px-2 py-0.5 text-[10px] font-medium ${mode === "raw" ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground"}`}
           onClick={() => handleModeChange("raw")}
@@ -153,6 +155,7 @@ export function FetchHostCall({
           Raw
         </button>
         <button
+          type="button"
           data-testid="fetch-mode-struct"
           className={`cursor-pointer rounded px-2 py-0.5 text-[10px] font-medium ${mode === "struct" ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground"}`}
           onClick={() => handleModeChange("struct")}

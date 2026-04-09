@@ -160,8 +160,8 @@ test.describe("Sprint 11 — URL + Manual Hex Sources", () => {
 
     // Upload a file — should clear hex result
     const fileInput = page.getByTestId("file-upload-input");
-    const path = await import("path");
-    const url = await import("url");
+    const path = await import("node:path");
+    const url = await import("node:url");
     const __filename = url.fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
     const fixturesDir = path.resolve(__dirname, "../../../fixtures");

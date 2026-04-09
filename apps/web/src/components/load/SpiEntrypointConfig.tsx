@@ -61,7 +61,7 @@ const DEFAULT_FIELDS: Record<
     index: "0",
     id: "0",
     payload: "",
-    workPackageHash: "0x" + "00".repeat(32),
+    workPackageHash: `0x${"00".repeat(32)}`,
   },
   is_authorized: { core: "0" },
 };
@@ -317,6 +317,7 @@ export function SpiEntrypointConfig({
   }, [encodeFromFields, isRawMode, onChange]);
 
   // When in RAW mode, decode rawHex → fields and notify parent
+  // biome-ignore lint/correctness/useExhaustiveDependencies: onChange/fields intentionally excluded to prevent infinite re-render loop
   useEffect(() => {
     if (isRawMode) {
       const hexErr = validateRawHex(rawHex);
@@ -346,7 +347,7 @@ export function SpiEntrypointConfig({
         onChange(null);
       }
     }
-  }, [rawHex, isRawMode, entrypoint]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rawHex, isRawMode, entrypoint]);
 
   // Persist to localStorage on every state change
   useEffect(() => {
@@ -394,6 +395,12 @@ export function SpiEntrypointConfig({
           <label
             className="text-xs text-muted-foreground cursor-pointer"
             onClick={() => handleRawModeToggle(!isRawMode)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleRawModeToggle(!isRawMode);
+              }
+            }}
           >
             RAW
           </label>

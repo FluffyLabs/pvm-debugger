@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 23 — Logs Tab", () => {
+  test.describe.configure({ mode: "parallel" });
   /** Load a simple (non-trace) program. */
   async function loadSimpleProgram(page: import("@playwright/test").Page) {
     await page.goto("/#/load");

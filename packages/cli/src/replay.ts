@@ -159,7 +159,7 @@ export async function replay(
 
   // 2. Build program envelope (also parses the trace internally)
   const envelope = decodeTrace(content, "example", tracePath);
-  const trace = envelope.trace!;
+  const trace = envelope.trace as NonNullable<typeof envelope.trace>;
 
   // 4. Create orchestrator
   const orchestrator = new Orchestrator({ stepTimeoutMs: options.timeoutMs });

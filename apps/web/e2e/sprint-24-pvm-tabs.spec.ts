@@ -65,7 +65,7 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
   test("both PVM tabs render when both are enabled", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(!enabled, "PVM switching did not stabilize (timing issue)");
+    expect(enabled).toBe(true);
 
     await expect(page.getByTestId("pvm-tab-typeberry")).toBeVisible();
     await expect(page.getByTestId("pvm-tab-ananas")).toBeVisible();
@@ -78,7 +78,7 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
 
     // Enable ananas (this resets the session — both PVMs start at initial state)
     const enabled = await tryEnableAnanas(page);
-    test.skip(!enabled, "PVM switching did not stabilize (timing issue)");
+    expect(enabled).toBe(true);
 
     // Step once so typeberry registers diverge
     const nextBtn = page.getByTestId("next-button");
@@ -88,7 +88,7 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     // Capture register state for typeberry (after stepping)
     const regPanel = page.getByTestId("panel-registers");
     await expect(regPanel).toBeVisible();
-    const typeberryText = await regPanel.innerText();
+    const _typeberryText = await regPanel.innerText();
 
     // Click ananas tab
     await page.getByTestId("pvm-tab-ananas").click();
@@ -98,7 +98,7 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     );
 
     // Register panel should now show ananas state (same step applied to both PVMs)
-    const ananasText = await regPanel.innerText();
+    const _ananasText = await regPanel.innerText();
 
     // Click back to typeberry
     await page.getByTestId("pvm-tab-typeberry").click();
@@ -116,7 +116,7 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
   test("removed PVM disappears from tab bar", async ({ page }) => {
     await loadProgram(page);
     const enabled = await tryEnableAnanas(page);
-    test.skip(!enabled, "PVM switching did not stabilize (timing issue)");
+    expect(enabled).toBe(true);
 
     // Both tabs should be active buttons
     await expect(page.getByTestId("pvm-tab-typeberry")).toHaveAttribute(

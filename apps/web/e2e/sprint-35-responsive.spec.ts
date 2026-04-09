@@ -73,8 +73,8 @@ test.describe("Sprint 35 — Mobile / Responsive Layout", () => {
 
     expect(panelsBox).toBeTruthy();
     expect(drawerBox).toBeTruthy();
-    expect(panelsBox!.y + panelsBox!.height).toBeLessThanOrEqual(
-      drawerBox!.y + 2,
+    expect(panelsBox?.y + panelsBox?.height).toBeLessThanOrEqual(
+      drawerBox?.y + 2,
     );
   });
 
@@ -132,6 +132,6 @@ test.describe("Sprint 35 — Mobile / Responsive Layout", () => {
     const rightBox = await right.boundingBox();
     expect(leftBox).toBeTruthy();
     expect(rightBox).toBeTruthy();
-    expect(leftBox!.y).toBeLessThan(rightBox!.y);
+    expect(leftBox?.y).toBeLessThan(rightBox?.y);
   });
 });

@@ -25,13 +25,14 @@ Add full GitHub Actions CI/CD: PR checks (lint, type-check, test, e2e, changeset
 .github/workflows/publish-next.yml
 .github/workflows/release.yml
 .changeset/config.json
+.githooks/pre-push
 biome.json
 ```
 
 ## Modified Files
 
 ```
-package.json              (add biome, changesets deps; add lint/lint:fix scripts)
+package.json              (add biome, changesets deps; add lint/lint:fix/prepare scripts; fix build order)
 apps/web/vite.config.ts   (set base path for GitHub Pages)
 ```
 
@@ -51,17 +52,23 @@ Each workflow has a single trigger and a clear purpose:
 
 Trigger: `on: pull_request` targeting `main`.
 
-Steps (sequential — project is small enough that parallelism adds complexity without meaningful speed gain):
+Two jobs: `ci` (required) and `e2e` (runs after `ci` passes).
+
+**Job: `ci` — Lint, Test & Build**
 
 1. Checkout code
 2. Setup Node.js 22.x with npm cache
 3. `npm ci`
-4. **Build packages** — `npm run build` across all `packages/*` (produces `.js` + `.d.ts` needed by downstream packages and the web app)
+4. **Build all packages and web app** — `npm run build` (builds packages in dependency order: types → trace → runtime-worker → content → orchestrator → cli → web)
 5. **Lint** — `npx biome check .`
 6. **Unit tests** — `npm test`
-7. **Build web app** — `npm run build -w apps/web`
-8. **E2E tests** — Install Playwright Chromium, then `npm run test:e2e -w apps/web`
-9. **Changeset check** — Verify a `.changeset/*.md` file is present in the PR (skip for PRs from the changesets bot)
+7. **Changeset check** — Verify a `.changeset/*.md` file is present in the PR (skip for PRs from the changesets bot)
+
+**Job: `e2e` — E2E Tests** (needs: `ci`)
+
+1. Checkout, setup Node.js, `npm ci`, build (same as above)
+2. Install Playwright Chromium
+3. `npm run test:e2e -w apps/web`
 
 ### Publish Next Workflow (`publish-next.yml`)
 
@@ -171,8 +178,15 @@ Added to root `package.json` as `devDependencies`:
 
 Added to root `package.json`:
 
+- `"build"` — builds all packages in dependency order (types → trace → runtime-worker → content → orchestrator → cli) then web app
+- `"build:packages"` — builds only the library packages in dependency order (excludes web app)
 - `"lint": "biome check ."`
 - `"lint:fix": "biome check --write ."`
+- `"prepare"` — configures git to use `.githooks/` as the hooks directory
+
+## Pre-push Git Hook
+
+A `.githooks/pre-push` hook runs the same checks as CI locally before each push: build, lint, and unit tests. The `prepare` npm script automatically configures `git config core.hooksPath .githooks` on `npm install`, so the hook activates for all contributors without manual setup.
 
 ## Manual Setup Required (Outside of Code)
 
@@ -219,6 +233,6 @@ npx biome check .
 # Validate changesets config
 npx changeset status
 
-# Test the build pipeline locally
-npm ci && npm run build && npm test && npm run build -w apps/web
+# Test the full build pipeline locally (same as CI)
+npm ci && npm run build && npx biome check . && npm test
 ```

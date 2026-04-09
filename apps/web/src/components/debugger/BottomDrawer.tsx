@@ -128,6 +128,7 @@ export function BottomDrawer({
       >
         {TABS.map(({ id, label }) => (
           <button
+            type="button"
             key={id}
             data-testid={`drawer-tab-${id}`}
             aria-label={label}
@@ -148,6 +149,7 @@ export function BottomDrawer({
         ))}
         {isExpanded && (
           <button
+            type="button"
             data-testid="drawer-close-button"
             aria-label="Close drawer"
             onClick={() => setActiveTab(null)}
@@ -162,6 +164,7 @@ export function BottomDrawer({
               strokeWidth="2"
               strokeLinecap="round"
             >
+              <title>Close</title>
               <line x1="2" y1="2" x2="12" y2="12" />
               <line x1="12" y1="2" x2="2" y2="12" />
             </svg>

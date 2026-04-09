@@ -452,8 +452,8 @@ describe("replay integration", () => {
 
     const pvmResult = result.results.get("typeberry");
     expect(pvmResult).toBeDefined();
-    expect(pvmResult!.passed).toBe(true);
-    expect(pvmResult!.mismatches).toEqual([]);
+    expect(pvmResult?.passed).toBe(true);
+    expect(pvmResult?.mismatches).toEqual([]);
   }, 120000);
 
   it("replays io-trace-output.log with typeberry", async () => {
@@ -470,8 +470,8 @@ describe("replay integration", () => {
 
     const pvmResult = result.results.get("typeberry");
     expect(pvmResult).toBeDefined();
-    expect(pvmResult!.passed).toBe(true);
-    expect(pvmResult!.mismatches).toEqual([]);
+    expect(pvmResult?.passed).toBe(true);
+    expect(pvmResult?.mismatches).toEqual([]);
   }, 120000);
 
   it("replays trace-001.log with ananas", async () => {
@@ -485,8 +485,8 @@ describe("replay integration", () => {
     expect(result.results.size).toBe(1);
     const pvmResult = result.results.get("ananas");
     expect(pvmResult).toBeDefined();
-    expect(pvmResult!.passed).toBe(true);
-    expect(pvmResult!.mismatches).toEqual([]);
+    expect(pvmResult?.passed).toBe(true);
+    expect(pvmResult?.mismatches).toEqual([]);
   }, 120000);
 
   it("replays trace-001.log with both PVMs", async () => {
@@ -513,7 +513,7 @@ describe("replay integration", () => {
       logger: (msg) => logs.push(msg),
     });
 
-    expect(result.results.get("typeberry")!.passed).toBe(true);
+    expect(result.results.get("typeberry")?.passed).toBe(true);
     // Verbose mode should produce host-call and completion logs
     expect(logs.length).toBeGreaterThan(0);
     expect(logs.some((l) => l.includes("Replay completed"))).toBe(true);
