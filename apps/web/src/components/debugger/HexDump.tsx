@@ -72,7 +72,6 @@ function ByteCell({
           className="w-full bg-transparent border-none outline-none text-foreground font-mono text-xs p-0 m-0 text-center"
           style={{ width: "1.5em", caretColor: "auto" }}
           maxLength={2}
-          autoFocus
           onKeyDown={(e) => {
             if (e.key === "Backspace" && e.currentTarget.value === "") {
               e.preventDefault();
@@ -108,6 +107,7 @@ function ByteCell({
   }
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: interactivity is conditional on editable prop
     <span
       data-testid={`hex-byte-${offset}`}
       className={`inline-block ${editable ? "cursor-pointer hover:bg-accent/50 rounded" : "cursor-default"} ${
@@ -128,7 +128,19 @@ function ByteCell({
           : { width: "1.5em", textAlign: "center" as const }
       }
       data-changed={isChanged ? "true" : undefined}
+      role={editable ? "button" : undefined}
+      tabIndex={editable ? 0 : undefined}
       onClick={editable ? () => onStartEdit(offset) : undefined}
+      onKeyDown={
+        editable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onStartEdit(offset);
+              }
+            }
+          : undefined
+      }
     >
       {byteToHex(byte)}
     </span>
@@ -234,6 +246,7 @@ export function HexDump({
         const addr = baseAddress + offset;
 
         return (
+          // biome-ignore lint/suspicious/noArrayIndexKey: index is the only stable key
           <div key={rowIdx} className="flex whitespace-nowrap">
             <span
               data-testid="hex-address"
@@ -246,7 +259,7 @@ export function HexDump({
                 const byteOffset = offset + i;
                 return (
                   <ByteCell
-                    key={i}
+                    key={byteOffset}
                     byte={byte}
                     offset={byteOffset}
                     editable={editable}
@@ -265,14 +278,17 @@ export function HexDump({
               data-testid="hex-ascii"
               className="text-muted-foreground select-none"
             >
-              {Array.from(rowBytes, (byte, i) => (
-                <span
-                  key={i}
-                  className={byte === 0 ? "text-muted-foreground/40" : ""}
-                >
-                  {isPrintable(byte) ? String.fromCharCode(byte) : "."}
-                </span>
-              ))}
+              {Array.from(rowBytes, (byte, i) => {
+                const asciiOffset = offset + i;
+                return (
+                  <span
+                    key={asciiOffset}
+                    className={byte === 0 ? "text-muted-foreground/40" : ""}
+                  >
+                    {isPrintable(byte) ? String.fromCharCode(byte) : "."}
+                  </span>
+                );
+              })}
             </span>
           </div>
         );

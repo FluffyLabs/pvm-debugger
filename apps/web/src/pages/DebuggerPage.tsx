@@ -28,7 +28,6 @@ import { useOrchestratorState } from "../hooks/useOrchestratorState";
 import { usePendingChanges } from "../hooks/usePendingChanges";
 import { clearProgramSession } from "../hooks/usePersistence";
 import { useStorageTable } from "../hooks/useStorageTable";
-import { AVAILABLE_PVMS } from "../lib/debugger-settings";
 
 function DebuggerPageInner() {
   const { orchestrator, envelope, teardown, initialize, setEnvelope } =
@@ -131,10 +130,7 @@ function DebuggerPageInner() {
   });
 
   // Route guard: redirect to /load when no program is loaded.
-  if (
-    !isReloadingRef.current &&
-    (!orchestrator || !orchestrator.getProgramBytes())
-  ) {
+  if (!isReloadingRef.current && !orchestrator?.getProgramBytes()) {
     return <Navigate to="/load" replace />;
   }
 
@@ -163,6 +159,7 @@ function DebuggerPageInner() {
 
   // Settings cog toggle
   const settingsOpen = activeTab === "settings";
+  // biome-ignore lint/correctness/useHookAtTopLevel: hook is always called when component renders past the route guard
   const toggleSettings = useCallback(() => {
     if (settingsOpen) {
       setActiveTab(null);
@@ -205,6 +202,7 @@ function DebuggerPageInner() {
                 >
                   <span>{error}</span>
                   <button
+                    type="button"
                     aria-label="Dismiss error"
                     onClick={clearError}
                     className="font-bold cursor-pointer hover:opacity-70"

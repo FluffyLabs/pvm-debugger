@@ -28,18 +28,18 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     page: import("@playwright/test").Page,
   ): Promise<number> {
     const text = await page.getByTestId("pc-value").textContent();
-    return parseInt(text!.replace("0x", ""), 16);
+    return parseInt(text?.replace("0x", ""), 16);
   }
 
   /** Get the block header PCs visible in the instructions panel. */
-  async function getBlockHeaderPcs(
+  async function _getBlockHeaderPcs(
     page: import("@playwright/test").Page,
   ): Promise<number[]> {
     const headers = page.locator("[data-testid^='block-header-']");
     const count = await headers.count();
     const pcs: number[] = [];
     for (let i = 0; i < count; i++) {
-      const testId = await headers.nth(i).getAttribute("data-testid");
+      const _testId = await headers.nth(i).getAttribute("data-testid");
       // block-header-N where N is block index — extract startPc from first instruction in block
       // Instead, look at the block header content which typically shows the start PC
       pcs.push(i); // placeholder — we use a different approach below
@@ -142,7 +142,7 @@ test.describe("Sprint 33 — Block Stepping (Real)", () => {
     await nextBtn.click();
     await expect(pcValue).not.toHaveText("0x0000", { timeout: 5000 });
     const targetPcText = await pcValue.textContent();
-    const targetPc = parseInt(targetPcText!.replace("0x", ""), 16);
+    const targetPc = parseInt(targetPcText?.replace("0x", ""), 16);
 
     // Reset and set breakpoint at that PC
     await page.getByTestId("reset-button").click();

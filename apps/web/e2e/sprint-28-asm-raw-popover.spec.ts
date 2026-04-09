@@ -49,7 +49,7 @@ test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
     let hasOmega = false;
     for (let i = 0; i < count; i++) {
       const text = await argsElements.nth(i).textContent();
-      if (text && text.includes("ω")) {
+      if (text?.includes("ω")) {
         hasOmega = true;
         break;
       }
@@ -112,7 +112,7 @@ test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
     let hasOmega = false;
     for (let i = 0; i < count; i++) {
       const text = await argsElements.nth(i).textContent();
-      if (text && text.includes("ω")) {
+      if (text?.includes("ω")) {
         hasOmega = true;
         break;
       }

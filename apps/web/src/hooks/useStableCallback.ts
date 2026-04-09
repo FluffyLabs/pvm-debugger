@@ -5,10 +5,10 @@ import { useCallback, useRef } from "react";
  * Useful to avoid re-triggering effects when a callback's identity changes
  * but its behavior should not cause re-renders.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useStableCallback<T extends (...args: any[]) => any>(fn: T): T {
+export function useStableCallback<T extends (...args: unknown[]) => unknown>(
+  fn: T,
+): T {
   const ref = useRef<T>(fn);
   ref.current = fn;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return useCallback((...args: any[]) => ref.current(...args), []) as T;
+  return useCallback((...args: unknown[]) => ref.current(...args), []) as T;
 }

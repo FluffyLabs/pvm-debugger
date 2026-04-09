@@ -44,6 +44,7 @@ export function AllWorkItemsEditor({
           {value.length} work item summary(ies)
         </span>
         <button
+          type="button"
           className="cursor-pointer rounded bg-primary/20 px-2 py-0.5 text-[10px] text-primary hover:bg-primary/30"
           onClick={addItem}
         >
@@ -51,12 +52,14 @@ export function AllWorkItemsEditor({
         </button>
       </div>
       {value.map((item, idx) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: index is the only stable key
         <div key={idx} className="border border-border rounded p-2">
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] text-muted-foreground">
               Item #{idx}
             </span>
             <button
+              type="button"
               className="cursor-pointer text-xs text-muted-foreground hover:text-destructive"
               onClick={() => removeItem(idx)}
             >

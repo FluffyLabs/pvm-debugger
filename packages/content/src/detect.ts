@@ -130,7 +130,7 @@ function isJsonTestVector(json: unknown): boolean {
     json !== null &&
     "program" in json &&
     "initial-regs" in json &&
-    Array.isArray((json as Record<string, unknown>)["program"]) &&
+    Array.isArray((json as Record<string, unknown>).program) &&
     Array.isArray((json as Record<string, unknown>)["initial-regs"])
   );
 }

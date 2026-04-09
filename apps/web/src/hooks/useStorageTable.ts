@@ -16,7 +16,6 @@ export interface StorageEntry {
  */
 class StorageStore {
   private entries = new Map<string, string>();
-  private revision = 0;
   private snapshot: StorageEntry[] = [];
   private listeners = new Set<() => void>();
 
@@ -97,8 +96,8 @@ function safeFromHex(hex: string): Uint8Array {
   try {
     let clean =
       hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
-    if (clean.length % 2 === 1) clean = "0" + clean;
-    return fromHex("0x" + clean);
+    if (clean.length % 2 === 1) clean = `0${clean}`;
+    return fromHex(`0x${clean}`);
   } catch {
     return new Uint8Array(0);
   }

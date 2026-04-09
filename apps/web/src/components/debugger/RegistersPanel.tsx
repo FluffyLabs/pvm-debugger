@@ -6,6 +6,9 @@ import { PendingChanges } from "./PendingChanges";
 import { type RegisterDivergence, RegisterRow } from "./RegisterRow";
 import { StatusHeader } from "./StatusHeader";
 
+/** Pre-computed stable keys for the 13 PVM registers to avoid array-index keys. */
+const REGISTER_KEYS = Array.from({ length: 13 }, (_, i) => `reg-${i}`);
+
 interface RegistersPanelProps {
   snapshot: MachineStateSnapshot | null;
   lifecycle: PvmLifecycle | null;
@@ -187,14 +190,14 @@ export function RegistersPanel({
         data-testid="registers-scroll"
         className="flex-1 overflow-auto min-h-[4.5rem]"
       >
-        {registers.map((value, i) => (
+        {registers.map((value, regIndex) => (
           <RegisterRow
-            key={i}
-            index={i}
+            key={REGISTER_KEYS[regIndex]}
+            index={regIndex}
             value={value}
             editable={editable}
-            changed={changedRegisters.has(i)}
-            divergences={divergenceMap.get(i)}
+            changed={changedRegisters.has(regIndex)}
+            divergences={divergenceMap.get(regIndex)}
             onCommit={commitRegister}
           />
         ))}

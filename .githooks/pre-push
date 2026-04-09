@@ -8,7 +8,7 @@ echo "==> Building all packages..."
 npm run build
 
 echo "==> Running lint..."
-npx biome check .
+npx biome check . --error-on-warnings
 
 echo "==> Running unit tests..."
 npm test

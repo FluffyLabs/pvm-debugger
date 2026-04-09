@@ -140,6 +140,7 @@ function StickyBar({
       {/* Use Trace Data button — only when trace data actually exists */}
       {userModified && hasProposal && (
         <button
+          type="button"
           data-testid="use-trace-data"
           onClick={onUseTraceData}
           className="cursor-pointer rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-300 hover:bg-amber-500/30"

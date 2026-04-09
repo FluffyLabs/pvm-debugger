@@ -5,7 +5,7 @@ import type { EcalliTrace, TraceEntry, TraceTermination } from "@pvmdbg/types";
  */
 function bigintHex(value: bigint): string {
   if (value === 0n) return "0x0";
-  return "0x" + value.toString(16);
+  return `0x${value.toString(16)}`;
 }
 
 /**
@@ -44,13 +44,13 @@ export function serializeTrace(trace: EcalliTrace): string {
   }
 
   const startRegs = serializeRegisters(prelude.startRegisters);
-  const startLine = `start pc=${prelude.startPc} gas=${prelude.startGas}${startRegs ? " " + startRegs : ""}`;
+  const startLine = `start pc=${prelude.startPc} gas=${prelude.startGas}${startRegs ? ` ${startRegs}` : ""}`;
   lines.push(startLine);
 
   // --- Entries ---
   for (const entry of entries) {
     const entryRegs = serializeRegisters(entry.registers);
-    const ecalliLine = `ecalli=${entry.index} pc=${entry.pc} gas=${entry.gas}${entryRegs ? " " + entryRegs : ""}`;
+    const ecalliLine = `ecalli=${entry.index} pc=${entry.pc} gas=${entry.gas}${entryRegs ? ` ${entryRegs}` : ""}`;
     lines.push(ecalliLine);
 
     serializeEntrySubCommands(entry, lines);
@@ -61,7 +61,7 @@ export function serializeTrace(trace: EcalliTrace): string {
     lines.push(serializeTermination(termination));
   }
 
-  return lines.join("\n") + "\n";
+  return `${lines.join("\n")}\n`;
 }
 
 function serializeEntrySubCommands(entry: TraceEntry, lines: string[]): void {
@@ -98,7 +98,7 @@ function serializeEntrySubCommands(entry: TraceEntry, lines: string[]): void {
 
 function serializeTermination(term: TraceTermination): string {
   const regs = serializeRegisters(term.registers);
-  const regSuffix = regs ? " " + regs : "";
+  const regSuffix = regs ? ` ${regs}` : "";
   switch (term.kind) {
     case "halt":
       return `HALT pc=${term.pc} gas=${term.gas}${regSuffix}`;

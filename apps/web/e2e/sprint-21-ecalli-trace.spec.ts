@@ -45,7 +45,7 @@ test.describe("Sprint 21 — Ecalli Trace Tab", () => {
     ).toBeChecked();
   }
 
-  function pvmStatus(page: import("@playwright/test").Page) {
+  function _pvmStatus(page: import("@playwright/test").Page) {
     return page.getByTestId("pvm-status-typeberry");
   }
 

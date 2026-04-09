@@ -164,7 +164,7 @@ test.describe("Sprint 27 — Block Folding + Virtualization", () => {
     expect(rowCount).toBeGreaterThan(1);
 
     const secondRowTestId = await rows.nth(1).getAttribute("data-testid");
-    const pc = secondRowTestId!.replace("instruction-row-", "");
+    const pc = secondRowTestId?.replace("instruction-row-", "");
 
     // Click gutter to set breakpoint
     const gutter = page.getByTestId(`breakpoint-gutter-${pc}`);

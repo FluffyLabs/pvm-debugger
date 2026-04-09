@@ -88,7 +88,7 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     // Capture register state for typeberry (after stepping)
     const regPanel = page.getByTestId("panel-registers");
     await expect(regPanel).toBeVisible();
-    const typeberryText = await regPanel.innerText();
+    const _typeberryText = await regPanel.innerText();
 
     // Click ananas tab
     await page.getByTestId("pvm-tab-ananas").click();
@@ -98,7 +98,7 @@ test.describe("Sprint 24 — Multi-PVM Tabs", () => {
     );
 
     // Register panel should now show ananas state (same step applied to both PVMs)
-    const ananasText = await regPanel.innerText();
+    const _ananasText = await regPanel.innerText();
 
     // Click back to typeberry
     await page.getByTestId("pvm-tab-typeberry").click();

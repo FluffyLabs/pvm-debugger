@@ -16,7 +16,7 @@ initAnanas().then((api) => {
   installWorkerEntry(ws, interpreter);
   // Replay any messages that arrived during init
   for (const msg of pending) {
-    ws.onmessage!(msg);
+    ws.onmessage?.(msg);
   }
   pending.length = 0;
 });

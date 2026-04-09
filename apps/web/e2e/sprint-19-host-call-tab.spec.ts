@@ -119,7 +119,7 @@ test.describe("Sprint 19 — Host Call Drawer Tab", () => {
       const headerText = await page
         .getByTestId("host-call-header")
         .textContent();
-      if (headerText && headerText.includes("log")) {
+      if (headerText?.includes("log")) {
         foundLog = true;
         break;
       }

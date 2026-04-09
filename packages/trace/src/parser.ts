@@ -20,7 +20,7 @@ function parseRegisters(tokens: string[]): Map<number, bigint> {
   for (const token of tokens) {
     const m = token.match(/^r(\d{2})=0x([0-9a-fA-F]+)$/);
     if (m) {
-      regs.set(parseInt(m[1], 10), BigInt("0x" + m[2]));
+      regs.set(parseInt(m[1], 10), BigInt(`0x${m[2]}`));
     }
   }
   return regs;
@@ -210,7 +210,7 @@ export function parseTrace(text: string): EcalliTrace {
         throw new Error(`Line ${lineNum}: malformed setreg: ${line}`);
       }
       const regIdx = parseInt(m[1], 10);
-      const value = BigInt("0x" + m[2]);
+      const value = BigInt(`0x${m[2]}`);
       currentEntry.registerWrites.set(regIdx, value);
       continue;
     }

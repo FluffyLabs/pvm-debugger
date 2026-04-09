@@ -102,6 +102,7 @@ export function InstructionsPanel({
           data-testid="display-mode-toggle"
         >
           <button
+            type="button"
             data-testid="display-mode-asm"
             className={`px-2 py-0.5 rounded-l border cursor-pointer ${
               displayMode === "asm"
@@ -113,6 +114,7 @@ export function InstructionsPanel({
             ASM
           </button>
           <button
+            type="button"
             data-testid="display-mode-raw"
             className={`px-2 py-0.5 rounded-r border border-l-0 cursor-pointer ${
               displayMode === "raw"

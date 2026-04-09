@@ -442,7 +442,7 @@ describe("storageAwareEffects", () => {
 
     // Should override memory writes with custom value
     expect(effects.memoryWrites).toHaveLength(1);
-    expect(effects.memoryWrites![0].data).toEqual(new Uint8Array([0x42]));
+    expect(effects.memoryWrites?.[0].data).toEqual(new Uint8Array([0x42]));
     // Register writes should be preserved
     expect(effects.registerWrites?.get(0)).toBe(1n);
   });
@@ -469,7 +469,7 @@ describe("storageAwareEffects", () => {
 
     // Should return base effects unchanged for write host calls
     expect(effects.memoryWrites).toHaveLength(1);
-    expect(effects.memoryWrites![0].address).toBe(0x1000);
+    expect(effects.memoryWrites?.[0].address).toBe(0x1000);
   });
 
   it("returns base effects when storage table has no matching key", () => {
@@ -493,7 +493,7 @@ describe("storageAwareEffects", () => {
 
     // Should use trace memory writes since key doesn't match
     expect(effects.memoryWrites).toHaveLength(1);
-    expect(effects.memoryWrites![0].address).toBe(0x1000);
+    expect(effects.memoryWrites?.[0].address).toBe(0x1000);
   });
 });
 

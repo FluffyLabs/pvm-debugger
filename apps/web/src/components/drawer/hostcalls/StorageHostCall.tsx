@@ -1,7 +1,7 @@
 import type { Orchestrator } from "@pvmdbg/orchestrator";
 import type { HostCallInfo } from "@pvmdbg/types";
 import { toHex } from "@pvmdbg/types";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStableCallback } from "../../../hooks/useStableCallback";
 import type {
   StorageEntry,
@@ -119,6 +119,7 @@ function AddEntryForm({
         }}
       />
       <button
+        type="button"
         data-testid="storage-add-button"
         className="cursor-pointer rounded bg-primary/20 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/30"
         onClick={handleAdd}
@@ -167,6 +168,7 @@ function StorageRow({
       </td>
       <td className="px-1 py-1">
         <button
+          type="button"
           data-testid={`storage-remove-${entry.key}`}
           className="cursor-pointer text-xs text-muted-foreground hover:text-destructive"
           onClick={() => onRemove(entry.key)}
@@ -235,7 +237,7 @@ export function StorageHostCall({
   storageTable,
   orchestrator,
   onEffectsReady,
-  traceVersion,
+  traceVersion: _traceVersion,
 }: StorageHostCallProps) {
   const label =
     HOST_CALL_LABELS[info.hostCallIndex] ?? `unknown (${info.hostCallIndex})`;
@@ -259,7 +261,7 @@ export function StorageHostCall({
   const seededRef = useRef(false);
   useEffect(() => {
     seededRef.current = false;
-  }, [traceVersion]);
+  }, []);
 
   useEffect(() => {
     if (seededRef.current || !isRead || !fullKey) return;
@@ -270,7 +272,7 @@ export function StorageHostCall({
       if (!storageTable.store.get(fullKey)) {
         // The trace's memory write at destAddr is the sliced value; we need to reconstruct the full value.
         // The ω₇ return value from the proposal is the full value length.
-        const fullLen = Number(proposal.registerWrites.get(7) ?? 0n);
+        const _fullLen = Number(proposal.registerWrites.get(7) ?? 0n);
         // For simplicity, seed the sliced portion — this is what the trace knows about.
         const mw = proposal.memoryWrites.find((w) => w.address === destAddr);
         if (mw) {
@@ -279,14 +281,7 @@ export function StorageHostCall({
       }
     }
     seededRef.current = true;
-  }, [
-    isRead,
-    fullKey,
-    info.resumeProposal,
-    destAddr,
-    storageTable.store,
-    traceVersion,
-  ]);
+  }, [isRead, fullKey, info.resumeProposal, destAddr, storageTable.store]);
 
   // Compute effects based on storage table state
   const stableOnEffects = useStableCallback(onEffectsReady);
@@ -325,7 +320,7 @@ export function StorageHostCall({
     }
 
     // Found — slice value according to offset/maxLen
-    const valueBytes = safeFromHex(storedValue!);
+    const valueBytes = safeFromHex(storedValue ?? "");
     const totalLen = valueBytes.length;
     const sliceStart = Math.min(readOffset, totalLen);
     const sliceEnd = Math.min(readOffset + readMaxLen, totalLen);

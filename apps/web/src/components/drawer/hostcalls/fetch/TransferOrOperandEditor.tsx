@@ -145,7 +145,7 @@ function TransferEditor({
           value={value.source}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) onChange({ ...value, source: n });
+            if (!Number.isNaN(n)) onChange({ ...value, source: n });
           }}
         />
       </div>
@@ -158,7 +158,7 @@ function TransferEditor({
           value={value.dest}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) onChange({ ...value, dest: n });
+            if (!Number.isNaN(n)) onChange({ ...value, dest: n });
           }}
         />
       </div>
@@ -232,12 +232,14 @@ export function TransferOrOperandEditor({
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground text-[10px]">Type:</span>
         <button
+          type="button"
           className={`cursor-pointer rounded px-2 py-0.5 text-[10px] font-medium ${value.tag === "operand" ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground"}`}
           onClick={() => handleTagSwitch("operand")}
         >
           Operand
         </button>
         <button
+          type="button"
           className={`cursor-pointer rounded px-2 py-0.5 text-[10px] font-medium ${value.tag === "transfer" ? "bg-blue-500/20 text-blue-300" : "bg-muted text-muted-foreground"}`}
           onClick={() => handleTagSwitch("transfer")}
         >

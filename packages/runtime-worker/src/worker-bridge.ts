@@ -16,7 +16,6 @@ import {
   applyRegisterPatch,
   regsToUint8,
   serializeInitialState,
-  uint8ToRegs,
   validateRegisterIndices,
 } from "./utils.js";
 

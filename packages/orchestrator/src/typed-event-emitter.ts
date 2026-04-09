@@ -5,8 +5,8 @@
 
 type Listener<T extends unknown[]> = (...args: T) => void;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class TypedEventEmitter<
+  // biome-ignore lint/suspicious/noExplicitAny: generic event constraint requires any[] for covariance
   TEvents extends { [K in keyof TEvents]: (...args: any[]) => void },
 > {
   private listeners = new Map<keyof TEvents, Set<Listener<never[]>>>();
@@ -15,7 +15,7 @@ export class TypedEventEmitter<
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(listener as Listener<never[]>);
+    this.listeners.get(event)?.add(listener as Listener<never[]>);
   }
 
   off<K extends keyof TEvents>(event: K, listener: TEvents[K]): void {

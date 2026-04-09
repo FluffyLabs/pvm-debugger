@@ -139,9 +139,9 @@ describe("parseTrace — trace-001.log", () => {
     const text = readFixture("trace-001.log");
     trace = parseTrace(text);
     expect(trace.termination).toBeDefined();
-    expect(trace.termination!.kind).toBe("halt");
-    expect(trace.termination!.pc).toBe(82601);
-    expect(trace.termination!.gas).toBe(19521320n);
+    expect(trace.termination?.kind).toBe("halt");
+    expect(trace.termination?.pc).toBe(82601);
+    expect(trace.termination?.gas).toBe(19521320n);
   });
 });
 
@@ -172,7 +172,7 @@ describe("parseTrace — io-trace-output.log", () => {
     const text = readFixture("io-trace-output.log");
     const trace = parseTrace(text);
     expect(trace.termination).toBeDefined();
-    expect(trace.termination!.kind).toBe("halt");
+    expect(trace.termination?.kind).toBe("halt");
   });
 });
 
@@ -245,11 +245,11 @@ describe("parseTrace — FAULT termination", () => {
     ].join("\n");
     const trace = parseTrace(input);
     expect(trace.termination).toBeDefined();
-    expect(trace.termination!.kind).toBe("fault");
-    expect(trace.termination!.arg).toBe(42);
-    expect(trace.termination!.pc).toBe(10);
-    expect(trace.termination!.gas).toBe(50n);
-    expect(trace.termination!.registers.get(0)).toBe(1n);
+    expect(trace.termination?.kind).toBe("fault");
+    expect(trace.termination?.arg).toBe(42);
+    expect(trace.termination?.pc).toBe(10);
+    expect(trace.termination?.gas).toBe(50n);
+    expect(trace.termination?.registers.get(0)).toBe(1n);
   });
 });
 
@@ -263,8 +263,8 @@ describe("parseTrace — PANIC termination", () => {
       "PANIC=7 pc=5 gas=80",
     ].join("\n");
     const trace = parseTrace(input);
-    expect(trace.termination!.kind).toBe("panic");
-    expect(trace.termination!.arg).toBe(7);
+    expect(trace.termination?.kind).toBe("panic");
+    expect(trace.termination?.arg).toBe(7);
   });
 });
 
@@ -278,9 +278,9 @@ describe("parseTrace — OOG termination", () => {
       "OOG pc=20 gas=0",
     ].join("\n");
     const trace = parseTrace(input);
-    expect(trace.termination!.kind).toBe("oog");
-    expect(trace.termination!.pc).toBe(20);
-    expect(trace.termination!.gas).toBe(0n);
+    expect(trace.termination?.kind).toBe("oog");
+    expect(trace.termination?.pc).toBe(20);
+    expect(trace.termination?.gas).toBe(0n);
   });
 });
 
@@ -566,8 +566,8 @@ describe("compareTraces", () => {
     const mismatches = compareTraces(a, b);
     const kindMismatch = mismatches.find((m) => m.path === "termination.kind");
     expect(kindMismatch).toBeDefined();
-    expect(kindMismatch!.expected).toBe("halt");
-    expect(kindMismatch!.actual).toBe("panic");
+    expect(kindMismatch?.expected).toBe("halt");
+    expect(kindMismatch?.actual).toBe("panic");
   });
 
   it("reports when termination is missing in one trace", () => {
@@ -686,7 +686,7 @@ describe("parseTrace — edge cases", () => {
     ].join("\n");
     const trace = parseTrace(input);
     expect(trace.entries.length).toBe(0);
-    expect(trace.termination!.kind).toBe("halt");
+    expect(trace.termination?.kind).toBe("halt");
   });
 
   it("handles multiple consecutive ecalli entries", () => {
@@ -718,7 +718,7 @@ describe("parseTrace — edge cases", () => {
     ].join("\n");
     const trace = parseTrace(input);
     expect(trace.prelude.programHex).toBe("aabb");
-    expect(trace.termination!.kind).toBe("halt");
+    expect(trace.termination?.kind).toBe("halt");
   });
 });
 

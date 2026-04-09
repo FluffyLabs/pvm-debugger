@@ -17,7 +17,7 @@ export type RegisterFormat = "hex" | "decimal" | "custom";
 export function formatRegValue(value: bigint, format: RegisterFormat): string {
   switch (format) {
     case "hex":
-      return "0x" + value.toString(16);
+      return `0x${value.toString(16)}`;
     case "decimal":
       return value.toString();
     case "custom":
@@ -33,8 +33,8 @@ export function safeFromHex(hex: string): Uint8Array {
   try {
     let clean =
       hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
-    if (clean.length % 2 === 1) clean = "0" + clean;
-    return fromHex("0x" + clean);
+    if (clean.length % 2 === 1) clean = `0${clean}`;
+    return fromHex(`0x${clean}`);
   } catch {
     return new Uint8Array(0);
   }

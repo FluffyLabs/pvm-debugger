@@ -162,7 +162,7 @@ function proposalToText(info: HostCallInfo): string {
 export function GenericHostCall({
   info,
   onEffectsReady,
-  traceVersion,
+  traceVersion: _traceVersion,
 }: GenericHostCallProps) {
   const initialText = useMemo(() => proposalToText(info), [info]);
   const [text, setText] = useState(initialText);
@@ -171,7 +171,7 @@ export function GenericHostCall({
   useEffect(() => {
     setText(proposalToText(info));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [traceVersion]);
+  }, [info]);
 
   const stableOnEffects = useStableCallback(onEffectsReady);
 
@@ -204,6 +204,7 @@ export function GenericHostCall({
           className="text-red-400 text-xs space-y-0.5"
         >
           {errors.map((err, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: index is the only stable key
             <div key={i}>{err}</div>
           ))}
         </div>

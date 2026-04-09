@@ -35,7 +35,7 @@ export function WorkItemInfoEditor({
           value={value.serviceindex}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) setField("serviceindex", n);
+            if (!Number.isNaN(n)) setField("serviceindex", n);
           }}
         />
       </div>
@@ -97,7 +97,7 @@ export function WorkItemInfoEditor({
           value={value.exportcount}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) setField("exportcount", n);
+            if (!Number.isNaN(n)) setField("exportcount", n);
           }}
         />
       </div>
@@ -110,7 +110,7 @@ export function WorkItemInfoEditor({
           value={value.importsegmentsCount}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) setField("importsegmentsCount", n);
+            if (!Number.isNaN(n)) setField("importsegmentsCount", n);
           }}
         />
       </div>
@@ -123,7 +123,7 @@ export function WorkItemInfoEditor({
           value={value.extrinsicsCount}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) setField("extrinsicsCount", n);
+            if (!Number.isNaN(n)) setField("extrinsicsCount", n);
           }}
         />
       </div>
@@ -136,7 +136,7 @@ export function WorkItemInfoEditor({
           value={value.payloadLength}
           onChange={(e) => {
             const n = parseInt(e.target.value, 10);
-            if (!isNaN(n)) setField("payloadLength", n);
+            if (!Number.isNaN(n)) setField("payloadLength", n);
           }}
         />
       </div>

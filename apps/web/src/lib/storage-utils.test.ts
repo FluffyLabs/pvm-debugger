@@ -1,8 +1,4 @@
-import type {
-  HostCallInfo,
-  HostCallResumeProposal,
-  MachineStateSnapshot,
-} from "@pvmdbg/types";
+import type { HostCallInfo, MachineStateSnapshot } from "@pvmdbg/types";
 import { describe, expect, it } from "vitest";
 import { deriveKeyHex } from "./storage-utils";
 

@@ -29,7 +29,7 @@ export function RawEditor({ blob, onBlobChange }: RawEditorProps) {
         raw.startsWith("0x") || raw.startsWith("0X") ? raw.slice(2) : raw;
       if (clean.length % 2 === 0 && /^[0-9a-fA-F]*$/.test(clean)) {
         try {
-          onBlobChange(fromHex("0x" + clean));
+          onBlobChange(fromHex(`0x${clean}`));
         } catch {
           // ignore
         }

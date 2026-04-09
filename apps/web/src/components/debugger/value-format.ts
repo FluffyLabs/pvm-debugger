@@ -16,7 +16,7 @@ export function formatRegister(value: bigint): {
 } {
   // Mask to unsigned 64-bit range
   const unsigned = BigInt.asUintN(64, value);
-  const hex = "0x" + unsigned.toString(16).padStart(16, "0");
+  const hex = `0x${unsigned.toString(16).padStart(16, "0")}`;
   const decimal = unsigned.toString(10);
   return { hex, decimal };
 }
@@ -81,7 +81,7 @@ export function parsePcInput(input: string): number | null {
 
 /** Format gas as a hex string (for tooltip display). */
 export function formatGasHex(gas: bigint): string {
-  return "0x" + gas.toString(16);
+  return `0x${gas.toString(16)}`;
 }
 
 /** Map PvmLifecycle (+ PvmStatus for terminal states) to a user-facing label. */

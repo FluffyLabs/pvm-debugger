@@ -1,6 +1,6 @@
 import { Badge, Button } from "@fluffylabs/shared-ui";
 import type { DetectedFormat, ExampleEntry, RawPayload } from "@pvmdbg/content";
-import { createProgramEnvelope, decodeGeneric } from "@pvmdbg/content";
+import { createProgramEnvelope } from "@pvmdbg/content";
 import { ArrowRight } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";

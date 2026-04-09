@@ -134,10 +134,23 @@ export function RegisterRow({
         />
       ) : (
         <>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: interactivity is conditional on editable prop */}
           <span
             data-testid={`register-hex-${index}`}
             className={`text-foreground ${editable ? "cursor-pointer hover:underline" : ""}`}
+            role={editable ? "button" : undefined}
+            tabIndex={editable ? 0 : undefined}
             onClick={startEditing}
+            onKeyDown={
+              editable
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      startEditing();
+                    }
+                  }
+                : undefined
+            }
           >
             {hex}
           </span>

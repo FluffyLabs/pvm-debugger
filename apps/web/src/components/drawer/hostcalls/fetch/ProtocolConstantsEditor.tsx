@@ -219,7 +219,7 @@ function FieldInput({
               onFieldChange(field.key, BigInt(raw));
             } else {
               const n = parseInt(raw, 10);
-              if (!isNaN(n)) onFieldChange(field.key, n);
+              if (!Number.isNaN(n)) onFieldChange(field.key, n);
             }
           } catch {
             // ignore bad input

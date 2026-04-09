@@ -24,7 +24,7 @@ export function useDivergenceCheck(
     { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
   >,
   selectedPvmId: string | null,
-  snapshotVersion: number,
+  _snapshotVersion: number,
 ): DivergenceResult {
   return useMemo(() => {
     if (snapshots.size < 2 || !selectedPvmId) {
@@ -107,5 +107,5 @@ export function useDivergenceCheck(
       details: detailLines.join("\n"),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [snapshots, selectedPvmId, snapshotVersion]);
+  }, [snapshots, selectedPvmId]);
 }

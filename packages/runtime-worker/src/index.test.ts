@@ -43,7 +43,7 @@ function createAddProgram(): Uint8Array {
 }
 
 // Helper: create a LOAD_IMM program that loads a value into r0
-function createLoadImmProgram(value: number): Uint8Array {
+function _createLoadImmProgram(value: number): Uint8Array {
   const code = new Uint8Array([
     LOAD_IMM,
     0x00,
@@ -661,7 +661,7 @@ describe("installWorkerEntry", () => {
     expect(mockSelf.onmessage).not.toBeNull();
 
     const program = createAddProgram();
-    mockSelf.onmessage!({
+    mockSelf.onmessage?.({
       data: {
         type: "load",
         messageId: "1",
@@ -672,7 +672,7 @@ describe("installWorkerEntry", () => {
     expect(responses.length).toBe(1);
     expect(responses[0].type).toBe("ok");
 
-    mockSelf.onmessage!({ data: { type: "step", messageId: "2", n: 1 } });
+    mockSelf.onmessage?.({ data: { type: "step", messageId: "2", n: 1 } });
     expect(responses.length).toBe(2);
     expect(responses[1].type).toBe("ok");
   });

@@ -129,7 +129,7 @@ function SpiSummary({
 
 function TraceSummary({
   envelope,
-  rawByteCount,
+  rawByteCount: _rawByteCount,
 }: {
   envelope: ProgramEnvelope;
   rawByteCount: number;
