@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Sprint 20 — Host Call Storage Table", () => {
+  // These tests step through multiple host calls to find storage — needs extra time in CI
+  test.slow();
+
   /** Load the all-ecalli-refine SPI program (has storage host calls). */
   async function loadProgram(page: import("@playwright/test").Page) {
     await page.goto("/#/load");
@@ -195,10 +198,7 @@ test.describe("Sprint 20 — Host Call Storage Table", () => {
 
     // Find first storage host call
     const found1 = await stepToStorageHostCall(page);
-    if (!found1) {
-      test.skip();
-      return;
-    }
+    expect(found1).toBe(true);
 
     // Add an entry
     await page.getByTestId("storage-new-key").fill("0xpersist");
