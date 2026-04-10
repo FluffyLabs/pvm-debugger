@@ -202,7 +202,7 @@ export function RegistersPanel({
           />
         ))}
       </div>
-      {pendingChanges.pending && (
+      {lifecycle === "paused_host_call" && pendingChanges.pending && (
         <PendingChanges pending={pendingChanges.pending} />
       )}
     </div>

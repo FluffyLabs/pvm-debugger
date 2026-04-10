@@ -136,6 +136,19 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       pendingStepDone.current = true;
       versionRef.current += 1;
 
+      // Clear host call info when the PVM is no longer paused at a host call
+      // (e.g. after auto-continue resumes). Without this, stale entries
+      // persist and cause "Pending changes" to show during continuous execution.
+      if (lifecycle !== "paused_host_call") {
+        const hcBase = pendingHostCallInfo.current ?? new Map();
+        if (hcBase.has(pvmId)) {
+          hcBase.delete(pvmId);
+        }
+        // Always set pendingHostCallInfo so the flush clears any stale
+        // React state even when no new hostCallPaused event fired.
+        pendingHostCallInfo.current = hcBase;
+      }
+
       if (lifecycle === "paused") {
         const errBase = pendingPerPvmErrors.current ?? new Map();
         if (errBase.has(pvmId)) {
