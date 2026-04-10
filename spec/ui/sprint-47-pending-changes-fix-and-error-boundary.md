@@ -4,7 +4,7 @@ Status: Implemented
 
 ## Goal
 
-Fix "Pending Host Call Changes" banner appearing during continuous execution (when PVM is running, not stopped at a host call). Add an error boundary so uncaught render errors show a recovery UI instead of crashing the app to a blank page.
+Fix "Pending Host Call Changes" banner appearing during continuous execution (when PVM is running, not stopped at a host call). Fix crash (React error #185 — Maximum update depth exceeded) when running trace examples with auto-continue. Add an error boundary so uncaught render errors show a recovery UI instead of crashing the app to a blank page.
 
 ## Prior Sprint Dependencies
 
@@ -25,11 +25,19 @@ Fix "Pending Host Call Changes" banner appearing during continuous execution (wh
 
 4. **No visible change during manual host-call pauses.** When the user is genuinely paused at a host call (manual stepping or auto-continue policy stops), the lifecycle is `"paused_host_call"` and the banner renders as before. The existing E2E tests and unit tests continue to pass unchanged.
 
+### Crash Fix — Suppress Host Call State While Running
+
+5. **`useHostCallState` returns null while running.** The `activeHostCall` useMemo returns null when `isRunning` is true. This prevents transient `paused_host_call` state from reaching the HostCallTab during auto-continue, which would trigger cascading setState calls and `orchestrator.setGas()` async operations that exceed React's max update depth.
+
+6. **Root cause.** The PVM adapter runs in a Web Worker. Worker `postMessage` is a macrotask, so `requestAnimationFrame` callbacks can fire between the orchestrator's host-call detection (`adapter.step()`) and resume (`adapter.setRegisters()/setMemory()/setGas()`). When the rAF fires in this window, React renders with `paused_host_call` lifecycle and `hostCallInfo` entry. The HostCallTab mounts, its render-time setState fires (×4), its useEffect applies effects which call `pendingChanges.setRegister/setGas` (more setState), and `orchestrator.setGas()` emits another `pvmStateChanged` event. With 43+ log host calls in trace-001, these cascading updates exceed React's 50-render limit.
+
+7. **`isRunning` threaded through BottomDrawer.** `DebuggerPage` passes `isRunning` to `BottomDrawer`, which passes it to `useHostCallState`. The hook suppresses all host-call-related state and drawer auto-opening while the PVM is running.
+
 ### Error Boundary
 
-5. **`ErrorBoundary` component.** A new class component `ErrorBoundary` catches uncaught render errors via `getDerivedStateFromError` and `componentDidCatch`. It displays the error message in a styled container with a "Reload" button that navigates to `#/load` and reloads the page.
+8. **`ErrorBoundary` component.** A new class component `ErrorBoundary` catches uncaught render errors via `getDerivedStateFromError` and `componentDidCatch`. It displays the error message in a styled container with a "Reload" button that navigates to `#/load` and reloads the page.
 
-6. **Wraps the app content.** The `ErrorBoundary` is placed in `App.tsx` around `<RestoreGate>` and `<Routes>`, inside the `OrchestratorProvider` and layout shell. Any rendering crash in the debugger page, load page, or restore gate is caught and displayed instead of showing a blank page.
+9. **Wraps the app content.** The `ErrorBoundary` is placed in `App.tsx` around `<RestoreGate>` and `<Routes>`, inside the `OrchestratorProvider` and layout shell. Any rendering crash in the debugger page, load page, or restore gate is caught and displayed instead of showing a blank page.
 
 ## Bug Details
 
@@ -44,9 +52,13 @@ The root cause of the spurious "Pending changes" banner was a two-part issue:
 | File | Changes |
 |------|---------|
 | `apps/web/src/hooks/useOrchestratorState.ts` | `onStateChanged` handler clears `pendingHostCallInfo` entry when lifecycle is not `paused_host_call`. Forces `pendingHostCallInfo.current` assignment so rAF flush propagates clearing |
+| `apps/web/src/hooks/useHostCallState.ts` | `activeHostCall` returns null when `isRunning` is true. Accepts `isRunning` parameter |
+| `apps/web/src/components/debugger/BottomDrawer.tsx` | Accepts and passes `isRunning` prop to `useHostCallState` |
+| `apps/web/src/pages/DebuggerPage.tsx` | Passes `isRunning` to `BottomDrawer` |
 | `apps/web/src/components/debugger/RegistersPanel.tsx` | `PendingChanges` rendering gated on `lifecycle === "paused_host_call"` |
 | `apps/web/src/components/ErrorBoundary.tsx` | **New.** React error boundary with error display and reload button |
 | `apps/web/src/App.tsx` | Wraps routes in `<ErrorBoundary>` |
+| `apps/web/e2e/sprint-47-trace-run-stability.spec.ts` | **New.** E2E tests for trace run stability: crash reproduction, pending changes guard |
 
 ## Implementation Notes
 

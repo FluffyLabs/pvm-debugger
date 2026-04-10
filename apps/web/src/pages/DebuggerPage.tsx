@@ -279,6 +279,7 @@ function DebuggerPageInner() {
             storageTable={storageTable}
             pendingChanges={pendingChanges}
             snapshotVersion={snapshotVersion}
+            isRunning={isRunning}
           />
         }
       />
