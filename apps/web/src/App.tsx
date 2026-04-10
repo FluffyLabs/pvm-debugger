@@ -3,6 +3,7 @@ import { AppsSidebar, Content, Header } from "@fluffylabs/shared-ui";
 import { initManifest } from "@pvmdbg/content";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useNavigate } from "react-router";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { DebuggerSettingsProvider } from "./context/debugger-settings";
 import { OrchestratorProvider } from "./context/orchestrator";
 import { useOrchestrator } from "./hooks/useOrchestrator";
@@ -97,13 +98,15 @@ export default function App() {
           <div className="app-body">
             <AppsSidebar activeLink="debugger" enableDarkModeToggle />
             <Content className="app-content">
-              <RestoreGate>
-                <Routes>
-                  <Route path="/" element={<DebuggerPage />} />
-                  <Route path="/load" element={<LoadPage />} />
-                  <Route path="*" element={<Navigate to="/load" replace />} />
-                </Routes>
-              </RestoreGate>
+              <ErrorBoundary>
+                <RestoreGate>
+                  <Routes>
+                    <Route path="/" element={<DebuggerPage />} />
+                    <Route path="/load" element={<LoadPage />} />
+                    <Route path="*" element={<Navigate to="/load" replace />} />
+                  </Routes>
+                </RestoreGate>
+              </ErrorBoundary>
             </Content>
           </div>
         </div>

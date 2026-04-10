@@ -40,6 +40,7 @@ interface BottomDrawerProps {
   storageTable: UseStorageTable;
   pendingChanges: UsePendingChanges;
   snapshotVersion: number;
+  isRunning: boolean;
 }
 
 export function BottomDrawer({
@@ -51,12 +52,14 @@ export function BottomDrawer({
   storageTable,
   pendingChanges,
   snapshotVersion,
+  isRunning,
 }: BottomDrawerProps) {
   const { activeTab, height, setActiveTab, setHeight } = useDrawer();
   const { activeHostCall } = useHostCallState(
     hostCallInfo,
     selectedPvmId,
     snapshots,
+    isRunning,
   );
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
 
