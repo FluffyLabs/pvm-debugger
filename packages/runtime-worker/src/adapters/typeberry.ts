@@ -138,10 +138,7 @@ export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
       // addresses, producing negative values that fail tryAsMemoryIndex).
       // The instruction itself was correctly identified as a fault, but the
       // error-reporting code crashed. Treat this as a fault.
-      if (
-        err instanceof Error &&
-        err.message.includes("Assertion failure")
-      ) {
+      if (err instanceof Error && err.message.includes("Assertion failure")) {
         this.assertionFaultStatus = TYPEBERRY_STATUS_FAULT;
         return { finished: true };
       }
