@@ -770,3 +770,122 @@ describe("SPI loads", () => {
     expect(status1).toBe(status2);
   });
 });
+
+// ===== Doom diagnostic: compare Typeberry and Ananas =====
+describe("Doom program: Typeberry vs Ananas", () => {
+  let typeberry: TypeberrySyncInterpreter;
+  let ananas: AnanasSyncInterpreter;
+  let doomBytes: Uint8Array;
+
+  const doomState: InitialMachineState = {
+    pc: 0,
+    gas: 1_000_000n,
+    registers: Array.from({ length: 13 }, () => 0n),
+    pageMap: [],
+    memoryChunks: [],
+  };
+
+  beforeAll(async () => {
+    typeberry = new TypeberrySyncInterpreter();
+    const api = await initAnanas();
+    ananas = new AnanasSyncInterpreter(api);
+    doomBytes = readFixture("doom.bin");
+  });
+
+  it("initial state after load matches", () => {
+    typeberry.load(doomBytes, doomState);
+    ananas.load(doomBytes, doomState);
+
+    const tbPc = typeberry.getPc();
+    const anPc = ananas.getPc();
+    const tbGas = typeberry.getGas();
+    const anGas = ananas.getGas();
+    const tbStatus = typeberry.getStatus();
+    const anStatus = ananas.getStatus();
+    const tbRegs = uint8ToRegs(typeberry.getRegisters());
+    const anRegs = uint8ToRegs(ananas.getRegisters());
+
+    console.log("=== After load ===");
+    console.log(`TB PC: ${tbPc}, AN PC: ${anPc}`);
+    console.log(`TB Gas: ${tbGas}, AN Gas: ${anGas}`);
+    console.log(`TB Status: ${tbStatus}, AN Status: ${anStatus}`);
+    console.log(`TB Regs: [${tbRegs.join(",")}]`);
+    console.log(`AN Regs: [${anRegs.join(",")}]`);
+
+    expect(anPc).toBe(tbPc);
+    expect(anGas).toBe(tbGas);
+    expect(anStatus).toBe(tbStatus);
+    expect(anRegs).toEqual(tbRegs);
+  });
+
+  it("state after 1 step matches", () => {
+    typeberry.load(doomBytes, doomState);
+    ananas.load(doomBytes, doomState);
+
+    typeberry.step(1);
+    ananas.step(1);
+
+    const tbPc = typeberry.getPc();
+    const anPc = ananas.getPc();
+    const tbGas = typeberry.getGas();
+    const anGas = ananas.getGas();
+    const tbStatus = typeberry.getStatus();
+    const anStatus = ananas.getStatus();
+    const tbRegs = uint8ToRegs(typeberry.getRegisters());
+    const anRegs = uint8ToRegs(ananas.getRegisters());
+
+    console.log("=== After 1 step ===");
+    console.log(`TB PC: ${tbPc}, AN PC: ${anPc}`);
+    console.log(`TB Gas: ${tbGas}, AN Gas: ${anGas}`);
+    console.log(`TB Status: ${tbStatus}, AN Status: ${anStatus}`);
+    console.log(`TB Regs: [${tbRegs.join(",")}]`);
+    console.log(`AN Regs: [${anRegs.join(",")}]`);
+
+    expect(anPc).toBe(tbPc);
+    expect(anGas).toBe(tbGas);
+    expect(anStatus).toBe(tbStatus);
+    expect(anRegs).toEqual(tbRegs);
+  });
+
+  it("both PVMs agree on fault after store to unmapped memory", () => {
+    typeberry.load(doomBytes, doomState);
+    ananas.load(doomBytes, doomState);
+
+    // Step until one terminates (doom faults on step 2 due to unmapped memory store)
+    for (let i = 0; i < 10; i++) {
+      const tbResult = typeberry.step(1);
+      const anResult = ananas.step(1);
+
+      const tbStatus = mapStatus(typeberry.getStatus());
+      const anStatus = mapStatus(ananas.getStatus());
+
+      expect(tbResult.finished).toBe(anResult.finished);
+      expect(tbStatus).toBe(anStatus);
+
+      if (tbResult.finished || anResult.finished) {
+        // Both should agree it's a fault
+        expect(tbStatus).toBe("fault");
+        expect(anStatus).toBe("fault");
+        break;
+      }
+    }
+  });
+
+  it("typeberry handles assertion fault gracefully on nSteps", () => {
+    typeberry.load(doomBytes, doomState);
+
+    // nSteps should not throw — should return finished and fault status
+    const result = typeberry.step(100);
+    expect(result.finished).toBe(true);
+    expect(mapStatus(typeberry.getStatus())).toBe("fault");
+  });
+
+  it("reset clears assertion fault status", () => {
+    typeberry.load(doomBytes, doomState);
+    typeberry.step(100); // triggers fault
+    expect(mapStatus(typeberry.getStatus())).toBe("fault");
+
+    typeberry.reset();
+    expect(mapStatus(typeberry.getStatus())).toBe("ok");
+  });
+});
