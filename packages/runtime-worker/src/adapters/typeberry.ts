@@ -55,12 +55,19 @@ function buildMemory(
   return builder.finalize(heapStart, heapEnd);
 }
 
+// Typeberry fault status code (maps to "fault" via status-map)
+const TYPEBERRY_STATUS_FAULT = 2;
+
 /** Typeberry PVM interpreter wrapper implementing SyncPvmInterpreter. */
 export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
   private adapter: pvm.DebuggerAdapter;
   private storedProgram: Uint8Array | null = null;
   private storedInitialState: InitialMachineState | null = null;
   private storedLoadContext: ProgramLoadContext | undefined = undefined;
+  // Workaround for typeberry assertion errors in fault-handling code paths
+  // (e.g. getStartPageIndex using signed << on high addresses).
+  // When set, overrides getStatus() to report fault instead of ok.
+  private assertionFaultStatus: number | null = null;
 
   constructor() {
     this.adapter = new DebuggerAdapter();
@@ -74,6 +81,7 @@ export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
     this.storedProgram = program;
     this.storedInitialState = initialState;
     this.storedLoadContext = loadContext;
+    this.assertionFaultStatus = null;
     this.doLoad(program, initialState, loadContext);
   }
 
@@ -108,6 +116,7 @@ export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
     if (!this.storedProgram || !this.storedInitialState) {
       throw new Error("Cannot reset: no program has been loaded");
     }
+    this.assertionFaultStatus = null;
     this.doLoad(
       this.storedProgram,
       this.storedInitialState,
@@ -116,15 +125,34 @@ export class TypeberrySyncInterpreter implements SyncPvmInterpreter {
   }
 
   step(n: number): { finished: boolean } {
-    if (n === 1) {
-      const running = this.adapter.nextStep();
+    try {
+      if (n === 1) {
+        const running = this.adapter.nextStep();
+        return { finished: !running };
+      }
+      const running = this.adapter.nSteps(n);
       return { finished: !running };
+    } catch (err) {
+      // Typeberry has a known bug where its fault-handling code path throws
+      // assertion errors (e.g. getStartPageIndex uses signed << on high
+      // addresses, producing negative values that fail tryAsMemoryIndex).
+      // The instruction itself was correctly identified as a fault, but the
+      // error-reporting code crashed. Treat this as a fault.
+      if (
+        err instanceof Error &&
+        err.message.includes("Assertion failure")
+      ) {
+        this.assertionFaultStatus = TYPEBERRY_STATUS_FAULT;
+        return { finished: true };
+      }
+      throw err;
     }
-    const running = this.adapter.nSteps(n);
-    return { finished: !running };
   }
 
   getStatus(): number {
+    if (this.assertionFaultStatus !== null) {
+      return this.assertionFaultStatus;
+    }
     return this.adapter.getStatus() as number;
   }
 

@@ -234,6 +234,12 @@ This is NOT `dest, src1, src2` order. The `addU32(first, second, result)` functi
 
 After every `resetGenericWithMemory()` or `resetJAM()`, Ananas requires calling `setNextProgramCounter(pc)`, `setGasLeft(gas)`, and `nextStep()` to prime the interpreter state. Without this, the first step result will be incorrect.
 
+### Typeberry assertion error on high-address faults
+
+Typeberry's `getStartPageIndex()` in `memory/memory-utils.js` uses JavaScript's `<<` operator to page-align addresses, which converts the result to a signed 32-bit integer. For addresses >= `0x80000000`, the page-aligned result has bit 31 set, making it negative and failing `tryAsMemoryIndex`. This crash occurs in the **fault-handling code path** (not the address calculation itself), so the instruction was correctly identified as a fault but the error-reporting code throws. Programs that store to unmapped high addresses trigger this.
+
+**Workaround**: `TypeberrySyncInterpreter.step()` catches assertion errors and sets a synthetic fault status (code 2). The synthetic status is cleared on `load()` and `reset()`. See sprint-48 for full details.
+
 ## Acceptance Criteria
 
 - `mapStatus()` covers all six known statuses and throws on unknown codes.
@@ -249,6 +255,7 @@ After every `resetGenericWithMemory()` or `resetJAM()`, Ananas requires calling 
 - `WorkerBridge` applies real `setPc`, `setGas`, `setRegisters`, `getMemory`, `setMemory`, and `reset` through the worker protocol.
 - `WorkerBridge` rejects stalled commands with `TimeoutError`.
 - Worker command handler returns structured error responses when interpreter throws.
+- Typeberry and Ananas produce the same fault status for the doom binary (assertion fault workaround).
 - `npm run build -w packages/runtime-worker` succeeds.
 - `npm test -w packages/runtime-worker` succeeds.
 - `npm run build` succeeds for the workspace.
