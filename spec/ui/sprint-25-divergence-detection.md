@@ -14,6 +14,8 @@ When multiple PVMs are active, detect and surface divergences between them. Show
 - No divergence output when fewer than 2 PVMs are active
 - Failed/timed-out PVMs show inline red error text
 - Divergence clears after reset
+- No false divergence when enabling or disabling the second PVM
+- No divergence flash during PVM reload (workers responding at different times)
 
 ## Prior Sprint Dependencies
 
@@ -23,8 +25,11 @@ When multiple PVMs are active, detect and surface divergences between them. Show
 
 ```
 apps/web/src/hooks/useDivergenceCheck.ts
-apps/web/src/components/debugger/PvmTabs.tsx    (extend with divergence display)
+apps/web/src/hooks/useOrchestratorState.ts      (lastFlushedSnapshots ref)
+apps/web/src/pages/DebuggerPage.tsx              (isReloadingRef divergence gate)
+apps/web/src/components/debugger/PvmTabs.tsx     (extend with divergence display)
 apps/web/e2e/sprint-25-divergence.spec.ts
+apps/web/e2e/sprint-25-disable-pvm-divergence.spec.ts
 ```
 
 ## Divergence Contract
@@ -73,6 +78,8 @@ Implementation pitfall: failed/timed-out sessions do not emit `pvmStateChanged`;
 - divergence clears after reset
 - error text appears inline for failed PVMs
 - no divergence shown with single PVM
+- no divergence after enabling then disabling second PVM
+- no divergence after stepping, enabling, then disabling second PVM
 ```
 
 ## Acceptance Criteria
@@ -81,6 +88,8 @@ Implementation pitfall: failed/timed-out sessions do not emit `pvmStateChanged`;
 - Summary is concise; tooltip has full details.
 - Failed/timed-out PVMs show inline error text.
 - Divergence clears after reset.
+- No false divergence when enabling or disabling PVMs.
+- No divergence flash during PVM reload.
 - `cd apps/web && npx vite build` succeeds.
 - E2E tests pass.
 
@@ -94,9 +103,18 @@ Implementation pitfall: failed/timed-out sessions do not emit `pvmStateChanged`;
 - Multi-PVM E2E tests depend on PVM switching via settings, which has a pre-existing timing issue from sprint-24 (orchestrator reload clears program state briefly). These tests are conditionally skipped with `test.skip` when PVM switching doesn't stabilize.
 - Unit tests (22 total) thoroughly cover: all divergence field types, concise summary formatting, edge cases (empty snapshots, missing PVM ID), error display for failed/timed-out PVMs, and tooltip content.
 
+### False divergence on PVM enable/disable
+
+Two bugs caused false divergence when toggling the second PVM:
+
+1. **Stale-closure race in rAF flush** (`useOrchestratorState`): The `onStateChanged` handler accumulated into `pendingSnapshots`, using `new Map(initial)` as fallback after each rAF flush cleared `pendingSnapshots.current`. The `initial` variable was captured before `loadProgram` completed, so when two PVM workers responded across different animation frames, the second event reverted the first PVM's loaded state to pre-load defaults (e.g., gas=0 instead of gas=10000). Fix: a `lastFlushedSnapshots` ref tracks the most recently flushed snapshot map, providing an up-to-date fallback base. The chain is: `pendingSnapshots.current ?? new Map(lastFlushedSnapshots.current ?? initial)`.
+
+2. **Divergence flash during reload** (`DebuggerPage`): Even with the above fix, PVM workers respond at different speeds during `loadProgram`. For one render frame, one PVM has loaded state while the other still has defaults. Fix: divergence results are gated behind `isReloadingRef`, which is already `true` for the duration of `loadProgram` in `onPvmChange`. Since snapshot updates (which trigger renders) arrive while the ref is still `true`, the flash is suppressed. When `loadProgram` finishes and the ref becomes `false`, both PVMs have matching state so divergence is null anyway.
+
 ## Verification
 
 ```bash
 cd apps/web && npx vite build
 npx playwright test e2e/sprint-25-divergence.spec.ts
+npx playwright test e2e/sprint-25-disable-pvm-divergence.spec.ts
 ```

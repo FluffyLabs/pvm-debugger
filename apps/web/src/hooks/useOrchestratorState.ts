@@ -59,12 +59,19 @@ export function useOrchestratorState(): OrchestratorReactiveState {
   const pendingPerPvmErrors = useRef<Map<string, string> | null>(null);
   const pendingStepDone = useRef(false);
   const rafId = useRef<number | null>(null);
+  // Tracks the most recently flushed snapshots so post-flush event handlers
+  // don't fall back to the stale `initial` closure captured at subscription time.
+  const lastFlushedSnapshots = useRef<Map<
+    string,
+    { snapshot: MachineStateSnapshot; lifecycle: PvmLifecycle }
+  > | null>(null);
 
   const scheduleFlush = useCallback(() => {
     if (rafId.current !== null) return;
     rafId.current = requestAnimationFrame(() => {
       rafId.current = null;
       if (pendingSnapshots.current) {
+        lastFlushedSnapshots.current = pendingSnapshots.current;
         setSnapshots(pendingSnapshots.current);
         pendingSnapshots.current = null;
       }
@@ -91,6 +98,7 @@ export function useOrchestratorState(): OrchestratorReactiveState {
   useEffect(() => {
     // Discard any buffered data from the previous orchestrator
     pendingSnapshots.current = null;
+    lastFlushedSnapshots.current = null;
     pendingHostCallInfo.current = null;
     pendingPerPvmErrors.current = null;
     pendingSelectedPvmId.current = null;
@@ -121,15 +129,22 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       prev && pvmIds.includes(prev) ? prev : (pvmIds[0] ?? null),
     );
 
-    // Use `initial` (from this orchestrator) as the fallback base for event
-    // accumulation — NOT the stale `snapshots` React state from the closure.
-    // This prevents disabled-PVM data from leaking into the new orchestrator.
+    // Event handlers accumulate into `pendingSnapshots`. After each rAF flush
+    // clears it, the fallback base is `lastFlushedSnapshots` (most recent flush),
+    // then `initial` (pre-loadProgram state from this orchestrator). This chain
+    // prevents two bugs:
+    //   1. Stale React state leaking disabled-PVM data into a new orchestrator
+    //   2. Post-flush events reverting already-loaded PVM state to pre-load defaults
+    //      (the rAF race: PVM A loads → flush → PVM B loads → fallback to `initial`
+    //       would lose A's loaded state without `lastFlushedSnapshots`)
     const onStateChanged = (
       pvmId: string,
       snapshot: MachineStateSnapshot,
       lifecycle: PvmLifecycle,
     ) => {
-      const base = pendingSnapshots.current ?? new Map(initial);
+      const base =
+        pendingSnapshots.current ??
+        new Map(lastFlushedSnapshots.current ?? initial);
       base.set(pvmId, { snapshot, lifecycle });
       pendingSnapshots.current = base;
       pendingSelectedPvmId.current = pvmId;
@@ -169,7 +184,9 @@ export function useOrchestratorState(): OrchestratorReactiveState {
     };
 
     const onTerminated = (pvmId: string, reason: PvmStatus) => {
-      const base = pendingSnapshots.current ?? new Map(initial);
+      const base =
+        pendingSnapshots.current ??
+        new Map(lastFlushedSnapshots.current ?? initial);
       const entry = base.get(pvmId);
       if (entry) {
         base.set(pvmId, {
@@ -187,7 +204,9 @@ export function useOrchestratorState(): OrchestratorReactiveState {
       const isTimeout = /timeout/i.test(error.message);
       const lifecycle: PvmLifecycle = isTimeout ? "timed_out" : "failed";
 
-      const base = pendingSnapshots.current ?? new Map(initial);
+      const base =
+        pendingSnapshots.current ??
+        new Map(lastFlushedSnapshots.current ?? initial);
       const entry = base.get(pvmId);
       if (entry) {
         base.set(pvmId, { snapshot: entry.snapshot, lifecycle });
