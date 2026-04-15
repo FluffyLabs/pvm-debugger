@@ -44,8 +44,17 @@ function DebuggerPageInner() {
     snapshotVersion,
     perPvmErrors,
   } = useOrchestratorState();
-  const { summary: divergenceSummary, details: divergenceDetails } =
+  const { summary: rawDivergenceSummary, details: rawDivergenceDetails } =
     useDivergenceCheck(snapshots, selectedPvmId, snapshotVersion);
+  // Suppress divergence during PVM reload — workers respond at different
+  // times so there's a brief window where one PVM has loaded state and the
+  // other still has defaults, producing a false divergence flash.
+  const divergenceSummary = isReloadingRef.current
+    ? null
+    : rawDivergenceSummary;
+  const divergenceDetails = isReloadingRef.current
+    ? null
+    : rawDivergenceDetails;
   const instructions = useDisassembly(envelope);
 
   const { activeTab, openToTab, setActiveTab } = useDrawer();
