@@ -75,7 +75,7 @@ function Sidebar({
           data-testid="output-preview"
           className="text-xs font-mono border-t border-border pt-1"
         >
-          <span className="text-muted-foreground">ω₇ ← </span>
+          <span className="text-muted-foreground">φ₇ ← </span>
           <span className="text-foreground">
             {outputValue.toString()}
             {outputValue !== NONE && (
@@ -305,7 +305,7 @@ export function HostCallTab({
       setNoneChecked(checked);
       setUserModified(true);
       if (checked) {
-        // NONE: ω₇ = 2^64-1, no memory writes, clean up previously applied mem writes
+        // NONE: φ₇ = 2^64-1, no memory writes, clean up previously applied mem writes
         for (const addr of appliedMemAddrsRef.current) {
           pendingChanges.removeMemoryWrite(addr);
         }
@@ -394,7 +394,7 @@ export function HostCallTab({
           )}
           {noneChecked && (
             <p className="text-xs text-muted-foreground italic">
-              NONE mode: returning ω₇ = 2⁶⁴−1 with no memory writes.
+              NONE mode: returning φ₇ = 2⁶⁴−1 with no memory writes.
             </p>
           )}
           <p

@@ -30,7 +30,7 @@ async function loadProgram(
 }
 
 test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
-  test("ASM mode shows omega notation", async ({ page }) => {
+  test("ASM mode shows phi notation", async ({ page }) => {
     await loadProgram(page, "add-jam");
 
     const panel = page.getByTestId("instructions-panel");
@@ -40,21 +40,21 @@ test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
     const asmBtn = page.getByTestId("display-mode-asm");
     await expect(asmBtn).toBeVisible();
 
-    // Instruction args should contain omega notation
+    // Instruction args should contain phi notation
     const argsElements = panel.locator("[data-testid='instruction-args']");
     const count = await argsElements.count();
     expect(count).toBeGreaterThan(0);
 
-    // At least one arg should contain omega (ω) character
-    let hasOmega = false;
+    // At least one arg should contain phi (φ) character
+    let hasPhi = false;
     for (let i = 0; i < count; i++) {
       const text = await argsElements.nth(i).textContent();
-      if (text?.includes("ω")) {
-        hasOmega = true;
+      if (text?.includes("φ")) {
+        hasPhi = true;
         break;
       }
     }
-    expect(hasOmega).toBe(true);
+    expect(hasPhi).toBe(true);
   });
 
   test("toggling to Raw mode changes displayed text", async ({ page }) => {
@@ -87,7 +87,7 @@ test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
     expect(firstRaw).toMatch(/^[0-9A-F]{2}( [0-9A-F]{2})*$/);
   });
 
-  test("toggling back to ASM restores omega notation", async ({ page }) => {
+  test("toggling back to ASM restores phi notation", async ({ page }) => {
     await loadProgram(page, "add-jam");
 
     const panel = page.getByTestId("instructions-panel");
@@ -106,18 +106,18 @@ test.describe("Sprint 28 — ASM/Raw Toggle + Binary Popover", () => {
     const mnemonics = panel.locator("[data-testid='instruction-mnemonic']");
     expect(await mnemonics.count()).toBeGreaterThan(0);
 
-    // Omega notation should be present in args
+    // Phi notation should be present in args
     const argsElements = panel.locator("[data-testid='instruction-args']");
     const count = await argsElements.count();
-    let hasOmega = false;
+    let hasPhi = false;
     for (let i = 0; i < count; i++) {
       const text = await argsElements.nth(i).textContent();
-      if (text?.includes("ω")) {
-        hasOmega = true;
+      if (text?.includes("φ")) {
+        hasPhi = true;
         break;
       }
     }
-    expect(hasOmega).toBe(true);
+    expect(hasPhi).toBe(true);
   });
 
   test("clicking an instruction opens the binary popover", async ({ page }) => {

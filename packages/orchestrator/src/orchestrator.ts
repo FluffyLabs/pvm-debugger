@@ -428,7 +428,7 @@ export class Orchestrator extends TypedEventEmitter<OrchestratorEvents> {
 
   /**
    * Capture memory reads for log host calls (index 100) from the live PVM.
-   * Log registers: ω8=target_ptr, ω9=target_len, ω10=msg_ptr, ω11=msg_len.
+   * Log registers: φ8=target_ptr, φ9=target_len, φ10=msg_ptr, φ11=msg_len.
    */
   private async captureLogMemoryReads(
     session: Session,

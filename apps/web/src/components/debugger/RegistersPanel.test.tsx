@@ -104,9 +104,9 @@ describe("RegistersPanel — Change Highlighting", () => {
       />,
     );
 
-    // omega3 changed -> should have delta
+    // phi3 changed -> should have delta
     expect(screen.getByTestId("register-delta-3")).toBeDefined();
-    // omega0 did not change -> no delta
+    // phi0 did not change -> no delta
     expect(screen.queryByTestId("register-delta-0")).toBeNull();
     // PC changed -> delta
     expect(screen.getByTestId("pc-delta")).toBeDefined();
@@ -133,7 +133,7 @@ describe("RegistersPanel — Change Highlighting", () => {
       />,
     );
 
-    // Step 1->2: omega5 changes
+    // Step 1->2: phi5 changes
     rerender(
       <RegistersPanel
         snapshot={snap2}
@@ -269,9 +269,9 @@ describe("RegistersPanel — Multi-PVM Divergence", () => {
       />,
     );
 
-    // omega7 differs -> divergence indicator
+    // phi7 differs -> divergence indicator
     expect(screen.getByTestId("register-divergence-7")).toBeDefined();
-    // omega0 matches -> no indicator
+    // phi0 matches -> no indicator
     expect(screen.queryByTestId("register-divergence-0")).toBeNull();
   });
 });

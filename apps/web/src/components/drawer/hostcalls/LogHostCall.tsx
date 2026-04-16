@@ -29,7 +29,7 @@ function toHexString(data: Uint8Array): string {
 /**
  * Log host call view (index 100).
  *
- * Log registers: ω7=level, ω8=target_ptr, ω9=target_len, ω10=msg_ptr, ω11=msg_len
+ * Log registers: φ7=level, φ8=target_ptr, φ9=target_len, φ10=msg_ptr, φ11=msg_len
  *
  * Decodes message text from trace memory reads (resumeProposal.memoryWrites)
  * when available, otherwise reads memory from the orchestrator using the

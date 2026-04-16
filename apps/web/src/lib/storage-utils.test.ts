@@ -38,7 +38,7 @@ describe("deriveKeyHex", () => {
     expect(deriveKeyHex(info)).toBeNull();
   });
 
-  it("derives key for read host call (index 3) from ω8/ω9", () => {
+  it("derives key for read host call (index 3) from φ8/φ9", () => {
     const regs = Array(13).fill(0n) as bigint[];
     regs[8] = 0x1000n; // key ptr
     regs[9] = 4n; // key len
@@ -61,7 +61,7 @@ describe("deriveKeyHex", () => {
     expect(deriveKeyHex(info)).toBe("0xdeadbeef");
   });
 
-  it("derives key for write host call (index 4) from ω7/ω8", () => {
+  it("derives key for write host call (index 4) from φ7/φ8", () => {
     const regs = Array(13).fill(0n) as bigint[];
     regs[7] = 0x2000n; // key ptr
     regs[8] = 2n; // key len

@@ -190,7 +190,7 @@ test.describe("Sprint 36 — Integration Smoke Test", () => {
       timeout: 5000,
     });
 
-    // r9 should be 102 (0x66) — proving editing ω7 changed the downstream result
+    // r9 should be 102 (0x66) — proving editing φ7 changed the downstream result
     const regHex9 = page.getByTestId("register-hex-9");
     await expect(regHex9).toHaveText(/0x0{14}66/i, { timeout: 5000 });
   });

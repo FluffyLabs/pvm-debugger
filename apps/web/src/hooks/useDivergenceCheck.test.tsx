@@ -112,8 +112,8 @@ describe("useDivergenceCheck", () => {
       useDivergenceCheck(snapshots, "typeberry", 0),
     );
     expect(result.current.summary).toBe("2 registers");
-    expect(result.current.details).toContain("ω3:");
-    expect(result.current.details).toContain("ω7:");
+    expect(result.current.details).toContain("φ3:");
+    expect(result.current.details).toContain("φ7:");
   });
 
   it("shows 1 register for single register divergence", () => {
@@ -186,7 +186,7 @@ describe("useDivergenceCheck", () => {
     );
 
     // PC diverges (typeberry vs polkavm), Gas diverges (typeberry vs ananas),
-    // register ω3 diverges (typeberry vs both)
+    // register φ3 diverges (typeberry vs both)
     expect(result.current.summary).toBe("PC, Gas, 1 register");
 
     // Details should have entries for each diverging PVM
@@ -196,9 +196,9 @@ describe("useDivergenceCheck", () => {
     // Gas diverges only with ananas, PC only with polkavm
     expect(details).toContain("Gas:");
     expect(details).toContain("PC:");
-    // ω3 diverges with both
-    const omega3Lines = details.split("\n").filter((l) => l.startsWith("ω3:"));
-    expect(omega3Lines.length).toBe(2);
+    // φ3 diverges with both
+    const phi3Lines = details.split("\n").filter((l) => l.startsWith("φ3:"));
+    expect(phi3Lines.length).toBe(2);
   });
 
   it("reports divergence from perspective of selected PVM", () => {

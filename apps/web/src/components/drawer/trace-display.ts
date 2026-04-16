@@ -50,7 +50,7 @@ export function formatEntryLines(entry: TraceEntry): string[] {
   const name = getHostCallName(entry.index);
   const lines: string[] = [];
 
-  lines.push(`ecalli ${entry.index}, ω7 = ${entry.gas}`);
+  lines.push(`ecalli ${entry.index}, φ7 = ${entry.gas}`);
 
   // Memory reads
   for (const mr of entry.memoryReads) {
@@ -66,7 +66,7 @@ export function formatEntryLines(entry: TraceEntry): string[] {
 
   // Register writes
   for (const [reg, val] of entry.registerWrites) {
-    lines.push(`  ω${reg} ← ${val}`);
+    lines.push(`  φ${reg} ← ${val}`);
   }
 
   // Gas update

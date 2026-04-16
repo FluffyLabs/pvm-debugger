@@ -111,7 +111,7 @@ export function RegisterRow({
         data-testid={`register-label-${index}`}
         className="text-muted-foreground w-8 shrink-0 select-none"
       >
-        ω{index}:
+        φ{index}:
       </span>
       {editing ? (
         <input

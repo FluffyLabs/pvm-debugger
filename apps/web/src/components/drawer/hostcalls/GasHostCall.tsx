@@ -14,7 +14,7 @@ export function GasHostCall({ info, onEffectsReady }: GasHostCallProps) {
 
   const stableOnEffects = useStableCallback(onEffectsReady);
 
-  // Auto-report ω₇ = currentGas on mount
+  // Auto-report φ₇ = currentGas on mount
   useEffect(() => {
     stableOnEffects({
       registerWrites: new Map([[7, currentGas]]),
@@ -25,7 +25,7 @@ export function GasHostCall({ info, onEffectsReady }: GasHostCallProps) {
   return (
     <div data-testid="gas-host-call" className="flex flex-col gap-2 text-xs">
       <p className="text-muted-foreground">
-        Returns current gas counter in ω₇.
+        Returns current gas counter in φ₇.
       </p>
       <div className="font-mono">
         <span className="text-muted-foreground">Current gas: </span>

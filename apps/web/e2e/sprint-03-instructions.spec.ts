@@ -49,7 +49,7 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     await expect(mnemonicElement).toHaveText(/.+/);
   });
 
-  test("register arguments use omega notation (ω)", async ({ page }) => {
+  test("register arguments use phi notation (φ)", async ({ page }) => {
     // Load the add-jam example (SPI, in wat category — collapsed by default)
     await page.goto("/#/load");
     await page.getByTestId("category-toggle-wat").click();
@@ -69,21 +69,21 @@ test.describe("Sprint 03 — Flat Instruction List", () => {
     const panel = page.getByTestId("instructions-panel");
     await expect(panel).toBeVisible();
 
-    // At least one instruction should contain omega notation
+    // At least one instruction should contain phi notation
     const argsElements = panel.getByTestId("instruction-args");
     const count = await argsElements.count();
     expect(count).toBeGreaterThan(0);
 
-    // Find at least one args element with omega notation
-    let foundOmega = false;
+    // Find at least one args element with phi notation
+    let foundPhi = false;
     for (let i = 0; i < count; i++) {
       const text = await argsElements.nth(i).textContent();
-      if (text?.includes("ω")) {
-        foundOmega = true;
+      if (text?.includes("φ")) {
+        foundPhi = true;
         break;
       }
     }
-    expect(foundOmega).toBe(true);
+    expect(foundPhi).toBe(true);
   });
 
   test("current PC row is visually highlighted", async ({ page }) => {

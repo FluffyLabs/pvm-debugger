@@ -41,7 +41,7 @@ test.describe("Sprint 04 — Registers + Status Display", () => {
     await expect(gasValue).toHaveText(/^[\d,]+$/);
   });
 
-  test("all 13 register rows render with omega labels", async ({ page }) => {
+  test("all 13 register rows render with phi labels", async ({ page }) => {
     await loadProgram(page);
 
     const panel = page.getByTestId("registers-panel");
@@ -52,7 +52,7 @@ test.describe("Sprint 04 — Registers + Status Display", () => {
       await expect(row).toBeVisible();
 
       const label = page.getByTestId(`register-label-${i}`);
-      await expect(label).toHaveText(`ω${i}:`);
+      await expect(label).toHaveText(`φ${i}:`);
     }
   });
 
