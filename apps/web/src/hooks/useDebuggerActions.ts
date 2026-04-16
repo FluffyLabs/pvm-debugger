@@ -149,7 +149,7 @@ export function persistWriteToStorage(
   const keyHex = deriveKeyHex(hc);
   if (!keyHex) return;
 
-  // For write, value is at ω9/ω10
+  // For write, value is at φ9/φ10
   const valPtr = Number(hc.currentState.registers[9] ?? 0n);
   const valLen = Number(hc.currentState.registers[10] ?? 0n);
 

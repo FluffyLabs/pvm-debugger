@@ -244,7 +244,7 @@ export function StorageHostCall({
   const isRead = info.hostCallIndex === 3;
   const regs = info.currentState.registers;
 
-  // For read: ω7=serviceId, ω8=keyPtr, ω9=keyLen, ω10=dest, ω11=offset, ω12=maxLen
+  // For read: φ7=serviceId, φ8=keyPtr, φ9=keyLen, φ10=dest, φ11=offset, φ12=maxLen
   const serviceId = regs[7] ?? 0n;
   const keyPtr = Number(regs[8] ?? 0n);
   const keyLen = Number(regs[9] ?? 0n);
@@ -271,7 +271,7 @@ export function StorageHostCall({
       // Only seed if key doesn't already exist (don't overwrite user edits)
       if (!storageTable.store.get(fullKey)) {
         // The trace's memory write at destAddr is the sliced value; we need to reconstruct the full value.
-        // The ω₇ return value from the proposal is the full value length.
+        // The φ₇ return value from the proposal is the full value length.
         const _fullLen = Number(proposal.registerWrites.get(7) ?? 0n);
         // For simplicity, seed the sliced portion — this is what the trace knows about.
         const mw = proposal.memoryWrites.find((w) => w.address === destAddr);

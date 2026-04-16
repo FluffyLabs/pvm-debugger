@@ -16,14 +16,14 @@ export interface DecodedInstruction {
   mnemonic: string;
   rawBytes: Uint8Array;
   args: string;
-  /** Numeric-only argument string (register indices as numbers, no omega notation). */
+  /** Numeric-only argument string (register indices as numbers, no phi notation). */
   rawArgs: string;
   /** Index of the basic block this instruction belongs to (0-based). */
   blockIndex: number;
 }
 
 function regName(index: number): string {
-  return `ω${index}`;
+  return `φ${index}`;
 }
 
 function formatImm(decoder: { getI32(): number }): string {

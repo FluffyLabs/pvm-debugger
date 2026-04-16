@@ -82,20 +82,20 @@ export const FETCH_KIND_INFO: Record<FetchKind, FetchKindInfo> = {
   [FetchKind.OtherWorkItemExtrinsics]: {
     name: "OtherWorkItemExtrinsics",
     description:
-      "Extrinsic blob from another work item (x̄[ω₁₁]_{ω₁₂}, refine only)",
+      "Extrinsic blob from another work item (x̄[φ₁₁]_{φ₁₂}, refine only)",
   },
   [FetchKind.MyExtrinsics]: {
     name: "MyExtrinsics",
-    description: "Current work item's extrinsic at index ω₁₁ (refine only)",
+    description: "Current work item's extrinsic at index φ₁₁ (refine only)",
   },
   [FetchKind.OtherWorkItemImports]: {
     name: "OtherWorkItemImports",
     description:
-      "Import segment from another work item (ī[ω₁₁]_{ω₁₂}, refine only)",
+      "Import segment from another work item (ī[φ₁₁]_{φ₁₂}, refine only)",
   },
   [FetchKind.MyImports]: {
     name: "MyImports",
-    description: "Current work item's import at index ω₁₁ (refine only)",
+    description: "Current work item's import at index φ₁₁ (refine only)",
   },
   [FetchKind.WorkPackage]: {
     name: "WorkPackage",
@@ -123,12 +123,12 @@ export const FETCH_KIND_INFO: Record<FetchKind, FetchKindInfo> = {
   [FetchKind.OneWorkItem]: {
     name: "OneWorkItem",
     description:
-      "One work item summary (62 bytes fixed, S(p.workitems[ω₁₁]), refine + is-auth)",
+      "One work item summary (62 bytes fixed, S(p.workitems[φ₁₁]), refine + is-auth)",
   },
   [FetchKind.WorkItemPayload]: {
     name: "WorkItemPayload",
     description:
-      "Work item payload blob (p.workitems[ω₁₁].payload, refine + is-auth)",
+      "Work item payload blob (p.workitems[φ₁₁].payload, refine + is-auth)",
   },
   [FetchKind.AllTransfersAndOperands]: {
     name: "AllTransfersAndOperands",

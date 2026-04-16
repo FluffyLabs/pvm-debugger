@@ -81,7 +81,7 @@ export function useDivergenceCheck(
         if (selected.registers[i] !== other.registers[i]) {
           divergentRegIndices.add(i);
           detailLines.push(
-            `\u03C9${i}: ${selectedPvmId}=0x${BigInt.asUintN(64, selected.registers[i]).toString(16)}, ${pvmId}=0x${BigInt.asUintN(64, other.registers[i]).toString(16)}`,
+            `\u03C6${i}: ${selectedPvmId}=0x${BigInt.asUintN(64, selected.registers[i]).toString(16)}, ${pvmId}=0x${BigInt.asUintN(64, other.registers[i]).toString(16)}`,
           );
         }
       }

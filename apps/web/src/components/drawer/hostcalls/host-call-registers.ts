@@ -10,7 +10,7 @@ export interface RegisterMeta {
   format: RegisterFormat;
 }
 
-/** Metadata for the output register (typically ω₇). */
+/** Metadata for the output register (typically φ₇). */
 export interface OutputRegisterMeta {
   index: number;
   label: string;

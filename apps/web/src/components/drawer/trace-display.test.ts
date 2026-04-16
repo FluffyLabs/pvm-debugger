@@ -82,7 +82,7 @@ describe("formatEntryLines", () => {
   it("formats header line with ecalli index and gas", () => {
     const entry = makeEntry({ index: 2, gas: 999n });
     const lines = formatEntryLines(entry);
-    expect(lines[0]).toBe("ecalli 2, ω7 = 999");
+    expect(lines[0]).toBe("ecalli 2, φ7 = 999");
   });
 
   it("formats memory reads", () => {
@@ -106,7 +106,7 @@ describe("formatEntryLines", () => {
       registerWrites: new Map([[7, 42n]]),
     });
     const lines = formatEntryLines(entry);
-    expect(lines).toContainEqual("  ω7 ← 42");
+    expect(lines).toContainEqual("  φ7 ← 42");
   });
 
   it("formats gas update when gasAfter is present", () => {
@@ -134,7 +134,7 @@ describe("formatEntryLines", () => {
     const entry = makeEntry({ index: 0, gas: 100n });
     const lines = formatEntryLines(entry);
     expect(lines).toHaveLength(1);
-    expect(lines[0]).toBe("ecalli 0, ω7 = 100");
+    expect(lines[0]).toBe("ecalli 0, φ7 = 100");
   });
 });
 
