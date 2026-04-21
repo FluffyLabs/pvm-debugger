@@ -18,7 +18,7 @@ Use the examples column on the right to open bundled programs. The six categorie
 
 ### From File Upload
 
-Drop a file or use the browse button to load `.jam`, `.pvm`, `.bin`, `.log`, or `.json` input from disk.
+Drop a file or use the browse button to load `.jam`, `.pvm`, `.bin`, `.log`, `.trace`, or `.json` input from disk.
 
 ![Loader with an uploaded branch.pvm file selected](usage-screenshots/load-upload.png)
 

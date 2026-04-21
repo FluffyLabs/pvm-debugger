@@ -10,7 +10,7 @@ Add file upload as a program source on the load page. Users can drag-and-drop or
 
 - Load page has a two-column layout: sources (left) + examples (right)
 - File upload supports drag-and-drop and file picker
-- Accepted extensions: `.jam`, `.pvm`, `.bin`, `.log`, `.json`
+- Accepted extensions: `.jam`, `.pvm`, `.bin`, `.log`, `.trace`, `.json`
 - Selected file shows name and byte count
 - Format is auto-detected through `detectFormat()`
 - `Continue` button appears and enables after valid file selection
@@ -46,7 +46,7 @@ Use `loadUpload()` and `detectFormat()` from the content package.
 Rules:
 
 - support both drag-and-drop and file picker
-- accept `.jam`, `.pvm`, `.bin`, `.log`, `.json`
+- accept `.jam`, `.pvm`, `.bin`, `.log`, `.trace`, `.json`
 - show selected file name and byte count after selection
 - detect format automatically
 - the UI must not reimplement loading or format detection
