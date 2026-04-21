@@ -4,8 +4,7 @@ A browser-based debugger for PolkaVM programs with multi-interpreter support, tr
 
 ## Live Instance
 
-<!-- Replace with the deployed URL when available -->
-*Deployment URL coming soon.*
+<https://pvm.fluffylabs.dev/>
 
 ## Quick Start
 
