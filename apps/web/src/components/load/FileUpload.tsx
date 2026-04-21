@@ -15,8 +15,14 @@ import {
 } from "react";
 import { formatBadgeIntent, formatByteCount, formatLabel } from "./format";
 
-const ACCEPTED_EXTENSIONS = [".jam", ".pvm", ".bin", ".log", ".json"];
-const ACCEPT_STRING = ACCEPTED_EXTENSIONS.join(",");
+const ACCEPTED_EXTENSIONS = [".jam", ".pvm", ".bin", ".log", ".trace", ".json"];
+// Include broad MIME types so browsers (esp. macOS) don't grey out
+// .log/.trace files in the system picker due to UTI matching quirks.
+const ACCEPT_STRING = [
+  ...ACCEPTED_EXTENSIONS,
+  "text/plain",
+  "application/octet-stream",
+].join(",");
 
 export interface FileUploadResult {
   rawPayload: RawPayload;
