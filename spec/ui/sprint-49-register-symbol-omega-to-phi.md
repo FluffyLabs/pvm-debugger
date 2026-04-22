@@ -63,6 +63,22 @@ Unicode escape in detail line changed from `\u03C9` (ω) to `\u03C6` (φ) for re
 
 Log host call register comment updated (φ8=target_ptr, φ9=target_len, etc.).
 
+### 9. Unicode Escape Form (added in sprint 50 follow-up)
+
+Two files stored the symbol as the Unicode escape `\u03C9` rather than the
+literal `ω` character, so the original verification grep missed them. Both
+were found while refreshing the usage-guide screenshots in sprint 50 and
+updated to `\u03C6`:
+
+- `apps/web/src/components/debugger/PendingChanges.tsx` — pending register
+  write prefix (`{"\u03C9"}` → `{"\u03C6"}`).
+- `apps/web/src/components/load/DetectionSummary.tsx` — registers-preview
+  template literal (`\u03C9${i}=…` → `\u03C6${i}=…`).
+
+If you re-implement this rename from scratch, remember to search for BOTH
+representations: the literal character and the `\u03C9` escape sequence.
+The verification section below has been updated accordingly.
+
 ## Files Changed
 
 | File | Changes |
@@ -90,6 +106,8 @@ Log host call register comment updated (φ8=target_ptr, φ9=target_len, etc.).
 | `apps/web/e2e/sprint-04-registers.spec.ts` | E2E label assertions match φ |
 | `apps/web/e2e/sprint-28-asm-raw-popover.spec.ts` | E2E ASM mode assertions match φ |
 | `apps/web/e2e/integration-smoke.spec.ts` | Comment uses φ7 |
+| `apps/web/src/components/debugger/PendingChanges.tsx` | (sprint 50 follow-up) `\u03C9` escape → `\u03C6` |
+| `apps/web/src/components/load/DetectionSummary.tsx` | (sprint 50 follow-up) `\u03C9` escape → `\u03C6` |
 
 ## Acceptance Criteria
 
@@ -98,7 +116,9 @@ Log host call register comment updated (φ8=target_ptr, φ9=target_len, etc.).
 - Trace display uses `φ7` in host call headers and `φN` in register writes.
 - Divergence detail strings use `φN:` prefix.
 - Host call output preview shows `φ₇ ←`.
-- No remaining references to ω in `.ts` or `.tsx` source or test files.
+- **No remaining references to ω in source or test files, in ANY form:**
+  the literal character (`ω`), the Unicode code-point escape (`\u03C9`),
+  the hex-code phrase (`U+03C9`), or the word "omega".
 - All 683 unit tests pass.
 - The spec/ directory documentation files are not updated (they are historical records of prior sprints).
 
@@ -107,6 +127,14 @@ Log host call register comment updated (φ8=target_ptr, φ9=target_len, etc.).
 ```bash
 npm run build
 npm test
-# Confirm no ω remains in source/test files:
-grep -r 'ω' --include='*.ts' --include='*.tsx' apps/ packages/
+# Confirm no ω remains in source/test files — check BOTH the literal char
+# and the Unicode-escape form, since both appear in the code base:
+grep -r -E '(ω|\\u03C9|\\u03c9|U\+03C9|omega)' \
+  --include='*.ts' --include='*.tsx' apps/ packages/
 ```
+
+The original sprint-49 verification only grepped for the literal `ω`
+character, which missed `PendingChanges.tsx` and `DetectionSummary.tsx` —
+both stored the symbol as `\u03C9`. Those files were fixed in the sprint-50
+follow-up. If you re-run this rename for any future notation change, use
+the broader regex above.

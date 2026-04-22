@@ -131,7 +131,7 @@ export function PendingChanges({ pending }: PendingChangesProps) {
               {[...pending.registerWrites.entries()].map(([regIdx, val]) => (
                 <div key={regIdx} className="flex items-baseline gap-1">
                   <span className="text-amber-800 dark:text-amber-300">
-                    {"\u03C9"}
+                    {"\u03C6"}
                     {regIdx} {"\u2190"} {formatRegister(val).hex}
                   </span>
                 </div>
