@@ -35,7 +35,7 @@ export function screenshotPath(name: string): string {
  */
 export async function waitForFontsReady(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    if (document.fonts && document.fonts.ready) {
+    if (document.fonts?.ready) {
       await document.fonts.ready;
     }
   });

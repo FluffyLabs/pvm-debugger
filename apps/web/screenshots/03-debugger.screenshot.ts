@@ -1,5 +1,5 @@
-import { capture, expect, settle, test } from "./helpers";
 import type { Page } from "@playwright/test";
+import { capture, expect, settle, test } from "./helpers";
 
 /** Load a generic PVM example that goes straight to the debugger. */
 async function loadGeneric(page: Page, id: string) {
@@ -49,7 +49,9 @@ test.describe("Debugger screen", () => {
       await page.waitForTimeout(20);
     }
     // Expand the first memory range by clicking its header.
-    const firstHeader = page.locator("[data-testid^='memory-range-header-']").first();
+    const firstHeader = page
+      .locator("[data-testid^='memory-range-header-']")
+      .first();
     await firstHeader.click();
     await settle(page);
     await capture(page, "memory-panel.png");
