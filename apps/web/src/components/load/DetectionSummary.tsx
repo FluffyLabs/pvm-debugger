@@ -282,7 +282,7 @@ function RegisterPreview({ registers }: { registers: bigint[] }) {
 
   const preview = nonZero
     .slice(0, 4)
-    .map(({ i, v }) => `\u03C9${i}=0x${v.toString(16)}`)
+    .map(({ i, v }) => `\u03C6${i}=0x${v.toString(16)}`)
     .join(", ");
   const suffix = nonZero.length > 4 ? `, +${nonZero.length - 4} more` : "";
 

@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "screenshots": "playwright test --config=playwright.screenshots.config.ts"
   },
   "dependencies": {
     "@fluffylabs/shared-ui": "^0.4.6",
